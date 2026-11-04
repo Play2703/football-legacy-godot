@@ -1,0 +1,195 @@
+[gd_scene load_steps=3 format=3 uid="uid://b8testingview4a"]
+
+[ext_resource type="Script" path="res://features/scoreboard/test_scoreboard_view.gd" id="1_test"]
+[ext_resource type="PackedScene" path="res://features/scoreboard/scoreboard_view.tscn" id="2_view"]
+
+[node name="TestScoreboardView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_test")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="TopPanel" type="PanelContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="HBoxControls" type="HBoxContainer" parent="VBox/TopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="LblTheme" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "Tema:"
+
+[node name="OptTheme" type="OptionButton" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VSep1" type="VSeparator" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+
+[node name="LblKit" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "Clubes/Kits:"
+
+[node name="OptKit" type="OptionButton" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VSep2" type="VSeparator" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+
+[node name="LblScore" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "Gols C:"
+
+[node name="BtnHomeDown" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " - "
+
+[node name="LblHomeGoals" type="Label" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "2"
+
+[node name="BtnHomeUp" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " + "
+
+[node name="LblScoreF" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "F:"
+
+[node name="BtnAwayDown" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " - "
+
+[node name="LblAwayGoals" type="Label" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1"
+
+[node name="BtnAwayUp" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " + "
+
+[node name="VSep3" type="VSeparator" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+
+[node name="LblMin" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "Minuto:"
+
+[node name="BtnMinDown" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " - "
+
+[node name="LblMinute" type="Label" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "91'"
+
+[node name="BtnMinUp" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " + "
+
+[node name="LblStop" type="Label" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = "Acréscimo:"
+
+[node name="BtnStopDown" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " - "
+
+[node name="LblStoppage" type="Label" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+6"
+
+[node name="BtnStopUp" type="Button" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+text = " + "
+
+[node name="VSep4" type="VSeparator" parent="VBox/TopPanel/HBoxControls"]
+layout_mode = 2
+
+[node name="ChkCompact" type="CheckButton" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Modo Retrato Compacto"
+
+[node name="ChkLocalTex" type="CheckButton" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Texturas Locais"
+
+[node name="OptRes" type="OptionButton" parent="VBox/TopPanel/HBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LblDimensions" type="Label" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.75, 1, 1)
+text = "Tamanho Real: 430 x 86 px | Escala: 1.00"
+
+[node name="ScreenFrame" type="PanelContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FieldSim" type="ColorRect" parent="VBox/ScreenFrame"]
+layout_mode = 2
+color = Color(0.12, 0.22, 0.14, 1)
+
+[node name="PitchLine" type="ColorRect" parent="VBox/ScreenFrame/FieldSim"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 180.0
+offset_bottom = 182.0
+grow_horizontal = 2
+color = Color(0.25, 0.45, 0.28, 1)
+
+[node name="ScoreboardContainer" type="MarginContainer" parent="VBox/ScreenFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 28
+
+[node name="ScoreboardInstance" parent="VBox/ScreenFrame/ScoreboardContainer" instance=ExtResource("2_view")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnHomeDown" to="." method="on_btn_home_goals_down"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnHomeUp" to="." method="on_btn_home_goals_up"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnAwayDown" to="." method="on_btn_away_goals_down"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnAwayUp" to="." method="on_btn_away_goals_up"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnMinDown" to="." method="on_btn_minute_down"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnMinUp" to="." method="on_btn_minute_up"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnStopDown" to="." method="on_btn_stoppage_down"]
+[connection signal="pressed" from="VBox/TopPanel/HBoxControls/BtnStopUp" to="." method="on_btn_stoppage_up"]
