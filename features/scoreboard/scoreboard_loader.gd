@@ -70,6 +70,13 @@ static func _scan_and_load_textures(theme: ScoreboardTheme) -> void:
 		theme.missing_textures = ["textura_bg", "textura_logo", "textura_font"]
 		return
 	
+	# Checagem prioritária para logo.png
+	var logo_path: String = dir_path + "logo.png"
+	if FileAccess.file_exists(logo_path):
+		theme.texture_logo = _load_texture_resilient(logo_path)
+		if theme.texture_logo != null:
+			theme.found_textures.append("logo.png")
+	
 	var dir = DirAccess.open(dir_path)
 	if not dir:
 		theme.fallback_level = 2
@@ -77,23 +84,21 @@ static func _scan_and_load_textures(theme: ScoreboardTheme) -> void:
 	
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
-	var found_any: bool = false
+	var found_any: bool = (theme.texture_logo != null)
 	
 	while file_name != "":
 		if not dir.current_is_dir() and file_name.ends_with(".png"):
-			theme.found_textures.append(file_name)
+			if not theme.found_textures.has(file_name):
+				theme.found_textures.append(file_name)
 			found_any = true
 			
 			var full_path = dir_path + file_name
 			if ("ninepatch" in file_name or "tex1" in file_name or "bg" in file_name) and theme.texture_bg == null:
-				if ResourceLoader.exists(full_path):
-					theme.texture_bg = load(full_path) as Texture2D
+				theme.texture_bg = _load_texture_resilient(full_path)
 			elif ("logo" in file_name) and theme.texture_logo == null:
-				if ResourceLoader.exists(full_path):
-					theme.texture_logo = load(full_path) as Texture2D
+				theme.texture_logo = _load_texture_resilient(full_path)
 			elif ("fonte" in file_name or "font" in file_name) and theme.texture_font == null:
-				if ResourceLoader.exists(full_path):
-					theme.texture_font = load(full_path) as Texture2D
+				theme.texture_font = _load_texture_resilient(full_path)
 		file_name = dir.get_next()
 	
 	if found_any:
@@ -101,6 +106,17 @@ static func _scan_and_load_textures(theme: ScoreboardTheme) -> void:
 	else:
 		theme.fallback_level = 2
 		theme.missing_textures = ["texturas_locais_ausentes"]
+
+static func _load_texture_resilient(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var res = load(path)
+		if res is Texture2D:
+			return res
+	if FileAccess.file_exists(path):
+		var img = Image.load_from_file(path)
+		if img and not img.is_empty():
+			return ImageTexture.create_from_image(img)
+	return null
 
 static func _convert_array_dicts(raw: Array) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

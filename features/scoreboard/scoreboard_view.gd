@@ -201,11 +201,11 @@ func _draw_brasileirao() -> void:
 			draw_rect(Rect2(rect.position.x, H - strip_h, rect.size.x, strip_h), strip_col)
 			
 		if c_tipo == "time_casa":
-			# Escudo e sigla dentro da célula
-			var diam = H * 0.52
-			var crest_pos = Vector2(rect.position.x + 12.0, (H - strip_h - diam) * 0.5)
+			# Módulo BRANCO sigla + escudo (escudo voltado para o placar)
+			var diam = min((H - strip_h) * 0.56, rect.size.x * 0.28)
+			var crest_pos = Vector2(rect.position.x + rect.size.x - diam - 10.0, (H - strip_h - diam) * 0.5)
 			_position_crest(_home_crest, crest_pos, diam)
-			var r_text = Rect2(rect.position.x + diam + 20.0, 0.0, rect.size.x - diam - 28.0, H - strip_h)
+			var r_text = Rect2(rect.position.x + 10.0, 0.0, rect.size.x - diam - 22.0, H - strip_h)
 			_draw_auto_text(home_team.get("abbrev", "FLA"), r_text, txt_col, int(H * 0.40), 0.25 * H, true)
 			
 		elif c_tipo == "placar_unico":
@@ -221,11 +221,11 @@ func _draw_brasileirao() -> void:
 			draw_line(Vector2(rect.position.x + seg_w, div_y), Vector2(rect.position.x + seg_w, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
 			
 		elif c_tipo == "time_fora":
-			# Sigla e escudo dentro da célula
-			var diam = H * 0.52
-			var crest_pos = Vector2(rect.position.x + rect.size.x - diam - 12.0, (H - strip_h - diam) * 0.5)
+			# Módulo BRANCO escudo + sigla (escudo voltado para o placar)
+			var diam = min((H - strip_h) * 0.56, rect.size.x * 0.28)
+			var crest_pos = Vector2(rect.position.x + 10.0, (H - strip_h - diam) * 0.5)
 			_position_crest(_away_crest, crest_pos, diam)
-			var r_text = Rect2(rect.position.x + 8.0, 0.0, rect.size.x - diam - 28.0, H - strip_h)
+			var r_text = Rect2(rect.position.x + diam + 18.0, 0.0, rect.size.x - diam - 26.0, H - strip_h)
 			_draw_auto_text(away_team.get("abbrev", "PAL"), r_text, txt_col, int(H * 0.40), 0.25 * H, true)
 			
 		elif c_tipo == "relogio":
@@ -297,62 +297,64 @@ func _draw_skew() -> void:
 					
 			"time_casa":
 				# Escudo à esquerda da sigla com margem, escudo SEMPRE dentro da célula
-				var diam = H * 0.50
-				var crest_x = cell_rect.position.x + 8.0
+				var diam = min(H * 0.52, (cell_rect.size.x - 16.0) * 0.32)
+				var crest_x = cell_rect.position.x + 10.0
 				var crest_y = (H - diam) * 0.5
 				_position_crest(_home_crest, Vector2(crest_x, crest_y), diam)
 				
-				var r_sigla = Rect2(crest_x + diam + 8.0, 0.0, cell_rect.size.x - diam - 16.0, H)
+				var r_sigla = Rect2(crest_x + diam + 8.0, 0.0, cell_rect.size.x - diam - 22.0, H)
 				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, int(H * 0.38), 0.25 * H, true)
-				_draw_skew_team_stripes(cell_rect, H, home_team)
+				_draw_skew_team_stripes(r_sigla, H, home_team)
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
 				_draw_auto_text(score_str, cell_rect, txt_col, int(H * 0.52), 0.30 * H, true)
 				
 			"time_fora":
-				# Sigla e escudo dentro da célula, sigla NUNCA cortada
-				var diam = H * 0.50
-				var crest_x = cell_rect.position.x + cell_rect.size.x - diam - 8.0
+				# Escudo à esquerda da sigla do visitante (sem corte de siglas)
+				var diam = min(H * 0.52, (cell_rect.size.x - 16.0) * 0.32)
+				var crest_x = cell_rect.position.x + 10.0
 				var crest_y = (H - diam) * 0.5
 				_position_crest(_away_crest, Vector2(crest_x, crest_y), diam)
 				
-				var r_sigla = Rect2(cell_rect.position.x + 6.0, 0.0, cell_rect.size.x - diam - 14.0, H)
+				var r_sigla = Rect2(crest_x + diam + 8.0, 0.0, cell_rect.size.x - diam - 22.0, H)
 				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, int(H * 0.38), 0.25 * H, true)
-				_draw_skew_team_stripes(cell_rect, H, away_team)
+				_draw_skew_team_stripes(r_sigla, H, away_team)
 				
 		cur_x = next_x
 
 func _draw_stoppage_tag(rect: Rect2, H: float, text: String, color: Color) -> void:
-	# Etiqueta pequena presa ao canto superior direito do relógio
-	var tab_w = clamp(rect.size.x * 0.28, 28.0, 44.0)
-	var tab_h = H * 0.38
+	# Etiqueta retangular pequena (largura ~0.28 e altura ~0.30 do módulo do relógio)
+	var tab_w = clamp(rect.size.x * 0.28, 26.0, 42.0)
+	var tab_h = H * 0.30
 	var tab_x = rect.position.x + rect.size.x - tab_w - 2.0
 	var tab_y = 2.0
 	var r_tag = Rect2(tab_x, tab_y, tab_w, tab_h)
 	draw_rect(r_tag, color)
-	_draw_auto_text(text, r_tag, Color.WHITE, int(tab_h * 0.72), 0.4 * tab_h, true)
+	_draw_auto_text(text, r_tag, Color.WHITE, int(tab_h * 0.75), 10, true)
 
 func _draw_skew_team_stripes(rect: Rect2, H: float, team: Dictionary) -> void:
 	var kit_col = _get_team_color(team)
-	var dec_y = H - 6.0
+	var dec_y = H - 5.0
 	
 	if board_theme.theme_id == "serie_a":
-		# Linha tracejada ciano
+		# Linha tracejada ciano fino
 		var dash_col = Color("#30D6E1")
-		var num_d = 5
-		var dw = (rect.size.x - 24.0) / float(num_d * 2 - 1)
+		var num_d = 4
+		var dw = 8.0
+		var gap = 4.0
+		var start_x = rect.position.x + (rect.size.x - (dw * 4.0 + gap * 3.0)) * 0.5
 		for d in range(num_d):
-			var sx = rect.position.x + 12.0 + float(d * 2) * dw
-			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), dash_col, 2.5)
+			var sx = start_x + float(d) * (dw + gap)
+			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), dash_col, 2.0)
 	else:
-		# 3 traços horizontais coloridos
-		var dw = 14.0
-		var gap = 5.0
-		var start_x = rect.position.x + (rect.size.x - (dw * 3 + gap * 2)) * 0.5
+		# 3 traços horizontais finos (espessura 2px, comprimento ~8-12px)
+		var dw = 10.0
+		var gap = 4.0
+		var start_x = rect.position.x + (rect.size.x - (dw * 3.0 + gap * 2.0)) * 0.5
 		for d in range(3):
 			var sx = start_x + float(d) * (dw + gap)
-			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), kit_col, 2.5)
+			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), kit_col, 2.0)
 
 # ==============================================================================
 # RETO (Bundesliga & Champions League)
@@ -559,11 +561,14 @@ func _draw_stack2() -> void:
 			_draw_logo_in_rect(r_top, Color.WHITE)
 			
 			var time_str = "%02d:%02d" % [minute, 0]
-			_draw_auto_text(time_str, r_bot, Color("#101015"), int(r_bot.size.y * 0.52), 0.22 * total_h, true)
+			var r_clk = Rect2(cur_x, total_h * 0.5 + 4.0, col_w, r_bot.size.y * 0.46)
+			_draw_auto_text(time_str, r_clk, Color("#101015"), int(r_bot.size.y * 0.42), 0.20 * total_h, true)
 			if stoppage > 0:
-				var stop_w = col_w * 0.38
-				var stop_h = r_bot.size.y * 0.38
-				var stop_rect = Rect2(cur_x + col_w - stop_w - 2.0, total_h - stop_h - 2.0, stop_w, stop_h)
+				var stop_w = col_w * 0.32
+				var stop_h = r_bot.size.y * 0.32
+				var stop_x = cur_x + (col_w - stop_w) * 0.5
+				var stop_y = total_h * 0.5 + r_bot.size.y * 0.56
+				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
 				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.75), 0.4 * stop_h, true)
 				
@@ -572,7 +577,7 @@ func _draw_stack2() -> void:
 			var r_a = Rect2(cur_x, total_h * 0.5, col_w, total_h * 0.5)
 			draw_line(Vector2(cur_x, total_h * 0.5), Vector2(cur_x + col_w, total_h * 0.5), Color(1.0, 1.0, 1.0, 0.15), 1.0)
 			
-			# Escudos 1:1 pequenos dentro da coluna marinho
+			# Escudos 1:1 pequenos dentro da coluna marinho (~0.30 da largura)
 			_draw_stack_team_row(r_h, home_team, _home_crest)
 			_draw_stack_team_row(r_a, away_team, _away_crest)
 			
@@ -587,11 +592,12 @@ func _draw_stack2() -> void:
 		cur_x += col_w
 
 func _draw_stack_team_row(rect: Rect2, team: Dictionary, crest: CrestView) -> void:
-	var diam = rect.size.y * 0.62
-	var pos = Vector2(rect.position.x + 8.0, rect.position.y + (rect.size.y - diam) * 0.5)
+	# Escudo circular 1:1 rigoroso (~0.30 da largura da coluna marinho)
+	var diam = min(rect.size.y * 0.58, rect.size.x * 0.28)
+	var pos = Vector2(rect.position.x + 10.0, rect.position.y + (rect.size.y - diam) * 0.5)
 	_position_crest(crest, pos, diam)
 	
-	var r_abbr = Rect2(rect.position.x + diam + 12.0, rect.position.y, rect.size.x - diam - 24.0, rect.size.y)
+	var r_abbr = Rect2(pos.x + diam + 10.0, rect.position.y, rect.size.x - diam - 26.0, rect.size.y)
 	_draw_auto_text(team.get("abbrev", "CAS"), r_abbr, Color.WHITE, int(rect.size.y * 0.48), 0.25 * rect.size.y, true)
 	
 	var kit_col = _get_team_color(team)

@@ -187,7 +187,6 @@ func run_automated_boundary_tests() -> Dictionary:
 		scoreboard.setup(norm_home, norm_away, theme_id, t["variant"], false)
 		scoreboard.update_score(0, 0)
 		scoreboard.update_time(85, 6)
-		scoreboard._draw()
 		var norm_warn = scoreboard._last_text_overlap_warning
 		
 		# Teste Estresse
@@ -195,7 +194,6 @@ func run_automated_boundary_tests() -> Dictionary:
 		scoreboard.update_score(10, 10)
 		scoreboard.update_time(120, 10)
 		scoreboard.set_shootout(true, "(10-9)")
-		scoreboard._draw()
 		var stress_warn = scoreboard._last_text_overlap_warning
 		
 		results[theme_id] = {
