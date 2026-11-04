@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/ceremonies/idolo_despedida.gd" id="1_8mqs5"]
+
+[node name="IdoloDespedida" type="Control" unique_id=213425058]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8mqs5")

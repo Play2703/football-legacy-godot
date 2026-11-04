@@ -1,0 +1,1522 @@
+{
+	"balon_walk_north_01": [
+		44,
+		40,
+		7,
+		11,
+		47.0
+	],
+	"balon_walk_north_02": [
+		44,
+		38,
+		7,
+		11,
+		47.0
+	],
+	"balon_walk_north_03": [
+		43,
+		38,
+		7,
+		11,
+		46.5
+	],
+	"balon_walk_north_04": [
+		41,
+		37,
+		7,
+		11,
+		44.5
+	],
+	"blocaje_bruces_north_01": [
+		42,
+		44,
+		8,
+		11,
+		46.0
+	],
+	"blocaje_bruces_north_02": [
+		42,
+		49,
+		8,
+		11,
+		45.4
+	],
+	"blocaje_lado_north_01": [
+		40,
+		43,
+		8,
+		11,
+		43.3
+	],
+	"bloqueo_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"bloqueo_player_north_02": [
+		43,
+		41,
+		7,
+		11,
+		46.5
+	],
+	"bloqueo_player_north_03": [
+		42,
+		45,
+		8,
+		11,
+		46.0
+	],
+	"bloqueo_player_north_04": [
+		42,
+		45,
+		8,
+		11,
+		46.0
+	],
+	"bloqueo_player_north_05": [
+		43,
+		41,
+		7,
+		11,
+		46.0
+	],
+	"cano_autopase_north_01": [
+		46,
+		41,
+		7,
+		10,
+		49.0
+	],
+	"cano_autopase_north_02": [
+		44,
+		42,
+		7,
+		9,
+		47.0
+	],
+	"cano_autopase_north_03": [
+		42,
+		43,
+		7,
+		9,
+		45.0
+	],
+	"cano_autopase_north_04": [
+		46,
+		40,
+		6,
+		12,
+		48.5
+	],
+	"cano_autopase_north_05": [
+		46,
+		37,
+		6,
+		12,
+		48.5
+	],
+	"cano_autopase_north_06": [
+		45,
+		43,
+		6,
+		11,
+		48.0
+	],
+	"carga_player_north_01": [
+		46,
+		43,
+		8,
+		11,
+		49.0
+	],
+	"carga_player_north_02": [
+		43,
+		44,
+		8,
+		10,
+		47.5
+	],
+	"carga_player_north_03": [
+		43,
+		45,
+		9,
+		10,
+		47.5
+	],
+	"carga_player_north_04": [
+		45,
+		43,
+		7,
+		10,
+		49.0
+	],
+	"carga_player_north_05": [
+		45,
+		41,
+		7,
+		10,
+		48.5
+	],
+	"celebration_north_00": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"celebration_north_01": [
+		43,
+		41,
+		7,
+		10,
+		46.5
+	],
+	"celebration_north_02": [
+		43,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"celebration_north_03": [
+		43,
+		37,
+		7,
+		10,
+		47.0
+	],
+	"celebration_north_04": [
+		43,
+		35,
+		7,
+		10,
+		46.5
+	],
+	"celebration_north_05": [
+		43,
+		37,
+		7,
+		10,
+		46.5
+	],
+	"celebration_north_06": [
+		43,
+		41,
+		7,
+		10,
+		46.5
+	],
+	"chest_catch_north_01": [
+		42,
+		42,
+		7,
+		8,
+		45.5
+	],
+	"chest_catch_north_02": [
+		42,
+		42,
+		7,
+		8,
+		45.0
+	],
+	"chest_catch_north_03": [
+		42,
+		45,
+		7,
+		6,
+		45.5
+	],
+	"chest_catch_north_04": [
+		42,
+		46,
+		7,
+		5,
+		45.5
+	],
+	"chest_catch_north_05": [
+		42,
+		44,
+		7,
+		7,
+		45.5
+	],
+	"chest_catch_north_06": [
+		42,
+		43,
+		7,
+		7,
+		45.5
+	],
+	"chest_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"chest_player_north_02": [
+		43,
+		38,
+		7,
+		11,
+		46.5
+	],
+	"chest_player_north_03": [
+		43,
+		36,
+		7,
+		11,
+		46.5
+	],
+	"chest_player_north_04": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"chest_player_north_05": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"chest_player_north_06": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"chilena_player_north_01": [
+		41,
+		36,
+		6,
+		10,
+		45.5
+	],
+	"chilena_player_north_02": [
+		33,
+		38,
+		9,
+		7,
+		43.5
+	],
+	"clap_player_north_00": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"clap_player_north_01": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"clap_player_north_02": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"clap_player_north_03": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"control_player_north_01": [
+		44,
+		38,
+		7,
+		11,
+		47.5
+	],
+	"control_player_north_02": [
+		43,
+		39,
+		8,
+		11,
+		47.0
+	],
+	"control_player_north_03": [
+		43,
+		41,
+		8,
+		11,
+		47.0
+	],
+	"control_player_north_04": [
+		42,
+		44,
+		9,
+		11,
+		46.5
+	],
+	"control_player_north_05": [
+		43,
+		39,
+		8,
+		12,
+		46.5
+	],
+	"control_player_north_06": [
+		44,
+		37,
+		8,
+		11,
+		47.5
+	],
+	"despeje_player_north_01": [
+		42,
+		40,
+		8,
+		10,
+		46.0
+	],
+	"despeje_player_north_02": [
+		40,
+		38,
+		8,
+		10,
+		44.5
+	],
+	"despeje_player_north_03": [
+		40,
+		41,
+		8,
+		10,
+		43.0
+	],
+	"despeje_player_north_04": [
+		40,
+		41,
+		8,
+		11,
+		42.0
+	],
+	"despeje_player_north_05": [
+		43,
+		37,
+		7,
+		11,
+		46.0
+	],
+	"dive_high_north_01": [
+		42,
+		40,
+		7,
+		11,
+		45.5
+	],
+	"dive_high_north_02": [
+		41,
+		42,
+		7,
+		10,
+		45.0
+	],
+	"dive_high_north_03": [
+		41,
+		39,
+		7,
+		11,
+		44.5
+	],
+	"dive_high_north_04": [
+		44,
+		39,
+		7,
+		10,
+		47.0
+	],
+	"dive_high_north_05": [
+		48,
+		42,
+		7,
+		9,
+		51.0,
+		13.0
+	],
+	"dive_high_north_06": [
+		49,
+		45,
+		7,
+		8,
+		51.5,
+		23.0
+	],
+	"dive_north_01": [
+		42,
+		43,
+		7,
+		7,
+		45.0
+	],
+	"dive_north_02": [
+		42,
+		45,
+		7,
+		5,
+		45.0
+	],
+	"dive_north_03": [
+		44,
+		45,
+		7,
+		6,
+		48.0
+	],
+	"dive_north_04": [
+		45,
+		52,
+		7,
+		3,
+		48.5
+	],
+	"dive_north_05": [
+		47,
+		69,
+		5,
+		5,
+		50.0,
+		65.0
+	],
+	"dive_north_06": [
+		46,
+		73,
+		6,
+		3,
+		51.0,
+		71.0
+	],
+	"dorsal_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"dorsal_north_02": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"dorsal_north_03": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"dorsal_north_04": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"dribble_player_north_01": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"dribble_player_north_02": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"dribble_player_north_03": [
+		43,
+		42,
+		7,
+		11,
+		46.5
+	],
+	"dribble_player_north_04": [
+		42,
+		41,
+		7,
+		11,
+		46.0
+	],
+	"dribble_player_north_05": [
+		42,
+		37,
+		7,
+		11,
+		46.0
+	],
+	"dribble_player_north_06": [
+		43,
+		42,
+		7,
+		11,
+		46.5
+	],
+	"empeine_player_north_01": [
+		43,
+		42,
+		7,
+		11,
+		46.0
+	],
+	"empeine_player_north_02": [
+		43,
+		42,
+		7,
+		11,
+		46.0
+	],
+	"empeine_player_north_03": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"empeine_player_north_04": [
+		45,
+		39,
+		7,
+		11,
+		47.5
+	],
+	"empeine_player_north_05": [
+		46,
+		39,
+		7,
+		11,
+		48.5
+	],
+	"fall_player_north_01": [
+		43,
+		41,
+		7,
+		11,
+		46.5
+	],
+	"fall_player_north_02": [
+		43,
+		42,
+		7,
+		11,
+		46.0
+	],
+	"fall_player_north_03": [
+		45,
+		52,
+		7,
+		10,
+		48.0
+	],
+	"fall_player_north_04": [
+		45,
+		71,
+		5,
+		6,
+		48.5,
+		70.0
+	],
+	"feint_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"feint_player_north_02": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"feint_player_north_03": [
+		42,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"feint_player_north_04": [
+		43,
+		41,
+		7,
+		11,
+		46.0
+	],
+	"feint_player_north_05": [
+		42,
+		40,
+		7,
+		11,
+		45.5
+	],
+	"feint_player_north_06": [
+		42,
+		38,
+		7,
+		11,
+		46.0
+	],
+	"header_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"header_player_north_02": [
+		43,
+		38,
+		7,
+		11,
+		46.5
+	],
+	"header_player_north_03": [
+		43,
+		34,
+		7,
+		10,
+		46.5
+	],
+	"header_player_north_04": [
+		43,
+		39,
+		7,
+		10,
+		47.0
+	],
+	"idle_keeper_north_00": [
+		42,
+		40,
+		8,
+		11,
+		45.5
+	],
+	"idle_keeper_north_01": [
+		42,
+		39,
+		8,
+		11,
+		45.5
+	],
+	"idle_keeper_north_02": [
+		42,
+		38,
+		8,
+		12,
+		45.5
+	],
+	"idle_keeper_north_03": [
+		42,
+		40,
+		8,
+		11,
+		45.5
+	],
+	"idle_north_00": [
+		43,
+		42,
+		7,
+		11,
+		46.5
+	],
+	"idle_north_01": [
+		43,
+		43,
+		7,
+		11,
+		46.5
+	],
+	"idle_north_02": [
+		44,
+		42,
+		7,
+		11,
+		46.0
+	],
+	"idle_north_03": [
+		43,
+		42,
+		7,
+		11,
+		46.5
+	],
+	"jump_catch_north_01": [
+		42,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"jump_catch_north_02": [
+		42,
+		42,
+		7,
+		10,
+		45.0
+	],
+	"jump_catch_north_03": [
+		42,
+		42,
+		7,
+		9,
+		45.0
+	],
+	"jump_catch_north_04": [
+		42,
+		43,
+		7,
+		8,
+		45.5
+	],
+	"jump_catch_north_05": [
+		42,
+		45,
+		7,
+		8,
+		45.5
+	],
+	"jump_catch_north_06": [
+		42,
+		46,
+		7,
+		8,
+		45.5
+	],
+	"jump_north_01": [
+		42,
+		42,
+		7,
+		11,
+		45.0
+	],
+	"jump_north_02": [
+		42,
+		37,
+		7,
+		11,
+		45.0
+	],
+	"jump_north_03": [
+		43,
+		28,
+		7,
+		11,
+		45.5
+	],
+	"jump_north_04": [
+		42,
+		22,
+		7,
+		11,
+		44.5
+	],
+	"jump_north_05": [
+		43,
+		21,
+		7,
+		11,
+		45.5
+	],
+	"jump_north_06": [
+		42,
+		21,
+		7,
+		11,
+		45.0
+	],
+	"kick_player_north_01": [
+		44,
+		40,
+		7,
+		11,
+		47.0
+	],
+	"kick_player_north_02": [
+		41,
+		40,
+		7,
+		11,
+		44.0
+	],
+	"kick_player_north_03": [
+		39,
+		40,
+		7,
+		11,
+		42.5
+	],
+	"kick_player_north_04": [
+		43,
+		40,
+		7,
+		10,
+		45.5
+	],
+	"lost_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"lost_player_north_02": [
+		43,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"lost_player_north_03": [
+		43,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"lost_player_north_04": [
+		43,
+		42,
+		7,
+		10,
+		46.5
+	],
+	"lost_player_north_05": [
+		43,
+		42,
+		7,
+		10,
+		46.5
+	],
+	"parada_caida_north_01": [
+		42,
+		39,
+		7,
+		11,
+		45.5
+	],
+	"parada_caida_north_02": [
+		41,
+		39,
+		7,
+		11,
+		44.5
+	],
+	"parada_caida_north_03": [
+		43,
+		41,
+		7,
+		10,
+		46.5
+	],
+	"parada_caida_north_04": [
+		44,
+		43,
+		6,
+		9,
+		47.0
+	],
+	"parada_caida_north_05": [
+		46,
+		55,
+		6,
+		6,
+		48.5,
+		21.0
+	],
+	"parada_colapso_north_01": [
+		42,
+		39,
+		7,
+		11,
+		45.5
+	],
+	"parada_colapso_north_02": [
+		42,
+		39,
+		7,
+		11,
+		45.5
+	],
+	"parada_colapso_north_03": [
+		44,
+		43,
+		5,
+		10,
+		46.0
+	],
+	"parada_colapso_north_04": [
+		43,
+		50,
+		6,
+		6,
+		46.0,
+		15.0
+	],
+	"parada_mano_north_01": [
+		42,
+		38,
+		6,
+		11,
+		45.5
+	],
+	"parada_mano_north_02": [
+		44,
+		37,
+		6,
+		11,
+		47.0
+	],
+	"parada_mano_north_03": [
+		44,
+		36,
+		6,
+		10,
+		47.5
+	],
+	"parada_mano_north_04": [
+		44,
+		38,
+		6,
+		10,
+		47.0
+	],
+	"parada_mano_north_05": [
+		46,
+		40,
+		6,
+		9,
+		48.5,
+		12.0
+	],
+	"parada_mano_north_06": [
+		49,
+		42,
+		4,
+		9,
+		51.0,
+		17.0
+	],
+	"parada_mano_north_07": [
+		45,
+		47,
+		6,
+		7,
+		48.0,
+		21.0
+	],
+	"parada_mano_north_08": [
+		52,
+		46,
+		5,
+		8,
+		54.5,
+		19.0
+	],
+	"parada_plancha_north_01": [
+		42,
+		39,
+		7,
+		11,
+		45.0
+	],
+	"parada_plancha_north_02": [
+		41,
+		37,
+		7,
+		10,
+		44.5
+	],
+	"parada_plancha_north_03": [
+		45,
+		38,
+		6,
+		9,
+		48.0
+	],
+	"pie_lateral_north_01": [
+		43,
+		40,
+		8,
+		11,
+		46.6
+	],
+	"pie_lateral_north_02": [
+		43,
+		42,
+		8,
+		11,
+		46.8
+	],
+	"pie_lateral_north_03": [
+		44,
+		43,
+		8,
+		11,
+		47.0
+	],
+	"pie_lateral_north_04": [
+		43,
+		45,
+		8,
+		11,
+		46.7
+	],
+	"pie_lateral_north_05": [
+		43,
+		46,
+		8,
+		11,
+		46.1
+	],
+	"pie_lateral_north_06": [
+		43,
+		47,
+		8,
+		11,
+		46.1
+	],
+	"pie_lateral_north_07": [
+		43,
+		47,
+		8,
+		11,
+		46.2
+	],
+	"pie_raso_north_01": [
+		42,
+		43,
+		8,
+		11,
+		45.4
+	],
+	"pie_raso_north_02": [
+		42,
+		48,
+		8,
+		11,
+		45.6
+	],
+	"pie_raso_north_03": [
+		42,
+		59,
+		8,
+		11,
+		45.6
+	],
+	"pie_raso_north_04": [
+		42,
+		61,
+		8,
+		11,
+		45.7
+	],
+	"pie_raso_north_05": [
+		42,
+		60,
+		8,
+		11,
+		45.6
+	],
+	"pie_raso_north_06": [
+		42,
+		59,
+		8,
+		11,
+		45.5
+	],
+	"pie_raso_north_07": [
+		42,
+		60,
+		8,
+		11,
+		45.6
+	],
+	"player_north": [
+		43,
+		40,
+		7,
+		11
+	],
+	"run_player_north_01": [
+		43,
+		41,
+		7,
+		11,
+		45.5
+	],
+	"run_player_north_02": [
+		43,
+		40,
+		7,
+		12,
+		46.5
+	],
+	"run_player_north_03": [
+		43,
+		43,
+		7,
+		11,
+		46.0
+	],
+	"run_player_north_04": [
+		42,
+		40,
+		8,
+		11,
+		46.5
+	],
+	"run_player_north_05": [
+		42,
+		41,
+		7,
+		12,
+		45.5
+	],
+	"run_player_north_06": [
+		44,
+		43,
+		7,
+		11,
+		46.0
+	],
+	"shirtoff_south_01": [
+		21,
+		31,
+		6,
+		12,
+		24.5
+	],
+	"shirtoff_south_02": [
+		20,
+		32,
+		7,
+		11,
+		24.0
+	],
+	"shirtoff_south_03": [
+		19,
+		34,
+		6,
+		11,
+		23.0
+	],
+	"shirtoff_south_04": [
+		18,
+		37,
+		7,
+		11,
+		22.0
+	],
+	"shirtoff_south_05": [
+		18,
+		35,
+		6,
+		11,
+		20.5
+	],
+	"shirtoff_south_06": [
+		19,
+		33,
+		6,
+		11,
+		21.5
+	],
+	"slide_player_north_01": [
+		49,
+		56,
+		7,
+		11,
+		52.5,
+		29.0
+	],
+	"slide_player_north_02": [
+		48,
+		59,
+		7,
+		10,
+		51.5,
+		26.0
+	],
+	"slide_player_north_03": [
+		46,
+		61,
+		6,
+		8,
+		52.0,
+		32.0
+	],
+	"slide_player_north_04": [
+		55,
+		61,
+		6,
+		5,
+		52.5,
+		35.0
+	],
+	"slide_player_north_05": [
+		42,
+		63,
+		7,
+		6,
+		53.0,
+		24.0
+	],
+	"trofeo_anda_north_00": [
+		42,
+		41,
+		7,
+		11,
+		45.6
+	],
+	"trofeo_anda_north_01": [
+		42,
+		38,
+		7,
+		11,
+		45.5
+	],
+	"trofeo_anda_north_02": [
+		42,
+		43,
+		7,
+		11,
+		45.5
+	],
+	"trofeo_anda_north_03": [
+		42,
+		41,
+		7,
+		11,
+		45.5
+	],
+	"trofeo_anda_north_04": [
+		41,
+		40,
+		7,
+		11,
+		44.5
+	],
+	"trofeo_anda_north_05": [
+		41,
+		39,
+		7,
+		11,
+		44.3
+	],
+	"trofeo_anda_north_06": [
+		42,
+		40,
+		7,
+		11,
+		45.2
+	],
+	"trofeo_anda_north_07": [
+		42,
+		43,
+		7,
+		11,
+		45.5
+	],
+	"trofeo_quieto_north_00": [
+		42,
+		39,
+		7,
+		11,
+		45.4
+	],
+	"trofeo_quieto_north_01": [
+		42,
+		39,
+		7,
+		11,
+		45.3
+	],
+	"trofeo_quieto_north_02": [
+		42,
+		39,
+		7,
+		11,
+		45.4
+	],
+	"trofeo_quieto_north_03": [
+		42,
+		40,
+		7,
+		11,
+		45.4
+	],
+	"volea_player_north_01": [
+		42,
+		38,
+		6,
+		10,
+		45.0
+	],
+	"volea_player_north_02": [
+		41,
+		37,
+		7,
+		11,
+		44.0
+	],
+	"volea_player_north_03": [
+		40,
+		37,
+		7,
+		11,
+		44.0
+	],
+	"volea_player_north_04": [
+		40,
+		37,
+		7,
+		11,
+		43.5
+	],
+	"volea_player_north_05": [
+		41,
+		37,
+		7,
+		11,
+		44.5
+	],
+	"walk_player_north_01": [
+		43,
+		40,
+		7,
+		11,
+		46.5
+	],
+	"walk_player_north_02": [
+		43,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"walk_player_north_03": [
+		43,
+		40,
+		7,
+		11,
+		45.5
+	],
+	"walk_player_north_04": [
+		42,
+		41,
+		7,
+		11,
+		46.0
+	],
+	"walk_player_north_05": [
+		42,
+		41,
+		7,
+		11,
+		46.0
+	],
+	"walk_player_north_06": [
+		42,
+		40,
+		7,
+		11,
+		46.0
+	],
+	"walk_player_north_07": [
+		42,
+		40,
+		7,
+		11,
+		45.5
+	],
+	"walk_player_north_08": [
+		43,
+		42,
+		7,
+		11,
+		45.5
+	],
+	"elastica_north_01": [
+		40,
+		41,
+		7,
+		11,
+		43.5
+	],
+	"elastica_north_02": [
+		43,
+		41,
+		7,
+		11,
+		46.5
+	],
+	"elastica_north_03": [
+		49,
+		41,
+		6,
+		11,
+		52.5
+	],
+	"elastica_north_04": [
+		53,
+		41,
+		6,
+		11,
+		56.0
+	],
+	"elastica_north_05": [
+		50,
+		41,
+		6,
+		11,
+		53.0
+	],
+	"firma_pie_player_north_01": [
+		43,
+		39,
+		7,
+		11,
+		46.5
+	],
+	"firma_pie_player_north_02": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"firma_pie_player_north_03": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	],
+	"firma_pie_player_north_04": [
+		43,
+		39,
+		7,
+		11,
+		46.0
+	]
+}

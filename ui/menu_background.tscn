@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menu_background.gd" id="1_6yovq"]
+[ext_resource type="Shader" path="res://ui/theme/menu_bg.gdshader" id="2_putcd"]
+[ext_resource type="Shader" path="res://ui/theme/crt_overlay.gdshader" id="3_sbmfo"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("2_putcd")
+shader_parameter/colour_top = null
+shader_parameter/colour_bottom = null
+shader_parameter/stripe_strength = null
+shader_parameter/stripe_scale = null
+shader_parameter/flow_phase = null
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("3_sbmfo")
+shader_parameter/aberration = null
+shader_parameter/scan_lines = null
+shader_parameter/scan_strength = null
+shader_parameter/vignette_strength = null
+shader_parameter/paper = null
+
+[node name="MenuBackground" type="Control" unique_id=1031007206]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_6yovq")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1730644392]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_bg")
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CRTLayer" type="CanvasLayer" parent="." unique_id=130062181]
+layer = 90
+
+[node name="CRT" type="ColorRect" parent="CRTLayer" unique_id=949626936]
+material = SubResource("ShaderMaterial_crt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

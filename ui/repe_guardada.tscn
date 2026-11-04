@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/repe_guardada.gd" id="1_5e3ob"]
+[ext_resource type="PackedScene" path="res://features/match/match.tscn" id="2_ehdoq"]
+
+[node name="RepeGuardada" type="Node" unique_id=1138877004]
+script = ExtResource("1_5e3ob")
+match_scene = ExtResource("2_ehdoq")

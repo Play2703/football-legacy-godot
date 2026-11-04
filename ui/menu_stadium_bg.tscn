@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menu_stadium_bg.gd" id="1_ab43d"]
+[ext_resource type="Shader" path="res://ui/theme/crt_overlay.gdshader" id="2_e2okg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("2_e2okg")
+shader_parameter/aberration = null
+shader_parameter/scan_lines = null
+shader_parameter/scan_strength = null
+shader_parameter/vignette_strength = null
+shader_parameter/paper = null
+
+[node name="MenuStadiumBackground" type="Control" unique_id=234413876]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_ab43d")
+
+[node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=1221341845]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="ViewportContainer" unique_id=1912822931]
+unique_name_in_owner = true
+own_world_3d = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="CRTLayer" type="CanvasLayer" parent="." unique_id=112649060]
+layer = 90
+
+[node name="CRT" type="ColorRect" parent="CRTLayer" unique_id=1194704421]
+material = SubResource("ShaderMaterial_crt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

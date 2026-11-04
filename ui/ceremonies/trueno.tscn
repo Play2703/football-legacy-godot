@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/ceremonies/trueno.gd" id="1_nrpu8"]
+
+[node name="Trueno" type="Control" unique_id=732462875]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_nrpu8")

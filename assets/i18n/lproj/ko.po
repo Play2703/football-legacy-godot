@@ -1,0 +1,15 @@
+# VACÍA A PROPÓSITO (2026-10-02; la del turco, 2026-10-11; la del árabe, 2026-10-22; la del coreano, 2026-10-24). No traduce nada: el juego se traduce con I18n
+# (autoload/i18n.gd). Existe sólo para que el export de iOS cree la carpeta ko.lproj del
+# bundle, que es de donde la App Store saca la fila «Idiomas» de la ficha: sin ella la
+# tienda dice que el juego está sólo en inglés. Ver tools/test_idiomas_ios.gd.
+#
+# NO le metas mensajes: el auto_translate de Godot pisaría los textos de la UI.
+# Y es .po y no .tres porque Godot lee las traducciones del proyecto al ARRANCAR, antes de
+# registrar el cargador de recursos de texto: un .tres no carga y cada arranque escupe
+# «No loader found». El cargador de .po es del núcleo y ya está.
+msgid ""
+msgstr ""
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"

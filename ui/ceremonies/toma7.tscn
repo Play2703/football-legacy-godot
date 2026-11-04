@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/ceremonies/toma7.gd" id="1_fnmna"]
+
+[node name="Toma7" type="Control" unique_id=94972048]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_fnmna")

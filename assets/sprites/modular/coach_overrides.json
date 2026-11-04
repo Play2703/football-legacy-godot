@@ -1,0 +1,35 @@
+{
+ "_nota": "Retoques a mano de las anclas del TÉCNICO (los lee tools/derive_coach_geometry.py). El píxel de más de las cabezas de PixelLab ya va en la regla del ancla por ojos, y los cuadros del apretón (coach_mano_*) llevan el CUERPO del técnico de pie con sólo el brazo de PixelLab (2026-09-24), así que su cabeza es la de la plantilla. El pecho del saque de banda (2026-10-16): la cabeza gritando de PixelLab es más ancha que el recuadro que mide el pelo y dejaba un mechón (03) y la quijada (02) a la izquierda de la cabeza nueva; se ensancha el recuadro a borrar. En 01 y 02 la quijada abierta deja 3-4 filas de cuello bajo la barbilla nueva: la cabeza baja hasta la camisa (nudge) y el recuadro llega hasta ella.",
+ "coach_pecho_south_02": {
+  "clear_rect": [
+   38,
+   17,
+   15,
+   20
+  ],
+  "nudge": [
+   0,
+   3
+  ]
+ },
+ "coach_pecho_south_03": {
+  "clear_rect": [
+   38,
+   15,
+   15,
+   20
+  ]
+ },
+ "coach_pecho_south_01": {
+  "clear_rect": [
+   38,
+   16,
+   15,
+   21
+  ],
+  "nudge": [
+   0,
+   4
+  ]
+ }
+}

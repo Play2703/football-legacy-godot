@@ -1,0 +1,117 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://features/match/match.gd" id="1_slfic"]
+[ext_resource type="Script" path="res://features/stadium/stadium.gd" id="2_ddwso"]
+[ext_resource type="Script" path="res://features/shot/aim_ground.gd" id="3_ehf1m"]
+[ext_resource type="Script" path="res://ui/hud.gd" id="4_qum26"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="5_j2wwx"]
+[ext_resource type="PackedScene" path="res://ui/sim_screen.tscn" id="6_2ieqg"]
+
+[node name="Match" type="Node3D" unique_id=1091617465]
+script = ExtResource("1_slfic")
+
+[node name="Stadium" type="Node3D" parent="." unique_id=1157923554]
+script = ExtResource("2_ddwso")
+
+[node name="Actors" type="Node3D" parent="." unique_id=1380896590]
+
+[node name="Ball" type="AnimatedSprite3D" parent="." unique_id=457878243]
+
+[node name="AimCamera" type="Camera3D" parent="." unique_id=1171241556]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, 28)
+current = true
+fov = 55.0
+
+[node name="ShotCamera" type="Camera3D" parent="." unique_id=1197836583]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 18)
+fov = 60.0
+
+[node name="AimGround" type="Node3D" parent="." unique_id=192824018]
+script = ExtResource("3_ehf1m")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=173636178]
+script = ExtResource("4_qum26")
+
+[node name="ScoreChip" type="PanelContainer" parent="HUD" unique_id=823075496]
+unique_name_in_owner = true
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 24.0
+grow_horizontal = 2
+
+[node name="ScoreLabel" type="Label" parent="HUD/ScoreChip" unique_id=991866825]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="HUD" unique_id=843558337]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 560.0
+offset_bottom = 700.0
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="HUD" unique_id=1733553350]
+unique_name_in_owner = true
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -240.0
+offset_bottom = -170.0
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EndPanel" type="PanelContainer" parent="HUD" unique_id=560558457]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_right = 420.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/EndPanel" unique_id=725123496]
+layout_mode = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 44
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 44
+
+[node name="VBox" type="VBoxContainer" parent="HUD/EndPanel/Margin" unique_id=471648744]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="EndTitle" type="Label" parent="HUD/EndPanel/Margin/VBox" unique_id=431467802]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EndStats" type="Label" parent="HUD/EndPanel/Margin/VBox" unique_id=1484995911]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="HUD/EndPanel/Margin/VBox" unique_id=331201735]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+text = "OTRO PARTIDO"
+
+[node name="MenuButton" type="Button" parent="HUD/EndPanel/Margin/VBox" unique_id=218386298]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+text = "MENÚ"
+
+[node name="PauseMenu" parent="." unique_id=995812090 instance=ExtResource("5_j2wwx")]
+
+[node name="SimScreen" parent="." unique_id=1955700668 instance=ExtResource("6_2ieqg")]

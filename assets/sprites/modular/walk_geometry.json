@@ -1,0 +1,683 @@
+{
+  "coordinate_system": "92x92 sprite canvas; rects are [x,y,width,height], offset applies to coordinates in proposed player_<direction>.png, no scale or rotation. clear_rect removes the old head through jaw/nape while preserving the animated neck and clothing below.",
+  "reference_heads": {
+    "south": {
+      "source": "propuestas/actualizacion/player_south.png",
+      "source_head_rect": [
+        38,
+        19,
+        15,
+        17
+      ],
+      "head_only_opacity_bbox": [
+        0,
+        0,
+        15,
+        17
+      ],
+      "neck_cut_y": 36
+    },
+    "east": {
+      "source": "propuestas/actualizacion/player_east.png",
+      "source_head_rect": [
+        39,
+        19,
+        16,
+        17
+      ],
+      "head_only_opacity_bbox": [
+        0,
+        0,
+        16,
+        17
+      ],
+      "neck_cut_y": 36
+    },
+    "west": {
+      "source": "propuestas/actualizacion/player_west.png",
+      "source_head_rect": [
+        38,
+        19,
+        16,
+        17
+      ],
+      "head_only_opacity_bbox": [
+        0,
+        0,
+        16,
+        17
+      ],
+      "neck_cut_y": 36
+    },
+    "north": {
+      "source": "propuestas/actualizacion/player_north.png",
+      "source_head_rect": [
+        38,
+        18,
+        15,
+        15
+      ],
+      "head_only_opacity_bbox": [
+        0,
+        0,
+        15,
+        15
+      ],
+      "neck_cut_y": 33
+    }
+  },
+  "frames": [
+    {
+      "source": "res://assets/sprites/players/player_south.png",
+      "direction": "south",
+      "offset": [
+        1,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        15,
+        17
+      ],
+      "neck_cut_y": 36
+    },
+    {
+      "source": "res://assets/sprites/players/player_east.png",
+      "direction": "east",
+      "offset": [
+        1,
+        -1
+      ],
+      "clear_rect": [
+        40,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36
+    },
+    {
+      "source": "res://assets/sprites/players/player_west.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        -2
+      ],
+      "clear_rect": [
+        37,
+        17,
+        16,
+        18
+      ],
+      "neck_cut_y": 35
+    },
+    {
+      "source": "res://assets/sprites/players/player_north.png",
+      "direction": "north",
+      "offset": [
+        1,
+        0
+      ],
+      "clear_rect": [
+        39,
+        18,
+        15,
+        16
+      ],
+      "neck_cut_y": 34
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_01.png",
+      "direction": "south",
+      "offset": [
+        1,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        15,
+        17
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 158
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_02.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 178
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_03.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 173
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_04.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 175
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_05.png",
+      "direction": "south",
+      "offset": [
+        0,
+        0
+      ],
+      "clear_rect": [
+        38,
+        19,
+        16,
+        17
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 175
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_06.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 172
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_07.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 183
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_south_08.png",
+      "direction": "south",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        18,
+        16,
+        17
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 180
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_01.png",
+      "direction": "east",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 204
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_02.png",
+      "direction": "east",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 201
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_03.png",
+      "direction": "east",
+      "offset": [
+        0,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        16,
+        18
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 195
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_04.png",
+      "direction": "east",
+      "offset": [
+        -1,
+        2
+      ],
+      "clear_rect": [
+        38,
+        21,
+        16,
+        18
+      ],
+      "neck_cut_y": 39,
+      "changed_pixels_in_diagnostic": 196
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_05.png",
+      "direction": "east",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 190
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_06.png",
+      "direction": "east",
+      "offset": [
+        0,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        16,
+        18
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 197
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_07.png",
+      "direction": "east",
+      "offset": [
+        0,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        16,
+        18
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 191
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_east_08.png",
+      "direction": "east",
+      "offset": [
+        0,
+        0
+      ],
+      "clear_rect": [
+        39,
+        19,
+        16,
+        18
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 193
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_01.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        -2
+      ],
+      "clear_rect": [
+        37,
+        17,
+        16,
+        18
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 198
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_02.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        0
+      ],
+      "clear_rect": [
+        37,
+        19,
+        16,
+        18
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 188
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_03.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        1
+      ],
+      "clear_rect": [
+        37,
+        20,
+        16,
+        17
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 179
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_04.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        1
+      ],
+      "clear_rect": [
+        37,
+        20,
+        16,
+        17
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 175
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_05.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        -1
+      ],
+      "clear_rect": [
+        37,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 189
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_06.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        -1
+      ],
+      "clear_rect": [
+        37,
+        18,
+        16,
+        18
+      ],
+      "neck_cut_y": 36,
+      "changed_pixels_in_diagnostic": 188
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_07.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        1
+      ],
+      "clear_rect": [
+        37,
+        20,
+        16,
+        17
+      ],
+      "neck_cut_y": 37,
+      "changed_pixels_in_diagnostic": 179
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_west_08.png",
+      "direction": "west",
+      "offset": [
+        -1,
+        2
+      ],
+      "clear_rect": [
+        37,
+        21,
+        16,
+        17
+      ],
+      "neck_cut_y": 38,
+      "changed_pixels_in_diagnostic": 185
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_01.png",
+      "direction": "north",
+      "offset": [
+        1,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        17,
+        15,
+        16
+      ],
+      "neck_cut_y": 33,
+      "changed_pixels_in_diagnostic": 176
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_02.png",
+      "direction": "north",
+      "offset": [
+        1,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        17,
+        15,
+        16
+      ],
+      "neck_cut_y": 33,
+      "changed_pixels_in_diagnostic": 181
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_03.png",
+      "direction": "north",
+      "offset": [
+        1,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        17,
+        15,
+        16
+      ],
+      "neck_cut_y": 33,
+      "changed_pixels_in_diagnostic": 180
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_04.png",
+      "direction": "north",
+      "offset": [
+        1,
+        0
+      ],
+      "clear_rect": [
+        39,
+        18,
+        15,
+        16
+      ],
+      "neck_cut_y": 34,
+      "changed_pixels_in_diagnostic": 181
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_05.png",
+      "direction": "north",
+      "offset": [
+        1,
+        0
+      ],
+      "clear_rect": [
+        39,
+        18,
+        15,
+        16
+      ],
+      "neck_cut_y": 34,
+      "changed_pixels_in_diagnostic": 183
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_06.png",
+      "direction": "north",
+      "offset": [
+        1,
+        -1
+      ],
+      "clear_rect": [
+        39,
+        17,
+        15,
+        16
+      ],
+      "neck_cut_y": 33,
+      "changed_pixels_in_diagnostic": 184
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_07.png",
+      "direction": "north",
+      "offset": [
+        0,
+        -1
+      ],
+      "clear_rect": [
+        38,
+        17,
+        15,
+        16
+      ],
+      "neck_cut_y": 33,
+      "changed_pixels_in_diagnostic": 183
+    },
+    {
+      "source": "res://assets/sprites/anim/walk_player_north_08.png",
+      "direction": "north",
+      "offset": [
+        0,
+        1
+      ],
+      "clear_rect": [
+        38,
+        19,
+        15,
+        16
+      ],
+      "neck_cut_y": 35,
+      "changed_pixels_in_diagnostic": 185
+    }
+  ],
+  "notes": [
+    "A fixed head per direction is geometrically viable for all 32 walk frames. The animation retains its existing body and neck.",
+    "Offsets follow the jaw-to-neck attachment, not the hair crown or torso axis. Canonical bald skull size is intentionally constant.",
+    "All proposed walk heads retain residual nape hair; east_01 is not shaved. Use the four canonical proposed player heads, not the edited walk heads.",
+    "One-pixel outline variation can remain on the original neck below the replaced head, especially west frames 03 and 04; these are kept to preserve the animated neck."
+  ],
+  "verification": {
+    "frame_count": 36,
+    "preview": "/tmp/modular_walk_geometry_preview.png",
+    "source_files_modified": false,
+    "no_changes_below_neck_cut_in_diagnostic": true,
+    "walk_frame_count": 32,
+    "base_frame_count": 4
+  },
+  "source_head_rect": {
+    "south": [
+      38,
+      19,
+      15,
+      17
+    ],
+    "east": [
+      39,
+      19,
+      16,
+      17
+    ],
+    "west": [
+      38,
+      19,
+      16,
+      17
+    ],
+    "north": [
+      38,
+      18,
+      15,
+      15
+    ]
+  }
+}

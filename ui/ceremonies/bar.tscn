@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/ceremonies/bar.gd" id="1_aa72d"]
+
+[node name="Bar" type="Control" unique_id=1269235625]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_aa72d")

@@ -1,0 +1,95 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Football Legacy"
+config/version="131"
+run/main_scene="res://ui/main_menu.tscn"
+config/project_settings_override="user://arranque_tumbado.cfg"
+config/quit_on_go_back=false
+config/features=PackedStringArray("4.7", "Mobile")
+boot_splash/bg_color=Color(0.106039, 0.129255, 0.180392, 1)
+boot_splash/stretch_mode=4
+boot_splash/image="res://assets/branding/splash_arranque.png"
+config/icon="res://assets/branding/app_icon_1024.png"
+boot_splash/image.pc="res://assets/branding/splash_cielo.png"
+boot_splash/image.lienzo_h="res://assets/branding/splash_cielo.png"
+config/use_custom_user_dir.steam=true
+config/custom_user_dir_name.steam="Football Legacy"
+
+[autoload]
+
+CacheGuard="*res://autoload/cache_guard.gd"
+Lienzo="*res://autoload/lienzo.gd"
+I18n="*res://autoload/i18n.gd"
+SaveSlots="*res://autoload/save_slots.gd"
+GameState="*res://autoload/game_state.gd"
+Career="*res://autoload/career.gd"
+Achievements="*res://autoload/achievements.gd"
+GameCenter="*res://autoload/game_center.gd"
+Respaldo="*res://autoload/respaldo.gd"
+PlayGames="*res://autoload/play_games.gd"
+SteamPuente="*res://autoload/steam_puente.gd"
+Store="*res://autoload/store.gd"
+Herencia="*res://autoload/herencia.gd"
+Settings="*res://autoload/settings.gd"
+UiAudio="*res://autoload/ui_audio.gd"
+Music="*res://autoload/music.gd"
+SceneFade="*res://autoload/scene_fade.gd"
+Entrada="*res://autoload/entrada.gd"
+Telemetry="*res://autoload/telemetry.gd"
+Nube="*res://autoload/nube.gd"
+MemoriaGuard="*res://autoload/memoria_guard.gd"
+Notificaciones="*res://autoload/notificaciones.gd"
+StoreReview="*res://autoload/store_review.gd"
+PackRecibido="*res://autoload/pack_recibido.gd"
+FotoNitida="*res://autoload/foto_nitida.gd"
+
+[debug]
+
+file_logging/enable_file_logging.mobile=true
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/size/window_width_override=486
+window/size/window_height_override=864
+window/frame_pacing/android/enable_frame_pacing=false
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+window/size/viewport_width.lienzo_h=1920
+window/size/viewport_height.lienzo_h=1080
+window/size/window_width_override.lienzo_h=864
+window/size/window_height_override.lienzo_h=486
+window/handheld/orientation.lienzo_h=4
+window/size/resizable.android=true
+
+[gui]
+
+theme/custom="res://ui/theme/theme.tres"
+
+[input_devices]
+
+pointing/android/disable_scroll_deadzone=true
+pointing/emulate_touch_from_mouse=true
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/i18n/lproj/es.po", "res://assets/i18n/lproj/fr.po", "res://assets/i18n/lproj/it.po", "res://assets/i18n/lproj/pt.po", "res://assets/i18n/lproj/de.po", "res://assets/i18n/lproj/id.po", "res://assets/i18n/lproj/tr.po", "res://assets/i18n/lproj/ar.po", "res://assets/i18n/lproj/ko.po", "res://assets/i18n/lproj/ru.po")
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+renderer/rendering_method.android="gl_compatibility"

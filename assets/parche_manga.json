@@ -1,0 +1,560 @@
+{
+  "caja": {
+    "alto": 8.0,
+    "ancho": 4.0,
+    "color": "auto",
+    "dx": 9.0,
+    "dy": 34.5,
+    "giro": 0.0
+  },
+  "cuadros": {
+    "idle_east_00": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "idle_east_01": {
+      "dx": -10.0,
+      "dy": 6.0
+    },
+    "idle_east_02": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "idle_east_03": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_dedo_east_01": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_dedo_east_02": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_dedo_east_03": {
+      "sin": true
+    },
+    "pelea_dedo_east_04": {
+      "sin": true
+    },
+    "pelea_dedo_east_05": {
+      "sin": true
+    },
+    "pelea_dedo_east_06": {
+      "sin": true
+    },
+    "pelea_dedo_east_07": {
+      "sin": true
+    },
+    "pelea_dedo_east_08": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_empuja_east_01": {
+      "dx": -11.0,
+      "dy": 5.0
+    },
+    "pelea_empuja_east_02": {
+      "dx": -12.0,
+      "dy": 5.0
+    },
+    "pelea_empuja_east_03": {
+      "dx": -11.0,
+      "dy": 6.0
+    },
+    "pelea_empuja_east_04": {
+      "dx": -20.0,
+      "dy": 6.0
+    },
+    "pelea_empuja_east_05": {
+      "dx": -18.0,
+      "dy": 7.0
+    },
+    "pelea_empuja_east_06": {
+      "dx": -16.0,
+      "dy": 6.0
+    },
+    "pelea_empuja_east_07": {
+      "dx": -16.0,
+      "dy": 4.0
+    },
+    "pelea_empuja_east_08": {
+      "dx": -10.0,
+      "dy": 6.0
+    },
+    "pelea_empujado_east_01": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_empujado_east_02": {
+      "dx": -11.0,
+      "dy": 6.0
+    },
+    "pelea_empujado_east_03": {
+      "sin": true
+    },
+    "pelea_empujado_east_04": {
+      "sin": true
+    },
+    "pelea_empujado_east_05": {
+      "sin": true
+    },
+    "pelea_empujado_east_06": {
+      "sin": true
+    },
+    "pelea_empujado_east_07": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_empujado_east_08": {
+      "dx": -11.0,
+      "dy": 6.0
+    },
+    "pelea_encara_east_01": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_02": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_03": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_04": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_05": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_06": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_07": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_encara_east_08": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_01": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_02": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_03": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_04": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_05": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_06": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_07": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_patada_east_08": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_recibe_east_01": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_recibe_east_02": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_recibe_east_03": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_recibe_east_04": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "pelea_recibe_east_05": {
+      "sin": true
+    },
+    "run_player_east_01": {
+      "dx": -6.0,
+      "dy": 12.0
+    },
+    "run_player_east_02": {
+      "dx": -4.0,
+      "dy": 16.0
+    },
+    "run_player_east_03": {
+      "dx": -12.0,
+      "dy": 12.0
+    },
+    "run_player_east_04": {
+      "dx": -15.0,
+      "dy": 6.0
+    },
+    "run_player_east_05": {
+      "dx": -12.0,
+      "dy": 5.0
+    },
+    "run_player_east_06": {
+      "dx": -16.0,
+      "dy": 7.0
+    },
+    "walk_player_east_01": {
+      "dx": -10.0,
+      "dy": 7.0
+    },
+    "walk_player_east_02": {
+      "dx": -9.0,
+      "dy": 6.0
+    },
+    "walk_player_east_03": {
+      "dx": -9.0,
+      "dy": 8.0
+    },
+    "walk_player_east_04": {
+      "dx": -11.0,
+      "dy": 9.0
+    },
+    "walk_player_east_05": {
+      "dx": -11.0,
+      "dy": 7.0
+    },
+    "walk_player_east_06": {
+      "dx": -13.0,
+      "dy": 8.0
+    },
+    "walk_player_east_07": {
+      "dx": -12.0,
+      "dy": 7.0
+    },
+    "walk_player_east_08": {
+      "dx": -11.0,
+      "dy": 7.0
+    }
+  },
+  "torneos": {
+    "champions": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.4897
+      ]
+    },
+    "clubes": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.8443
+      ]
+    },
+    "conference": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.5138
+      ]
+    },
+    "cont_afc": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "cont_caf": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "cont_concacaf": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "cont_conmebol": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "cont_ofc": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "cont_uefa": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "europa": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.5187
+      ]
+    },
+    "liga_ar": {
+      "rec": [
+        0.0,
+        0.0,
+        0.3844,
+        1.0
+      ]
+    },
+    "liga_at": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_br": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.7563
+      ]
+    },
+    "liga_ch": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.5407
+      ]
+    },
+    "liga_co": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_de": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.7203
+      ]
+    },
+    "liga_dk": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_eg": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.4035
+      ]
+    },
+    "liga_en": {
+      "rec": [
+        0.0,
+        0.0,
+        0.3398,
+        1.0
+      ]
+    },
+    "liga_es": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.6667
+      ]
+    },
+    "liga_fr": {
+      "rec": [
+        0.0,
+        0.0,
+        0.8592,
+        0.4706
+      ]
+    },
+    "liga_gr": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_hr": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_it": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.6844
+      ]
+    },
+    "liga_jp": {
+      "rec": [
+        0.0,
+        0.0,
+        0.4063,
+        1.0
+      ]
+    },
+    "liga_kr": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.8157
+      ]
+    },
+    "liga_mx": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.791
+      ]
+    },
+    "liga_nl": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.6364
+      ]
+    },
+    "liga_no": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_pt": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.7792
+      ]
+    },
+    "liga_rs": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.2992
+      ]
+    },
+    "liga_sa": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_sco": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_tr": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_ua": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.702
+      ]
+    },
+    "liga_us": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    "liga_uy": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        0.6929
+      ]
+    },
+    "mundial": {
+      "rec": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    }
+  }
+}

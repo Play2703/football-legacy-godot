@@ -1,0 +1,9 @@
+{
+  "provider": "PixelLab MCP",
+  "date": "2026-09-21",
+  "camera_job": "1fde8a8c-748d-46bb-a7de-75c3cf274921",
+  "guard_job": "d0f8a281-5328-4999-bf00-efa113aff7fc",
+  "processing": "Ropa y brazos; cabeza excluida, suela alineada en fila 83. Composición con las capas modulares originales en staff_sprites.gd.",
+  "camera_frames": 4,
+  "guard_frames": 1
+}

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/celeb_replay.gd" id="1_thlye"]
+[ext_resource type="PackedScene" path="res://features/match/match.tscn" id="2_on2ri"]
+
+[node name="CelebReplay" type="Node" unique_id=691816810]
+script = ExtResource("1_thlye")
+match_scene = ExtResource("2_on2ri")

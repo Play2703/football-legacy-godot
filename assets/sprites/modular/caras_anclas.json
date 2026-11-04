@@ -1,0 +1,7443 @@
+{
+"res://assets/sprites/modular/base/afi_celular_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_06.png": {
+"dir": "south",
+"ojo": [
+42,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_celular_south_07.png": {
+"dir": "south",
+"ojo": [
+42,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+28
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_04.png": {
+"dir": "south",
+"ojo": [
+48,
+37
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_05.png": {
+"dir": "south",
+"ojo": [
+53,
+50
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_06.png": {
+"dir": "south",
+"ojo": [
+55,
+52
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_07.png": {
+"dir": "south",
+"ojo": [
+55,
+49
+]
+},
+"res://assets/sprites/modular/base/afi_derribado_south_08.png": {
+"dir": "south",
+"ojo": [
+55,
+48
+]
+},
+"res://assets/sprites/modular/base/afi_idle_east.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_idle_south.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_idle_west.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_sonrisa_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_sonrisa_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+22
+]
+},
+"res://assets/sprites/modular/base/afi_sonrisa_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+22
+]
+},
+"res://assets/sprites/modular/base/afi_sonrisa_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+23
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_05.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_06.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_07.png": {
+"dir": "east",
+"ojo": [
+53,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_east_08.png": {
+"dir": "east",
+"ojo": [
+53,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_05.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_06.png": {
+"dir": "west",
+"ojo": [
+39,
+27
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_07.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/afi_walk_west_08.png": {
+"dir": "west",
+"ojo": [
+38,
+25
+]
+},
+"res://assets/sprites/modular/base/angry_player_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/angry_player_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/angry_player_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/anillo_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/anillo_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/anillo_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/avion_east_01.png": {
+"dir": "east",
+"ojo": [
+59,
+37
+]
+},
+"res://assets/sprites/modular/base/avion_east_02.png": {
+"dir": "east",
+"ojo": [
+59,
+36
+]
+},
+"res://assets/sprites/modular/base/avion_east_03.png": {
+"dir": "east",
+"ojo": [
+59,
+33
+]
+},
+"res://assets/sprites/modular/base/avion_east_04.png": {
+"dir": "east",
+"ojo": [
+59,
+35
+]
+},
+"res://assets/sprites/modular/base/avion_east_05.png": {
+"dir": "east",
+"ojo": [
+59,
+35
+]
+},
+"res://assets/sprites/modular/base/avion_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/avion_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/avion_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/avion_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/avion_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/avion_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/avion_west_01.png": {
+"dir": "west",
+"ojo": [
+32,
+37
+]
+},
+"res://assets/sprites/modular/base/avion_west_02.png": {
+"dir": "west",
+"ojo": [
+32,
+36
+]
+},
+"res://assets/sprites/modular/base/avion_west_03.png": {
+"dir": "west",
+"ojo": [
+32,
+33
+]
+},
+"res://assets/sprites/modular/base/avion_west_04.png": {
+"dir": "west",
+"ojo": [
+32,
+35
+]
+},
+"res://assets/sprites/modular/base/avion_west_05.png": {
+"dir": "west",
+"ojo": [
+32,
+35
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+33
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+40
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+33
+]
+},
+"res://assets/sprites/modular/base/balon_run_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/balon_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/balon_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/barrera_agacha_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/barrera_agacha_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+43
+]
+},
+"res://assets/sprites/modular/base/barrera_salto_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/barrera_salto_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/barrera_salto_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/barrera_salto_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/barrera_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/barrera_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/bici_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/bici_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/bici_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/bici_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/bici_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/bici_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/bici_south_07.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/bici_south_08.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_01.png": {
+"dir": "south",
+"ojo": [
+43,
+36
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_02.png": {
+"dir": "south",
+"ojo": [
+44,
+41
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_03.png": {
+"dir": "south",
+"ojo": [
+46,
+42
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_04.png": {
+"dir": "south",
+"ojo": [
+51,
+52
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_05.png": {
+"dir": "south",
+"ojo": [
+54,
+63
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_06.png": {
+"dir": "south",
+"ojo": [
+54,
+61
+]
+},
+"res://assets/sprites/modular/base/blocaje_bruces_07.png": {
+"dir": "south",
+"ojo": [
+54,
+61
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_02.png": {
+"dir": "south",
+"ojo": [
+47,
+32
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_03.png": {
+"dir": "south",
+"ojo": [
+55,
+52
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_04.png": {
+"dir": "south",
+"ojo": [
+58,
+65
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_05.png": {
+"dir": "south",
+"ojo": [
+60,
+65
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_06.png": {
+"dir": "south",
+"ojo": [
+59,
+64
+]
+},
+"res://assets/sprites/modular/base/blocaje_lado_07.png": {
+"dir": "south",
+"ojo": [
+60,
+63
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_east_01.png": {
+"dir": "east",
+"ojo": [
+55,
+29
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_east_02.png": {
+"dir": "east",
+"ojo": [
+58,
+33
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_east_03.png": {
+"dir": "east",
+"ojo": [
+60,
+37
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_east_04.png": {
+"dir": "east",
+"ojo": [
+61,
+37
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_east_05.png": {
+"dir": "east",
+"ojo": [
+55,
+28
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+33
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+33
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_west_01.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_west_02.png": {
+"dir": "west",
+"ojo": [
+33,
+33
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_west_03.png": {
+"dir": "west",
+"ojo": [
+31,
+37
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_west_04.png": {
+"dir": "west",
+"ojo": [
+31,
+37
+]
+},
+"res://assets/sprites/modular/base/bloqueo_player_west_05.png": {
+"dir": "west",
+"ojo": [
+35,
+28
+]
+},
+"res://assets/sprites/modular/base/botella_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/botella_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+29
+]
+},
+"res://assets/sprites/modular/base/botella_south_06.png": {
+"dir": "south",
+"ojo": [
+47,
+31
+]
+},
+"res://assets/sprites/modular/base/brazos_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/brazos_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/brazos_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/brazos_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/cano_abre_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/cano_abre_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/cano_abre_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/cano_abre_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/cano_abre_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/capitan_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/capitan_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/capitan_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/capitan_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/carga_player_east_01.png": {
+"dir": "east",
+"ojo": [
+54,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_east_02.png": {
+"dir": "east",
+"ojo": [
+54,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_east_03.png": {
+"dir": "east",
+"ojo": [
+52,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_east_04.png": {
+"dir": "east",
+"ojo": [
+54,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_east_05.png": {
+"dir": "east",
+"ojo": [
+56,
+33
+]
+},
+"res://assets/sprites/modular/base/carga_player_south_01.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/carga_player_south_02.png": {
+"dir": "south",
+"ojo": [
+40,
+31
+]
+},
+"res://assets/sprites/modular/base/carga_player_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+34
+]
+},
+"res://assets/sprites/modular/base/carga_player_south_04.png": {
+"dir": "south",
+"ojo": [
+39,
+31
+]
+},
+"res://assets/sprites/modular/base/carga_player_south_05.png": {
+"dir": "south",
+"ojo": [
+39,
+31
+]
+},
+"res://assets/sprites/modular/base/carga_player_west_01.png": {
+"dir": "west",
+"ojo": [
+38,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_west_04.png": {
+"dir": "west",
+"ojo": [
+38,
+30
+]
+},
+"res://assets/sprites/modular/base/carga_player_west_05.png": {
+"dir": "west",
+"ojo": [
+35,
+33
+]
+},
+"res://assets/sprites/modular/base/casual_idle_east_00.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_idle_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_idle_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_idle_east_03.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_idle_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/casual_idle_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/casual_idle_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/casual_idle_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/casual_idle_west_00.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_idle_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_idle_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_idle_west_03.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_04.png": {
+"dir": "east",
+"ojo": [
+50,
+29
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_05.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_07.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_east_08.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_05.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_06.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_07.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/casual_walk_west_08.png": {
+"dir": "west",
+"ojo": [
+40,
+29
+]
+},
+"res://assets/sprites/modular/base/celebration_east_00.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/celebration_east_01.png": {
+"dir": "east",
+"ojo": [
+53,
+29
+]
+},
+"res://assets/sprites/modular/base/celebration_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+29
+]
+},
+"res://assets/sprites/modular/base/celebration_east_03.png": {
+"dir": "east",
+"ojo": [
+50,
+25
+]
+},
+"res://assets/sprites/modular/base/celebration_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+21
+]
+},
+"res://assets/sprites/modular/base/celebration_east_05.png": {
+"dir": "east",
+"ojo": [
+49,
+23
+]
+},
+"res://assets/sprites/modular/base/celebration_east_06.png": {
+"dir": "east",
+"ojo": [
+49,
+28
+]
+},
+"res://assets/sprites/modular/base/celebration_south_00.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/celebration_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/celebration_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/celebration_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/celebration_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/celebration_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/celebration_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/celebration_west_00.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/celebration_west_01.png": {
+"dir": "west",
+"ojo": [
+38,
+28
+]
+},
+"res://assets/sprites/modular/base/celebration_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/celebration_west_03.png": {
+"dir": "west",
+"ojo": [
+44,
+19
+]
+},
+"res://assets/sprites/modular/base/celebration_west_04.png": {
+"dir": "west",
+"ojo": [
+45,
+20
+]
+},
+"res://assets/sprites/modular/base/celebration_west_05.png": {
+"dir": "west",
+"ojo": [
+45,
+23
+]
+},
+"res://assets/sprites/modular/base/celebration_west_06.png": {
+"dir": "west",
+"ojo": [
+45,
+25
+]
+},
+"res://assets/sprites/modular/base/cesped_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+43
+]
+},
+"res://assets/sprites/modular/base/cesped_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+49
+]
+},
+"res://assets/sprites/modular/base/cesped_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+48
+]
+},
+"res://assets/sprites/modular/base/cesped_south_04.png": {
+"dir": "south",
+"ojo": [
+42,
+46
+]
+},
+"res://assets/sprites/modular/base/chest_catch_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/chest_catch_02.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/chest_catch_03.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/chest_catch_04.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/chest_catch_05.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/chest_catch_06.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/chest_catch_07.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_01.png": {
+"dir": "east",
+"ojo": [
+50,
+25
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_02.png": {
+"dir": "east",
+"ojo": [
+47,
+25
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_03.png": {
+"dir": "east",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_04.png": {
+"dir": "east",
+"ojo": [
+38,
+27
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_05.png": {
+"dir": "east",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/chest_player_east_06.png": {
+"dir": "east",
+"ojo": [
+45,
+25
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/chest_player_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_01.png": {
+"dir": "west",
+"ojo": [
+42,
+25
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_02.png": {
+"dir": "west",
+"ojo": [
+45,
+25
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_03.png": {
+"dir": "west",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_04.png": {
+"dir": "west",
+"ojo": [
+54,
+27
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_05.png": {
+"dir": "west",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/chest_player_west_06.png": {
+"dir": "west",
+"ojo": [
+47,
+25
+]
+},
+"res://assets/sprites/modular/base/chilena_player_east_01.png": {
+"dir": "east",
+"ojo": [
+39,
+29
+]
+},
+"res://assets/sprites/modular/base/chilena_player_south_01.png": {
+"dir": "south",
+"ojo": [
+47,
+21
+]
+},
+"res://assets/sprites/modular/base/chilena_player_south_02.png": {
+"dir": "south",
+"ojo": [
+53,
+19
+]
+},
+"res://assets/sprites/modular/base/chilena_player_west_01.png": {
+"dir": "west",
+"ojo": [
+52,
+29
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_03.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_04.png": {
+"dir": "east",
+"ojo": [
+54,
+29
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_05.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/chinchanpu_east_06.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/cielo_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/cielo_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/cielo_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/cielo_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/clap_player_south_00.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/clap_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/clap_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/clap_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/coach_aplaude_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_aplaude_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_aplaude_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_aplaude_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_brazos_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_brazos_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_brazos_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_brazos_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_brazos_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_east_00.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_01.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_02.png": {
+"dir": "south",
+"ojo": [
+42,
+33
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_03.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_04.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_enojo2_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+35
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_03.png": {
+"dir": "south",
+"ojo": [
+46,
+36
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+37
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+37
+]
+},
+"res://assets/sprites/modular/base/coach_enojo_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+36
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_festeja_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_lamento_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_05.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_01.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_02.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_03.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_04.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_05.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_mano_west_06.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_02.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_pase_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_04.png": {
+"dir": "south",
+"ojo": [
+46,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_05.png": {
+"dir": "south",
+"ojo": [
+39,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_06.png": {
+"dir": "south",
+"ojo": [
+36,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_07.png": {
+"dir": "south",
+"ojo": [
+39,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_patada_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pecho_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_pecho_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_pecho_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_pecho_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_protesta_south_01.png": {
+"dir": "south",
+"ojo": [
+41,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_protesta_south_02.png": {
+"dir": "south",
+"ojo": [
+42,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_protesta_south_03.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_protesta_south_04.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_protesta_south_05.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_senala_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_senala_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_senala_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_senala_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/coach_senala_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/coach_sostiene_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_sostiene_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_sostiene_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_sostiene_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_01.png": {
+"dir": "south",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_02.png": {
+"dir": "south",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_03.png": {
+"dir": "south",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_04.png": {
+"dir": "south",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_05.png": {
+"dir": "south",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_06.png": {
+"dir": "south",
+"ojo": [
+42,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_toque_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_05.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_07.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_walk_east_08.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_walk_south_07.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_05.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_06.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_07.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/coach_walk_west_08.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/coach_west_00.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/control_player_east_01.png": {
+"dir": "east",
+"ojo": [
+47,
+25
+]
+},
+"res://assets/sprites/modular/base/control_player_east_02.png": {
+"dir": "east",
+"ojo": [
+48,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_east_03.png": {
+"dir": "east",
+"ojo": [
+50,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_east_04.png": {
+"dir": "east",
+"ojo": [
+50,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_east_05.png": {
+"dir": "east",
+"ojo": [
+49,
+26
+]
+},
+"res://assets/sprites/modular/base/control_player_east_06.png": {
+"dir": "east",
+"ojo": [
+47,
+25
+]
+},
+"res://assets/sprites/modular/base/control_player_south_01.png": {
+"dir": "south",
+"ojo": [
+42,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_south_02.png": {
+"dir": "south",
+"ojo": [
+41,
+28
+]
+},
+"res://assets/sprites/modular/base/control_player_south_03.png": {
+"dir": "south",
+"ojo": [
+41,
+29
+]
+},
+"res://assets/sprites/modular/base/control_player_south_04.png": {
+"dir": "south",
+"ojo": [
+39,
+30
+]
+},
+"res://assets/sprites/modular/base/control_player_south_05.png": {
+"dir": "south",
+"ojo": [
+41,
+29
+]
+},
+"res://assets/sprites/modular/base/control_player_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/control_player_west_01.png": {
+"dir": "west",
+"ojo": [
+45,
+25
+]
+},
+"res://assets/sprites/modular/base/control_player_west_02.png": {
+"dir": "west",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_west_03.png": {
+"dir": "west",
+"ojo": [
+41,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_west_04.png": {
+"dir": "west",
+"ojo": [
+41,
+27
+]
+},
+"res://assets/sprites/modular/base/control_player_west_05.png": {
+"dir": "west",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/control_player_west_06.png": {
+"dir": "west",
+"ojo": [
+45,
+25
+]
+},
+"res://assets/sprites/modular/base/dab_south_01.png": {
+"dir": "south",
+"ojo": [
+42,
+35
+]
+},
+"res://assets/sprites/modular/base/despeje_player_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/despeje_player_east_02.png": {
+"dir": "east",
+"ojo": [
+54,
+30
+]
+},
+"res://assets/sprites/modular/base/despeje_player_east_03.png": {
+"dir": "east",
+"ojo": [
+53,
+24
+]
+},
+"res://assets/sprites/modular/base/despeje_player_east_04.png": {
+"dir": "east",
+"ojo": [
+47,
+29
+]
+},
+"res://assets/sprites/modular/base/despeje_player_east_05.png": {
+"dir": "east",
+"ojo": [
+48,
+28
+]
+},
+"res://assets/sprites/modular/base/despeje_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/despeje_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/despeje_player_south_03.png": {
+"dir": "south",
+"ojo": [
+46,
+32
+]
+},
+"res://assets/sprites/modular/base/despeje_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/despeje_player_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+29
+]
+},
+"res://assets/sprites/modular/base/despeje_player_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/despeje_player_west_02.png": {
+"dir": "west",
+"ojo": [
+37,
+30
+]
+},
+"res://assets/sprites/modular/base/despeje_player_west_03.png": {
+"dir": "west",
+"ojo": [
+38,
+24
+]
+},
+"res://assets/sprites/modular/base/despeje_player_west_05.png": {
+"dir": "west",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/dive_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/dive_02.png": {
+"dir": "south",
+"ojo": [
+45,
+32
+]
+},
+"res://assets/sprites/modular/base/dive_03.png": {
+"dir": "south",
+"ojo": [
+50,
+44
+]
+},
+"res://assets/sprites/modular/base/dive_high_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/dive_high_02.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/dive_high_03.png": {
+"dir": "south",
+"ojo": [
+41,
+33
+]
+},
+"res://assets/sprites/modular/base/dive_high_04.png": {
+"dir": "south",
+"ojo": [
+41,
+34
+]
+},
+"res://assets/sprites/modular/base/dive_high_05.png": {
+"dir": "south",
+"ojo": [
+46,
+28
+]
+},
+"res://assets/sprites/modular/base/dive_high_06.png": {
+"dir": "south",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+24
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+23
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_03.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_04.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_05.png": {
+"dir": "east",
+"ojo": [
+52,
+24
+]
+},
+"res://assets/sprites/modular/base/dribble_player_east_06.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/dribble_player_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+24
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+23
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_03.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_04.png": {
+"dir": "west",
+"ojo": [
+39,
+28
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_05.png": {
+"dir": "west",
+"ojo": [
+39,
+24
+]
+},
+"res://assets/sprites/modular/base/dribble_player_west_06.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/empeine_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+29
+]
+},
+"res://assets/sprites/modular/base/empeine_player_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/empeine_player_east_03.png": {
+"dir": "east",
+"ojo": [
+46,
+22
+]
+},
+"res://assets/sprites/modular/base/empeine_player_east_04.png": {
+"dir": "east",
+"ojo": [
+47,
+23
+]
+},
+"res://assets/sprites/modular/base/empeine_player_east_05.png": {
+"dir": "east",
+"ojo": [
+50,
+25
+]
+},
+"res://assets/sprites/modular/base/empeine_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/empeine_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/empeine_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/empeine_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+23
+]
+},
+"res://assets/sprites/modular/base/empeine_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/empeine_player_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+29
+]
+},
+"res://assets/sprites/modular/base/empeine_player_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+28
+]
+},
+"res://assets/sprites/modular/base/empeine_player_west_03.png": {
+"dir": "west",
+"ojo": [
+45,
+22
+]
+},
+"res://assets/sprites/modular/base/empeine_player_west_04.png": {
+"dir": "west",
+"ojo": [
+44,
+23
+]
+},
+"res://assets/sprites/modular/base/empeine_player_west_05.png": {
+"dir": "west",
+"ojo": [
+41,
+25
+]
+},
+"res://assets/sprites/modular/base/escudo_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/escudo_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+34
+]
+},
+"res://assets/sprites/modular/base/escudo_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+34
+]
+},
+"res://assets/sprites/modular/base/escudo_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/fall_player_east_01.png": {
+"dir": "east",
+"ojo": [
+54,
+29
+]
+},
+"res://assets/sprites/modular/base/fall_player_east_02.png": {
+"dir": "east",
+"ojo": [
+57,
+32
+]
+},
+"res://assets/sprites/modular/base/fall_player_east_03.png": {
+"dir": "east",
+"ojo": [
+62,
+44
+]
+},
+"res://assets/sprites/modular/base/fall_player_east_04.png": {
+"dir": "east",
+"ojo": [
+69,
+64
+]
+},
+"res://assets/sprites/modular/base/fall_player_east_05.png": {
+"dir": "east",
+"ojo": [
+71,
+71
+]
+},
+"res://assets/sprites/modular/base/fall_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/fall_player_south_02.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/fall_player_south_03.png": {
+"dir": "south",
+"ojo": [
+49,
+36
+]
+},
+"res://assets/sprites/modular/base/fall_player_south_04.png": {
+"dir": "south",
+"ojo": [
+58,
+60
+]
+},
+"res://assets/sprites/modular/base/fall_player_south_05.png": {
+"dir": "south",
+"ojo": [
+60,
+71
+]
+},
+"res://assets/sprites/modular/base/fall_player_west_01.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/fall_player_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+29
+]
+},
+"res://assets/sprites/modular/base/fall_player_west_03.png": {
+"dir": "west",
+"ojo": [
+45,
+38
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_01.png": {
+"dir": "east",
+"ojo": [
+53,
+26
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_02.png": {
+"dir": "east",
+"ojo": [
+55,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_03.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_04.png": {
+"dir": "east",
+"ojo": [
+58,
+33
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_05.png": {
+"dir": "east",
+"ojo": [
+56,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_east_06.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+34
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_02.png": {
+"dir": "west",
+"ojo": [
+35,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_03.png": {
+"dir": "west",
+"ojo": [
+34,
+31
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_04.png": {
+"dir": "west",
+"ojo": [
+32,
+33
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_05.png": {
+"dir": "west",
+"ojo": [
+34,
+30
+]
+},
+"res://assets/sprites/modular/base/feint_player_west_06.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/firma_contrato_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/firma_contrato_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+33
+]
+},
+"res://assets/sprites/modular/base/firma_contrato_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/firma_contrato_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_east_03.png": {
+"dir": "east",
+"ojo": [
+50,
+26
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+27
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_west_03.png": {
+"dir": "west",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/firma_pie_player_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/header_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/header_player_east_02.png": {
+"dir": "east",
+"ojo": [
+56,
+24
+]
+},
+"res://assets/sprites/modular/base/header_player_east_03.png": {
+"dir": "east",
+"ojo": [
+58,
+22
+]
+},
+"res://assets/sprites/modular/base/header_player_east_04.png": {
+"dir": "east",
+"ojo": [
+60,
+34
+]
+},
+"res://assets/sprites/modular/base/header_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/header_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/header_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/header_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/header_player_west_01.png": {
+"dir": "west",
+"ojo": [
+37,
+27
+]
+},
+"res://assets/sprites/modular/base/header_player_west_02.png": {
+"dir": "west",
+"ojo": [
+36,
+24
+]
+},
+"res://assets/sprites/modular/base/header_player_west_03.png": {
+"dir": "west",
+"ojo": [
+37,
+19
+]
+},
+"res://assets/sprites/modular/base/header_player_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/hielo_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/hielo_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/hielo_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/hielo_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/hielo_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/hielo_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+33
+]
+},
+"res://assets/sprites/modular/base/hielo_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+34
+]
+},
+"res://assets/sprites/modular/base/hielo_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+34
+]
+},
+"res://assets/sprites/modular/base/idle_east_00.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/idle_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/idle_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/idle_east_03.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/idle_keeper_00.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/idle_keeper_01.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/idle_keeper_02.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/idle_keeper_03.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/idle_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/idle_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/idle_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/idle_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/idle_west_00.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/idle_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/idle_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/idle_west_03.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/jump_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_03.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/jump_04.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_05.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/jump_06.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_07.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/jump_08.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_catch_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_catch_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_catch_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/jump_catch_04.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_catch_05.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/jump_catch_06.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/jump_catch_07.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/keeper_east.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/keeper_south.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/keeper_west.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/kick_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/kick_player_east_02.png": {
+"dir": "east",
+"ojo": [
+54,
+26
+]
+},
+"res://assets/sprites/modular/base/kick_player_east_03.png": {
+"dir": "east",
+"ojo": [
+54,
+26
+]
+},
+"res://assets/sprites/modular/base/kick_player_east_04.png": {
+"dir": "east",
+"ojo": [
+54,
+28
+]
+},
+"res://assets/sprites/modular/base/kick_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/kick_player_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/kick_player_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+31
+]
+},
+"res://assets/sprites/modular/base/kick_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/kick_player_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/kick_player_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/kick_player_west_03.png": {
+"dir": "west",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/kick_player_west_04.png": {
+"dir": "west",
+"ojo": [
+38,
+28
+]
+},
+"res://assets/sprites/modular/base/leer_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/leer_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/leer_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/leer_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/leer_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/leer_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/leer_south_07.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_05.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_06.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_07.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_anda_east_08.png": {
+"dir": "east",
+"ojo": [
+52,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_02.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_03.png": {
+"dir": "east",
+"ojo": [
+54,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_04.png": {
+"dir": "east",
+"ojo": [
+55,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_05.png": {
+"dir": "east",
+"ojo": [
+54,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_06.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_07.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_east_08.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/limpia_barre_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_brazos_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_06.png": {
+"dir": "south",
+"ojo": [
+42,
+28
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_07.png": {
+"dir": "south",
+"ojo": [
+42,
+27
+]
+},
+"res://assets/sprites/modular/base/limpia_pulgar_south_08.png": {
+"dir": "south",
+"ojo": [
+42,
+27
+]
+},
+"res://assets/sprites/modular/base/linesman_south_00.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/linesman_south_01.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/linesman_south_02.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/linesman_south_03.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/linesman_south_04.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/linesman_south_05.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/linesman_south_06.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/linesman_south_07.png": {
+"dir": "south",
+"ojo": [
+41,
+32
+]
+},
+"res://assets/sprites/modular/base/linesman_south_08.png": {
+"dir": "south",
+"ojo": [
+41,
+30
+]
+},
+"res://assets/sprites/modular/base/linesman_south_09.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/linesman_south_10.png": {
+"dir": "south",
+"ojo": [
+41,
+31
+]
+},
+"res://assets/sprites/modular/base/lost_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/lost_player_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+25
+]
+},
+"res://assets/sprites/modular/base/lost_player_east_03.png": {
+"dir": "east",
+"ojo": [
+54,
+28
+]
+},
+"res://assets/sprites/modular/base/lost_player_east_04.png": {
+"dir": "east",
+"ojo": [
+58,
+30
+]
+},
+"res://assets/sprites/modular/base/lost_player_east_05.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/lost_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/lost_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/lost_player_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/lost_player_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/lost_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/lost_player_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/lost_player_west_02.png": {
+"dir": "west",
+"ojo": [
+39,
+25
+]
+},
+"res://assets/sprites/modular/base/lost_player_west_03.png": {
+"dir": "west",
+"ojo": [
+37,
+27
+]
+},
+"res://assets/sprites/modular/base/lost_player_west_04.png": {
+"dir": "west",
+"ojo": [
+33,
+29
+]
+},
+"res://assets/sprites/modular/base/lost_player_west_05.png": {
+"dir": "west",
+"ojo": [
+32,
+30
+]
+},
+"res://assets/sprites/modular/base/mastil_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/mastil_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/mastil_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/mastil_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/mortal_east_02.png": {
+"dir": "east",
+"ojo": [
+56,
+38
+]
+},
+"res://assets/sprites/modular/base/muerde_south_01.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/muerde_south_02.png": {
+"dir": "south",
+"ojo": [
+45,
+33
+]
+},
+"res://assets/sprites/modular/base/muerde_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+36
+]
+},
+"res://assets/sprites/modular/base/muerde_south_04.png": {
+"dir": "south",
+"ojo": [
+40,
+37
+]
+},
+"res://assets/sprites/modular/base/muerde_south_05.png": {
+"dir": "south",
+"ojo": [
+38,
+38
+]
+},
+"res://assets/sprites/modular/base/muerde_south_06.png": {
+"dir": "south",
+"ojo": [
+38,
+39
+]
+},
+"res://assets/sprites/modular/base/muerde_south_07.png": {
+"dir": "south",
+"ojo": [
+48,
+38
+]
+},
+"res://assets/sprites/modular/base/muerde_south_08.png": {
+"dir": "south",
+"ojo": [
+49,
+36
+]
+},
+"res://assets/sprites/modular/base/ocarina_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/ocarina_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/ocarina_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/ocarina_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/ocarina_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/oreja_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/oreja_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/oreja_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/oreja_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_01.png": {
+"dir": "east",
+"ojo": [
+53,
+18
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_02.png": {
+"dir": "east",
+"ojo": [
+57,
+23
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_03.png": {
+"dir": "east",
+"ojo": [
+61,
+34
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_04.png": {
+"dir": "east",
+"ojo": [
+64,
+49
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_05.png": {
+"dir": "east",
+"ojo": [
+63,
+70
+]
+},
+"res://assets/sprites/modular/base/palomita_player_east_06.png": {
+"dir": "east",
+"ojo": [
+59,
+67
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+18
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_02.png": {
+"dir": "west",
+"ojo": [
+33,
+23
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_03.png": {
+"dir": "west",
+"ojo": [
+30,
+34
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_04.png": {
+"dir": "west",
+"ojo": [
+27,
+49
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_05.png": {
+"dir": "west",
+"ojo": [
+28,
+70
+]
+},
+"res://assets/sprites/modular/base/palomita_player_west_06.png": {
+"dir": "west",
+"ojo": [
+31,
+67
+]
+},
+"res://assets/sprites/modular/base/panzazo_south_01.png": {
+"dir": "south",
+"ojo": [
+51,
+63
+]
+},
+"res://assets/sprites/modular/base/panzazo_south_02.png": {
+"dir": "south",
+"ojo": [
+54,
+72
+]
+},
+"res://assets/sprites/modular/base/panzazo_south_03.png": {
+"dir": "south",
+"ojo": [
+54,
+72
+]
+},
+"res://assets/sprites/modular/base/panzazo_south_04.png": {
+"dir": "south",
+"ojo": [
+53,
+72
+]
+},
+"res://assets/sprites/modular/base/parada_caida_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/parada_caida_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/parada_caida_03.png": {
+"dir": "south",
+"ojo": [
+47,
+35
+]
+},
+"res://assets/sprites/modular/base/parada_caida_04.png": {
+"dir": "south",
+"ojo": [
+48,
+41
+]
+},
+"res://assets/sprites/modular/base/parada_colapso_01.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/parada_colapso_02.png": {
+"dir": "south",
+"ojo": [
+44,
+35
+]
+},
+"res://assets/sprites/modular/base/parada_colapso_03.png": {
+"dir": "south",
+"ojo": [
+48,
+38
+]
+},
+"res://assets/sprites/modular/base/parada_colapso_04.png": {
+"dir": "south",
+"ojo": [
+51,
+45
+]
+},
+"res://assets/sprites/modular/base/parada_mano_01.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/parada_mano_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/parada_mano_03.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/parada_mano_04.png": {
+"dir": "south",
+"ojo": [
+46,
+28
+]
+},
+"res://assets/sprites/modular/base/parada_mano_05.png": {
+"dir": "south",
+"ojo": [
+50,
+33
+]
+},
+"res://assets/sprites/modular/base/parada_plancha_01.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/parada_plancha_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/parada_plancha_03.png": {
+"dir": "south",
+"ojo": [
+49,
+29
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+23
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+22
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+21
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_04.png": {
+"dir": "south",
+"ojo": [
+41,
+20
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+23
+]
+},
+"res://assets/sprites/modular/base/pc_bosteza_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+23
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_festeja_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_frustra_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_pulgar_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_pulgar_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_pulgar_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_pulgar_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_pulgar_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_sorbo_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_sorbo_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/pc_sorbo_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_sorbo_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_sorbo_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_00.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+26
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+25
+]
+},
+"res://assets/sprites/modular/base/pc_teclea_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_02.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_03.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_04.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_05.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_06.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_07.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_east_08.png": {
+"dir": "east",
+"ojo": [
+54,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_03.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_04.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_05.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_06.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_07.png": {
+"dir": "west",
+"ojo": [
+35,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_dedo_west_08.png": {
+"dir": "west",
+"ojo": [
+37,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_03.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_04.png": {
+"dir": "east",
+"ojo": [
+56,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_05.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_06.png": {
+"dir": "east",
+"ojo": [
+56,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_07.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_east_08.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_03.png": {
+"dir": "west",
+"ojo": [
+38,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_04.png": {
+"dir": "west",
+"ojo": [
+35,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_05.png": {
+"dir": "west",
+"ojo": [
+34,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_06.png": {
+"dir": "west",
+"ojo": [
+35,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_07.png": {
+"dir": "west",
+"ojo": [
+38,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empuja_west_08.png": {
+"dir": "west",
+"ojo": [
+39,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_02.png": {
+"dir": "east",
+"ojo": [
+53,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_03.png": {
+"dir": "east",
+"ojo": [
+53,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_04.png": {
+"dir": "east",
+"ojo": [
+51,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_05.png": {
+"dir": "east",
+"ojo": [
+51,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_07.png": {
+"dir": "east",
+"ojo": [
+51,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_east_08.png": {
+"dir": "east",
+"ojo": [
+53,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_03.png": {
+"dir": "west",
+"ojo": [
+38,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_04.png": {
+"dir": "west",
+"ojo": [
+39,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_05.png": {
+"dir": "west",
+"ojo": [
+39,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_06.png": {
+"dir": "west",
+"ojo": [
+39,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_07.png": {
+"dir": "west",
+"ojo": [
+39,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_empujado_west_08.png": {
+"dir": "west",
+"ojo": [
+38,
+28
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_01.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_02.png": {
+"dir": "east",
+"ojo": [
+55,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_03.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_04.png": {
+"dir": "east",
+"ojo": [
+58,
+32
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_05.png": {
+"dir": "east",
+"ojo": [
+57,
+34
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_06.png": {
+"dir": "east",
+"ojo": [
+57,
+34
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_07.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_east_08.png": {
+"dir": "east",
+"ojo": [
+56,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_01.png": {
+"dir": "west",
+"ojo": [
+38,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_02.png": {
+"dir": "west",
+"ojo": [
+36,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_03.png": {
+"dir": "west",
+"ojo": [
+34,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_04.png": {
+"dir": "west",
+"ojo": [
+33,
+32
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_05.png": {
+"dir": "west",
+"ojo": [
+34,
+34
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_06.png": {
+"dir": "west",
+"ojo": [
+34,
+34
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_07.png": {
+"dir": "west",
+"ojo": [
+34,
+31
+]
+},
+"res://assets/sprites/modular/base/pelea_encara_west_08.png": {
+"dir": "west",
+"ojo": [
+35,
+30
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_04.png": {
+"dir": "east",
+"ojo": [
+53,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_05.png": {
+"dir": "east",
+"ojo": [
+53,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_07.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_east_08.png": {
+"dir": "east",
+"ojo": [
+51,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_04.png": {
+"dir": "west",
+"ojo": [
+38,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_05.png": {
+"dir": "west",
+"ojo": [
+38,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_06.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_07.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_patada_west_08.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_east_02.png": {
+"dir": "east",
+"ojo": [
+54,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_east_03.png": {
+"dir": "east",
+"ojo": [
+54,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_west_01.png": {
+"dir": "west",
+"ojo": [
+39,
+26
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_west_02.png": {
+"dir": "west",
+"ojo": [
+37,
+27
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_west_03.png": {
+"dir": "west",
+"ojo": [
+37,
+29
+]
+},
+"res://assets/sprites/modular/base/pelea_recibe_west_04.png": {
+"dir": "west",
+"ojo": [
+34,
+34
+]
+},
+"res://assets/sprites/modular/base/perdon_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/perdon_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/perdon_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/perdon_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/pesas_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/pesas_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/pesas_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/pesas_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+33
+]
+},
+"res://assets/sprites/modular/base/pesas_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/pesas_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+33
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_01.png": {
+"dir": "south",
+"ojo": [
+44,
+35
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_02.png": {
+"dir": "south",
+"ojo": [
+44,
+37
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_03.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_04.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_05.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_06.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/pie_lateral_07.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/pie_raso_01.png": {
+"dir": "south",
+"ojo": [
+45,
+36
+]
+},
+"res://assets/sprites/modular/base/pie_raso_02.png": {
+"dir": "south",
+"ojo": [
+46,
+40
+]
+},
+"res://assets/sprites/modular/base/pie_raso_03.png": {
+"dir": "south",
+"ojo": [
+48,
+44
+]
+},
+"res://assets/sprites/modular/base/pie_raso_04.png": {
+"dir": "south",
+"ojo": [
+51,
+48
+]
+},
+"res://assets/sprites/modular/base/pie_raso_05.png": {
+"dir": "south",
+"ojo": [
+54,
+53
+]
+},
+"res://assets/sprites/modular/base/pie_raso_06.png": {
+"dir": "south",
+"ojo": [
+58,
+57
+]
+},
+"res://assets/sprites/modular/base/pie_raso_07.png": {
+"dir": "south",
+"ojo": [
+59,
+57
+]
+},
+"res://assets/sprites/modular/base/pito_south_01.png": {
+"dir": "south",
+"ojo": [
+48,
+30
+]
+},
+"res://assets/sprites/modular/base/player_east.png": {
+"dir": "east",
+"ojo": [
+52,
+26
+]
+},
+"res://assets/sprites/modular/base/player_south.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/player_west.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/posa_sonrisa_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/posa_sonrisa_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/posa_sonrisa_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+22
+]
+},
+"res://assets/sprites/modular/base/posa_sonrisa_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+24
+]
+},
+"res://assets/sprites/modular/base/puno_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/puno_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+35
+]
+},
+"res://assets/sprites/modular/base/puno_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/puno_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/puno_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+19
+]
+},
+"res://assets/sprites/modular/base/puno_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+19
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_07.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_alto_player_south_08.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_02.png": {
+"dir": "south",
+"ojo": [
+45,
+27
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+27
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+33
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+34
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_06.png": {
+"dir": "south",
+"ojo": [
+45,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_07.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/recep_pisada_player_south_08.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_01.png": {
+"dir": "south",
+"ojo": [
+45,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_02.png": {
+"dir": "south",
+"ojo": [
+45,
+31
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+33
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_05.png": {
+"dir": "south",
+"ojo": [
+45,
+32
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_07.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/recep_rabona_player_south_08.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_04.png": {
+"dir": "south",
+"ojo": [
+42,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_06.png": {
+"dir": "south",
+"ojo": [
+42,
+30
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/recep_tacon_player_south_08.png": {
+"dir": "south",
+"ojo": [
+45,
+30
+]
+},
+"res://assets/sprites/modular/base/ref4_cartel_south_00.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/ref4_cartel_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/ref4_cartel_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+27
+]
+},
+"res://assets/sprites/modular/base/ref4_cartel_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/reloj_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/reloj_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/reloj_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/reloj_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/reverencia_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+49
+]
+},
+"res://assets/sprites/modular/base/reverencia_south_02.png": {
+"dir": "south",
+"ojo": [
+49,
+66
+]
+},
+"res://assets/sprites/modular/base/reverencia_south_03.png": {
+"dir": "south",
+"ojo": [
+49,
+66
+]
+},
+"res://assets/sprites/modular/base/reverencia_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+49
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+36
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/rodillas_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+38
+]
+},
+"res://assets/sprites/modular/base/run_player_east_01.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/run_player_east_02.png": {
+"dir": "east",
+"ojo": [
+55,
+33
+]
+},
+"res://assets/sprites/modular/base/run_player_east_03.png": {
+"dir": "east",
+"ojo": [
+55,
+31
+]
+},
+"res://assets/sprites/modular/base/run_player_east_04.png": {
+"dir": "east",
+"ojo": [
+57,
+31
+]
+},
+"res://assets/sprites/modular/base/run_player_east_05.png": {
+"dir": "east",
+"ojo": [
+56,
+32
+]
+},
+"res://assets/sprites/modular/base/run_player_east_06.png": {
+"dir": "east",
+"ojo": [
+56,
+29
+]
+},
+"res://assets/sprites/modular/base/run_player_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+38
+]
+},
+"res://assets/sprites/modular/base/run_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/run_player_south_03.png": {
+"dir": "south",
+"ojo": [
+45,
+33
+]
+},
+"res://assets/sprites/modular/base/run_player_south_04.png": {
+"dir": "south",
+"ojo": [
+45,
+40
+]
+},
+"res://assets/sprites/modular/base/run_player_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+33
+]
+},
+"res://assets/sprites/modular/base/run_player_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+32
+]
+},
+"res://assets/sprites/modular/base/run_player_west_01.png": {
+"dir": "west",
+"ojo": [
+35,
+33
+]
+},
+"res://assets/sprites/modular/base/run_player_west_02.png": {
+"dir": "west",
+"ojo": [
+35,
+34
+]
+},
+"res://assets/sprites/modular/base/run_player_west_03.png": {
+"dir": "west",
+"ojo": [
+35,
+33
+]
+},
+"res://assets/sprites/modular/base/run_player_west_04.png": {
+"dir": "west",
+"ojo": [
+34,
+32
+]
+},
+"res://assets/sprites/modular/base/run_player_west_05.png": {
+"dir": "west",
+"ojo": [
+35,
+36
+]
+},
+"res://assets/sprites/modular/base/run_player_west_06.png": {
+"dir": "west",
+"ojo": [
+35,
+33
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_01.png": {
+"dir": "east",
+"ojo": [
+53,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_02.png": {
+"dir": "east",
+"ojo": [
+52,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_04.png": {
+"dir": "east",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_05.png": {
+"dir": "east",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_06.png": {
+"dir": "east",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/saque_banda_east_08.png": {
+"dir": "east",
+"ojo": [
+57,
+29
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_01.png": {
+"dir": "west",
+"ojo": [
+37,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_02.png": {
+"dir": "west",
+"ojo": [
+38,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_04.png": {
+"dir": "west",
+"ojo": [
+46,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_05.png": {
+"dir": "west",
+"ojo": [
+46,
+27
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_06.png": {
+"dir": "west",
+"ojo": [
+47,
+28
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_07.png": {
+"dir": "west",
+"ojo": [
+41,
+25
+]
+},
+"res://assets/sprites/modular/base/saque_banda_west_08.png": {
+"dir": "west",
+"ojo": [
+33,
+29
+]
+},
+"res://assets/sprites/modular/base/saque_mano_keeper_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/saque_mano_keeper_02.png": {
+"dir": "south",
+"ojo": [
+43,
+34
+]
+},
+"res://assets/sprites/modular/base/saque_mano_keeper_03.png": {
+"dir": "south",
+"ojo": [
+43,
+42
+]
+},
+"res://assets/sprites/modular/base/saque_mano_keeper_04.png": {
+"dir": "south",
+"ojo": [
+43,
+41
+]
+},
+"res://assets/sprites/modular/base/saque_mano_keeper_05.png": {
+"dir": "south",
+"ojo": [
+43,
+37
+]
+},
+"res://assets/sprites/modular/base/selfie_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+30
+]
+},
+"res://assets/sprites/modular/base/selfie_south_02.png": {
+"dir": "south",
+"ojo": [
+41,
+30
+]
+},
+"res://assets/sprites/modular/base/selfie_south_03.png": {
+"dir": "south",
+"ojo": [
+41,
+30
+]
+},
+"res://assets/sprites/modular/base/selfie_south_04.png": {
+"dir": "south",
+"ojo": [
+41,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_brazos_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_brazos_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_brazos_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_brazos_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_chinchan_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/sentado_chinchan_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_chinchan_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/sentado_chinchan_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_chinchan_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/sentado_foto_south_01.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_foto_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_foto_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_foto_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_gana_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_gana_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_gana_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/sentado_gana_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/sentado_lanza_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+31
+]
+},
+"res://assets/sprites/modular/base/sentado_lanza_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/sentado_lanza_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_lanza_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_lanza_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_manos_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/sentado_manos_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_manos_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_pierde_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/sentado_pierde_south_02.png": {
+"dir": "south",
+"ojo": [
+42,
+32
+]
+},
+"res://assets/sprites/modular/base/sentado_pierde_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+33
+]
+},
+"res://assets/sprites/modular/base/sentado_pierde_south_04.png": {
+"dir": "south",
+"ojo": [
+42,
+33
+]
+},
+"res://assets/sprites/modular/base/sentado_pierde_south_05.png": {
+"dir": "south",
+"ojo": [
+41,
+33
+]
+},
+"res://assets/sprites/modular/base/shirtoff_player_south_00.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/shirtoff_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/shirtoff_player_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/shirtoff_player_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_04.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+29
+]
+},
+"res://assets/sprites/modular/base/shirtoff_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/slide_player_east_01.png": {
+"dir": "east",
+"ojo": [
+52,
+30
+]
+},
+"res://assets/sprites/modular/base/slide_player_east_02.png": {
+"dir": "east",
+"ojo": [
+49,
+36
+]
+},
+"res://assets/sprites/modular/base/slide_player_east_03.png": {
+"dir": "east",
+"ojo": [
+47,
+48
+]
+},
+"res://assets/sprites/modular/base/slide_player_east_04.png": {
+"dir": "east",
+"ojo": [
+44,
+48
+]
+},
+"res://assets/sprites/modular/base/slide_player_east_05.png": {
+"dir": "east",
+"ojo": [
+40,
+49
+]
+},
+"res://assets/sprites/modular/base/slide_player_south_01.png": {
+"dir": "south",
+"ojo": [
+54,
+42
+]
+},
+"res://assets/sprites/modular/base/slide_player_south_02.png": {
+"dir": "south",
+"ojo": [
+54,
+44
+]
+},
+"res://assets/sprites/modular/base/slide_player_south_03.png": {
+"dir": "south",
+"ojo": [
+54,
+46
+]
+},
+"res://assets/sprites/modular/base/slide_player_south_04.png": {
+"dir": "south",
+"ojo": [
+54,
+45
+]
+},
+"res://assets/sprites/modular/base/slide_player_south_05.png": {
+"dir": "south",
+"ojo": [
+54,
+46
+]
+},
+"res://assets/sprites/modular/base/slide_player_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+30
+]
+},
+"res://assets/sprites/modular/base/slide_player_west_02.png": {
+"dir": "west",
+"ojo": [
+43,
+36
+]
+},
+"res://assets/sprites/modular/base/slide_player_west_03.png": {
+"dir": "west",
+"ojo": [
+45,
+48
+]
+},
+"res://assets/sprites/modular/base/slide_player_west_04.png": {
+"dir": "west",
+"ojo": [
+49,
+48
+]
+},
+"res://assets/sprites/modular/base/slide_player_west_05.png": {
+"dir": "west",
+"ojo": [
+53,
+49
+]
+},
+"res://assets/sprites/modular/base/socio_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/socio_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/socio_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+25
+]
+},
+"res://assets/sprites/modular/base/socio_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+26
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+30
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/tarjeta_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/tele_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+32
+]
+},
+"res://assets/sprites/modular/base/tele_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+34
+]
+},
+"res://assets/sprites/modular/base/tele_south_03.png": {
+"dir": "south",
+"ojo": [
+42,
+37
+]
+},
+"res://assets/sprites/modular/base/tele_south_04.png": {
+"dir": "south",
+"ojo": [
+42,
+38
+]
+},
+"res://assets/sprites/modular/base/tele_south_05.png": {
+"dir": "south",
+"ojo": [
+42,
+38
+]
+},
+"res://assets/sprites/modular/base/tele_south_06.png": {
+"dir": "south",
+"ojo": [
+42,
+37
+]
+},
+"res://assets/sprites/modular/base/tele_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+36
+]
+},
+"res://assets/sprites/modular/base/tele_south_08.png": {
+"dir": "south",
+"ojo": [
+44,
+37
+]
+},
+"res://assets/sprites/modular/base/tresdedos_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/tresdedos_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/tresdedos_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/tresdedos_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/volado_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/volado_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/volado_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/volado_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+27
+]
+},
+"res://assets/sprites/modular/base/volea_player_east_01.png": {
+"dir": "east",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/volea_player_east_02.png": {
+"dir": "east",
+"ojo": [
+41,
+25
+]
+},
+"res://assets/sprites/modular/base/volea_player_east_03.png": {
+"dir": "east",
+"ojo": [
+41,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_east_04.png": {
+"dir": "east",
+"ojo": [
+43,
+24
+]
+},
+"res://assets/sprites/modular/base/volea_player_east_05.png": {
+"dir": "east",
+"ojo": [
+46,
+24
+]
+},
+"res://assets/sprites/modular/base/volea_player_south_01.png": {
+"dir": "south",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/volea_player_south_02.png": {
+"dir": "south",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_south_03.png": {
+"dir": "south",
+"ojo": [
+37,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_south_04.png": {
+"dir": "south",
+"ojo": [
+36,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_south_05.png": {
+"dir": "south",
+"ojo": [
+38,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_west_01.png": {
+"dir": "west",
+"ojo": [
+48,
+24
+]
+},
+"res://assets/sprites/modular/base/volea_player_west_02.png": {
+"dir": "west",
+"ojo": [
+50,
+25
+]
+},
+"res://assets/sprites/modular/base/volea_player_west_03.png": {
+"dir": "west",
+"ojo": [
+50,
+26
+]
+},
+"res://assets/sprites/modular/base/volea_player_west_04.png": {
+"dir": "west",
+"ojo": [
+48,
+24
+]
+},
+"res://assets/sprites/modular/base/volea_player_west_05.png": {
+"dir": "west",
+"ojo": [
+45,
+24
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_01.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_02.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_03.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_04.png": {
+"dir": "east",
+"ojo": [
+50,
+29
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_05.png": {
+"dir": "east",
+"ojo": [
+51,
+26
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_06.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_07.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/walk_player_east_08.png": {
+"dir": "east",
+"ojo": [
+51,
+27
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_04.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_06.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_07.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_south_08.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_01.png": {
+"dir": "west",
+"ojo": [
+40,
+25
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_02.png": {
+"dir": "west",
+"ojo": [
+40,
+27
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_03.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_04.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_05.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_06.png": {
+"dir": "west",
+"ojo": [
+40,
+26
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_07.png": {
+"dir": "west",
+"ojo": [
+40,
+28
+]
+},
+"res://assets/sprites/modular/base/walk_player_west_08.png": {
+"dir": "west",
+"ojo": [
+40,
+29
+]
+},
+"res://assets/sprites/modular/base/wave_walk_player_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+28
+]
+},
+"res://assets/sprites/modular/base/wave_walk_player_south_02.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/wave_walk_player_south_03.png": {
+"dir": "south",
+"ojo": [
+43,
+28
+]
+},
+"res://assets/sprites/modular/base/wave_walk_player_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+29
+]
+},
+"res://assets/sprites/modular/base/wave_walk_player_south_05.png": {
+"dir": "south",
+"ojo": [
+43,
+29
+]
+},
+"res://assets/sprites/modular/base/zen_south_01.png": {
+"dir": "south",
+"ojo": [
+44,
+37
+]
+},
+"res://assets/sprites/modular/base/zen_south_02.png": {
+"dir": "south",
+"ojo": [
+44,
+39
+]
+},
+"res://assets/sprites/modular/base/zen_south_03.png": {
+"dir": "south",
+"ojo": [
+44,
+41
+]
+},
+"res://assets/sprites/modular/base/zen_south_04.png": {
+"dir": "south",
+"ojo": [
+44,
+42
+]
+},
+"res://assets/sprites/modular/base/zen_south_05.png": {
+"dir": "south",
+"ojo": [
+44,
+41
+]
+},
+"res://assets/sprites/modular/base/zen_south_06.png": {
+"dir": "south",
+"ojo": [
+44,
+40
+]
+}
+}

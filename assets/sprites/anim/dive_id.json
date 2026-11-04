@@ -1,0 +1,9 @@
+{
+  "character_id": "e42fb598-f4d7-4765-8848-f218aa0392c1",
+  "animation_group_id": "21d94497-57e8-4180-aeb1-494207419f76",
+  "animation_name": "goalkeeper_dive",
+  "mode": "v3",
+  "direction": "south",
+  "frame_count": 7,
+  "note": "7 frames = 1 reference (idle south pose) + 6 animated dive frames"
+}
