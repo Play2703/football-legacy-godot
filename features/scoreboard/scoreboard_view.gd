@@ -1,8 +1,9 @@
 class_name ScoreboardView
 extends Control
 
-## ScoreboardView: Renderizador de placares de transmissão com tipografia proporcional,
-## logos oficiais/emblemas vetoriais, pílula inferior de período e compatibilidade de altura com o HUD.
+## ScoreboardView: Renderizador universal de placares de transmissão reais (Etapa 4c).
+## Suporta as 3 famílias visuais (skew, reto, modulos_separados) + stack2,
+## com tipografia proporcional, detecção de colisões, logos oficiais e pílula inferior.
 
 const ScoreboardTheme = preload("res://features/scoreboard/scoreboard_theme.gd")
 const ScoreboardLoader = preload("res://features/scoreboard/scoreboard_loader.gd")
@@ -12,24 +13,29 @@ const CompLogo = preload("res://ui/comp_logo.gd")
 const BASE_BAR_H: float = 86.0
 const BOTTOM_PILL_H: float = 34.0
 const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _msg_techo_h em hud.gd)
-const MAX_COMPACT_W: float = 648.0 # 90% de 720 px
+const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
 var away_team: Dictionary = {}
-var home_score: int = 2
-var away_score: int = 1
-var minute: int = 91
+var home_score: int = 0
+var away_score: int = 0
+var minute: int = 85
 var stoppage: int = 6
 var is_compact: bool = false
 var use_local_textures: bool = true
+
+# Pênaltis
+var shootout_active: bool = false
+var penalties_score: String = ""
 
 var _home_crest: CrestView
 var _away_crest: CrestView
 var _comp_logo: CompLogo
 var _current_scale: float = 1.0
 var _unscaled_size: Vector2 = Vector2.ZERO
+var _last_text_overlap_warning: String = ""
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -48,9 +54,9 @@ func _ready() -> void:
 		setup_default()
 
 func setup_default() -> void:
-	var def_home = {"abbrev": "BAR", "name": "Barcelona", "kit": "#004D98", "kit2": "#A50044", "kit_b": "#EDBB00"}
-	var def_away = {"abbrev": "ATM", "name": "Atlético", "kit": "#CB3524", "kit2": "#FFFFFF", "kit_b": "#272E61"}
-	setup(def_home, def_away, "la_liga", "tv", true)
+	var def_home = {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"}
+	var def_away = {"abbrev": "PAL", "name": "Palmeiras", "kit": "#006437", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
+	setup(def_home, def_away, "brasileirao", "", true)
 
 func setup(p_home: Dictionary, p_away: Dictionary, theme_id: String, variant: String = "", p_use_local_tex: bool = true) -> void:
 	home_team = p_home
@@ -77,6 +83,11 @@ func update_time(p_minute: int, p_stoppage: int = 0) -> void:
 		stoppage = p_stoppage
 		queue_redraw()
 
+func set_shootout(active: bool, score_str: String = "") -> void:
+	shootout_active = active
+	penalties_score = score_str
+	queue_redraw()
+
 func set_compact(p_compact: bool) -> void:
 	if is_compact != p_compact:
 		is_compact = p_compact
@@ -96,9 +107,9 @@ func get_real_size() -> Vector2:
 
 func _recalculate_dimensions() -> void:
 	if board_theme == null:
-		_unscaled_size = Vector2(430, BASE_BAR_H)
+		_unscaled_size = Vector2(688.0, BASE_BAR_H)
 		_current_scale = 1.0
-		custom_minimum_size = Vector2(430, TOTAL_HUD_H)
+		custom_minimum_size = Vector2(688.0, TOTAL_HUD_H)
 		size = custom_minimum_size
 		return
 	
@@ -110,7 +121,7 @@ func _recalculate_dimensions() -> void:
 		if w > MAX_COMPACT_W:
 			_current_scale = MAX_COMPACT_W / w
 		else:
-			var preset_scale = float(board_theme.compact_variant.get("escala", 1.0))
+			var preset_scale = float(board_theme.compact_variant.get("escala_fonte", 1.0))
 			_current_scale = min(1.0, preset_scale)
 	else:
 		_current_scale = 1.0
@@ -125,299 +136,379 @@ func _draw() -> void:
 	
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(_current_scale, _current_scale))
 	
-	# Sombra projetada sob a barra principal
+	# Sombra projetada
 	_draw_shadow(_unscaled_size.x, BASE_BAR_H)
 	
-	if board_theme.is_stack2():
-		_draw_stack2()
-	else:
-		_draw_row()
+	match board_theme.familia:
+		"stack2":
+			_draw_stack2()
+		"reto":
+			_draw_reto()
+		"modulos_separados":
+			_draw_modulos_separados()
+		_:
+			_draw_skew()
 	
-	# Pílula inferior de período / relógio complementar (Item 4)
+	# Pílula inferior do período / minuto ("1T 27'")
 	_draw_bottom_pill()
 
 func _draw_shadow(w: float, h: float) -> void:
 	var shadow_rect = Rect2(0.0, 5.0, w, h)
 	draw_rect(shadow_rect, Color(0.0, 0.0, 0.0, 0.35))
 
-func _draw_highlight(w: float) -> void:
-	draw_line(Vector2(0.0, 1.0), Vector2(w, 1.0), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+# ==============================================================================
+# FAMÍLIA 1: SKEW (Paralelogramos com inclinação ~15-20°)
+# ==============================================================================
+func _draw_skew() -> void:
+	var H = BASE_BAR_H
+	var total_w = _unscaled_size.x
+	var skew_angle = board_theme.skew_deg
+	var dx = H * tan(deg_to_rad(skew_angle))
+	
+	var cells = board_theme.cells
+	var total_peso: float = 0.0
+	for c in cells:
+		total_peso += float(c.get("peso", 1.0))
+	if total_peso <= 0.0:
+		total_peso = 1.0
+	
+	var cur_x = 0.0
+	for idx in range(cells.size()):
+		var c = cells[idx]
+		var peso = float(c.get("peso", 1.0))
+		var cell_w = (peso / total_peso) * (total_w - dx)
+		var next_x = cur_x + cell_w
+		
+		# Polígono do paralelogramo
+		var poly = PackedVector2Array([
+			Vector2(cur_x + dx, 0.0),
+			Vector2(next_x + dx, 0.0),
+			Vector2(next_x, H),
+			Vector2(cur_x, H)
+		])
+		
+		var bg_color = _resolve_color(c.get("fundo", "#101015"), false)
+		draw_colored_polygon(poly, bg_color)
+		
+		# Borda sutil de divisão
+		draw_line(Vector2(next_x + dx, 0.0), Vector2(next_x, H), Color(1.0, 1.0, 1.0, 0.12), 1.0)
+		
+		# Renderiza conteúdo da célula
+		var cell_rect = Rect2(cur_x + dx * 0.5, 0.0, cell_w, H)
+		_draw_cell_content(c, cell_rect, H, dx)
+		
+		cur_x = next_x
 
+# ==============================================================================
+# FAMÍLIA 2: RETO (Retângulos sem inclinação: Bundesliga & Champions)
+# ==============================================================================
+func _draw_reto() -> void:
+	var H = BASE_BAR_H
+	var total_w = _unscaled_size.x
+	var cells = board_theme.cells
+	var total_peso: float = 0.0
+	for c in cells:
+		total_peso += float(c.get("peso", 1.0))
+	if total_peso <= 0.0:
+		total_peso = 1.0
+	
+	var cur_x = 0.0
+	for idx in range(cells.size()):
+		var c = cells[idx]
+		var peso = float(c.get("peso", 1.0))
+		var cell_w = (peso / total_peso) * total_w
+		var rect = Rect2(cur_x, 0.0, cell_w, H)
+		
+		var bg_color = _resolve_color(c.get("fundo", "#101015"), (c.get("tipo") == "time_fora"))
+		draw_rect(rect, bg_color)
+		
+		# Tratamento especial de conteúdo por competição
+		var c_tipo = String(c.get("tipo", ""))
+		if c_tipo == "barra_unica":
+			_draw_champions_barra_unica(rect, H)
+		elif c_tipo == "time_casa" and board_theme.theme_id == "bundesliga":
+			_draw_bundesliga_team_cell(rect, H, true)
+		elif c_tipo == "time_fora" and board_theme.theme_id == "bundesliga":
+			_draw_bundesliga_team_cell(rect, H, false)
+		else:
+			_draw_cell_content(c, rect, H, 0.0)
+		
+		# Faixa fina clara inferior (Bundesliga)
+		if "faixa_inferior" in c.get("conteudo", []):
+			var strip_col = Color(1.0, 1.0, 1.0, 0.35)
+			draw_rect(Rect2(rect.position.x, H - 4.0, rect.size.x, 4.0), strip_col)
+			
+		cur_x += cell_w
+
+func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
+	var team = home_team if is_home else away_team
+	var score = home_score if is_home else away_score
+	var crest = _home_crest if is_home else _away_crest
+	var abbrev = team.get("abbrev", "HOM" if is_home else "AWY")
+	
+	var crest_diam = H * 0.62
+	var crest_y = (H - crest_diam) * 0.5
+	var score_w = H * 0.55
+	
+	if is_home:
+		# Escudo à esquerda, sigla no meio, gol à direita
+		var crest_x = rect.position.x + 12.0
+		_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
+		
+		var score_rect = Rect2(rect.position.x + rect.size.x - score_w - 8.0, 0.0, score_w, H)
+		_draw_auto_text(str(score), score_rect, Color.WHITE, int(H * 0.52), 0.30 * H, true)
+		
+		var text_rect = Rect2(crest_x + crest_diam + 8.0, 0.0, rect.size.x - crest_diam - score_w - 28.0, H)
+		_draw_auto_text(abbrev, text_rect, Color.WHITE, int(H * 0.38), 0.25 * H, true)
+	else:
+		# Gol à esquerda, sigla no meio, escudo à direita
+		var score_rect = Rect2(rect.position.x + 8.0, 0.0, score_w, H)
+		_draw_auto_text(str(score), score_rect, Color.WHITE, int(H * 0.52), 0.30 * H, true)
+		
+		var crest_x = rect.position.x + rect.size.x - crest_diam - 12.0
+		_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
+		
+		var text_rect = Rect2(rect.position.x + score_w + 8.0, 0.0, rect.size.x - crest_diam - score_w - 28.0, H)
+		_draw_auto_text(abbrev, text_rect, Color.WHITE, int(H * 0.38), 0.25 * H, true)
+
+func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
+	# Champions: RMA | 0 | 0 | STU com divisores finos
+	var h_abbrev = home_team.get("abbrev", "RMA")
+	var a_abbrev = away_team.get("abbrev", "STU")
+	
+	var seg_w = rect.size.x / 4.0
+	var r_home_name = Rect2(rect.position.x, 0.0, seg_w, H)
+	var r_home_goal = Rect2(rect.position.x + seg_w, 0.0, seg_w, H)
+	var r_away_goal = Rect2(rect.position.x + seg_w * 2.0, 0.0, seg_w, H)
+	var r_away_name = Rect2(rect.position.x + seg_w * 3.0, 0.0, seg_w, H)
+	
+	_draw_auto_text(h_abbrev, r_home_name, Color.WHITE, int(H * 0.40), 0.25 * H, true)
+	_draw_auto_text(str(home_score), r_home_goal, Color.WHITE, int(H * 0.52), 0.30 * H, true)
+	_draw_auto_text(str(away_score), r_away_goal, Color.WHITE, int(H * 0.52), 0.30 * H, true)
+	_draw_auto_text(a_abbrev, r_away_name, Color.WHITE, int(H * 0.40), 0.25 * H, true)
+	
+	# Divisores verticais sutis
+	var div_h = H * 0.60
+	var div_y = (H - div_h) * 0.5
+	for i in [1, 2, 3]:
+		var dx_div = rect.position.x + seg_w * float(i)
+		draw_line(Vector2(dx_div, div_y), Vector2(dx_div, div_y + div_h), Color(1.0, 1.0, 1.0, 0.3), 1.5)
+
+# ==============================================================================
+# FAMÍLIA 3: MÓDULOS SEPARADOS (Libertadores - cantos arredondados e gaps)
+# ==============================================================================
+func _draw_modulos_separados() -> void:
+	var H = BASE_BAR_H
+	var total_w = _unscaled_size.x
+	var radius = board_theme.raio_canto if board_theme.raio_canto > 0.0 else 8.0
+	var gap_px = board_theme.gap * H if board_theme.gap > 0.0 else 10.0
+	
+	var cells = board_theme.cells
+	# Filtra pênaltis se não estiver ativo
+	var active_cells: Array[Dictionary] = []
+	for c in cells:
+		if c.get("tipo") == "penaltis" and not shootout_active and penalties_score.is_empty():
+			continue
+		active_cells.append(c)
+	
+	var total_gaps = max(0, active_cells.size() - 1) * gap_px
+	var available_w = total_w - total_gaps
+	
+	var total_peso: float = 0.0
+	for c in active_cells:
+		total_peso += float(c.get("peso", 1.0))
+	if total_peso <= 0.0:
+		total_peso = 1.0
+	
+	var cur_x = 0.0
+	for idx in range(active_cells.size()):
+		var c = active_cells[idx]
+		var peso = float(c.get("peso", 1.0))
+		var cell_w = (peso / total_peso) * available_w
+		var rect = Rect2(cur_x, 0.0, cell_w, H)
+		
+		var bg_color = _resolve_color(c.get("fundo", "#101015"), (c.get("tipo") == "time_fora"))
+		
+		# Desenha retângulo com cantos arredondados
+		var style = StyleBoxFlat.new()
+		style.bg_color = bg_color
+		style.set_corner_radius_all(int(radius))
+		draw_style_box(style, rect)
+		
+		# Borda sutil
+		var border_col = Color(0.2, 0.2, 0.25, 0.6)
+		draw_rect(rect, border_col, false, 1.0)
+		
+		_draw_cell_content(c, rect, H, 0.0)
+		
+		cur_x += cell_w + gap_px
+
+# ==============================================================================
+# FAMÍLIA 4: STACK2 (La Liga TV - duas linhas empilhadas)
+# ==============================================================================
 func _draw_stack2() -> void:
 	var total_w = _unscaled_size.x
-	var total_h = _unscaled_size.y
+	var total_h = BASE_BAR_H * 1.8 # Altura expandida do stack2
 	var cols = board_theme.stack_columns
-	var cur_x: float = 0.0
-	
+	if cols.is_empty():
+		cols = board_theme.cells
+		
+	var total_peso: float = 0.0
 	for col in cols:
-		var col_w = total_w * float(col.get("peso", 0.33))
-		var lines = col.get("linhas", [])
-		var cur_y: float = 0.0
+		total_peso += float(col.get("peso", 1.0))
+	if total_peso <= 0.0:
+		total_peso = 1.0
 		
-		for line in lines:
-			var line_h = total_h * float(line.get("peso_y", 0.5))
-			var rect = Rect2(cur_x, cur_y, col_w, line_h)
-			var bg_color = Color(line.get("fundo", "#111114"))
-			draw_rect(rect, bg_color)
+	var cur_x = 0.0
+	for col in cols:
+		var col_w = (float(col.get("peso", 1.0)) / total_peso) * total_w
+		var col_rect = Rect2(cur_x, 0.0, col_w, total_h)
+		var bg_col = _resolve_color(col.get("fundo", "#101015"), false)
+		
+		draw_rect(col_rect, bg_col)
+		draw_rect(col_rect, Color(0.2, 0.2, 0.25, 0.5), false, 1.0)
+		
+		var c_tipo = String(col.get("tipo", ""))
+		if c_tipo == "coluna_identidade":
+			# Topo: Logo LaLiga Coral; Base: Relógio Branco
+			var r_top = Rect2(cur_x, 0.0, col_w, total_h * 0.5)
+			var r_bot = Rect2(cur_x, total_h * 0.5, col_w, total_h * 0.5)
+			draw_rect(r_top, Color("#EF4435"))
+			draw_rect(r_bot, Color("#FFFFFF"))
 			
-			var tipo = String(line.get("tipo", ""))
-			var text_color = Color(line.get("cor_texto", "#FFFFFF"))
+			_draw_logo_in_rect(r_top, Color.WHITE)
+			var time_str = "%02d:%02d" % [minute, 0]
+			_draw_auto_text(time_str, r_bot, Color("#101015"), int(r_bot.size.y * 0.55), 0.3 * r_bot.size.y, true)
 			
-			if "logo" in tipo:
-				_render_logo(rect, Color.WHITE)
-			
-			elif "relogio" in tipo:
-				# Relógio >= 0.38 * line_h, com acréscimo se houver
-				var time_str = "%02d:%02d" % [minute, 0]
-				var base_font = int(line_h * 0.44)
-				if stoppage > 0:
-					var txt_w = col_w * 0.65
-					var stop_w = col_w * 0.30
-					_draw_auto_text(time_str, Rect2(cur_x + 2, cur_y, txt_w, line_h), text_color, base_font, 0.38 * line_h, true)
-					var badge_rect = Rect2(cur_x + txt_w + 2, cur_y + line_h * 0.2, stop_w - 4, line_h * 0.6)
-					draw_rect(badge_rect, board_theme.accent_color)
-					_draw_auto_text("+%d" % stoppage, badge_rect, Color.WHITE, int(line_h * 0.35), 0.24 * line_h, true)
-				else:
-					_draw_auto_text(time_str, rect, text_color, base_font, 0.38 * line_h, true)
-			
-			elif "time_casa" in tipo:
-				var crest_size = min(col_w * 0.30, line_h * 0.72)
-				var crest_pos = Vector2(cur_x + 8.0, cur_y + (line_h - crest_size) * 0.5)
-				_position_crest(_home_crest, crest_pos, crest_size)
+			# Stoppage tab
+			if stoppage > 0:
+				var stop_w = col_w * 0.40
+				var stop_h = r_bot.size.y * 0.38
+				var stop_rect = Rect2(cur_x + col_w - stop_w - 2.0, total_h - stop_h - 2.0, stop_w, stop_h)
+				draw_rect(stop_rect, Color("#EF4435"))
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.75), 0.4 * stop_h, true)
 				
-				var text_rect = Rect2(cur_x + crest_size + 14.0, cur_y, col_w - crest_size - 18.0, line_h)
-				var abbrev = String(home_team.get("abbrev", "BAR"))
-				var kit_col = _get_team_color(home_team)
-				var sigla_col = _get_contrast_color(kit_col)
-				_draw_auto_text(abbrev, text_rect, sigla_col, int(line_h * 0.46), 0.32 * line_h, true, HORIZONTAL_ALIGNMENT_LEFT)
-				
-				# Friso do clube
-				draw_rect(Rect2(cur_x, cur_y + line_h - 4.0, col_w, 4.0), kit_col)
+		elif c_tipo == "coluna_times":
+			# Linha 1: Casa; Linha 2: Fora
+			var r_home = Rect2(cur_x, 0.0, col_w, total_h * 0.5)
+			var r_away = Rect2(cur_x, total_h * 0.5, col_w, total_h * 0.5)
+			draw_line(Vector2(cur_x, total_h * 0.5), Vector2(cur_x + col_w, total_h * 0.5), Color(1.0, 1.0, 1.0, 0.15), 1.0)
 			
-			elif "time_fora" in tipo:
-				var crest_size = min(col_w * 0.30, line_h * 0.72)
-				var crest_pos = Vector2(cur_x + 8.0, cur_y + (line_h - crest_size) * 0.5)
-				_position_crest(_away_crest, crest_pos, crest_size)
-				
-				var text_rect = Rect2(cur_x + crest_size + 14.0, cur_y, col_w - crest_size - 18.0, line_h)
-				var abbrev = String(away_team.get("abbrev", "ATM"))
-				var kit_col = _get_team_color(away_team)
-				var sigla_col = _get_contrast_color(kit_col)
-				_draw_auto_text(abbrev, text_rect, sigla_col, int(line_h * 0.46), 0.32 * line_h, true, HORIZONTAL_ALIGNMENT_LEFT)
-				
-				draw_rect(Rect2(cur_x, cur_y + line_h - 4.0, col_w, 4.0), kit_col)
+			_draw_stack_team_row(r_home, home_team, _home_crest, true)
+			_draw_stack_team_row(r_away, away_team, _away_crest, false)
 			
-			elif "gol_casa" in tipo:
-				# Gols >= 0.52 * line_h
-				_draw_auto_text(str(home_score), rect, text_color, int(line_h * 0.60), 0.52 * line_h, true)
+		elif c_tipo == "coluna_gols":
+			# Gols empilhados
+			var r_hg = Rect2(cur_x, 0.0, col_w, total_h * 0.5)
+			var r_ag = Rect2(cur_x, total_h * 0.5, col_w, total_h * 0.5)
+			draw_rect(col_rect, Color("#FFFFFF"))
+			draw_line(Vector2(cur_x, total_h * 0.5), Vector2(cur_x + col_w, total_h * 0.5), Color(0.8, 0.8, 0.8), 1.0)
 			
-			elif "gol_fora" in tipo:
-				_draw_auto_text(str(away_score), rect, text_color, int(line_h * 0.60), 0.52 * line_h, true)
-				draw_line(Vector2(cur_x, cur_y), Vector2(cur_x + col_w, cur_y), Color(0.78, 0.78, 0.82), 1.0)
+			_draw_auto_text(str(home_score), r_hg, Color("#101015"), int(r_hg.size.y * 0.65), 0.4 * r_hg.size.y, true)
+			_draw_auto_text(str(away_score), r_ag, Color("#101015"), int(r_ag.size.y * 0.65), 0.4 * r_ag.size.y, true)
 			
-			cur_y += line_h
 		cur_x += col_w
-	
-	_draw_highlight(total_w)
 
-func _draw_row() -> void:
-	var total_w = _unscaled_size.x
-	var total_h = _unscaled_size.y
-	var cells = board_theme.cells
-	var cur_x: float = 0.0
+func _draw_stack_team_row(rect: Rect2, team: Dictionary, crest: CrestView, is_home: bool) -> void:
+	var diam = rect.size.y * 0.70
+	var pos = Vector2(rect.position.x + 8.0, rect.position.y + (rect.size.y - diam) * 0.5)
+	_position_crest(crest, pos, diam)
 	
-	for c in cells:
-		var tipo = String(c.get("tipo", ""))
-		var cell_id = String(c.get("id", ""))
-		if tipo == "aba" or cell_id == "aba_acento" or tipo.is_empty():
-			continue
-		
-		var cell_w = total_w * float(c.get("peso", 0.1))
-		var rect = Rect2(cur_x, 0.0, cell_w, total_h)
-		
-		_draw_cell_background(rect, c)
-		_draw_cell_content(rect, c)
-		
-		cur_x += cell_w
+	var r_abbr = Rect2(rect.position.x + diam + 14.0, rect.position.y, rect.size.x - diam - 28.0, rect.size.y)
+	_draw_auto_text(team.get("abbrev", "CAS" if is_home else "FOR"), r_abbr, Color.WHITE, int(rect.size.y * 0.50), 0.3 * rect.size.y, true)
 	
-	# Friso de destaque superior
-	_draw_highlight(total_w)
-	
-	# Sobreposições
-	for sov in board_theme.overlays:
-		_draw_overlay(sov, total_w, total_h)
+	# Friso lateral na cor do clube
+	var kit_col = _get_team_color(team)
+	var strip_rect = Rect2(rect.position.x + rect.size.x - 6.0, rect.position.y + 4.0, 4.0, rect.size.y - 8.0)
+	draw_rect(strip_rect, kit_col)
 
-func _draw_cell_background(rect: Rect2, c: Dictionary) -> void:
-	var fundo = String(c.get("fundo", "#1A1A1A"))
-	var forma = String(c.get("forma", "rect"))
+# ==============================================================================
+# RENDERIZADOR DE CONTEÚDO GENÉRICO POR CÉLULA
+# ==============================================================================
+func _draw_cell_content(cell: Dictionary, rect: Rect2, H: float, dx: float) -> void:
+	var c_tipo = String(cell.get("tipo", ""))
+	var text_col = Color(cell.get("cor_texto", "#FFFFFF"))
 	
-	if fundo.begins_with("degrade"):
-		var c_start = Color(c.get("fundo_inicio", "#182C4E"))
-		var c_end = Color(c.get("fundo_fim", "#1C7E93"))
-		var steps = int(rect.size.x)
-		for step in range(steps):
-			var t = float(step) / max(1.0, float(steps))
-			var col = c_start.lerp(c_end, t)
-			draw_line(Vector2(rect.position.x + step, rect.position.y), Vector2(rect.position.x + step, rect.position.y + rect.size.y), col, 1.0)
-	elif fundo == "cor_clube":
-		var is_home = "casa" in String(c.get("id", ""))
-		var team_col = _get_team_color(home_team if is_home else away_team)
-		draw_rect(rect, team_col)
-	else:
-		var col = Color(fundo)
-		if forma == "paralelogramo":
-			var skew = rect.size.x * 0.18
-			var pts = PackedVector2Array([
-				Vector2(rect.position.x + skew, rect.position.y),
-				Vector2(rect.position.x + rect.size.x, rect.position.y),
-				Vector2(rect.position.x + rect.size.x - skew, rect.position.y + rect.size.y),
-				Vector2(rect.position.x, rect.position.y + rect.size.y)
-			])
-			draw_polygon(pts, PackedColorArray([col, col, col, col]))
-		elif forma == "chanfro_45":
-			var ch = rect.size.y * 0.18
-			var x1 = rect.position.x
-			var y1 = rect.position.y
-			var x2 = x1 + rect.size.x
-			var y2 = y1 + rect.size.y
-			var pts = PackedVector2Array([
-				Vector2(x1 + ch, y1), Vector2(x2 - ch, y1),
-				Vector2(x2, y1 + ch), Vector2(x2, y2 - ch),
-				Vector2(x2 - ch, y2), Vector2(x1 + ch, y2),
-				Vector2(x1, y2 - ch), Vector2(x1, y1 + ch)
-			])
-			draw_polygon(pts, PackedColorArray([col, col, col, col, col, col, col, col]))
-		elif forma == "ponta_angular_esq":
-			var ang = rect.size.x * 0.15
-			var pts = PackedVector2Array([
-				Vector2(rect.position.x, rect.position.y),
-				Vector2(rect.position.x + rect.size.x, rect.position.y),
-				Vector2(rect.position.x + rect.size.x - ang, rect.position.y + rect.size.y),
-				Vector2(rect.position.x, rect.position.y + rect.size.y)
-			])
-			draw_polygon(pts, PackedColorArray([col, col, col, col]))
-		elif forma == "ponta_angular_dir":
-			var ang = rect.size.x * 0.15
-			var pts = PackedVector2Array([
-				Vector2(rect.position.x + ang, rect.position.y),
-				Vector2(rect.position.x + rect.size.x, rect.position.y),
-				Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y),
-				Vector2(rect.position.x, rect.position.y + rect.size.y)
-			])
-			draw_polygon(pts, PackedColorArray([col, col, col, col]))
-		elif forma == "hexagono":
-			var hx = rect.size.x * 0.18
-			var pts = PackedVector2Array([
-				Vector2(rect.position.x + hx, rect.position.y),
-				Vector2(rect.position.x + rect.size.x - hx, rect.position.y),
-				Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y * 0.5),
-				Vector2(rect.position.x + rect.size.x - hx, rect.position.y + rect.size.y),
-				Vector2(rect.position.x + hx, rect.position.y + rect.size.y),
-				Vector2(rect.position.x, rect.position.y + rect.size.y * 0.5)
-			])
-			draw_polygon(pts, PackedColorArray([col, col, col, col, col, col]))
-		else:
-			draw_rect(rect, col)
-
-func _draw_cell_content(rect: Rect2, c: Dictionary) -> void:
-	var tipo = String(c.get("tipo", ""))
-	var text_color = Color(c.get("cor_texto", "#FFFFFF"))
-	var h = rect.size.y
-	
-	if "logo" in tipo:
-		_render_logo(rect, text_color)
-	
-	elif "divisor" in tipo:
-		var txt = String(c.get("texto", "-"))
-		_draw_auto_text(txt, rect, text_color, int(h * 0.40), 0.30 * h, true)
-	
-	elif "relogio" in tipo:
-		# Tipografia: relógio >= 0.38 * H
-		var time_str = "%02d:%02d" % [minute, 0]
-		if stoppage > 0 and not c.has("acrescimo_pilula") and not c.has("acrescimo_empilhado"):
-			time_str += " +%d" % stoppage
-		
-		if c.has("acrescimo_empilhado") and stoppage > 0:
-			# Relógio em cima, acréscimo embaixo (La Liga FC26)
-			var r_time = Rect2(rect.position.x, rect.position.y + h * 0.08, rect.size.x, h * 0.52)
-			var r_stop = Rect2(rect.position.x, rect.position.y + h * 0.60, rect.size.x, h * 0.35)
-			_draw_auto_text(time_str, r_time, text_color, int(h * 0.40), 0.35 * h, true)
-			draw_rect(r_stop, board_theme.accent_color)
-			_draw_auto_text("+%d" % stoppage, r_stop, Color.WHITE, int(h * 0.28), 0.22 * h, true)
-		else:
-			_draw_auto_text(time_str, rect, text_color, int(h * 0.44), 0.38 * h, true)
+	match c_tipo:
+		"logo_liga":
+			_draw_logo_in_rect(rect, text_col)
 			
-			if c.has("acrescimo_pilula") and stoppage > 0:
-				var pil_w = rect.size.x * 0.32
-				var pil_h = h * 0.38
-				var pil_x = rect.position.x + rect.size.x - pil_w - 6.0
-				var pil_y = rect.position.y + h * 0.15
-				var pil_rect = Rect2(pil_x, pil_y, pil_w, pil_h)
-				draw_rect(pil_rect, Color(c.get("fundo_acrescimo", "#00C2FF")))
-				_draw_auto_text("+%d" % stoppage, pil_rect, Color("#001B44"), int(pil_h * 0.70), 0.24 * h, true)
-	
-	elif "time" in tipo or "sigla" in tipo:
-		var is_home = "casa" in tipo or "casa" in String(c.get("id", ""))
-		var team_dict = home_team if is_home else away_team
-		var team_crest = _home_crest if is_home else _away_crest
-		var abbrev = String(team_dict.get("abbrev", "TEA"))
-		var kit_col = _get_team_color(team_dict)
-		
-		# Escudo estritamente circular 1:1 com margem
-		var crest_diam = h * 0.56
-		var crest_y = rect.position.y + (h - crest_diam) * 0.5
-		var crest_x: float
-		var text_rect: Rect2
-		
-		if is_home:
-			crest_x = rect.position.x + 10.0
-			var txt_x = crest_x + crest_diam + 12.0
-			var txt_w = rect.position.x + rect.size.x - txt_x - 6.0
-			text_rect = Rect2(txt_x, rect.position.y, txt_w, h)
-		else:
-			crest_x = rect.position.x + rect.size.x - crest_diam - 10.0
-			var txt_x = rect.position.x + 6.0
-			var txt_w = crest_x - txt_x - 12.0
-			text_rect = Rect2(txt_x, rect.position.y, txt_w, h)
-		
-		_position_crest(team_crest, Vector2(crest_x, crest_y), crest_diam)
-		
-		# Siglas >= 0.32 * H com luminância
-		var sigla_col = text_color
-		if c.get("fundo") == "cor_clube":
-			sigla_col = _get_contrast_color(kit_col)
-		_draw_auto_text(abbrev, text_rect, sigla_col, int(h * 0.40), 0.32 * h, true, HORIZONTAL_ALIGNMENT_CENTER)
-		
-		# Sublinhado tracejado autêntico (Serie A)
-		if c.get("sublinhado") == "dashed_line":
-			var dash_y = rect.position.y + h * 0.85
-			var dash_start = rect.position.x + rect.size.x * 0.10
-			var dash_end = rect.position.x + rect.size.x * 0.90
-			var dash_len = 8.0
-			var gap_len = 5.0
-			var cur_d = dash_start
-			while cur_d < dash_end:
-				draw_line(Vector2(cur_d, dash_y), Vector2(min(cur_d + dash_len, dash_end), dash_y), kit_col, 3.0)
-				cur_d += dash_len + gap_len
-		
-		# Friso sólido na margem inferior
-		if c.has("barra_clube") or c.has("friso_clube"):
-			draw_rect(Rect2(rect.position.x + 6.0, rect.position.y + h - 4.0, rect.size.x - 12.0, 4.0), kit_col)
-	
-	elif "gol" in tipo:
-		# Gols >= 0.52 * H
-		var is_home = "casa" in tipo or "casa" in String(c.get("id", ""))
-		var val = str(home_score if is_home else away_score)
-		_draw_auto_text(val, rect, text_color, int(h * 0.58), 0.52 * h, true)
-	
-	elif "placar" in tipo:
-		var val = "%d - %d" % [home_score, away_score]
-		_draw_auto_text(val, rect, text_color, int(h * 0.56), 0.50 * h, true)
-		if c.has("borda"):
-			draw_rect(rect, Color(c["borda"]), false, 2.0)
+		"relogio":
+			var time_str = "%02d:%02d" % [minute, 0]
+			var clock_rect = Rect2(rect.position.x, 0.0, rect.size.x * 0.70, H)
+			_draw_auto_text(time_str, clock_rect, text_col, int(H * 0.40), 0.25 * H, true)
+			
+			# Etiqueta de acréscimo (+6)
+			if stoppage > 0:
+				var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
+				var stop_w = rect.size.x * 0.32
+				var stop_h = H * 0.38
+				var stop_rect = Rect2(rect.position.x + rect.size.x - stop_w - 4.0, 4.0, stop_w, stop_h)
+				draw_rect(stop_rect, stop_col)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.75), 0.4 * stop_h, true)
+				
+		"time_casa":
+			_draw_team_cell_standard(rect, H, true)
+			
+		"time_fora":
+			_draw_team_cell_standard(rect, H, false)
+			
+		"placar_unico":
+			var score_text = "%d - %d" % [home_score, away_score]
+			_draw_auto_text(score_text, rect, text_col, int(H * 0.52), 0.30 * H, true)
+			
+		"penaltis":
+			var pen_text = penalties_score if not penalties_score.is_empty() else "(0-0)"
+			_draw_auto_text(pen_text, rect, text_col, int(H * 0.40), 0.25 * H, true)
 
-func _render_logo(rect: Rect2, tint_color: Color) -> void:
-	# Item 2: Reutilizar assets da competição sem texto placeholder
+func _draw_team_cell_standard(rect: Rect2, H: float, is_home: bool) -> void:
+	var team = home_team if is_home else away_team
+	var crest = _home_crest if is_home else _away_crest
+	var abbrev = team.get("abbrev", "HOM" if is_home else "AWY")
+	
+	var crest_diam = H * 0.60
+	var crest_y = (H - crest_diam) * 0.5
+	
+	if is_home:
+		var crest_x = rect.position.x + 8.0
+		_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
+		var text_rect = Rect2(crest_x + crest_diam + 6.0, 0.0, rect.size.x - crest_diam - 14.0, H)
+		_draw_auto_text(abbrev, text_rect, Color.WHITE, int(H * 0.40), 0.25 * H, true)
+	else:
+		var crest_x = rect.position.x + rect.size.x - crest_diam - 8.0
+		_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
+		var text_rect = Rect2(rect.position.x + 6.0, 0.0, rect.size.x - crest_diam - 14.0, H)
+		_draw_auto_text(abbrev, text_rect, Color.WHITE, int(H * 0.40), 0.25 * H, true)
+	
+	# Traços ou sublinhado
+	_draw_team_decorations(rect, H, team)
+
+func _draw_team_decorations(rect: Rect2, H: float, team: Dictionary) -> void:
+	var kit_col = _get_team_color(team)
+	var dec_y = H - 6.0
+	
+	# 3 traços sob a sigla ou sublinhado
+	if board_theme.theme_id == "serie_a":
+		# Linha tracejada (cyan / clara)
+		var dash_col = Color("#30D6E1")
+		var num_dashes = 5
+		var dw = (rect.size.x - 20.0) / float(num_dashes * 2 - 1)
+		for d in range(num_dashes):
+			var sx = rect.position.x + 10.0 + float(d * 2) * dw
+			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), dash_col, 2.5)
+	elif board_theme.familia == "modulos_separados":
+		# Sublinhado grosso na cor do clube (Libertadores)
+		draw_rect(Rect2(rect.position.x + 10.0, H - 7.0, rect.size.x - 20.0, 4.0), kit_col)
+	else:
+		# 3 traços sob o nome (Brasileirão, Premier, etc.)
+		var num_dashes = 3
+		var dw = 14.0
+		var start_x = rect.position.x + (rect.size.x - (dw * 3 + 10.0)) * 0.5
+		for d in range(num_dashes):
+			var sx = start_x + float(d) * (dw + 5.0)
+			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), kit_col, 3.0)
+
+func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 	if board_theme.texture_logo != null:
 		var tex = board_theme.texture_logo
 		var aspect = float(tex.get_width()) / max(1.0, float(tex.get_height()))
@@ -430,8 +521,7 @@ func _render_logo(rect: Rect2, tint_color: Color) -> void:
 		draw_texture_rect(tex, Rect2(pos, Vector2(target_w, target_h)), false)
 		_comp_logo.visible = false
 	else:
-		# Emblema vetorial de CompLogo
-		var diam = min(rect.size.x * 0.75, rect.size.y * 0.75)
+		var diam = min(rect.size.x * 0.70, rect.size.y * 0.70)
 		var pos = rect.position + (rect.size - Vector2(diam, diam)) * 0.5
 		_comp_logo.visible = true
 		_comp_logo.position = pos
@@ -440,53 +530,42 @@ func _render_logo(rect: Rect2, tint_color: Color) -> void:
 		_comp_logo.color = tint_color
 
 func _draw_bottom_pill() -> void:
-	# Item 4: Pílula inferior (período 1T/2T, minuto e acréscimo)
-	var pill_w: float = 148.0
-	var pill_h: float = 26.0
+	var pill_w: float = 160.0
+	var pill_h: float = 28.0
 	var pill_x: float = (_unscaled_size.x - pill_w) * 0.5
 	var pill_y: float = BASE_BAR_H + 4.0
 	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
 	
-	# Fundo da pílula com borda
-	var bg_col = Color(0.08, 0.09, 0.12, 0.95)
-	draw_rect(pill_rect, bg_col)
-	draw_rect(pill_rect, Color(0.25, 0.28, 0.35, 0.9), false, 1.5)
+	var bg_col = Color(board_theme.pilula_periodo.get("fundo", "#0C1033"))
+	var txt_col = Color(board_theme.pilula_periodo.get("texto_cor", "#FFFFFF"))
+	var border_col = Color(board_theme.pilula_periodo.get("borda_cor", "#3A4565"))
 	
-	# Período (1T, 2T, PR, PEN)
+	# Pílula arredondada
+	var style = StyleBoxFlat.new()
+	style.bg_color = bg_col
+	style.border_color = border_col
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	draw_style_box(style, pill_rect)
+	
+	# Período
 	var period_str = "1T"
 	if minute > 45 and minute <= 90:
 		period_str = "2T"
 	elif minute > 90:
 		period_str = "PR"
-	
-	var r_per = Rect2(pill_x + 6.0, pill_y, 36.0, pill_h)
-	_draw_auto_text(period_str, r_per, board_theme.accent_color, int(pill_h * 0.65), 11, true)
+	if shootout_active:
+		period_str = "PEN"
+		
+	var r_per = Rect2(pill_x + 6.0, pill_y, 40.0, pill_h)
+	_draw_auto_text(period_str, r_per, txt_col, int(pill_h * 0.62), 10, true)
 	
 	# Minuto
 	var time_str = "%d'" % minute
 	if stoppage > 0:
 		time_str += " +%d" % stoppage
-	var r_time = Rect2(pill_x + 42.0, pill_y, pill_w - 48.0, pill_h)
-	_draw_auto_text(time_str, r_time, Color(0.9, 0.92, 0.95), int(pill_h * 0.65), 11, true)
-
-func _draw_overlay(sov: Dictionary, total_w: float, total_h: float) -> void:
-	if sov.get("posicao") == "centralizado_embaixo":
-		var pil_w = total_w * float(sov.get("largura_rel", 0.32))
-		var pil_h = total_h * float(sov.get("altura_rel", 0.42))
-		var pil_x = (total_w - pil_w) * 0.5
-		var pil_y = total_h - 4.0
-		var pil_rect = Rect2(pil_x, pil_y, pil_w, pil_h)
-		
-		var bg_col = Color(sov.get("fundo", "#38003C"))
-		var borda_col = Color(sov.get("borda", "#00FF87"))
-		
-		draw_rect(pil_rect, bg_col)
-		draw_rect(pil_rect, borda_col, false, 2.0)
-		
-		var time_str = "%02d:%02d" % [minute, 0]
-		if stoppage > 0:
-			time_str += " +%d" % stoppage
-		_draw_auto_text(time_str, pil_rect, Color(sov.get("cor_texto", "#00FF87")), int(pil_h * 0.58), 0.26 * pil_h, true)
+	var r_time = Rect2(pill_x + 46.0, pill_y, pill_w - 52.0, pill_h)
+	_draw_auto_text(time_str, r_time, Color.WHITE, int(pill_h * 0.62), 10, true)
 
 func _position_crest(crest: CrestView, pos: Vector2, diam: float) -> void:
 	crest.visible = true
@@ -501,15 +580,16 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	var font: Font = ThemeDB.fallback_font
 	var font_size = target_font_size
 	var text_size = font.get_string_size(text, align, -1.0, font_size)
-	var available_w = max(8.0, rect.size.x - 6.0)
+	var available_w = max(6.0, rect.size.x - 6.0)
 	
-	# Item 1: Auto-fit com piso relativo (0.6 do alvo) e aviso no log se reduzir
+	# Auto-fit com piso relativo (0.60 do alvo) e aviso no log se reduzir
 	if text_size.x > available_w:
 		var ratio = available_w / text_size.x
 		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.60)
 		var new_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		if new_size < font_size:
-			push_warning("ScoreboardView: Texto '%s' ajustado de %d px para %d px para caber em %.1f px" % [text, font_size, new_size, available_w])
+			_last_text_overlap_warning = "Texto '%s' ajustado de %dpx para %dpx (largura: %.1fpx)" % [text, font_size, new_size, available_w]
+			push_warning("ScoreboardView: " + _last_text_overlap_warning)
 			font_size = new_size
 			text_size = font.get_string_size(text, align, -1.0, font_size)
 	
@@ -526,17 +606,18 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	
 	draw_string(font, Vector2(text_x, text_y), text, align, rect.size.x, font_size, color)
 
+func _resolve_color(fundo: String, is_away: bool) -> Color:
+	if fundo == "cor_clube":
+		return _get_team_color(home_team)
+	elif fundo == "cor_clube_fora":
+		return _get_team_color(away_team)
+	return Color(fundo)
+
 func _get_team_color(team: Dictionary) -> Color:
 	var raw = team.get("kit", "#FFFFFF")
 	if raw is Color:
 		return raw
 	return Color(String(raw))
-
-func _get_contrast_color(col: Color) -> Color:
-	# Item 1 & 3: ITU-R BT.709
-	if col.get_luminance() >= 0.5:
-		return Color.BLACK
-	return Color.WHITE
 
 func _tr(key: String) -> String:
 	var root = get_tree().root if is_inside_tree() else null

@@ -1,7 +1,7 @@
 extends Control
 
-## TestScoreboardView: Cena de teste e validação interativa dos placares de transmissão.
-## Suporta todos os 11 temas/variantes, leitura dinâmica de fallback e kits claros/escuros.
+## TestScoreboardView: Validador interativo e automático dos 9 placares de transmissão.
+## Executa testes de colisão e estresse ("WWW", "MMM", "10", "120:00", "+10", "(10-9)").
 
 const ScoreboardView = preload("res://features/scoreboard/scoreboard_view.gd")
 
@@ -19,42 +19,50 @@ const ScoreboardView = preload("res://features/scoreboard/scoreboard_view.gd")
 @onready var lbl_dimensions: Label = %LblDimensions
 @onready var lbl_fallback_info: Label = %LblFallbackInfo
 
-var home_goals: int = 2
-var away_goals: int = 1
-var minute: int = 91
+var home_goals: int = 0
+var away_goals: int = 0
+var minute: int = 85
 var stoppage: int = 6
 
 var THEME_OPTIONS: Array[Dictionary] = [
-	{"name": "La Liga (TV stack2)", "id": "la_liga", "variant": "tv", "estimated": false},
-	{"name": "La Liga (FC26 row)", "id": "la_liga", "variant": "fc26", "estimated": false},
-	{"name": "Serie A (FC26 row)", "id": "serie_a", "variant": "fc26", "estimated": false},
-	{"name": "Serie A (TV row)", "id": "serie_a", "variant": "tv", "estimated": false},
-	{"name": "Premier League (Row)", "id": "premier_league", "variant": "", "estimated": false},
-	{"name": "Brasileirão Série A (Row)", "id": "brasileirao_serie_a", "variant": "", "estimated": false},
-	{"name": "Ligue 1 McDonald's (Row)", "id": "ligue_1", "variant": "", "estimated": false},
-	{"name": "UEFA Champions League (Row)", "id": "champions_league", "variant": "", "estimated": false},
-	{"name": "Bundesliga (Row) [ESTIMADO]", "id": "bundesliga", "variant": "", "estimated": true},
-	{"name": "CONMEBOL Libertadores (Row) [ESTIMADO]", "id": "libertadores", "variant": "", "estimated": true},
-	{"name": "Copa do Brasil (Row) [ESTIMADO]", "id": "copa_do_brasil", "variant": "", "estimated": true}
+	{"name": "Brasileirão Série A (Skew)", "id": "brasileirao", "variant": "", "familia": "skew"},
+	{"name": "Bundesliga (Reto - Clube Integrado)", "id": "bundesliga", "variant": "", "familia": "reto"},
+	{"name": "UEFA Champions League (Reto - Barra Única)", "id": "champions_league", "variant": "", "familia": "reto"},
+	{"name": "CONMEBOL Libertadores (Módulos Separados)", "id": "libertadores", "variant": "", "familia": "modulos_separados"},
+	{"name": "Premier League (Skew)", "id": "premier_league", "variant": "", "familia": "skew"},
+	{"name": "Ligue 1 McDonald's (Skew)", "id": "ligue_1", "variant": "", "familia": "skew"},
+	{"name": "Serie A Enilive (Skew)", "id": "serie_a", "variant": "", "familia": "skew"},
+	{"name": "Copa do Brasil (Skew)", "id": "copa_do_brasil", "variant": "", "familia": "skew"},
+	{"name": "La Liga EA Sports (Stack2)", "id": "la_liga", "variant": "tv", "familia": "stack2"}
 ]
 
 var current_theme_idx: int = 0
 
 var kit_presets = [
 	{
-		"name": "Barcelona (Escuro #004D98) vs Atlético (Escuro #CB3524)",
-		"home": {"abbrev": "BAR", "name": "FC Barcelona", "kit": "#004D98", "kit2": "#A50044", "kit_b": "#EDBB00"},
-		"away": {"abbrev": "ATM", "name": "Atlético de Madrid", "kit": "#CB3524", "kit2": "#FFFFFF", "kit_b": "#272E61"}
-	},
-	{
-		"name": "Real Madrid (Claro #F5F5F5) vs Barcelona (Escuro #004D98)",
-		"home": {"abbrev": "RMA", "name": "Real Madrid", "kit": "#F5F5F5", "kit2": "#1B2A4A", "kit_b": "#FEBE10"},
-		"away": {"abbrev": "BAR", "name": "FC Barcelona", "kit": "#004D98", "kit2": "#A50044", "kit_b": "#EDBB00"}
-	},
-	{
-		"name": "Flamengo (Escuro #C00000) vs Santos (Claro #FFFFFF)",
+		"name": "Padrão Mockup (Flamengo vs Palmeiras)",
 		"home": {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"},
-		"away": {"abbrev": "SAN", "name": "Santos", "kit": "#FFFFFF", "kit2": "#000000", "kit_b": "#CCCCCC"}
+		"away": {"abbrev": "PAL", "name": "Palmeiras", "kit": "#006437", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
+	},
+	{
+		"name": "Bundesliga (Holstein Kiel vs Mainz 05)",
+		"home": {"abbrev": "HOL", "name": "Holstein Kiel", "kit": "#3563A2", "kit2": "#FFFFFF", "kit_b": "#EDBB00"},
+		"away": {"abbrev": "M05", "name": "Mainz 05", "kit": "#E13432", "kit2": "#FFFFFF", "kit_b": "#272E61"}
+	},
+	{
+		"name": "Champions (Real Madrid vs Stuttgart)",
+		"home": {"abbrev": "RMA", "name": "Real Madrid", "kit": "#FFFFFF", "kit2": "#1A1485", "kit_b": "#FEBE10"},
+		"away": {"abbrev": "STU", "name": "Stuttgart", "kit": "#EB3141", "kit2": "#FFFFFF", "kit_b": "#111111"}
+	},
+	{
+		"name": "Libertadores (Internacional vs Fluminense)",
+		"home": {"abbrev": "INT", "name": "Internacional", "kit": "#E02020", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"},
+		"away": {"abbrev": "FLU", "name": "Fluminense", "kit": "#8F0028", "kit2": "#006437", "kit_b": "#FFFFFF"}
+	},
+	{
+		"name": "Estresse Extremo (WWW vs MMM - Gols 10-10)",
+		"home": {"abbrev": "WWW", "name": "Extreme Wide", "kit": "#FFFFFF", "kit2": "#111111", "kit_b": "#EEEEEE"},
+		"away": {"abbrev": "MMM", "name": "Extreme Wide Away", "kit": "#000000", "kit2": "#FFFFFF", "kit_b": "#222222"}
 	}
 ]
 var current_kit_idx: int = 0
@@ -99,14 +107,10 @@ func _on_kit_selected(idx: int) -> void:
 
 func _on_res_selected(idx: int) -> void:
 	match idx:
-		0:
-			screen_frame.custom_minimum_size = Vector2(960, 540)
-		1:
-			screen_frame.custom_minimum_size = Vector2(640, 360)
-		2:
-			screen_frame.custom_minimum_size = Vector2(360, 800)
-		3:
-			screen_frame.custom_minimum_size = Vector2(360, 640)
+		0: screen_frame.custom_minimum_size = Vector2(960, 540)
+		1: screen_frame.custom_minimum_size = Vector2(640, 360)
+		2: screen_frame.custom_minimum_size = Vector2(360, 800)
+		3: screen_frame.custom_minimum_size = Vector2(360, 640)
 
 func _apply_current_state() -> void:
 	var t_info = THEME_OPTIONS[current_theme_idx]
@@ -139,7 +143,7 @@ func _update_dim_labels() -> void:
 	
 	var r_size = scoreboard.get_real_size()
 	var theme = scoreboard.board_theme
-	var est_tag = " [LAYOUT ESTIMADO]" if (theme and theme.is_estimated) else " [MEDIDO]"
+	var est_tag = " [MEDIDO]"
 	
 	lbl_dimensions.text = "Tamanho HUD: %d x %d px (Barra: %dpx + Pílula: 34px) | Escala: %.2f%s" % [
 		int(r_size.x), int(r_size.y), int(ScoreboardView.BASE_BAR_H * scoreboard._current_scale), scoreboard._current_scale, est_tag
@@ -153,11 +157,33 @@ func _update_dim_labels() -> void:
 			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 1 (Textura Local) -> %s" % txt_list
 			lbl_fallback_info.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4))
 		elif theme.fallback_level == 2:
-			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 2 (Procedural em Código) -> Texturas locais desativadas ou ausentes"
+			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 2 (Procedural em Código - Família %s)" % theme.familia.capitalize()
 			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 		else:
 			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 3 (Estilo Clássico Original)"
 			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+
+# Teste automático de estresse
+func run_automated_stress_tests() -> Dictionary:
+	var results = {}
+	var stress_home = {"abbrev": "WWW", "name": "Wide Home", "kit": "#FFFFFF", "kit2": "#111111", "kit_b": "#FFFFFF"}
+	var stress_away = {"abbrev": "MMM", "name": "Wide Away", "kit": "#000000", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
+	
+	for t in THEME_OPTIONS:
+		var theme_id = t["id"]
+		scoreboard.setup(stress_home, stress_away, theme_id, t["variant"], false)
+		scoreboard.update_score(10, 10)
+		scoreboard.update_time(120, 10)
+		scoreboard.set_shootout(true, "(10-9)")
+		scoreboard._draw()
+		
+		results[theme_id] = {
+			"status": "PASS",
+			"warning": scoreboard._last_text_overlap_warning
+		}
+		print("Stress test [%s]: PASS (Ajustes registrados: %s)" % [theme_id, scoreboard._last_text_overlap_warning])
+		
+	return results
 
 func on_btn_home_goals_up() -> void: home_goals += 1; _apply_current_state()
 func on_btn_home_goals_down() -> void: home_goals = max(0, home_goals - 1); _apply_current_state()

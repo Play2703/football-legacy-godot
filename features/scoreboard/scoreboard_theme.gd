@@ -5,9 +5,13 @@ extends Resource
 
 @export var theme_id: String = "la_liga"
 @export var display_name: String = "LaLiga EA Sports"
+@export var familia: String = "skew" # "skew", "reto", "modulos_separados", "stack2"
 @export var mode: String = "row" # "row" ou "stack2"
-@export var aspect_ratio: float = 5.0
+@export var aspect_ratio: float = 8.0
 @export var reference_height: float = 86.0
+@export var skew_deg: float = 0.0
+@export var raio_canto: float = 0.0
+@export var gap: float = 0.0
 @export var cells: Array[Dictionary] = []
 @export var stack_columns: Array[Dictionary] = []
 @export var overlays: Array[Dictionary] = []
@@ -15,6 +19,16 @@ extends Resource
 @export var visual_params: Dictionary = {}
 @export var competition_logo_type: String = "liga_es"
 @export var is_estimated: bool = false
+
+# Metadados de dimensionamento
+@export var largura_em_86: int = 688
+@export var largura_em_62: int = 496
+@export var etiqueta_acrescimo: Dictionary = {}
+@export var pilula_periodo: Dictionary = {}
+
+# Pênaltis / Disputa
+@export var penalties_score: String = ""
+@export var shootout_active: bool = false
 
 # Texturas Locais (em res://assets/scoreboard_local/<liga>/)
 @export var texture_bg: Texture2D = null
@@ -40,7 +54,7 @@ extends Resource
 @export var missing_textures: Array[String] = []
 
 func is_stack2() -> bool:
-	return mode == "stack2"
+	return mode == "stack2" or familia == "stack2"
 
 func get_width_for_height(h: float) -> float:
 	return h * aspect_ratio
