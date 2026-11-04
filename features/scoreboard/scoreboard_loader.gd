@@ -49,6 +49,9 @@ static func load_theme(theme_id: String, variant: String = "", use_local_tex: bo
 	theme.compact_variant = layout_data.get("variante_compacta", {})
 	theme.cells = _convert_array_dicts(layout_data.get("celulas", []))
 	
+	theme.font_type = String(layout_data.get("fonte", "condensada"))
+	theme.font_res = resolve_scoreboard_font(theme.font_type)
+	
 	var mode: String = String(layout_data.get("modo", "row"))
 	if theme.familia == "stack2" or mode == "stack2":
 		mode = "stack2"
@@ -117,6 +120,65 @@ static func _load_texture_resilient(path: String) -> Texture2D:
 		if img and not img.is_empty():
 			return ImageTexture.create_from_image(img)
 	return null
+
+static func resolve_scoreboard_font(font_type: String) -> Font:
+	var path_candidates: Array[String] = []
+	var is_champions: bool = (font_type == "larga_espacada")
+	
+	match font_type:
+		"condensada":
+			path_candidates = [
+				"res://assets/fonts/BebasNeue-Regular.ttf",
+				"res://assets/fonts/Bebas_Neue/BebasNeue-Regular.ttf",
+				"res://assets/fonts/Montserrat-ExtraBold.ttf"
+			]
+		"larga_negrito":
+			path_candidates = [
+				"res://assets/fonts/Montserrat-ExtraBold.ttf",
+				"res://assets/fonts/Montserrat/static/Montserrat-ExtraBold.ttf",
+				"res://assets/fonts/BebasNeue-Regular.ttf"
+			]
+		"larga_espacada":
+			path_candidates = [
+				"res://assets/fonts/Inter-Medium.ttf",
+				"res://assets/fonts/Inter/static/Inter_24pt-Medium.ttf",
+				"res://assets/fonts/Inter/static/Inter_18pt-Medium.ttf",
+				"res://assets/fonts/Montserrat-ExtraBold.ttf"
+			]
+		_:
+			path_candidates = [
+				"res://assets/fonts/BebasNeue-Regular.ttf",
+				"res://assets/fonts/Montserrat-ExtraBold.ttf"
+			]
+	
+	var base_font: Font = null
+	for p in path_candidates:
+		if ResourceLoader.exists(p):
+			base_font = load(p) as Font
+			if base_font:
+				break
+		elif FileAccess.file_exists(p):
+			var ff = FontFile.new()
+			var err = ff.load_dynamic_font(p)
+			if err == OK:
+				ff.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+				ff.hinting = TextServer.HINTING_NONE
+				ff.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
+				base_font = ff
+				break
+	
+	if base_font == null:
+		push_warning("ScoreboardLoader: Nenhuma fonte encontrada para '%s', usando fallback mais proximo." % font_type)
+		base_font = ThemeDB.fallback_font
+	
+	if is_champions and base_font != null:
+		var var_font = FontVariation.new()
+		var_font.base_font = base_font
+		# Espaçamento de letras ≈ 0.2 em
+		var_font.spacing_glyph = 4
+		return var_font
+		
+	return base_font
 
 static func _convert_array_dicts(raw: Array) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

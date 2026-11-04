@@ -3,7 +3,7 @@
   "nome": "UEFA Champions League",
   "familia": "reto",
   "confianca": "medido",
-  "fonte": "referencias_reais/design_usuario/champions_league.png",
+  "fonte": "larga_espacada",
   "proporcao_barra": 11.43,
   "skew_deg": 0.0,
   "raio_canto": 0.0,
