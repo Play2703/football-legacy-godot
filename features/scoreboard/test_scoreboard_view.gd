@@ -1,7 +1,7 @@
 extends Control
 
 ## TestScoreboardView: Cena de teste e validação interativa dos placares de transmissão.
-## Pode ser executada no editor Godot ou via linha de comando (headless com captura automática).
+## Suporta todos os 11 temas/variantes, leitura dinâmica de fallback e kits claros/escuros.
 
 const ScoreboardView = preload("res://features/scoreboard/scoreboard_view.gd")
 
@@ -17,29 +17,42 @@ const ScoreboardView = preload("res://features/scoreboard/scoreboard_view.gd")
 @onready var opt_res: OptionButton = %OptRes
 @onready var screen_frame: PanelContainer = %ScreenFrame
 @onready var lbl_dimensions: Label = %LblDimensions
+@onready var lbl_fallback_info: Label = %LblFallbackInfo
 
 var home_goals: int = 2
 var away_goals: int = 1
 var minute: int = 91
 var stoppage: int = 6
 
-var current_theme_id: String = "la_liga"
-var current_variant: String = "tv"
+var THEME_OPTIONS: Array[Dictionary] = [
+	{"name": "La Liga (TV stack2)", "id": "la_liga", "variant": "tv", "estimated": false},
+	{"name": "La Liga (FC26 row)", "id": "la_liga", "variant": "fc26", "estimated": false},
+	{"name": "Serie A (FC26 row)", "id": "serie_a", "variant": "fc26", "estimated": false},
+	{"name": "Serie A (TV row)", "id": "serie_a", "variant": "tv", "estimated": false},
+	{"name": "Premier League (Row)", "id": "premier_league", "variant": "", "estimated": false},
+	{"name": "Brasileirão Série A (Row)", "id": "brasileirao_serie_a", "variant": "", "estimated": false},
+	{"name": "Ligue 1 McDonald's (Row)", "id": "ligue_1", "variant": "", "estimated": false},
+	{"name": "UEFA Champions League (Row)", "id": "champions_league", "variant": "", "estimated": false},
+	{"name": "Bundesliga (Row) [ESTIMADO]", "id": "bundesliga", "variant": "", "estimated": true},
+	{"name": "CONMEBOL Libertadores (Row) [ESTIMADO]", "id": "libertadores", "variant": "", "estimated": true},
+	{"name": "Copa do Brasil (Row) [ESTIMADO]", "id": "copa_do_brasil", "variant": "", "estimated": true}
+]
 
-# Kits para teste de contraste de luminância
+var current_theme_idx: int = 0
+
 var kit_presets = [
 	{
-		"name": "Barcelona (Escuro) vs Atlético (Escuro)",
+		"name": "Barcelona (Escuro #004D98) vs Atlético (Escuro #CB3524)",
 		"home": {"abbrev": "BAR", "name": "FC Barcelona", "kit": "#004D98", "kit2": "#A50044", "kit_b": "#EDBB00"},
 		"away": {"abbrev": "ATM", "name": "Atlético de Madrid", "kit": "#CB3524", "kit2": "#FFFFFF", "kit_b": "#272E61"}
 	},
 	{
-		"name": "Real Madrid (Claro) vs Barcelona (Escuro)",
+		"name": "Real Madrid (Claro #F5F5F5) vs Barcelona (Escuro #004D98)",
 		"home": {"abbrev": "RMA", "name": "Real Madrid", "kit": "#F5F5F5", "kit2": "#1B2A4A", "kit_b": "#FEBE10"},
 		"away": {"abbrev": "BAR", "name": "FC Barcelona", "kit": "#004D98", "kit2": "#A50044", "kit_b": "#EDBB00"}
 	},
 	{
-		"name": "Flamengo (Escuro) vs Santos (Claro)",
+		"name": "Flamengo (Escuro #C00000) vs Santos (Claro #FFFFFF)",
 		"home": {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"},
 		"away": {"abbrev": "SAN", "name": "Santos", "kit": "#FFFFFF", "kit2": "#000000", "kit_b": "#CCCCCC"}
 	}
@@ -49,19 +62,13 @@ var current_kit_idx: int = 0
 func _ready() -> void:
 	_setup_ui()
 	_apply_current_state()
-	
-	# Verificar se foi invocado em modo de screenshot automático
-	var user_args = OS.get_cmdline_user_args()
-	if "--screenshot" in user_args:
-		_run_auto_screenshots()
 
 func _setup_ui() -> void:
 	if not opt_theme:
 		return
 	opt_theme.clear()
-	opt_theme.add_item("La Liga (TV stack2)")
-	opt_theme.add_item("La Liga (FC26 row)")
-	opt_theme.add_item("Brasileirão Série A")
+	for t in THEME_OPTIONS:
+		opt_theme.add_item(t["name"])
 	opt_theme.select(0)
 	opt_theme.item_selected.connect(_on_theme_selected)
 	
@@ -79,20 +86,11 @@ func _setup_ui() -> void:
 	opt_res.select(0)
 	opt_res.item_selected.connect(_on_res_selected)
 	
-	chk_compact.toggled.connect(func(v): scoreboard.set_compact(v); _update_dim_label())
-	chk_local_tex.toggled.connect(func(v): scoreboard.set_use_local_textures(v); _update_dim_label())
+	chk_compact.toggled.connect(func(v): scoreboard.set_compact(v); _update_dim_labels())
+	chk_local_tex.toggled.connect(func(v): scoreboard.set_use_local_textures(v); _update_dim_labels())
 
 func _on_theme_selected(idx: int) -> void:
-	match idx:
-		0:
-			current_theme_id = "la_liga"
-			current_variant = "tv"
-		1:
-			current_theme_id = "la_liga"
-			current_variant = "fc26"
-		2:
-			current_theme_id = "brasileirao_serie_a"
-			current_variant = ""
+	current_theme_idx = idx
 	_apply_current_state()
 
 func _on_kit_selected(idx: int) -> void:
@@ -102,7 +100,7 @@ func _on_kit_selected(idx: int) -> void:
 func _on_res_selected(idx: int) -> void:
 	match idx:
 		0:
-			screen_frame.custom_minimum_size = Vector2(960, 540) # Preview 50%
+			screen_frame.custom_minimum_size = Vector2(960, 540)
 		1:
 			screen_frame.custom_minimum_size = Vector2(640, 360)
 		2:
@@ -111,14 +109,23 @@ func _on_res_selected(idx: int) -> void:
 			screen_frame.custom_minimum_size = Vector2(360, 640)
 
 func _apply_current_state() -> void:
+	var t_info = THEME_OPTIONS[current_theme_idx]
 	var kp = kit_presets[current_kit_idx]
-	scoreboard.setup(kp["home"], kp["away"], current_theme_id, current_variant, chk_local_tex.button_pressed if chk_local_tex else true)
+	
+	scoreboard.setup(
+		kp["home"],
+		kp["away"],
+		t_info["id"],
+		t_info["variant"],
+		chk_local_tex.button_pressed if chk_local_tex else true
+	)
 	scoreboard.update_score(home_goals, away_goals)
 	scoreboard.update_time(minute, stoppage)
 	if chk_compact:
 		scoreboard.set_compact(chk_compact.button_pressed)
+	
 	_update_labels()
-	_update_dim_label()
+	_update_dim_labels()
 
 func _update_labels() -> void:
 	if lbl_home_goals: lbl_home_goals.text = str(home_goals)
@@ -126,15 +133,32 @@ func _update_labels() -> void:
 	if lbl_minute: lbl_minute.text = "%d'" % minute
 	if lbl_stoppage: lbl_stoppage.text = "+%d" % stoppage
 
-func _update_dim_label() -> void:
+func _update_dim_labels() -> void:
 	if not lbl_dimensions:
 		return
+	
 	var r_size = scoreboard.get_real_size()
-	lbl_dimensions.text = "Tamanho Real: %d x %d px | Escala: %.2f | Fallback Nível: %d" % [
-		int(r_size.x), int(r_size.y), scoreboard._current_scale, scoreboard.board_theme.fallback_level if scoreboard.board_theme else 2
+	var theme = scoreboard.board_theme
+	var est_tag = " [LAYOUT ESTIMADO]" if (theme and theme.is_estimated) else " [MEDIDO]"
+	
+	lbl_dimensions.text = "Tamanho HUD: %d x %d px (Barra: %dpx + Pílula: 34px) | Escala: %.2f%s" % [
+		int(r_size.x), int(r_size.y), int(ScoreboardView.BASE_BAR_H * scoreboard._current_scale), scoreboard._current_scale, est_tag
 	]
+	
+	if lbl_fallback_info and theme:
+		if theme.fallback_level == 1:
+			var txt_list = ", ".join(theme.found_textures.slice(0, 3))
+			if theme.found_textures.size() > 3:
+				txt_list += " (+%d arquivos)" % (theme.found_textures.size() - 3)
+			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 1 (Textura Local) -> %s" % txt_list
+			lbl_fallback_info.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4))
+		elif theme.fallback_level == 2:
+			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 2 (Procedural em Código) -> Texturas locais desativadas ou ausentes"
+			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
+		else:
+			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 3 (Estilo Clássico Original)"
+			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 
-# Handlers de botões
 func on_btn_home_goals_up() -> void: home_goals += 1; _apply_current_state()
 func on_btn_home_goals_down() -> void: home_goals = max(0, home_goals - 1); _apply_current_state()
 func on_btn_away_goals_up() -> void: away_goals += 1; _apply_current_state()
@@ -143,32 +167,3 @@ func on_btn_minute_up() -> void: minute += 1; _apply_current_state()
 func on_btn_minute_down() -> void: minute = max(0, minute - 1); _apply_current_state()
 func on_btn_stoppage_up() -> void: stoppage += 1; _apply_current_state()
 func on_btn_stoppage_down() -> void: stoppage = max(0, stoppage - 1); _apply_current_state()
-
-# Rotina de exportação automática de capturas de teste
-func _run_auto_screenshots() -> void:
-	print("[Screenshot Mode] Iniciando captura automática...")
-	var out_dir = "res://REFERENCIAS_SCOREBOARD/capturas_teste/"
-	var targets = [
-		{"id": "la_liga", "variant": "tv", "name": "teste_la_liga_tv_stack2.png"},
-		{"id": "la_liga", "variant": "fc26", "name": "teste_la_liga_fc26_row.png"},
-		{"id": "brasileirao_serie_a", "variant": "", "name": "teste_brasileirao_serie_a.png"}
-	]
-	
-	for t in targets:
-		current_theme_id = t["id"]
-		current_variant = t["variant"]
-		_apply_current_state()
-		
-		# Esperar 2 frames para renderização completa
-		await get_tree().process_frame
-		await get_tree().process_frame
-		
-		var img = get_viewport().get_texture().get_image()
-		var out_path = out_dir + t["name"]
-		# Obter caminho global absoluto para garantir gravação
-		var global_path = ProjectSettings.globalize_path(out_path)
-		img.save_png(global_path)
-		print("  [+] Salva captura: %s" % global_path)
-	
-	print("[Screenshot Mode] Concluído com sucesso. Encerrando engine.")
-	get_tree().quit(0)

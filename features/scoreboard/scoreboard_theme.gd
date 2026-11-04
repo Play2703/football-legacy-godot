@@ -12,6 +12,9 @@ extends Resource
 @export var stack_columns: Array[Dictionary] = []
 @export var overlays: Array[Dictionary] = []
 @export var compact_variant: Dictionary = {}
+@export var visual_params: Dictionary = {}
+@export var competition_logo_type: String = "liga_es"
+@export var is_estimated: bool = false
 
 # Texturas Locais (em res://assets/scoreboard_local/<liga>/)
 @export var texture_bg: Texture2D = null
@@ -31,6 +34,10 @@ extends Resource
 # 3 = Estilo clássico original do jogo
 @export var fallback_level: int = 2
 @export var use_local_textures: bool = true
+
+# Rastreamento de texturas encontradas e faltantes
+@export var found_textures: Array[String] = []
+@export var missing_textures: Array[String] = []
 
 func is_stack2() -> bool:
 	return mode == "stack2"

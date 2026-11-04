@@ -158,6 +158,12 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.75, 1, 1)
 text = "Tamanho Real: 430 x 86 px | Escala: 1.00"
 
+[node name="LblFallbackInfo" type="Label" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
+text = "Fallback Ativo: NÍVEL 1 (Textura Local)"
+
 [node name="ScreenFrame" type="PanelContainer" parent="VBox"]
 unique_name_in_owner = true
 layout_mode = 2
