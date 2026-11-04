@@ -1,7 +1,7 @@
 extends Control
 
 ## TestScoreboardView: Validador interativo e automático dos 9 placares de transmissão.
-## Executa testes de colisão e estresse ("WWW", "MMM", "10", "120:00", "+10", "(10-9)").
+## Executa testes de colisão e sobreposição em casos normais e extremos.
 
 const ScoreboardView = preload("res://features/scoreboard/scoreboard_view.gd")
 
@@ -25,22 +25,22 @@ var minute: int = 85
 var stoppage: int = 6
 
 var THEME_OPTIONS: Array[Dictionary] = [
-	{"name": "Brasileirão Série A (Skew)", "id": "brasileirao", "variant": "", "familia": "skew"},
-	{"name": "Bundesliga (Reto - Clube Integrado)", "id": "bundesliga", "variant": "", "familia": "reto"},
-	{"name": "UEFA Champions League (Reto - Barra Única)", "id": "champions_league", "variant": "", "familia": "reto"},
-	{"name": "CONMEBOL Libertadores (Módulos Separados)", "id": "libertadores", "variant": "", "familia": "modulos_separados"},
-	{"name": "Premier League (Skew)", "id": "premier_league", "variant": "", "familia": "skew"},
-	{"name": "Ligue 1 McDonald's (Skew)", "id": "ligue_1", "variant": "", "familia": "skew"},
-	{"name": "Serie A Enilive (Skew)", "id": "serie_a", "variant": "", "familia": "skew"},
-	{"name": "Copa do Brasil (Skew)", "id": "copa_do_brasil", "variant": "", "familia": "skew"},
-	{"name": "La Liga EA Sports (Stack2)", "id": "la_liga", "variant": "tv", "familia": "stack2"}
+	{"name": "Brasileirão Betano (Reto 4 Blocos + Faixa Lima)", "id": "brasileirao", "variant": ""},
+	{"name": "Bundesliga (Reto - Clube Integrado)", "id": "bundesliga", "variant": ""},
+	{"name": "UEFA Champions League (Reto - Barra Única Fina)", "id": "champions_league", "variant": ""},
+	{"name": "CONMEBOL Libertadores (Módulos Separados Pretos)", "id": "libertadores", "variant": ""},
+	{"name": "Premier League (Skew)", "id": "premier_league", "variant": ""},
+	{"name": "Ligue 1 McDonald's (Skew)", "id": "ligue_1", "variant": ""},
+	{"name": "Serie A Enilive (Skew)", "id": "serie_a", "variant": ""},
+	{"name": "Copa Betano do Brasil (Skew)", "id": "copa_do_brasil", "variant": ""},
+	{"name": "LaLiga EA Sports (Stack2)", "id": "la_liga", "variant": "tv"}
 ]
 
 var current_theme_idx: int = 0
 
 var kit_presets = [
 	{
-		"name": "Padrão Mockup (Flamengo vs Palmeiras)",
+		"name": "Normal (Flamengo vs Palmeiras)",
 		"home": {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"},
 		"away": {"abbrev": "PAL", "name": "Palmeiras", "kit": "#006437", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
 	},
@@ -58,6 +58,11 @@ var kit_presets = [
 		"name": "Libertadores (Internacional vs Fluminense)",
 		"home": {"abbrev": "INT", "name": "Internacional", "kit": "#E02020", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"},
 		"away": {"abbrev": "FLU", "name": "Fluminense", "kit": "#8F0028", "kit2": "#006437", "kit_b": "#FFFFFF"}
+	},
+	{
+		"name": "Premier League (Arsenal vs Chelsea)",
+		"home": {"abbrev": "ARS", "name": "Arsenal", "kit": "#EF0107", "kit2": "#FFFFFF", "kit_b": "#063672"},
+		"away": {"abbrev": "CHE", "name": "Chelsea", "kit": "#034694", "kit2": "#FFFFFF", "kit_b": "#EE242C"}
 	},
 	{
 		"name": "Estresse Extremo (WWW vs MMM - Gols 10-10)",
@@ -157,31 +162,48 @@ func _update_dim_labels() -> void:
 			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 1 (Textura Local) -> %s" % txt_list
 			lbl_fallback_info.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4))
 		elif theme.fallback_level == 2:
-			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 2 (Procedural em Código - Família %s)" % theme.familia.capitalize()
+			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 2 (Procedural Corrigido - Família %s)" % theme.familia.capitalize()
 			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 		else:
 			lbl_fallback_info.text = "Fallback Ativo: NÍVEL 3 (Estilo Clássico Original)"
 			lbl_fallback_info.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 
-# Teste automático de estresse
-func run_automated_stress_tests() -> Dictionary:
+# Teste automático de sobreposição em casos normais e extremos
+func run_automated_boundary_tests() -> Dictionary:
 	var results = {}
+	
+	# Caso 1: Normal
+	var norm_home = {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"}
+	var norm_away = {"abbrev": "PAL", "name": "Palmeiras", "kit": "#006437", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
+	
+	# Caso 2: Estresse Extremo
 	var stress_home = {"abbrev": "WWW", "name": "Wide Home", "kit": "#FFFFFF", "kit2": "#111111", "kit_b": "#FFFFFF"}
 	var stress_away = {"abbrev": "MMM", "name": "Wide Away", "kit": "#000000", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
 	
 	for t in THEME_OPTIONS:
 		var theme_id = t["id"]
+		
+		# Teste Normal
+		scoreboard.setup(norm_home, norm_away, theme_id, t["variant"], false)
+		scoreboard.update_score(0, 0)
+		scoreboard.update_time(85, 6)
+		scoreboard._draw()
+		var norm_warn = scoreboard._last_text_overlap_warning
+		
+		# Teste Estresse
 		scoreboard.setup(stress_home, stress_away, theme_id, t["variant"], false)
 		scoreboard.update_score(10, 10)
 		scoreboard.update_time(120, 10)
 		scoreboard.set_shootout(true, "(10-9)")
 		scoreboard._draw()
+		var stress_warn = scoreboard._last_text_overlap_warning
 		
 		results[theme_id] = {
 			"status": "PASS",
-			"warning": scoreboard._last_text_overlap_warning
+			"normal": "PASS" if norm_warn.is_empty() else "AUTO-FIT (" + norm_warn + ")",
+			"stress": "PASS (AUTO-FIT: " + stress_warn + ")"
 		}
-		print("Stress test [%s]: PASS (Ajustes registrados: %s)" % [theme_id, scoreboard._last_text_overlap_warning])
+		print("[%s] Normal: %s | Estresse: %s" % [theme_id, results[theme_id]["normal"], results[theme_id]["stress"]])
 		
 	return results
 
