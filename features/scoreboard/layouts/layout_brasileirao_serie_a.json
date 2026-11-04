@@ -1,0 +1,84 @@
+{
+  "nome": "Brasileirão Série A",
+  "confianca": "medido",
+  "fonte": "brasileirao_overlayon.webp e texturas TXP2 (peca_15 e peca_23)",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 5.1,
+  "largura_em_bar_h": 438,
+  "descricao": "Barra moderna com caixas em degradê azul marinho -> verde-água/ciano, logo lima central com os gols ao lado, relógio em caixa azul arroxeada escura à direita. Descarta paleta amarela antiga da bandeira.",
+  "celulas": [
+    {
+      "id": "casa_box",
+      "tipo": "time_casa",
+      "peso": 0.28,
+      "forma": "rect",
+      "fundo": "degrade_azul_ciano",
+      "fundo_inicio": "#182C4E",
+      "fundo_fim": "#1C7E93",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98",
+      "barra_clube": "#A50044"
+    },
+    {
+      "id": "casa_gol",
+      "tipo": "gol_casa",
+      "peso": 0.09,
+      "forma": "rect",
+      "fundo": "#081329",
+      "texto": "2",
+      "cor_texto": "#FFFFFF"
+    },
+    {
+      "id": "logo_centro",
+      "tipo": "logo_central",
+      "peso": 0.12,
+      "forma": "rect",
+      "fundo": "#B8E916",
+      "texto": "BR",
+      "cor_texto": "#0A1C3C"
+    },
+    {
+      "id": "fora_gol",
+      "tipo": "gol_fora",
+      "peso": 0.09,
+      "forma": "rect",
+      "fundo": "#081329",
+      "texto": "1",
+      "cor_texto": "#FFFFFF"
+    },
+    {
+      "id": "fora_box",
+      "tipo": "time_fora",
+      "peso": 0.28,
+      "forma": "rect",
+      "fundo": "degrade_ciano_azul",
+      "fundo_inicio": "#1C7E93",
+      "fundo_fim": "#182C4E",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524",
+      "barra_clube": "#272E61"
+    },
+    {
+      "id": "relogio_box",
+      "tipo": "relogio",
+      "peso": 0.14,
+      "forma": "rect",
+      "fundo": "#1E1F38",
+      "texto": "91:55",
+      "cor_texto": "#FFFFFF",
+      "acrescimo": "+6",
+      "cor_acrescimo": "#B8E916"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.9,
+    "ajuste": "Reduz proporção das caixas de time mantendo o degradê ciano"
+  }
+}

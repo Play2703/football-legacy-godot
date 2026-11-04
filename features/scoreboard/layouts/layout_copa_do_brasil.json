@@ -1,0 +1,80 @@
+{
+  "nome": "Copa Betano do Brasil",
+  "confianca": "estimado",
+  "fonte": "Derivado da família de transmissão nacional (Brasileirão/Globo) com cores institucionais CBF",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 5.5,
+  "largura_em_bar_h": 473,
+  "descricao": "Derivado da mesma família do Brasileirão Série A (Globo/Premiere), porém com paleta verde-bandeira esmeralda, dourado e azul petróleo, identificador 'COPA' e acréscimo em destaque.",
+  "celulas": [
+    {
+      "id": "casa_box",
+      "tipo": "time_casa",
+      "peso": 0.28,
+      "forma": "rect",
+      "fundo": "#0A291A",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98",
+      "barra_clube": "#A50044"
+    },
+    {
+      "id": "casa_gol",
+      "tipo": "gol_casa",
+      "peso": 0.09,
+      "forma": "rect",
+      "fundo": "#061A11",
+      "texto": "2",
+      "cor_texto": "#FFFFFF"
+    },
+    {
+      "id": "logo_centro",
+      "tipo": "logo_central",
+      "peso": 0.12,
+      "forma": "rect",
+      "fundo": "#F4B800",
+      "texto": "CDB",
+      "cor_texto": "#0A291A"
+    },
+    {
+      "id": "fora_gol",
+      "tipo": "gol_fora",
+      "peso": 0.09,
+      "forma": "rect",
+      "fundo": "#061A11",
+      "texto": "1",
+      "cor_texto": "#FFFFFF"
+    },
+    {
+      "id": "fora_box",
+      "tipo": "time_fora",
+      "peso": 0.28,
+      "forma": "rect",
+      "fundo": "#0A291A",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524",
+      "barra_clube": "#272E61"
+    },
+    {
+      "id": "relogio_box",
+      "tipo": "relogio",
+      "peso": 0.14,
+      "forma": "rect",
+      "fundo": "#122019",
+      "texto": "91:55",
+      "cor_texto": "#FFFFFF",
+      "acrescimo": "+6",
+      "cor_acrescimo": "#F4B800"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.9,
+    "ajuste": "Largura nativa de 473px cabe diretamente com folga no modo retrato"
+  }
+}

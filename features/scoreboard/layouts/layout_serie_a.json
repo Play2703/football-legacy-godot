@@ -1,0 +1,85 @@
+{
+  "nome": "Serie A Enilive",
+  "confianca": "medido",
+  "fonte": "Captura FC26 (padrão) e seriea_overlayon.webp (variante TV)",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 4.6,
+  "largura_em_bar_h": 395,
+  "variante_padrao": "fc26",
+  "variante_fc26": {
+    "modo": "row",
+    "proporcao_aspecto": 4.6,
+    "largura_em_bar_h": 395,
+    "descricao": "Padrão FC26: Logo hexagonal azul escuro, relógio creme em paralelogramo, siglas com sublinhado tracejado na cor do clube, caixa de gols em creme com cantos chanfrados e aba ciano."
+  },
+  "variante_tv": {
+    "modo": "row",
+    "proporcao_aspecto": 11.6,
+    "largura_em_bar_h": 997,
+    "descricao": "Transmissão TV: Barra fina 11.6:1, sigla mandante | placar branco central com listras diagonais | sigla visitante, relógio à direita."
+  },
+  "celulas": [
+    {
+      "id": "logo_liga",
+      "tipo": "logo_liga",
+      "peso": 0.151,
+      "forma": "hexagono",
+      "fundo": "#001B44",
+      "texto": "SERIE A",
+      "cor_texto": "#00C2FF"
+    },
+    {
+      "id": "relogio",
+      "tipo": "relogio",
+      "peso": 0.198,
+      "forma": "paralelogramo",
+      "fundo": "#F2EFE9",
+      "texto": "91:55",
+      "cor_texto": "#001B44",
+      "acrescimo_pilula": "+6",
+      "fundo_acrescimo": "#00C2FF"
+    },
+    {
+      "id": "casa",
+      "tipo": "time_casa",
+      "peso": 0.233,
+      "forma": "chanfro_45",
+      "fundo": "#121620",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98",
+      "sublinhado": "dashed_line",
+      "cor_clube": "#A50044"
+    },
+    {
+      "id": "placar",
+      "tipo": "placar_unico",
+      "peso": 0.186,
+      "forma": "chanfro_45",
+      "fundo": "#F2EFE9",
+      "texto": "2 - 1",
+      "cor_texto": "#001B44"
+    },
+    {
+      "id": "fora",
+      "tipo": "time_fora",
+      "peso": 0.233,
+      "forma": "chanfro_45",
+      "fundo": "#121620",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524",
+      "sublinhado": "dashed_line",
+      "cor_clube": "#272E61"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.9,
+    "ajuste": "Reduz chanfro e aba externa"
+  }
+}

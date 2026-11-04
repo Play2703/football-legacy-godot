@@ -1,0 +1,80 @@
+{
+  "nome": "Ligue 1 McDonald's",
+  "confianca": "medido",
+  "fonte": "ligue1_overlayon.webp",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 8.5,
+  "largura_em_bar_h": 731,
+  "descricao": "Barra fina 9.2:1. Bloco verde-lima neon à esquerda integrando logo L1 McDonald's e o relógio em dígitos pretos, caixas azul marinho escuro para mandante e visitante com placar central e frisos neon.",
+  "celulas": [
+    {
+      "id": "bloco_tempo_logo",
+      "tipo": "logo_e_relogio",
+      "peso": 0.22,
+      "forma": "rect",
+      "fundo": "#A6FF00",
+      "logo_texto": "L1",
+      "texto": "91:55",
+      "cor_texto": "#000000",
+      "acrescimo": "+6"
+    },
+    {
+      "id": "casa_box",
+      "tipo": "time_casa",
+      "peso": 0.25,
+      "forma": "rect",
+      "fundo": "#06182E",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98",
+      "friso_clube": "#A50044"
+    },
+    {
+      "id": "gol_casa",
+      "tipo": "gol_casa",
+      "peso": 0.07,
+      "forma": "rect",
+      "fundo": "#06182E",
+      "texto": "2",
+      "cor_texto": "#A6FF00"
+    },
+    {
+      "id": "logo_centro",
+      "tipo": "logo_central",
+      "peso": 0.14,
+      "forma": "hexagono",
+      "fundo": "#A6FF00",
+      "texto": "L1",
+      "cor_texto": "#06182E"
+    },
+    {
+      "id": "gol_fora",
+      "tipo": "gol_fora",
+      "peso": 0.07,
+      "forma": "rect",
+      "fundo": "#06182E",
+      "texto": "1",
+      "cor_texto": "#A6FF00"
+    },
+    {
+      "id": "fora_box",
+      "tipo": "time_fora",
+      "peso": 0.25,
+      "forma": "rect",
+      "fundo": "#06182E",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524",
+      "friso_clube": "#272E61"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.8,
+    "ajuste": "Reduz o peso do bloco de relógio e acento externo para proporção 7.5:1"
+  }
+}

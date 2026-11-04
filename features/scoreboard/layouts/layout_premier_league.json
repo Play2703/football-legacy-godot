@@ -1,0 +1,84 @@
+{
+  "nome": "Premier League",
+  "confianca": "medido",
+  "fonte": "epl_overlayon.webp e epl_ref_01.jpg",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 4.5,
+  "largura_em_bar_h": 387,
+  "proporcao_barra_principal": 10.5,
+  "descricao": "Barra fina 10.5:1. Faixa de sigla na cor do clube com ponta angular, caixa de gol, leão da Premier League no centro, caixa de gol, sigla visitante com ponta angular, e relógio em pílula roxa (#38003C) centralizado logo embaixo do leão.",
+  "celulas": [
+    {
+      "id": "casa_sigla",
+      "tipo": "sigla_casa",
+      "peso": 0.28,
+      "forma": "ponta_angular_esq",
+      "fundo": "cor_clube",
+      "fundo_fallback": "#A50044",
+      "texto": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98"
+    },
+    {
+      "id": "casa_gol",
+      "tipo": "gol_casa",
+      "peso": 0.12,
+      "forma": "rect",
+      "fundo": "#FFFFFF",
+      "texto": "2",
+      "cor_texto": "#191919"
+    },
+    {
+      "id": "divisor_central",
+      "tipo": "logo_central",
+      "peso": 0.2,
+      "forma": "rect",
+      "fundo": "#38003C",
+      "texto": "PL",
+      "cor_texto": "#00FF87"
+    },
+    {
+      "id": "fora_gol",
+      "tipo": "gol_fora",
+      "peso": 0.12,
+      "forma": "rect",
+      "fundo": "#FFFFFF",
+      "texto": "1",
+      "cor_texto": "#191919"
+    },
+    {
+      "id": "fora_sigla",
+      "tipo": "sigla_fora",
+      "peso": 0.28,
+      "forma": "ponta_angular_dir",
+      "fundo": "cor_clube",
+      "fundo_fallback": "#272E61",
+      "texto": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524"
+    }
+  ],
+  "sobreposicoes": [
+    {
+      "id": "relogio_pilula_inferior",
+      "tipo": "relogio_embaixo",
+      "posicao": "centralizado_embaixo",
+      "largura_rel": 0.32,
+      "altura_rel": 0.45,
+      "forma": "pilula",
+      "fundo": "#38003C",
+      "texto": "91:55 +6",
+      "cor_texto": "#00FF87",
+      "borda": "#00FF87"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.85,
+    "ajuste": "Reduz largura das siglas angulares mantendo a pílula de relógio centralizada"
+  }
+}

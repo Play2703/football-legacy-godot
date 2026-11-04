@@ -1,0 +1,76 @@
+{
+  "nome": "Bundesliga",
+  "confianca": "estimado",
+  "fonte": "texturas TXP2 (tex001 moldura amarela, miolo cinza e divisória branca) e guia DFL",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 8.0,
+  "largura_em_bar_h": 688,
+  "descricao": "Baseado diretamente nas peças extraídas do TXP2: moldura externa com friso amarelo/vermelho, miolo em cinza escuro antracite, divisória vertical branca, logo DFL quadrado vermelho.",
+  "celulas": [
+    {
+      "id": "dfl_logo",
+      "tipo": "logo_liga",
+      "peso": 0.12,
+      "forma": "rect",
+      "fundo": "#D20222",
+      "texto": "DFL",
+      "cor_texto": "#FFFFFF"
+    },
+    {
+      "id": "relogio_box",
+      "tipo": "relogio",
+      "peso": 0.18,
+      "forma": "rect",
+      "fundo": "#1F2124",
+      "texto": "91:55",
+      "cor_texto": "#FFFFFF",
+      "borda_amarela": "#FFCC00"
+    },
+    {
+      "id": "casa_box",
+      "tipo": "time_casa",
+      "peso": 0.24,
+      "forma": "rect",
+      "fundo": "#2B2D31",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98"
+    },
+    {
+      "id": "placar_central",
+      "tipo": "placar_unico",
+      "peso": 0.14,
+      "forma": "rect",
+      "fundo": "#FFFFFF",
+      "texto": "2 - 1",
+      "cor_texto": "#1F2124",
+      "divisor": "linha_branca"
+    },
+    {
+      "id": "fora_box",
+      "tipo": "time_fora",
+      "peso": 0.24,
+      "forma": "rect",
+      "fundo": "#2B2D31",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524"
+    },
+    {
+      "id": "friso_amarelo",
+      "tipo": "acento",
+      "peso": 0.08,
+      "forma": "rect",
+      "fundo": "#FFCC00"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.88,
+    "ajuste": "Ajusta largura total para 610px para retrato"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "nome": "CONMEBOL Libertadores",
+  "confianca": "estimado",
+  "fonte": "texturas TXP2 CONMEBOL e identidade Glória Eterna (dourado e preto)",
+  "modo": "row",
+  "altura_ref": 86,
+  "proporcao_aspecto": 7.5,
+  "largura_em_bar_h": 645,
+  "descricao": "Identidade visual Glória Eterna da CONMEBOL: preto fosco (#0D0D0D), acentos em ouro metálico (#C5A059), logo Libertadores à esquerda e caixas chanfradas.",
+  "celulas": [
+    {
+      "id": "conmebol_logo",
+      "tipo": "logo_liga",
+      "peso": 0.15,
+      "forma": "chanfro_esq",
+      "fundo": "#0D0D0D",
+      "texto": "LIB",
+      "cor_texto": "#C5A059",
+      "borda": "#C5A059"
+    },
+    {
+      "id": "casa_box",
+      "tipo": "time_casa",
+      "peso": 0.26,
+      "forma": "rect",
+      "fundo": "#181818",
+      "sigla": "BAR",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#004D98",
+      "friso_ouro": "#C5A059"
+    },
+    {
+      "id": "placar_box",
+      "tipo": "placar_unico",
+      "peso": 0.16,
+      "forma": "rect",
+      "fundo": "#C5A059",
+      "texto": "2 - 1",
+      "cor_texto": "#0D0D0D"
+    },
+    {
+      "id": "fora_box",
+      "tipo": "time_fora",
+      "peso": 0.26,
+      "forma": "rect",
+      "fundo": "#181818",
+      "sigla": "ATM",
+      "cor_texto": "#FFFFFF",
+      "escudo": "circulo_1_1",
+      "cor_escudo": "#CB3524",
+      "friso_ouro": "#C5A059"
+    },
+    {
+      "id": "relogio_box",
+      "tipo": "relogio",
+      "peso": 0.17,
+      "forma": "chanfro_dir",
+      "fundo": "#0D0D0D",
+      "texto": "91:55",
+      "cor_texto": "#FFFFFF",
+      "acrescimo": "+6",
+      "cor_acrescimo": "#C5A059"
+    }
+  ],
+  "variante_compacta": {
+    "modo": "row",
+    "largura_max": 648,
+    "escala": 0.95,
+    "ajuste": "Largura nativa de 645px já se adapta perfeitamente ao limite de 648px do modo retrato"
+  }
+}
