@@ -338,13 +338,12 @@ func _draw_skew_team_stripes(rect: Rect2, H: float, team: Dictionary) -> void:
 	var dec_y = H - 5.0
 	
 	if board_theme.theme_id == "serie_a":
-		# Linha tracejada ciano fino
+		# 3 traços ciano fino sob a sigla
 		var dash_col = Color("#30D6E1")
-		var num_d = 4
-		var dw = 8.0
+		var dw = 10.0
 		var gap = 4.0
-		var start_x = rect.position.x + (rect.size.x - (dw * 4.0 + gap * 3.0)) * 0.5
-		for d in range(num_d):
+		var start_x = rect.position.x + (rect.size.x - (dw * 3.0 + gap * 2.0)) * 0.5
+		for d in range(3):
 			var sx = start_x + float(d) * (dw + gap)
 			draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), dash_col, 2.0)
 	else:
@@ -407,6 +406,7 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var crest_diam = H * 0.54
 	var crest_y = (H - crest_diam) * 0.5
 	var score_box_w = H * 0.60
+	var margin_w = rect.size.x * 0.10 # >= 0.08 * W de separação entre sigla e gol
 	
 	if is_home:
 		# Escudo à esquerda, sigla no meio, GOL com espaço próprio à direita
@@ -416,7 +416,7 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 		var r_score = Rect2(rect.position.x + rect.size.x - score_box_w, 0.0, score_box_w, H)
 		_draw_auto_text(str(score), r_score, Color.WHITE, int(H * 0.52), 0.30 * H, true)
 		
-		var r_sigla = Rect2(crest_x + crest_diam + 8.0, 0.0, rect.size.x - crest_diam - score_box_w - 18.0, H)
+		var r_sigla = Rect2(crest_x + crest_diam + 8.0, 0.0, rect.size.x - crest_diam - score_box_w - margin_w - 14.0, H)
 		_draw_auto_text(abbrev, r_sigla, Color.WHITE, int(H * 0.38), 0.25 * H, true)
 	else:
 		# GOL com espaço próprio à esquerda, sigla no meio, escudo à direita
@@ -426,7 +426,7 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 		var crest_x = rect.position.x + rect.size.x - crest_diam - 10.0
 		_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
 		
-		var r_sigla = Rect2(rect.position.x + score_box_w + 8.0, 0.0, rect.size.x - crest_diam - score_box_w - 18.0, H)
+		var r_sigla = Rect2(rect.position.x + score_box_w + margin_w, 0.0, rect.size.x - crest_diam - score_box_w - margin_w - 14.0, H)
 		_draw_auto_text(abbrev, r_sigla, Color.WHITE, int(H * 0.38), 0.25 * H, true)
 		
 	# Faixa clara inferior
@@ -604,28 +604,26 @@ func _draw_stack_team_row(rect: Rect2, team: Dictionary, crest: CrestView) -> vo
 	draw_rect(Rect2(rect.position.x + rect.size.x - 5.0, rect.position.y + 4.0, 4.0, rect.size.y - 8.0), kit_col)
 
 # ==============================================================================
-# LOGOS DE LIGA (CompLogo ou textura; NUNCA texto puro)
+# LOGOS DE LIGA (Textura oficial ou nada: sem texto, sem ponto colorido)
 # ==============================================================================
 func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 	if board_theme.texture_logo != null:
 		var tex = board_theme.texture_logo
 		var aspect = float(tex.get_width()) / max(1.0, float(tex.get_height()))
-		var target_h = rect.size.y * 0.65
+		var max_h_factor = 0.70
+		if board_theme.theme_id in ["serie_a", "libertadores"]:
+			max_h_factor = 0.85
+		var target_h = rect.size.y * max_h_factor
 		var target_w = target_h * aspect
-		if target_w > rect.size.x * 0.85:
-			target_w = rect.size.x * 0.85
+		if target_w > rect.size.x * 0.88:
+			target_w = rect.size.x * 0.88
 			target_h = target_w / aspect
 		var pos = rect.position + (rect.size - Vector2(target_w, target_h)) * 0.5
 		draw_texture_rect(tex, Rect2(pos, Vector2(target_w, target_h)), false)
 		_comp_logo.visible = false
-	elif _comp_logo != null:
-		var diam = min(rect.size.x * 0.70, rect.size.y * 0.70)
-		var pos = rect.position + (rect.size - Vector2(diam, diam)) * 0.5
-		_comp_logo.visible = true
-		_comp_logo.position = pos
-		_comp_logo.size = Vector2(diam, diam)
-		_comp_logo.custom_minimum_size = Vector2(diam, diam)
-		_comp_logo.color = tint_color
+	else:
+		# Se não existir textura: módulo só com a cor, sem texto e sem ponto
+		_comp_logo.visible = false
 
 # ==============================================================================
 # PÍLULA INFERIOR UNIVERSAL ("1T 27'")

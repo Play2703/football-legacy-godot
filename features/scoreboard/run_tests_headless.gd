@@ -38,9 +38,10 @@ func _init() -> void:
 			all_ok = false
 			continue
 		
-		# Teste 1: Presença do logo extraído em assets/scoreboard_local/
+		# Teste 1: Presença do logo extraído em assets/scoreboard_local/ (exceto Brasileirão que não possui módulo de logo)
 		var has_logo = (theme.texture_logo != null)
-		if not has_logo:
+		var expects_logo = (theme_id != "brasileirao" and theme_id != "brasileirao_serie_a")
+		if expects_logo and not has_logo:
 			printerr("AVISO: Logo local nao carregado para: ", theme_id)
 			all_ok = false
 		
