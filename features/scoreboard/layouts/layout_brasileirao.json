@@ -1,77 +1,67 @@
 {
   "id": "brasileirao",
-  "familia": "skew",
+  "nome": "Brasileirão Betano",
+  "familia": "reto",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/brasileirao.png",
   "proporcao_barra": 8.04,
-  "skew_deg": 15.0,
-  "raio_canto": 0.0,
+  "skew_deg": 0.0,
+  "raio_canto": 6.0,
   "gap": 0.0,
+  "faixa_inferior": {
+    "cor": "#A6FC05",
+    "altura": 5.0,
+    "modulos": [
+      "time_casa",
+      "placar_unico",
+      "time_fora"
+    ]
+  },
   "celulas": [
     {
-      "tipo": "logo_liga",
-      "peso": 1.2,
-      "forma": "paralelogramo",
-      "fundo": "#0C1033",
-      "cor_texto": "#A6FC05",
-      "conteudo": [
-        "logo"
-      ]
-    },
-    {
-      "tipo": "relogio",
-      "peso": 1.62,
-      "forma": "paralelogramo",
-      "fundo": "#0C1033",
-      "cor_texto": "#FFFFFF",
-      "conteudo": [
-        "minuto",
-        "acrescimo_etiqueta"
-      ]
-    },
-    {
       "tipo": "time_casa",
-      "peso": 1.55,
-      "forma": "paralelogramo",
-      "fundo": "#0C1033",
-      "cor_texto": "#FFFFFF",
+      "peso": 2.16,
+      "forma": "retangulo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#101015",
       "conteudo": [
-        "escudo",
         "sigla",
-        "tracos_3"
+        "escudo"
       ]
     },
     {
       "tipo": "placar_unico",
-      "peso": 1.1,
-      "forma": "paralelogramo",
-      "fundo": "#0B0F32",
+      "peso": 1.84,
+      "forma": "retangulo",
+      "fundo": "#0C1032",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "gol_casa",
-        "hifen",
+        "divisor_fino",
         "gol_fora"
       ]
     },
     {
       "tipo": "time_fora",
-      "peso": 1.55,
-      "forma": "paralelogramo",
-      "fundo": "#0C1033",
-      "cor_texto": "#FFFFFF",
+      "peso": 2.16,
+      "forma": "retangulo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#101015",
       "conteudo": [
-        "sigla",
         "escudo",
-        "tracos_3"
+        "sigla"
       ]
     },
     {
-      "tipo": "tampa",
-      "peso": 0.45,
-      "forma": "paralelogramo",
-      "fundo": "#261B5D",
-      "cor_texto": "",
-      "conteudo": []
+      "tipo": "relogio",
+      "peso": 1.88,
+      "forma": "retangulo",
+      "fundo": "#2A1F5C",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
     }
   ],
   "etiqueta_acrescimo": {
@@ -89,6 +79,6 @@
     "escala_fonte": 0.85,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 642,
-  "largura_em_62": 463
+  "largura_em_86": 691,
+  "largura_em_62": 498
 }

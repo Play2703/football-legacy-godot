@@ -1,5 +1,6 @@
 {
   "id": "ligue_1",
+  "nome": "Ligue 1 McDonald's",
   "familia": "skew",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/ligue_1.png",
@@ -60,8 +61,8 @@
       "fundo": "#0A1C3E",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "sigla",
         "escudo",
+        "sigla",
         "tracos_3"
       ]
     },

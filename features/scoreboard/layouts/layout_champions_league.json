@@ -1,5 +1,6 @@
 {
   "id": "champions_league",
+  "nome": "UEFA Champions League",
   "familia": "reto",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/champions_league.png",
@@ -77,6 +78,6 @@
     "escala_fonte": 0.85,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 986,
-  "largura_em_62": 711
+  "largura_em_86": 983,
+  "largura_em_62": 708
 }

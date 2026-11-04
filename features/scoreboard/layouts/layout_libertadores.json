@@ -1,11 +1,12 @@
 {
   "id": "libertadores",
+  "nome": "CONMEBOL Libertadores",
   "familia": "modulos_separados",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/libertadores.png",
   "proporcao_barra": 9.31,
   "skew_deg": 0.0,
-  "raio_canto": 8.0,
+  "raio_canto": 6.0,
   "gap": 0.09,
   "celulas": [
     {
@@ -22,19 +23,19 @@
       "tipo": "time_casa",
       "peso": 1.4,
       "forma": "retangulo_arredondado",
-      "fundo": "#131313",
+      "fundo": "#121212",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "sigla",
-        "sublinhado"
+        "sublinhado_grosso"
       ]
     },
     {
       "tipo": "placar_unico",
       "peso": 1.35,
       "forma": "retangulo_arredondado",
-      "fundo": "#FFFFFF",
-      "cor_texto": "#101010",
+      "fundo": "#121212",
+      "cor_texto": "#FFFFFF",
       "conteudo": [
         "gol_casa",
         "hifen",
@@ -45,11 +46,11 @@
       "tipo": "time_fora",
       "peso": 1.4,
       "forma": "retangulo_arredondado",
-      "fundo": "#131313",
+      "fundo": "#121212",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "sigla",
-        "sublinhado"
+        "sublinhado_grosso"
       ]
     },
     {
@@ -89,6 +90,6 @@
     "escala_fonte": 0.85,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 705,
-  "largura_em_62": 508
+  "largura_em_86": 714,
+  "largura_em_62": 515
 }

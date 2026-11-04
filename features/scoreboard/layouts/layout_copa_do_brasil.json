@@ -1,5 +1,6 @@
 {
   "id": "copa_do_brasil",
+  "nome": "Copa Betano do Brasil",
   "familia": "skew",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/copa_do_brasil.png",
@@ -60,8 +61,8 @@
       "fundo": "#093020",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "sigla",
         "escudo",
+        "sigla",
         "tracos_3"
       ]
     },

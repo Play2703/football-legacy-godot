@@ -1,5 +1,6 @@
 {
   "id": "bundesliga",
+  "nome": "Bundesliga",
   "familia": "reto",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/bundesliga.png",
@@ -38,6 +39,7 @@
       "conteudo": [
         "escudo",
         "sigla",
+        "espaco_gol",
         "gol",
         "faixa_inferior"
       ]
@@ -50,6 +52,7 @@
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "gol",
+        "espaco_gol",
         "sigla",
         "escudo",
         "faixa_inferior"

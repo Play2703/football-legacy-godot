@@ -1,5 +1,6 @@
 {
   "id": "premier_league",
+  "nome": "Premier League",
   "familia": "skew",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/premier_league.png",
@@ -60,8 +61,8 @@
       "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "sigla",
         "escudo",
+        "sigla",
         "tracos_3"
       ]
     },

@@ -1,5 +1,6 @@
 {
   "id": "serie_a",
+  "nome": "Serie A Enilive",
   "familia": "skew",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/serie_a.png",
@@ -60,8 +61,8 @@
       "fundo": "#0D214B",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "sigla",
         "escudo",
+        "sigla",
         "tracos_tracejados"
       ]
     },
@@ -69,7 +70,7 @@
       "tipo": "tampa",
       "peso": 0.53,
       "forma": "paralelogramo",
-      "fundo": "#2FD5E0",
+      "fundo": "#30D6E1",
       "cor_texto": "",
       "conteudo": []
     }
@@ -81,14 +82,14 @@
   },
   "pilula_periodo": {
     "fundo": "#0D214C",
-    "texto_cor": "#2FD5E0",
-    "borda_cor": "#2FD5E0"
+    "texto_cor": "#30D6E1",
+    "borda_cor": "#30D6E1"
   },
   "variante_compacta": {
     "habilitada": true,
     "escala_fonte": 0.85,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 699,
+  "largura_em_86": 700,
   "largura_em_62": 504
 }

@@ -1,5 +1,6 @@
 {
   "id": "la_liga",
+  "nome": "LaLiga EA Sports",
   "familia": "stack2",
   "confianca": "medido",
   "fonte": "referencias_reais/design_usuario/la_liga.png",
@@ -12,7 +13,7 @@
       "tipo": "coluna_identidade",
       "peso": 0.72,
       "forma": "retangulo",
-      "fundo": "#EE4437",
+      "fundo": "#EF4435",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "logo_topo",
@@ -23,7 +24,7 @@
       "tipo": "coluna_times",
       "peso": 0.85,
       "forma": "retangulo",
-      "fundo": "#0F193A",
+      "fundo": "#10193A",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "escudo_casa",
@@ -39,7 +40,7 @@
       "peso": 0.3,
       "forma": "retangulo",
       "fundo": "#FFFFFF",
-      "cor_texto": "#101010",
+      "cor_texto": "#101015",
       "conteudo": [
         "gol_casa_topo",
         "gol_fora_base"
@@ -49,7 +50,7 @@
   "etiqueta_acrescimo": {
     "cor": "#EF4435",
     "texto_cor": "#FFFFFF",
-    "canto": "superior_direito"
+    "canto": "inferior_direito_relogio"
   },
   "pilula_periodo": {
     "fundo": "#111A3B",
