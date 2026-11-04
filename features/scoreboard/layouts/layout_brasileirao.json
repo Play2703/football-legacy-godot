@@ -1,0 +1,94 @@
+{
+  "id": "brasileirao",
+  "familia": "skew",
+  "confianca": "medido",
+  "fonte": "referencias_reais/design_usuario/brasileirao.png",
+  "proporcao_barra": 8.04,
+  "skew_deg": 15.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 1.2,
+      "forma": "paralelogramo",
+      "fundo": "#0C1033",
+      "cor_texto": "#A6FC05",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.62,
+      "forma": "paralelogramo",
+      "fundo": "#0C1033",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 1.55,
+      "forma": "paralelogramo",
+      "fundo": "#0C1033",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.1,
+      "forma": "paralelogramo",
+      "fundo": "#0B0F32",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.55,
+      "forma": "paralelogramo",
+      "fundo": "#0C1033",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "escudo",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.45,
+      "forma": "paralelogramo",
+      "fundo": "#261B5D",
+      "cor_texto": "",
+      "conteudo": []
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#E13432",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#0C1033",
+    "texto_cor": "#A6FC05",
+    "borda_cor": "#A6FC05"
+  },
+  "variante_compacta": {
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 642,
+  "largura_em_62": 463
+}

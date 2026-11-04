@@ -1,84 +1,94 @@
 {
-  "nome": "Premier League",
+  "id": "premier_league",
+  "familia": "skew",
   "confianca": "medido",
-  "fonte": "epl_overlayon.webp e epl_ref_01.jpg",
-  "modo": "row",
-  "altura_ref": 86,
-  "proporcao_aspecto": 4.5,
-  "largura_em_bar_h": 387,
-  "proporcao_barra_principal": 10.5,
-  "descricao": "Barra fina 10.5:1. Faixa de sigla na cor do clube com ponta angular, caixa de gol, leão da Premier League no centro, caixa de gol, sigla visitante com ponta angular, e relógio em pílula roxa (#38003C) centralizado logo embaixo do leão.",
+  "fonte": "referencias_reais/design_usuario/premier_league.png",
+  "proporcao_barra": 9.48,
+  "skew_deg": 18.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
   "celulas": [
     {
-      "id": "casa_sigla",
-      "tipo": "sigla_casa",
-      "peso": 0.28,
-      "forma": "ponta_angular_esq",
-      "fundo": "cor_clube",
-      "fundo_fallback": "#A50044",
-      "texto": "BAR",
+      "tipo": "logo_liga",
+      "peso": 1.1,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
+      "cor_texto": "#1BFB97",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.77,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
-      "escudo": "circulo_1_1",
-      "cor_escudo": "#004D98"
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
     },
     {
-      "id": "casa_gol",
-      "tipo": "gol_casa",
-      "peso": 0.12,
-      "forma": "rect",
-      "fundo": "#FFFFFF",
-      "texto": "2",
-      "cor_texto": "#191919"
-    },
-    {
-      "id": "divisor_central",
-      "tipo": "logo_central",
-      "peso": 0.2,
-      "forma": "rect",
-      "fundo": "#38003C",
-      "texto": "PL",
-      "cor_texto": "#00FF87"
-    },
-    {
-      "id": "fora_gol",
-      "tipo": "gol_fora",
-      "peso": 0.12,
-      "forma": "rect",
-      "fundo": "#FFFFFF",
-      "texto": "1",
-      "cor_texto": "#191919"
-    },
-    {
-      "id": "fora_sigla",
-      "tipo": "sigla_fora",
-      "peso": 0.28,
-      "forma": "ponta_angular_dir",
-      "fundo": "cor_clube",
-      "fundo_fallback": "#272E61",
-      "texto": "ATM",
+      "tipo": "time_casa",
+      "peso": 1.83,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
-      "escudo": "circulo_1_1",
-      "cor_escudo": "#CB3524"
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.34,
+      "forma": "paralelogramo",
+      "fundo": "#FEFEFE",
+      "cor_texto": "#35053C",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.83,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "escudo",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.43,
+      "forma": "paralelogramo",
+      "fundo": "#1BFB97",
+      "cor_texto": "",
+      "conteudo": []
     }
   ],
-  "sobreposicoes": [
-    {
-      "id": "relogio_pilula_inferior",
-      "tipo": "relogio_embaixo",
-      "posicao": "centralizado_embaixo",
-      "largura_rel": 0.32,
-      "altura_rel": 0.45,
-      "forma": "pilula",
-      "fundo": "#38003C",
-      "texto": "91:55 +6",
-      "cor_texto": "#00FF87",
-      "borda": "#00FF87"
-    }
-  ],
+  "etiqueta_acrescimo": {
+    "cor": "#D82020",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#35063D",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#1BFB97"
+  },
   "variante_compacta": {
-    "modo": "row",
-    "largura_max": 648,
-    "escala": 0.85,
-    "ajuste": "Reduz largura das siglas angulares mantendo a pílula de relógio centralizada"
-  }
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 714,
+  "largura_em_62": 515
 }

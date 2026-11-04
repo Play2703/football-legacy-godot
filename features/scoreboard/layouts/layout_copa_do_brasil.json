@@ -1,80 +1,94 @@
 {
-  "nome": "Copa Betano do Brasil",
-  "confianca": "estimado",
-  "fonte": "Derivado da família de transmissão nacional (Brasileirão/Globo) com cores institucionais CBF",
-  "modo": "row",
-  "altura_ref": 86,
-  "proporcao_aspecto": 5.5,
-  "largura_em_bar_h": 473,
-  "descricao": "Derivado da mesma família do Brasileirão Série A (Globo/Premiere), porém com paleta verde-bandeira esmeralda, dourado e azul petróleo, identificador 'COPA' e acréscimo em destaque.",
+  "id": "copa_do_brasil",
+  "familia": "skew",
+  "confianca": "medido",
+  "fonte": "referencias_reais/design_usuario/copa_do_brasil.png",
+  "proporcao_barra": 9.84,
+  "skew_deg": 19.5,
+  "raio_canto": 0.0,
+  "gap": 0.0,
   "celulas": [
     {
-      "id": "casa_box",
-      "tipo": "time_casa",
-      "peso": 0.28,
-      "forma": "rect",
-      "fundo": "#0A291A",
-      "sigla": "BAR",
-      "cor_texto": "#FFFFFF",
-      "escudo": "circulo_1_1",
-      "cor_escudo": "#004D98",
-      "barra_clube": "#A50044"
+      "tipo": "logo_liga",
+      "peso": 1.3,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
+      "cor_texto": "#EAB003",
+      "conteudo": [
+        "logo"
+      ]
     },
     {
-      "id": "casa_gol",
-      "tipo": "gol_casa",
-      "peso": 0.09,
-      "forma": "rect",
-      "fundo": "#061A11",
-      "texto": "2",
-      "cor_texto": "#FFFFFF"
-    },
-    {
-      "id": "logo_centro",
-      "tipo": "logo_central",
-      "peso": 0.12,
-      "forma": "rect",
-      "fundo": "#F4B800",
-      "texto": "CDB",
-      "cor_texto": "#0A291A"
-    },
-    {
-      "id": "fora_gol",
-      "tipo": "gol_fora",
-      "peso": 0.09,
-      "forma": "rect",
-      "fundo": "#061A11",
-      "texto": "1",
-      "cor_texto": "#FFFFFF"
-    },
-    {
-      "id": "fora_box",
-      "tipo": "time_fora",
-      "peso": 0.28,
-      "forma": "rect",
-      "fundo": "#0A291A",
-      "sigla": "ATM",
-      "cor_texto": "#FFFFFF",
-      "escudo": "circulo_1_1",
-      "cor_escudo": "#CB3524",
-      "barra_clube": "#272E61"
-    },
-    {
-      "id": "relogio_box",
       "tipo": "relogio",
-      "peso": 0.14,
-      "forma": "rect",
-      "fundo": "#122019",
-      "texto": "91:55",
+      "peso": 1.74,
+      "forma": "paralelogramo",
+      "fundo": "#EAB003",
+      "cor_texto": "#093020",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 1.86,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
       "cor_texto": "#FFFFFF",
-      "acrescimo": "+6",
-      "cor_acrescimo": "#F4B800"
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.3,
+      "forma": "paralelogramo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#093020",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.86,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "escudo",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.56,
+      "forma": "paralelogramo",
+      "fundo": "#EAAF03",
+      "cor_texto": "",
+      "conteudo": []
     }
   ],
+  "etiqueta_acrescimo": {
+    "cor": "#D82020",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#093020",
+    "texto_cor": "#EAB003",
+    "borda_cor": "#EAB003"
+  },
   "variante_compacta": {
-    "modo": "row",
-    "largura_max": 648,
-    "escala": 0.9,
-    "ajuste": "Largura nativa de 473px cabe diretamente com folga no modo retrato"
-  }
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 741,
+  "largura_em_62": 534
 }

@@ -1,99 +1,66 @@
 {
-  "nome": "LaLiga EA Sports",
+  "id": "la_liga",
+  "familia": "stack2",
   "confianca": "medido",
-  "fonte": "laliga_real_01.png, laliga_overlayon.webp e capturas FC26",
-  "modo": "stack2",
-  "altura_ref": 86,
-  "proporcao_aspecto": 2.2,
-  "largura_em_bar_h": 189,
-  "variante_fc26": {
-    "modo": "row",
-    "proporcao_aspecto": 5.1,
-    "largura_em_bar_h": 438,
-    "descricao": "Barra horizontal FC26: Bloco coral 'LALIGA', relógio grande +6 empilhado, faixas escuras com siglas e linha fina de cor do clube, caixa branca de gols à direita."
-  },
-  "variante_padrao_tv": {
-    "modo": "stack2",
-    "descricao": "Transmissão Oficial TV: Coluna 1: logo coral em cima e relógio preto embaixo (+6 junto). Coluna 2: escudos empilhados (mandante em cima, visitante embaixo). Coluna 3: caixa branca com gols empilhados."
-  },
-  "colunas_stack": [
+  "fonte": "referencias_reais/design_usuario/la_liga.png",
+  "proporcao_barra": 1.87,
+  "skew_deg": 0.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
     {
-      "id": "col_identidade_tempo",
-      "peso": 0.28,
-      "linhas": [
-        {
-          "tipo": "logo_liga",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#FF004B",
-          "texto": "LALIGA",
-          "cor_texto": "#FFFFFF"
-        },
-        {
-          "tipo": "relogio_acrescimo",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#D8D8DC",
-          "texto": "91:55 +6",
-          "cor_texto": "#111114"
-        }
+      "tipo": "coluna_identidade",
+      "peso": 0.72,
+      "forma": "retangulo",
+      "fundo": "#EE4437",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "logo_topo",
+        "relogio_base"
       ]
     },
     {
-      "id": "col_times",
-      "peso": 0.48,
-      "linhas": [
-        {
-          "tipo": "time_casa",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#111114",
-          "escudo": "circulo_1_1",
-          "cor_escudo": "#004D98",
-          "sigla": "BAR",
-          "cor_sigla": "#FFFFFF",
-          "cor_clube": "#A50044"
-        },
-        {
-          "tipo": "time_fora",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#111114",
-          "escudo": "circulo_1_1",
-          "cor_escudo": "#CB3524",
-          "sigla": "ATM",
-          "cor_sigla": "#FFFFFF",
-          "cor_clube": "#272E61"
-        }
+      "tipo": "coluna_times",
+      "peso": 0.85,
+      "forma": "retangulo",
+      "fundo": "#0F193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo_casa",
+        "sigla_casa",
+        "faixa_casa",
+        "escudo_fora",
+        "sigla_fora",
+        "faixa_fora"
       ]
     },
     {
-      "id": "col_placar",
-      "peso": 0.24,
-      "linhas": [
-        {
-          "tipo": "gol_casa",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#EEEEEE",
-          "texto": "2",
-          "cor_texto": "#121214"
-        },
-        {
-          "tipo": "gol_fora",
-          "peso_y": 0.5,
-          "forma": "rect",
-          "fundo": "#EEEEEE",
-          "texto": "1",
-          "cor_texto": "#121214"
-        }
+      "tipo": "coluna_gols",
+      "peso": 0.3,
+      "forma": "retangulo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#101010",
+      "conteudo": [
+        "gol_casa_topo",
+        "gol_fora_base"
       ]
     }
   ],
+  "etiqueta_acrescimo": {
+    "cor": "#EF4435",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#111A3B",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#EF4435"
+  },
   "variante_compacta": {
-    "modo": "stack2",
-    "largura_max": 648,
-    "escala": 0.85,
-    "ajuste": "Reduz largura da coluna de times em 15% para caber no retrato"
-  }
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 161,
+  "largura_em_62": 116
 }
