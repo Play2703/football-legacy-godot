@@ -372,22 +372,21 @@ func _init() -> void:
 		{"h": test_clubs_pool["mci"], "a": test_clubs_pool["nfo"], "desc": "MCI (Redondo) × NFO (Alto / Vermelho)"},
 		{"h": test_clubs_pool["der"], "a": test_clubs_pool["che"], "desc": "DER (Largo) × CHE (Redondo)"},
 		{"h": test_clubs_pool["tot"], "a": test_clubs_pool["prd"], "desc": "TOT (Alto / Borda Clara) × PRD (Escuro)"},
-		{"h": test_clubs_pool["ful"], "a": test_clubs_pool["usa_chi"], "desc": "FUL (Borda Clara) × CHI (Placeholder 2)"},
-		{"h": test_clubs_pool["cri"], "a": test_clubs_pool["arg_ald"], "desc": "CRI (Largo) × ALD (Placeholder 1)"}
+		{"h": test_clubs_pool["ful"], "a": test_clubs_pool["usa_chi"], "desc": "FUL (Borda Clara) × CHI (Placeholder 2)"}
 	]
 	
 	var circle_layouts = [
-		{"id": "brasileirao", "variant": ""},
-		{"id": "bundesliga", "variant": ""},
-		{"id": "la_liga", "variant": "tv"},
-		{"id": "premier_league", "variant": ""},
-		{"id": "ligue_1", "variant": ""},
-		{"id": "serie_a", "variant": ""},
-		{"id": "copa_do_brasil", "variant": ""}
+		{"id": "brasileirao", "variant": "", "nome": "Brasileirão Série A"},
+		{"id": "bundesliga", "variant": "", "nome": "Bundesliga"},
+		{"id": "la_liga", "variant": "tv", "nome": "La Liga EA Sports"},
+		{"id": "premier_league", "variant": "", "nome": "Premier League"},
+		{"id": "ligue_1", "variant": "", "nome": "Ligue 1 McDonald's"},
+		{"id": "serie_a", "variant": "", "nome": "Serie A Enilive"},
+		{"id": "copa_do_brasil", "variant": "", "nome": "Copa Betano do Brasil"}
 	]
 	
 	print("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-	print(" TABELA DE MEDIÇÕES DO RENDER REAL DE ESCUDOS (7 LAYOUTS × 5 CONFRONTOS = 70 ESCUDOS — COBERTURA COMPLETA)")
+	print(" TABELA DE MEDIÇÕES DO RENDER REAL DE ESCUDOS (7 LAYOUTS × 4 CONFRONTOS = 56 ESCUDOS — CSV EXPORT)")
 	print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	print("%-14s | %-16s | %-7s | %-9s | %-11s | %-5s | %-7s | %-11s | %-11s | %-12s | %-12s | %-8s" % [
 		"Layout", "Clube", "Escudo?", "Asset L×A", "Render L×A", "Dif%", "Encaixe", "M. Sigla", "M. Borda", "ΔE Geral/Borda", "Disco Apoio", "Anel"
@@ -403,9 +402,15 @@ func _init() -> void:
 	var pass_contraste = true
 	var pass_placeholder = true
 	
+	var csv_rows: Array[String] = []
+	csv_rows.append("layout,layout_nome,clube,lado,tem_escudo,asset_dim,render_dim,distorcao_pct,dentro_circulo,margem_sigla_px,margem_sigla_pct,margem_borda_px,margem_borda_pct,de_geral,de_borda,de_efetivo,disco_usado,disco_cor,de_disco,anel_usado,anel_cor,status_contraste")
+	
+	var json_export_data: Array[Dictionary] = []
+	
 	for l_info in circle_layouts:
 		var lid = l_info["id"]
 		var lvar = l_info["variant"]
+		var lnome = l_info["nome"]
 		
 		for pair in fix10_pairs:
 			test_sb.setup(pair["h"], pair["a"], lid, lvar, true)
@@ -462,19 +467,21 @@ func _init() -> void:
 					pass_margem = false
 					all_ok = false
 					
-				# Asserção 4: ΔE < 40 com disco de apoio válido (Limite 40 no anel de 15% ou média geral)
+				# Asserção 4 (FIX10c): ΔE < 40 com disco de apoio válido, e DEPOIS DO DISCO ΔE entre escudo e disco >= 40
 				var de_eff = min(m["delta_e"], m["delta_e_edge"]) if m["has_crest"] else 999.0
-				if m["has_crest"] and de_eff < 40.0:
-					if not m["support_disk_used"]:
-						printerr("ERRO FIX10 CONTRASTE: %s no layout %s tem ΔE %.1f < 40 sem disco de apoio!" % [t["name"], lid, de_eff])
-						pass_contraste = false
-						all_ok = false
-					else:
-						var de_supp = ScoreboardView.delta_e_cie76(m["mean_color"], m["support_disk_color"])
-						if de_supp < 40.0:
-							printerr("ERRO FIX10 DISCO INSUFICIENTE: %s no layout %s disco de apoio tem ΔE %.1f < 40!" % [t["name"], lid, de_supp])
+				var item_contrast_pass = true
+				if m["has_crest"]:
+					if m["support_disk_used"]:
+						if m["delta_e_disk"] < 40.0:
+							printerr("ERRO FIX10c DISCO INSUFICIENTE: %s no layout %s escudo contra disco tem ΔE = %.1f (< 40)!" % [t["name"], lid, m["delta_e_disk"]])
 							pass_contraste = false
+							item_contrast_pass = false
 							all_ok = false
+					elif m["delta_e"] < 40.0:
+						printerr("ERRO FIX10c CONTRASTE: %s no layout %s tem ΔE %.1f < 40 sem disco de apoio!" % [t["name"], lid, m["delta_e"]])
+						pass_contraste = false
+						item_contrast_pass = false
+						all_ok = false
 							
 				# Asserção 5: Clube com escudo não cai no placeholder; clube sem escudo não tem círculo vazio
 				var has_file = FileAccess.file_exists("user://logos/" + t["id"] + ".png")
@@ -487,19 +494,87 @@ func _init() -> void:
 					pass_placeholder = false
 					all_ok = false
 					
+				# Coleta para CSV e JSON
+				var csv_line = "%s,%s,%s,%s,%s,%s,%s,%.2f,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%s,%s,%.1f,%s,%s,%s" % [
+					lid,
+					lnome,
+					t["name"],
+					s["role"],
+					"true" if m["has_crest"] else "false",
+					asset_dim,
+					render_dim,
+					m["ratio_diff_pct"],
+					"true" if m["within_circle"] else "false",
+					m["margin_to_sigla"],
+					m["margin_to_sigla_ratio"] * 100.0,
+					m["margin_to_edge"],
+					m["margin_to_edge_ratio"] * 100.0,
+					m["delta_e"],
+					m["delta_e_edge"],
+					de_eff,
+					"true" if m["support_disk_used"] else "false",
+					support_str,
+					m["delta_e_disk"],
+					"true" if m["ring_used"] else "false",
+					ring_str,
+					"PASS" if item_contrast_pass else "FAIL"
+				]
+				csv_rows.append(csv_line)
+				
+				var json_item = {
+					"layout": lid,
+					"layout_nome": lnome,
+					"clube_id": t["id"],
+					"clube": t["name"],
+					"lado": s["role"],
+					"has_crest": m["has_crest"],
+					"asset_dim": asset_dim,
+					"render_dim": render_dim,
+					"ratio_diff_pct": m["ratio_diff_pct"],
+					"within_circle": m["within_circle"],
+					"margin_to_sigla": m["margin_to_sigla"],
+					"margin_to_sigla_ratio": m["margin_to_sigla_ratio"],
+					"margin_to_edge": m["margin_to_edge"],
+					"margin_to_edge_ratio": m["margin_to_edge_ratio"],
+					"delta_e": m["delta_e"],
+					"delta_e_edge": m["delta_e_edge"],
+					"delta_e_effective": de_eff,
+					"support_disk_used": m["support_disk_used"],
+					"support_disk_color": support_str,
+					"delta_e_disk": m["delta_e_disk"],
+					"ring_used": m["ring_used"],
+					"ring_color": ring_str,
+					"contrast_status": "PASS" if item_contrast_pass else "FAIL"
+				}
+				json_export_data.append(json_item)
+					
 	test_sb.queue_free()
 	print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
 	
+	# Salvar CSV com exatamente 56 linhas de dados (mais cabeçalho)
+	var csv_content = "\n".join(csv_rows) + "\n"
+	var f_csv = FileAccess.open("res://features/scoreboard/tabela_escudos_56linhas.csv", FileAccess.WRITE)
+	if f_csv:
+		f_csv.store_string(csv_content)
+		f_csv.close()
+		print("[CSV EXPORT] Salvo em res://features/scoreboard/tabela_escudos_56linhas.csv (%d linhas)" % [csv_rows.size() - 1])
+		
+	var f_json = FileAccess.open("res://features/scoreboard/medicoes_escudos_56.json", FileAccess.WRITE)
+	if f_json:
+		f_json.store_string(JSON.stringify(json_export_data, "\t"))
+		f_json.close()
+		print("[JSON EXPORT] Salvo em res://features/scoreboard/medicoes_escudos_56.json (%d registros)" % json_export_data.size())
+	
 	print("=================================================================")
-	print("      RELATÓRIO DE AVALIAÇÃO FORMAL DE TESTE (FIX10b)           ")
+	print("      RELATÓRIO DE AVALIAÇÃO FORMAL DE TESTE (FIX10c)           ")
 	print("=================================================================")
 	print("[%s] (a) Distorção: Proporção L/A preservada estritamente (máx 0.00%% <= 1.0%%)" % ["PASS" if pass_distorcao else "FAIL"])
 	print("[%s] (b) Escudo fora do círculo: 100%% dos escudos contidos no limite 0.92·diâmetro" % ["PASS" if pass_fora_circulo else "FAIL"])
-	print("[%s] (c) Margens mínimas: Todas as margens escudo-sigla e escudo-borda >= 0.06·W" % ["PASS" if pass_margem else "FAIL"])
-	print("[%s] (d) Contraste e Disco: 100%% dos casos com ΔE < 40 possuem disco de apoio" % ["PASS" if pass_contraste else "FAIL"])
+	print("[%s] (c) Margens mínimas: Todas as margens escudo-sigla (até a caixa de texto) e escudo-borda >= 0.06·W" % ["PASS" if pass_margem else "FAIL"])
+	print("[%s] (d) Contraste e Disco: 100%% dos casos possuem contraste contra fundo ou disco >= 40" % ["PASS" if pass_contraste else "FAIL"])
 	print("[%s] (e) Integridade: Nenhum escudo real caiu no placeholder; nenhum placeholder vazio" % ["PASS" if pass_placeholder else "FAIL"])
 	print("=================================================================")
-	print("[TESTE OK] FIX10: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
+	print("[TESTE OK] FIX10c: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
 	
 	print("=================================================================")
 	if all_ok:

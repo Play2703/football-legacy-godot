@@ -1175,7 +1175,7 @@ static func get_team_crest_edge_mean_color(team: Dictionary) -> Color:
 	_crest_edge_color_cache[tid] = res
 	return res
 
-static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, style: String, block_bg: Color, cell_w: float, H: float, is_casa: bool = true) -> Dictionary:
+static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, style: String, block_bg: Color, cell_w: float, H: float, is_casa: bool = true, sigla_box_coord: float = -1.0) -> Dictionary:
 	var tex = get_team_crest_texture(team)
 	var center = pos + Vector2(diam, diam) * 0.5
 	var r = diam * 0.5
@@ -1200,6 +1200,7 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		"block_bg": block_bg,
 		"delta_e": 0.0,
 		"delta_e_edge": 0.0,
+		"delta_e_disk": 0.0,
 		"support_disk_used": false,
 		"support_disk_color": Color.TRANSPARENT,
 		"ring_used": false,
@@ -1240,12 +1241,21 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		res["delta_e"] = de_overall
 		res["delta_e_edge"] = de_edge
 		
-		# Limite 40 (FIX10b): Mede borda (anel 15%) e geral; desenha disco se abaixo de 40
-		if de_effective < 40.0:
-			res["support_disk_used"] = true
-			var de_white = min(delta_e_cie76(mean_col, Color.WHITE), delta_e_cie76(edge_col, Color.WHITE))
-			var de_dark = min(delta_e_cie76(mean_col, Color("#101015")), delta_e_cie76(edge_col, Color("#101015")))
-			res["support_disk_color"] = Color.WHITE if de_white >= de_dark else Color("#101015")
+		# Limite 40 (FIX10c): Disco de apoio escolhido pelo maior contraste contra o fundo da célula
+		var cr_white = get_contrast_ratio(block_bg, Color.WHITE)
+		var cr_dark = get_contrast_ratio(block_bg, Color("#101015"))
+		var candidate_supp_col = Color.WHITE if cr_white >= cr_dark else Color("#101015")
+		
+		var de_disk_overall = delta_e_cie76(mean_col, candidate_supp_col)
+		var de_disk_edge = delta_e_cie76(edge_col, candidate_supp_col)
+		var de_disk = min(de_disk_overall, de_disk_edge)
+		
+		# Ativação do disco: carência de contraste no fundo real (< 40) E o disco proporciona contraste válido (>= 40)
+		if (de_overall < 40.0 or (de_edge < 40.0 and de_disk >= 40.0)):
+			if de_disk >= 40.0:
+				res["support_disk_used"] = true
+				res["support_disk_color"] = candidate_supp_col
+				res["delta_e_disk"] = de_disk
 			
 		if style == "bundesliga":
 			res["ring_used"] = true
@@ -1259,23 +1269,31 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 			res["ring_used"] = true
 			res["ring_color"] = Color("#808080") if style == "brasileirao" else Color.WHITE
 			
-	# Margens medidas a partir do ESCUDO DESENHADO (crest_rect), não apenas do slot
+	# Margens medidas a partir do ESCUDO DESENHADO (crest_rect), não apenas do slot.
+	# Margem até a sigla medida até a caixa do texto da sigla (FIX10c).
 	var crest_offset = (diam - rw) * 0.5
 	if style == "brasileirao":
 		var base_margin = cell_w * 0.06
-		var base_gap = max(cell_w * 0.06, 8.0)
 		res["margin_to_edge"] = base_margin + crest_offset
-		res["margin_to_sigla"] = base_gap + crest_offset
-	elif style == "inclinada":
+		if sigla_box_coord >= 0.0:
+			if is_casa:
+				var crest_draw_start_x = pos.x + crest_offset
+				res["margin_to_sigla"] = max(0.0, crest_draw_start_x - sigla_box_coord)
+			else:
+				var crest_draw_end_x = pos.x + crest_offset + rw
+				res["margin_to_sigla"] = max(0.0, sigla_box_coord - crest_draw_end_x)
+		else:
+			var base_gap = max(cell_w * 0.06, 8.0)
+			res["margin_to_sigla"] = base_gap + crest_offset
+	elif style in ["inclinada", "bundesliga"]:
 		var base_div = max(cell_w * 0.06, 8.0)
-		var base_gap = max(cell_w * 0.06, 8.0)
 		res["margin_to_edge"] = base_div + crest_offset
-		res["margin_to_sigla"] = base_gap + crest_offset
-	elif style == "bundesliga":
-		var base_div = max(cell_w * 0.06, 8.0)
-		var base_gap = max(cell_w * 0.06, 8.0)
-		res["margin_to_edge"] = base_div + crest_offset
-		res["margin_to_sigla"] = base_gap + crest_offset
+		if sigla_box_coord >= 0.0:
+			var crest_draw_end_x = pos.x + crest_offset + rw
+			res["margin_to_sigla"] = max(0.0, sigla_box_coord - crest_draw_end_x)
+		else:
+			var base_gap = max(cell_w * 0.06, 8.0)
+			res["margin_to_sigla"] = base_gap + crest_offset
 	elif style == "la_liga":
 		res["margin_to_edge"] = (cell_w - rw) * 0.5
 		res["margin_to_sigla"] = (cell_w - rw) * 0.5
@@ -1315,8 +1333,29 @@ func get_layout_crest_measurements() -> Dictionary:
 		var diam_a = min(eff_h * 0.54, cell_away_w * 0.25)
 		var pos_h = Vector2(cell_home_w - (cell_home_w * 0.06) - diam_h, (eff_h - diam_h) * 0.5)
 		var pos_a = Vector2(cell_away_w * 0.06, (eff_h - diam_a) * 0.5)
-		res["home"] = measure_crest_render(home_team, pos_h, diam_h, "brasileirao", Color.WHITE, cell_home_w, H, true)
-		res["away"] = measure_crest_render(away_team, pos_a, diam_a, "brasileirao", Color.WHITE, cell_away_w, H, false)
+		
+		# Sigla mandante (à esquerda da célula): alinhada à esquerda com margem 8%
+		var abbrev_h = String(home_team.get("abbrev", "HOM"))
+		var f_sz_h = _get_font_size("sigla", eff_h)
+		var font_h = _get_font()
+		var txt_w_h = font_h.get_string_size(abbrev_h, HORIZONTAL_ALIGNMENT_LEFT, -1.0, f_sz_h).x
+		var sigla_start_x = cell_home_w * 0.08
+		var gap_sigla = max(cell_home_w * 0.06, 8.0)
+		var sigla_w_h = pos_h.x - gap_sigla - sigla_start_x
+		var text_box_right_h = sigla_start_x + (sigla_w_h * 0.08) + txt_w_h
+		
+		# Sigla visitante (à direita da célula): alinhada à direita com margem 8%
+		var abbrev_a = String(away_team.get("abbrev", "AWY"))
+		var f_sz_a = _get_font_size("sigla", eff_h)
+		var txt_w_a = font_h.get_string_size(abbrev_a, HORIZONTAL_ALIGNMENT_RIGHT, -1.0, f_sz_a).x
+		var gap_sigla_a = max(cell_away_w * 0.06, 8.0)
+		var sigla_start_x_a = pos_a.x + diam_a + gap_sigla_a
+		var sigla_end_x_a = cell_away_w - (cell_away_w * 0.08)
+		var sigla_w_a = sigla_end_x_a - sigla_start_x_a
+		var text_box_left_a = sigla_end_x_a - (sigla_w_a * 0.08) - txt_w_a
+		
+		res["home"] = measure_crest_render(home_team, pos_h, diam_h, "brasileirao", Color.WHITE, cell_home_w, H, true, text_box_right_h)
+		res["away"] = measure_crest_render(away_team, pos_a, diam_a, "brasileirao", Color.WHITE, cell_away_w, H, false, text_box_left_a)
 	elif fam == "skew":
 		res["has_crests"] = true
 		var diam = H * 0.55
@@ -1344,8 +1383,14 @@ func get_layout_crest_measurements() -> Dictionary:
 				break
 		var margin_div = max(cell_w * 0.06, 8.0)
 		var pos = Vector2(margin_div, (H - diam) * 0.5)
-		res["home"] = measure_crest_render(home_team, pos, diam, "inclinada", home_bg, cell_w, H, true)
-		res["away"] = measure_crest_render(away_team, pos, diam, "inclinada", away_bg, cell_w, H, false)
+		
+		var gap_sigla = max(cell_w * 0.06, 8.0)
+		var sigla_x = pos.x + diam + gap_sigla
+		var sigla_w = cell_w - sigla_x - max(cell_w * 0.06, 8.0)
+		var text_box_left = sigla_x + (sigla_w * 0.08)
+		
+		res["home"] = measure_crest_render(home_team, pos, diam, "inclinada", home_bg, cell_w, H, true, text_box_left)
+		res["away"] = measure_crest_render(away_team, pos, diam, "inclinada", away_bg, cell_w, H, false, text_box_left)
 	elif fam == "reto" and tid == "bundesliga":
 		res["has_crests"] = true
 		var diam = H * 0.52
@@ -1366,8 +1411,26 @@ func get_layout_crest_measurements() -> Dictionary:
 				break
 		var margin_left = max(cell_w * 0.06, 8.0)
 		var pos = Vector2(margin_left, (H - diam) * 0.5)
-		res["home"] = measure_crest_render(home_team, pos, diam, "bundesliga", home_bg, cell_w, H, true)
-		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false)
+		
+		var score_box_w = clamp(H * 0.48, 30.0, cell_w * 0.20)
+		var margin_score = max(cell_w * 0.06, 6.0)
+		var r_score_x = cell_w - score_box_w - margin_score
+		var margin_between = max(cell_w * 0.06, 8.0)
+		var sigla_x = pos.x + diam + margin_between
+		var sigla_w = r_score_x - margin_between - sigla_x
+		
+		var abbrev_h = String(home_team.get("abbrev", "HOM"))
+		var f_sz = _get_font_size("sigla", H)
+		var font = _get_font()
+		var txt_w_h = font.get_string_size(abbrev_h, HORIZONTAL_ALIGNMENT_CENTER, -1.0, f_sz).x
+		var text_box_left_h = sigla_x + (sigla_w - txt_w_h) * 0.5
+		
+		var abbrev_a = String(away_team.get("abbrev", "AWY"))
+		var txt_w_a = font.get_string_size(abbrev_a, HORIZONTAL_ALIGNMENT_CENTER, -1.0, f_sz).x
+		var text_box_left_a = sigla_x + (sigla_w - txt_w_a) * 0.5
+		
+		res["home"] = measure_crest_render(home_team, pos, diam, "bundesliga", home_bg, cell_w, H, true, text_box_left_h)
+		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false, text_box_left_a)
 	elif fam == "stack2":
 		res["has_crests"] = true
 		var col_times_w = W * 0.25 # coluna_times (marinho) tem 0.25 de peso no schema da La Liga
@@ -1413,12 +1476,15 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		var edge_col = get_team_crest_edge_mean_color(team)
 		var de_overall = delta_e_cie76(mean_col, block_bg)
 		var de_edge = delta_e_cie76(edge_col, block_bg)
-		var de_effective = min(de_overall, de_edge)
-		if de_effective < 40.0:
-			var de_white = min(delta_e_cie76(mean_col, Color.WHITE), delta_e_cie76(edge_col, Color.WHITE))
-			var de_dark = min(delta_e_cie76(mean_col, Color("#101015")), delta_e_cie76(edge_col, Color("#101015")))
-			var support_col = Color.WHITE if de_white >= de_dark else Color("#101015")
-			draw_circle(center, r * 0.95, support_col)
+		
+		var cr_white = get_contrast_ratio(block_bg, Color.WHITE)
+		var cr_dark = get_contrast_ratio(block_bg, Color("#101015"))
+		var candidate_supp_col = Color.WHITE if cr_white >= cr_dark else Color("#101015")
+		var de_disk = min(delta_e_cie76(mean_col, candidate_supp_col), delta_e_cie76(edge_col, candidate_supp_col))
+		
+		if (de_overall < 40.0 or (de_edge < 40.0 and de_disk >= 40.0)):
+			if de_disk >= 40.0:
+				draw_circle(center, r * 0.95, candidate_supp_col)
 			
 		# 3. Desenhar escudo real centralizado 1:1 fit (0.92 * diam) com filtro linear
 		draw_texture_rect(tex, crest_rect, false)
