@@ -105,5 +105,41 @@ func _ready() -> void:
 		img_com.save_png("res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/laliga_escuros_com_disco.png")
 		print("[LALIGA AVALIACAO] Salvo com disco: laliga_escuros_com_disco.png")
 		
-	print("Todas as 28 capturas 1:1 do Viewport do Godot foram geradas com sucesso!")
+	# Capturas FIX9 — Brasileirão Novo com Pílula Central (6 pares requeridos)
+	print("Gerando capturas do Brasileirão FIX9 (Pílula Central)...")
+	var cru_club = {"id": "cru", "name": "Cruzeiro", "abbrev": "CRU", "kit": "#14318F", "kit2": "#F5F5F5"}
+	var mir_club = {"id": "mir2", "name": "Mirassol", "abbrev": "MIR", "kit": "#FFDD00", "kit2": "#0A7A3C"}
+	var fla_club = {"id": "fla", "name": "Flamengo", "abbrev": "FLA", "kit": "#C00000", "kit2": "#111111"}
+	var pal_club = {"id": "pal", "name": "Palmeiras", "abbrev": "PAL", "kit": "#006437", "kit2": "#FFFFFF"}
+	
+	var fix9_render_pairs = [
+		{"h": cru_club, "a": mir_club, "gh": 0, "ga": 0, "min": 0, "sec": 48, "stop": 1, "state": "1T", "name": "par1"},
+		{"h": fla_club, "a": pal_club, "gh": 2, "ga": 1, "min": 69, "sec": 9, "stop": 5, "state": "2T", "name": "par2"},
+		{"h": test_clubs["der"], "a": test_clubs["che"], "gh": 0, "ga": 2, "min": 34, "sec": 12, "stop": 2, "state": "1T", "name": "par3"},
+		{"h": test_clubs["ful"], "a": test_clubs["usa_chi"], "gh": 1, "ga": 1, "min": 85, "sec": 34, "stop": 4, "state": "2T", "name": "par4"},
+		{"h": cru_club, "a": mir_club, "gh": 10, "ga": 0, "min": 89, "sec": 59, "stop": 3, "state": "2T", "name": "par5"},
+		{"h": cru_club, "a": mir_club, "gh": 0, "ga": 0, "min": 15, "sec": 0, "stop": 0, "state": "1T", "name": "par6"}
+	]
+	
+	for p_item in fix9_render_pairs:
+		sb.setup(p_item["h"], p_item["a"], "brasileirao", "", true)
+		sb.update_score(p_item["gh"], p_item["ga"])
+		sb.update_time(p_item["min"], p_item["stop"], p_item["sec"], p_item["state"])
+		
+		# Viewport com folga adequada para a pílula que sobressai no topo (-8.5px) e o relógio embaixo (+45.6px)
+		var needed_w = int(ceil(sb.size.x + 48.0))
+		var needed_h = int(ceil(sb.size.y + 80.0))
+		vp.size = Vector2i(needed_w, needed_h)
+		sb.position = Vector2(24.0, 20.0)
+		
+		await get_tree().process_frame
+		await get_tree().process_frame
+		
+		var b_img = vp.get_texture().get_image()
+		if b_img:
+			var b_path = "res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/board_brasileirao_fix9_%s.png" % p_item["name"]
+			b_img.save_png(b_path)
+			print("[BRASILEIRAO FIX9 RENDER] Salvo: %s (%dx%d)" % [b_path, b_img.get_width(), b_img.get_height()])
+		
+	print("Todas as capturas do Viewport do Godot foram geradas com sucesso!")
 	get_tree().quit(0)

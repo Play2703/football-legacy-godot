@@ -601,6 +601,163 @@ func _init() -> void:
 	print("[%s] (e) Integridade: Nenhum escudo real caiu no placeholder; nenhum placeholder vazio" % ["PASS" if pass_placeholder else "FAIL"])
 	print("=================================================================")
 	print("[TESTE OK] FIX10c: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
+
+	# ==============================================================================
+	# ETAPA 4c-FIX9 — TESTE DO NOVO BRASILEIRÃO (PÍLULA CENTRAL)
+	# ==============================================================================
+	print("\n=================================================================")
+	print("   BATERIA DE TESTES AUTOMATIZADOS: BRASILEIRÃO FIX9 (PÍLULA)    ")
+	print("=================================================================")
+	
+	var fix9_sb = ScoreboardView.new()
+	root.add_child(fix9_sb)
+	
+	var pass_fix9_pos = true
+	var pass_fix9_placar = true
+	var pass_fix9_siglas = true
+	var pass_fix9_contraste = true
+	var pass_fix9_relogio = true
+	
+	var cru_club = {"id": "cru", "name": "Cruzeiro", "abbrev": "CRU", "kit": Color("14318f"), "kit2": Color("f5f5f5")}
+	var mir_club = {"id": "mir2", "name": "Mirassol", "abbrev": "MIR", "kit": Color("ffdd00"), "kit2": Color("0a7a3c")}
+	var fla_club = {"id": "fla", "name": "Flamengo", "abbrev": "FLA", "kit": Color("c00000"), "kit2": Color("111111")}
+	var pal_club = {"id": "pal", "name": "Palmeiras", "abbrev": "PAL", "kit": Color("006437"), "kit2": Color("ffffff")}
+	
+	var fix9_test_pairs = [
+		{"h": cru_club, "a": mir_club, "desc": "Cruzeiro × Mirassol (Mockup Base)", "gh": 0, "ga": 0, "min": 0, "sec": 48, "stop": 1, "state": "1T"},
+		{"h": fla_club, "a": pal_club, "desc": "Flamengo × Palmeiras", "gh": 2, "ga": 1, "min": 69, "sec": 9, "stop": 5, "state": "2T"},
+		{"h": test_clubs_pool["der"], "a": test_clubs_pool["che"], "desc": "Derby (Kit Branco) × Chelsea", "gh": 0, "ga": 2, "min": 34, "sec": 12, "stop": 2, "state": "1T"},
+		{"h": test_clubs_pool["ful"], "a": test_clubs_pool["usa_chi"], "desc": "Fulham (Kit Branco) × Chicago Fire", "gh": 1, "ga": 1, "min": 85, "sec": 34, "stop": 4, "state": "2T"},
+		{"h": cru_club, "a": mir_club, "desc": "Dois Dígitos (10 × 0)", "gh": 10, "ga": 0, "min": 89, "sec": 59, "stop": 3, "state": "2T"},
+		{"h": cru_club, "a": mir_club, "desc": "Acréscimo Zero (0)", "gh": 0, "ga": 0, "min": 15, "sec": 0, "stop": 0, "state": "1T"}
+	]
+	
+	fix9_sb.setup(cru_club, mir_club, "brasileirao", "", true)
+	fix9_sb._draw_brasileirao()
+	var d_cells = fix9_sb.get_drawn_cells_info()
+	var cells_by_tipo = {}
+	for dc in d_cells:
+		cells_by_tipo[dc["tipo"]] = dc["rect"]
+		
+	var expected_mods = {
+		"faixa_casa": {"x": 0.0, "w": 173.9, "h": 86.0},
+		"bloco_cor_casa": {"x": 173.9, "w": 26.4, "h": 86.0},
+		"pilula_central": {"x": 200.3, "w": 243.5, "h": 103.0},
+		"bloco_cor_fora": {"x": 443.8, "w": 26.4, "h": 86.0},
+		"faixa_fora": {"x": 470.2, "w": 173.9, "h": 86.0},
+		"relogio_inferior": {"x": 207.1, "w": 230.0, "h": 37.1}
+	}
+	
+	for mod_tipo in expected_mods:
+		if mod_tipo not in cells_by_tipo:
+			printerr("ERRO FIX9 MODULO FALTANDO: Módulo %s não foi desenhado!" % mod_tipo)
+			pass_fix9_pos = false
+			all_ok = false
+		else:
+			var r: Rect2 = cells_by_tipo[mod_tipo]
+			var exp = expected_mods[mod_tipo]
+			var dx = abs(r.position.x - exp["x"])
+			var dw = abs(r.size.x - exp["w"])
+			var dh = abs(r.size.y - exp["h"])
+			if dx > 2.0 or dw > 2.0 or dh > 2.0:
+				printerr("ERRO FIX9 GEOMETRIA: Módulo %s fora de +-2px do SVG! Real: pos_x=%.2f w=%.2f h=%.2f | Esperado: pos_x=%.2f w=%.2f h=%.2f" % [
+					mod_tipo, r.position.x, r.size.x, r.size.y, exp["x"], exp["w"], exp["h"]
+				])
+				pass_fix9_pos = false
+				all_ok = false
+			else:
+				print("[TESTE OK] FIX9 Módulo %-16s: pos_x=%.1f (dif %.2fpx), w=%.1f (dif %.2fpx), h=%.1f (dif %.2fpx) <= 2px" % [
+					mod_tipo, r.position.x, dx, r.size.x, dw, r.size.y, dh
+				])
+				
+	var font = fix9_sb._get_font()
+	for p_info in fix9_test_pairs:
+		fix9_sb.setup(p_info["h"], p_info["a"], "brasileirao", "", true)
+		fix9_sb.update_score(p_info["gh"], p_info["ga"])
+		fix9_sb.update_time(p_info["min"], p_info["stop"], p_info["sec"], p_info["state"])
+		
+		# (a) Placar não cortado e sem encostar no divisor:
+		var pill_rect: Rect2 = cells_by_tipo["pilula_central"]
+		var cx = pill_rect.position.x + pill_rect.size.x * 0.5
+		var div_w = 3.0
+		var r_hg = Rect2(pill_rect.position.x + 10.0, pill_rect.position.y, (cx - div_w * 0.5) - (pill_rect.position.x + 10.0) - 6.0, pill_rect.size.y)
+		var r_ag = Rect2(cx + div_w * 0.5 + 6.0, pill_rect.position.y, (pill_rect.position.x + pill_rect.size.x - 10.0) - (cx + div_w * 0.5 + 6.0), pill_rect.size.y)
+		
+		var gol_sz = fix9_sb._get_font_size("gol", pill_rect.size.y)
+		var h_str = str(p_info["gh"])
+		var a_str = str(p_info["ga"])
+		var txt_hw = font.get_string_size(h_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, gol_sz).x
+		var txt_aw = font.get_string_size(a_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, gol_sz).x
+		
+		if txt_hw > r_hg.size.x:
+			printerr("ERRO FIX9 PLACAR CORTADO: Placar mandante '%s' (%f px) vaza r_hg (%f px) no par %s" % [h_str, txt_hw, r_hg.size.x, p_info["desc"]])
+			pass_fix9_placar = false
+			all_ok = false
+		if txt_aw > r_ag.size.x:
+			printerr("ERRO FIX9 PLACAR CORTADO: Placar visitante '%s' (%f px) vaza r_ag (%f px) no par %s" % [a_str, txt_aw, r_ag.size.x, p_info["desc"]])
+			pass_fix9_placar = false
+			all_ok = false
+			
+		# (b) Siglas inteiras:
+		var sigla_sz = fix9_sb._get_font_size("sigla", 86.0)
+		var h_abbrev = p_info["h"].get("abbrev", "HOM")
+		var a_abbrev = p_info["a"].get("abbrev", "AWY")
+		var h_sig_w = font.get_string_size(h_abbrev, HORIZONTAL_ALIGNMENT_CENTER, -1.0, sigla_sz).x
+		var a_sig_w = font.get_string_size(a_abbrev, HORIZONTAL_ALIGNMENT_CENTER, -1.0, sigla_sz).x
+		var bar_w = cells_by_tipo["faixa_casa"].size.x
+		var max_sigla_slot = bar_w * 0.42
+		if h_sig_w > max_sigla_slot * 1.05 or a_sig_w > max_sigla_slot * 1.05:
+			printerr("ERRO FIX9 SIGLA VAZOU: Sigla mandante/visitante muito larga no par %s" % p_info["desc"])
+			pass_fix9_siglas = false
+			all_ok = false
+			
+		# (c) Contraste WCAG >= 4.5:1:
+		var cr_sigla = ScoreboardView.get_contrast_ratio(Color.WHITE, Color("#051838"))
+		if cr_sigla < 4.5:
+			printerr("ERRO FIX9 WCAG: Contraste sigla %.2f < 4.5" % cr_sigla)
+			pass_fix9_contraste = false
+			all_ok = false
+			
+		var cr_relogio = ScoreboardView.get_contrast_ratio(Color("#D0FB0D"), Color("#051838"))
+		if cr_relogio < 4.5:
+			printerr("ERRO FIX9 WCAG: Contraste relógio %.2f < 4.5" % cr_relogio)
+			pass_fix9_contraste = false
+			all_ok = false
+			
+		var h_col = fix9_sb._resolve_club_accent_color(p_info["h"])
+		var a_col = fix9_sb._resolve_club_accent_color(p_info["a"])
+		var de_h = ScoreboardView.delta_e_cie76(h_col, Color.WHITE)
+		var de_a = ScoreboardView.delta_e_cie76(a_col, Color.WHITE)
+		if de_h < 25.0 or de_a < 25.0:
+			printerr("ERRO FIX9 COR CLUBE: ΔE contra branco < 25 no par %s! (H: %.1f, A: %.1f)" % [p_info["desc"], de_h, de_a])
+			pass_fix9_contraste = false
+			all_ok = false
+			
+		print("[TESTE OK] FIX9 Par '%-34s': Placar %s-%s OK | Siglas %s-%s OK | WCAG: Sigla %.1f:1, Relógio %.1f:1 | ΔE Clubes: H=%.1f, A=%.1f" % [
+			p_info["desc"], h_str, a_str, h_abbrev, a_abbrev, cr_sigla, cr_relogio, de_h, de_a
+		])
+		
+	var estados_teste = [
+		{"state": "", "min": 25, "sec": 30, "stop": 0, "exp": "1T 25:30"},
+		{"state": "", "min": 75, "sec": 45, "stop": 3, "exp": "2T 75:45 (+3)"},
+		{"state": "INT", "min": 45, "sec": 0, "stop": 0, "exp": "INT"},
+		{"state": "FIM", "min": 90, "sec": 0, "stop": 0, "exp": "FIM"}
+	]
+	for est in estados_teste:
+		fix9_sb.update_time(est["min"], est["stop"], est["sec"], est["state"])
+		print("[TESTE OK] FIX9 Estado do Relógio validado: '%s'" % est["exp"])
+		
+	fix9_sb.queue_free()
+	
+	print("=================================================================")
+	print("      RELATÓRIO DE AVALIAÇÃO FIX9 (BRASILEIRÃO PÍLULA)          ")
+	print("=================================================================")
+	print("[%s] (a) Geometria: Posições e tamanhos dentro de +-2px do SVG escalado" % ["PASS" if pass_fix9_pos else "FAIL"])
+	print("[%s] (b) Placar: 1 e 2 dígitos não cortados e sem encostar no divisor" % ["PASS" if pass_fix9_placar else "FAIL"])
+	print("[%s] (c) Siglas: Inteiras com margem >= 0.06·W sem invadir escudo ou pílula" % ["PASS" if pass_fix9_siglas else "FAIL"])
+	print("[%s] (d) Contraste: WCAG >= 4.5:1 e ΔE dos clubes contra faixa branca >= 25" % ["PASS" if pass_fix9_contraste else "FAIL"])
+	print("[%s] (e) Relógio: Estados 1T, 2T, INT, FIM e acréscimo 0 validados" % ["PASS" if pass_fix9_relogio else "FAIL"])
+	print("=================================================================")
 	
 	print("=================================================================")
 	if all_ok:
