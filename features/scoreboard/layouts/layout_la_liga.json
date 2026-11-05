@@ -28,11 +28,7 @@
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "escudo_casa",
-        "sigla_casa",
-        "faixa_casa",
-        "escudo_fora",
-        "sigla_fora",
-        "faixa_fora"
+        "escudo_fora"
       ]
     },
     {
