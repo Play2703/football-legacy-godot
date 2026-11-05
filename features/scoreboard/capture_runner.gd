@@ -76,38 +76,6 @@ func _ready() -> void:
 			else:
 				printerr("ERRO: Falha ao capturar imagem do viewport para %s par %d" % [lid, p_idx + 1])
 				
-	# Capturas de Avaliação La Liga (Item 3: Pordenone e Nottingham com e sem disco branco)
-	print("Gerando capturas de avaliação para La Liga (Pordenone e Nottingham)...")
-	# 1. Sem disco de apoio (Atual)
-	sb.la_liga_force_white_disk = false
-	sb.setup(test_clubs["prd"], test_clubs["nfo"], "la_liga", "", true)
-	sb.update_score(0, 0)
-	sb.update_time(85, 5)
-	var sb_sz_sem = sb.get_real_size()
-	vp.size = Vector2i(int(ceil(max(sb.size.x, sb_sz_sem.x) + 48.0)), int(ceil(max(sb.size.y, sb_sz_sem.y) + 48.0)))
-	sb.position = Vector2(24.0, 24.0)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img_sem = vp.get_texture().get_image()
-	if img_sem:
-		img_sem.save_png("res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/laliga_escuros_sem_disco.png")
-		print("[LALIGA AVALIACAO] Salvo sem disco: laliga_escuros_sem_disco.png")
-		
-	# 2. Com disco de apoio branco forçado
-	sb.la_liga_force_white_disk = true
-	sb.setup(test_clubs["prd"], test_clubs["nfo"], "la_liga", "", true)
-	sb.update_score(0, 0)
-	sb.update_time(85, 5)
-	var sb_sz_com = sb.get_real_size()
-	vp.size = Vector2i(int(ceil(max(sb.size.x, sb_sz_com.x) + 48.0)), int(ceil(max(sb.size.y, sb_sz_com.y) + 48.0)))
-	sb.position = Vector2(24.0, 24.0)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img_com = vp.get_texture().get_image()
-	if img_com:
-		img_com.save_png("res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/laliga_escuros_com_disco.png")
-		print("[LALIGA AVALIACAO] Salvo com disco: laliga_escuros_com_disco.png")
-		
 	# Capturas FIX9 — Brasileirão Novo com Pílula Central (6 pares requeridos)
 	print("Gerando capturas do Brasileirão FIX9 (Pílula Central)...")
 	var cru_club = {"id": "cru", "name": "Cruzeiro", "abbrev": "CRU", "kit": "#14318F", "kit2": "#F5F5F5"}
