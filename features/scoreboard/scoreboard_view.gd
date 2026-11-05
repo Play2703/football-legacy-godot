@@ -671,19 +671,19 @@ func _draw_modulos_separados() -> void:
 				_draw_faixa_clube(under_rect, under_colors, "horizontal")
 				
 			"relogio":
-				# Requisito 2 (FIX8c): Relógio dourado com dígitos #101010 (nunca dourado sobre dourado), auto-fit; "+6" com larg/alt ≈ 0.30
+				# Requisito 3 (FIX8d): Relógio "85:34" centralizado com margem >= 0.08*W, dígitos #101010; etiqueta +6 sem entalhe no topo (y >= 3)
 				var time_str = "%02d:%02d" % [minute, 0]
 				var clk_txt_col = Color("#101010")
 				var tag_w = cell_w * 0.30
 				var tag_h = H * 0.30
 				if stoppage > 0:
-					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - tag_w - 6.0, H)
+					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w - tag_w - cell_w * 0.10, H)
 					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
-					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 2.0, 2.0, tag_w, tag_h)
+					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 4.0, 3.0, tag_w, tag_h)
 					draw_rect(stop_rect, Color("#D82020"))
 					_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
 				else:
-					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - 8.0, H)
+					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w * 0.84, H)
 					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
 					
 			"penaltis":
@@ -927,7 +927,7 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 			
 	if total_w > available_w:
 		var ratio = available_w / total_w
-		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.75)
+		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.60)
 		var new_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		if new_size < font_size:
 			_last_text_overlap_warning = "Relógio '%s' ajustado de %dpx para %dpx (disponível: %.1fpx)" % [time_str, font_size, new_size, available_w]
@@ -991,7 +991,7 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	
 	if text_size.x > available_w:
 		var ratio = available_w / text_size.x
-		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.75)
+		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.60)
 		var new_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		if new_size < font_size:
 			_last_text_overlap_warning = "Texto '%s' ajustado de %dpx para %dpx (disponível: %.1fpx)" % [text, font_size, new_size, available_w]
@@ -1148,6 +1148,40 @@ static func get_best_contrast_color(bg: Color) -> Color:
 		return Color.WHITE
 	return Color("#101015")
 
+static func ensure_wcag_contrast(bg: Color) -> Dictionary:
+	var cr_white = get_contrast_ratio(Color.WHITE, bg)
+	var cr_dark = get_contrast_ratio(Color("#101015"), bg)
+	var best_text: Color
+	var best_cr: float
+	var adjusted_bg = bg
+	var adjusted = false
+	
+	if cr_white >= cr_dark:
+		best_text = Color.WHITE
+		best_cr = cr_white
+		var attempts = 0
+		while best_cr < 4.5 and attempts < 50:
+			adjusted_bg = Color(max(0.0, adjusted_bg.r * 0.98), max(0.0, adjusted_bg.g * 0.98), max(0.0, adjusted_bg.b * 0.98))
+			best_cr = get_contrast_ratio(Color.WHITE, adjusted_bg)
+			adjusted = true
+			attempts += 1
+	else:
+		best_text = Color("#101015")
+		best_cr = cr_dark
+		var attempts = 0
+		while best_cr < 4.5 and attempts < 50:
+			adjusted_bg = Color(min(1.0, adjusted_bg.r + (1.0 - adjusted_bg.r) * 0.03 + 0.005), min(1.0, adjusted_bg.g + (1.0 - adjusted_bg.g) * 0.03 + 0.005), min(1.0, adjusted_bg.b + (1.0 - adjusted_bg.b) * 0.03 + 0.005))
+			best_cr = get_contrast_ratio(Color("#101015"), adjusted_bg)
+			adjusted = true
+			attempts += 1
+			
+	return {
+		"bg": adjusted_bg,
+		"text": best_text,
+		"cr": best_cr,
+		"adjusted": adjusted
+	}
+
 func _resolve_team_kit_colors() -> Dictionary:
 	var h_bg = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
 	if h_bg.a == 0.0:
@@ -1160,10 +1194,13 @@ func _resolve_team_kit_colors() -> Dictionary:
 	var a_kit2 = _parse_color_resilient(away_team.get("kit2", ""))
 	
 	var dist = delta_e_cie76(h_bg, a_bg)
-	if dist < 25.0:
+	var conflict = (dist < 25.0)
+	var resolution = "none"
+	if conflict:
 		if a_kit2.a > 0.0 and delta_e_cie76(h_bg, a_kit2) >= 25.0:
 			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE), visitante alternado para kit2: %s" % str(a_kit2))
 			a_bg = a_kit2
+			resolution = "kit2"
 		else:
 			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE) e kit2 incompatível, visitante alternado para neutro")
 			var h_lab = color_to_lab(h_bg)
@@ -1171,15 +1208,30 @@ func _resolve_team_kit_colors() -> Dictionary:
 				a_bg = Color.WHITE
 			else:
 				a_bg = Color("#111111")
+			resolution = "neutral"
 				
-	var h_txt = get_best_contrast_color(h_bg)
-	var a_txt = get_best_contrast_color(a_bg)
+	var h_res = ensure_wcag_contrast(h_bg)
+	if h_res["adjusted"]:
+		push_warning("ScoreboardView: Fundo mandante ajustado para WCAG 4.5:1: %s -> %s (CR: %.2f:1)" % [str(h_bg), str(h_res["bg"]), h_res["cr"]])
+	h_bg = h_res["bg"]
+	var h_txt = h_res["text"]
+	
+	var a_res = ensure_wcag_contrast(a_bg)
+	if a_res["adjusted"]:
+		push_warning("ScoreboardView: Fundo visitante ajustado para WCAG 4.5:1: %s -> %s (CR: %.2f:1)" % [str(a_bg), str(a_res["bg"]), a_res["cr"]])
+	a_bg = a_res["bg"]
+	var a_txt = a_res["text"]
 	
 	return {
 		"home_bg": h_bg,
 		"away_bg": a_bg,
 		"home_txt": h_txt,
-		"away_txt": a_txt
+		"away_txt": a_txt,
+		"cr_home": h_res["cr"],
+		"cr_away": a_res["cr"],
+		"conflict_detected": conflict,
+		"conflict_resolution": resolution,
+		"primary_dist": dist
 	}
 
 func get_resolved_libertadores_underline_colors(team: Dictionary) -> Array[Color]:

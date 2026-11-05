@@ -125,26 +125,59 @@ func _init() -> void:
 	else:
 		print("[TESTE OK] FIX8b Libertadores: ordem_relogio (apos_times e apos_logo) validada com sucesso.")
 		
-	# Caso E (FIX8 & FIX8c): Validação de Contraste WCAG >= 4.5:1 em Premier e Bundesliga
+	# Caso E (FIX8d): Validação de Conflitos CIELAB < 25 e Contraste WCAG >= 4.5:1 sem tolerância
 	var test_kit_sb = ScoreboardView.new()
 	root.add_child(test_kit_sb)
-	var test_pairs = [
-		{"h": {"abbrev": "ARS", "kit": "#EF0107", "kit2": "#063672"}, "a": {"abbrev": "CHE", "kit": "#034694", "kit2": "#FFFFFF"}},
-		{"h": {"abbrev": "MCI", "kit": "#6CABDD", "kit2": "#1C2C5B"}, "a": {"abbrev": "NEW", "kit": "#241F20", "kit2": "#FFFFFF"}},
-		{"h": {"abbrev": "TOT", "kit": "#FFFFFF", "kit2": "#132257"}, "a": {"abbrev": "FUL", "kit": "#FFFFFF", "kit2": "#000000"}} # Conflito branco x branco
+	
+	print("\n-----------------------------------------------------------------")
+	print(" TABELA DE RESOLUÇÃO DE CORES E CONTRASTE WCAG (RENDER REAL)")
+	print("-----------------------------------------------------------------")
+	print("%-18s | %-12s | %-12s | %-8s | %-8s | %-16s" % ["Confronto", "Fundo Casa", "Fundo Fora", "CR Casa", "CR Fora", "Resolução Conflito"])
+	print("-----------------------------------------------------------------")
+	
+	var conflict_pairs = [
+		{"comp": "premier_league", "name": "Liverpool x Nottingham", "h": {"abbrev": "LIV", "kit": "#C8102E", "kit2": "#FFFFFF"}, "a": {"abbrev": "NOT", "kit": "#C8102E", "kit2": "#FFD100"}, "exp_away": Color("#FFD100")},
+		{"comp": "bundesliga", "name": "Werder x Wolfsburg", "h": {"abbrev": "SVW", "kit": "#1A7D3C", "kit2": "#FFFFFF"}, "a": {"abbrev": "WOB", "kit": "#1A7D3C", "kit2": "#00305B"}, "exp_away": Color("#00305B")},
+		{"comp": "premier_league", "name": "Tottenham x Fulham", "h": {"abbrev": "TOT", "kit": "#FFFFFF", "kit2": "#132257"}, "a": {"abbrev": "FUL", "kit": "#FFFFFF", "kit2": "#000000"}, "exp_away": Color("#000000")},
+		{"comp": "bundesliga", "name": "Leipzig x Frankfurt", "h": {"abbrev": "RBL", "kit": "#FFFFFF", "kit2": "#002F6C"}, "a": {"abbrev": "SGE", "kit": "#FFFFFF", "kit2": "#E1000F"}, "exp_away": Color("#E1000F")},
+		{"comp": "premier_league", "name": "Arsenal x Chelsea", "h": {"abbrev": "ARS", "kit": "#EF0107", "kit2": "#063672"}, "a": {"abbrev": "CHE", "kit": "#034694", "kit2": "#FFFFFF"}, "exp_away": Color("#034694")},
+		{"comp": "premier_league", "name": "Man City x Newcastle", "h": {"abbrev": "MCI", "kit": "#6CABDD", "kit2": "#1C2C5B"}, "a": {"abbrev": "NEW", "kit": "#241F20", "kit2": "#FFFFFF"}, "exp_away": Color("#241F20")},
+		{"comp": "bundesliga", "name": "Holstein x Mainz 05", "h": {"abbrev": "HOL", "kit": "#00458C", "kit2": "#FFFFFF"}, "a": {"abbrev": "M05", "kit": "#C8102E", "kit2": "#FFFFFF"}, "exp_away": Color("#C8102E")},
+		{"comp": "bundesliga", "name": "Dortmund x Bayern", "h": {"abbrev": "BVB", "kit": "#FDE100", "kit2": "#000000"}, "a": {"abbrev": "FCB", "kit": "#DC052D", "kit2": "#FFFFFF"}, "exp_away": Color("#DC052D")}
 	]
-	for pair in test_pairs:
-		test_kit_sb.setup(pair["h"], pair["a"], "premier_league", "", true)
-		var resolved_kit = test_kit_sb._resolve_team_kit_colors()
-		var cr_home = ScoreboardView.get_contrast_ratio(resolved_kit["home_txt"], resolved_kit["home_bg"])
-		var cr_away = ScoreboardView.get_contrast_ratio(resolved_kit["away_txt"], resolved_kit["away_bg"])
-		if cr_home < 4.4:
-			printerr("ERRO WCAG: Home contrast ratio %.2f < 4.5:1 para fundo %s" % [cr_home, str(resolved_kit["home_bg"])])
+	
+	for pair in conflict_pairs:
+		test_kit_sb.setup(pair["h"], pair["a"], pair["comp"], "", true)
+		var r_kit = test_kit_sb._resolve_team_kit_colors()
+		var cr_h = r_kit["cr_home"]
+		var cr_a = r_kit["cr_away"]
+		var h_hex = "#" + r_kit["home_bg"].to_html(false)
+		var a_hex = "#" + r_kit["away_bg"].to_html(false)
+		var res_str = "Nenhum"
+		if r_kit["conflict_detected"]:
+			res_str = "Kit2 " + a_hex if r_kit["conflict_resolution"] == "kit2" else "Neutro"
+			
+		print("%-18s | %-12s | %-12s | %-8.2f | %-8.2f | %-16s" % [
+			pair["name"], h_hex, a_hex, cr_h, cr_a, res_str
+		])
+		
+		# Teste (b): Falhar se houver conflito CIELAB < 25 sem resolução
+		if pair.has("exp_away"):
+			var exp_c: Color = pair["exp_away"]
+			if ScoreboardView.delta_e_cie76(r_kit["away_bg"], exp_c) > 5.0:
+				printerr("ERRO CONFLITO: %s deveria ter visitante em %s, obteve %s" % [pair["name"], str(exp_c), str(r_kit["away_bg"])])
+				all_ok = false
+				
+		# Teste (c): Piso de 4.5:1 sem tolerância!
+		if cr_h < 4.5:
+			printerr("ERRO WCAG CONTRASTE: %s Casa CR %.2f < 4.5:1 no fundo %s" % [pair["name"], cr_h, h_hex])
 			all_ok = false
-		if cr_away < 4.4:
-			printerr("ERRO WCAG: Away contrast ratio %.2f < 4.5:1 para fundo %s" % [cr_away, str(resolved_kit["away_bg"])])
+		if cr_a < 4.5:
+			printerr("ERRO WCAG CONTRASTE: %s Fora CR %.2f < 4.5:1 no fundo %s" % [pair["name"], cr_a, a_hex])
 			all_ok = false
-	print("[TESTE OK] FIX8 & FIX8c: Contraste WCAG >= 4.5:1 validado para todas as combinacoes de clubes.")
+			
+	print("-----------------------------------------------------------------\n")
+	print("[TESTE OK] FIX8d: Todos os 4 conflitos CIELAB < 25 resolvidos e contraste >= 4.5:1 sem tolerancia.")
 	
 	# Caso F (FIX8c): Libertadores sublinhado visível contra #121212 (ΔE >= 25 para clube escuro)
 	var dark_team = {"abbrev": "COR", "kit": "#111111", "kit2": "#FFFFFF"}
