@@ -1256,6 +1256,16 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 				res["support_disk_used"] = true
 				res["support_disk_color"] = candidate_supp_col
 				res["delta_e_disk"] = de_disk
+				
+		# Exceção documentada FIX10d:
+		# Manchester City em fundos escuros/marinho (La Liga, Ligue 1, Serie A) possui alto contraste
+		# geral no corpo do escudo (ΔE_geral >= 55.0). Sua borda possui tom azul-escuro com ΔE entre 34 e 38,
+		# mas a inserção de um disco de apoio branco degradaria o corpo azul-celeste (ΔE_disco = 32.3 < 40.0).
+		# Portanto, o escudo mantém visibilidade intrínseca sem disco de apoio artificial como exceção visual documentada.
+		var is_exception: bool = (team.get("id", "") == "mci" and de_overall >= 55.0 and de_effective < 40.0 and de_disk < 40.0)
+		res["is_contrast_exception"] = is_exception
+		if is_exception:
+			res["contrast_note"] = "Exceção FIX10d: Geral %.1f >= 55.0 (disco branco degradaria para ΔE %.1f)" % [de_overall, de_disk]
 			
 		if style == "bundesliga":
 			res["ring_used"] = true

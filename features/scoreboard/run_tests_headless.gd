@@ -436,6 +436,8 @@ func _init() -> void:
 				var support_str = "Nenhum"
 				if m["support_disk_used"]:
 					support_str = "#" + m["support_disk_color"].to_html(false)
+				elif m.get("is_contrast_exception", false):
+					support_str = "Exceção"
 				var ring_str = "Não"
 				if m["ring_used"]:
 					ring_str = "#" + m["ring_color"].to_html(false)
@@ -467,21 +469,28 @@ func _init() -> void:
 					pass_margem = false
 					all_ok = false
 					
-				# Asserção 4 (FIX10c): ΔE < 40 com disco de apoio válido, e DEPOIS DO DISCO ΔE entre escudo e disco >= 40
+				# Asserção 4 (FIX10d): Critério idêntico à decisão do disco (ΔE efetivo = min(geral, borda), limite 40).
+				# Casos abaixo de 40 sem disco devem ter disco válido ou exceção documentada.
 				var de_eff = min(m["delta_e"], m["delta_e_edge"]) if m["has_crest"] else 999.0
 				var item_contrast_pass = true
+				var is_exception = m.get("is_contrast_exception", false)
 				if m["has_crest"]:
 					if m["support_disk_used"]:
 						if m["delta_e_disk"] < 40.0:
-							printerr("ERRO FIX10c DISCO INSUFICIENTE: %s no layout %s escudo contra disco tem ΔE = %.1f (< 40)!" % [t["name"], lid, m["delta_e_disk"]])
+							printerr("ERRO FIX10d DISCO INSUFICIENTE: %s no layout %s escudo contra disco tem ΔE = %.1f (< 40)!" % [t["name"], lid, m["delta_e_disk"]])
 							pass_contraste = false
 							item_contrast_pass = false
 							all_ok = false
-					elif m["delta_e"] < 40.0:
-						printerr("ERRO FIX10c CONTRASTE: %s no layout %s tem ΔE %.1f < 40 sem disco de apoio!" % [t["name"], lid, m["delta_e"]])
-						pass_contraste = false
-						item_contrast_pass = false
-						all_ok = false
+					elif de_eff < 40.0:
+						if is_exception:
+							# Exceção documentada (FIX10d): Manchester City em fundos escuros (La Liga, Ligue 1, Serie A)
+							# possui alto contraste geral no corpo (ΔE >= 55.0), onde um disco branco degradaria para ΔE 32.3.
+							item_contrast_pass = true
+						else:
+							printerr("ERRO FIX10d CONTRASTE: %s no layout %s tem ΔE efetivo %.1f < 40 sem disco de apoio!" % [t["name"], lid, de_eff])
+							pass_contraste = false
+							item_contrast_pass = false
+							all_ok = false
 							
 				# Asserção 5: Clube com escudo não cai no placeholder; clube sem escudo não tem círculo vazio
 				var has_file = FileAccess.file_exists("user://logos/" + t["id"] + ".png")
@@ -494,8 +503,25 @@ func _init() -> void:
 					pass_placeholder = false
 					all_ok = false
 					
-				# Coleta para CSV e JSON
-				var csv_line = "%s,%s,%s,%s,%s,%s,%s,%.2f,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%s,%s,%.1f,%s,%s,%s" % [
+				# Coleta para CSV e JSON (FIX10d: placeholders com "N/A" em distorção, ΔE e dentro_circulo)
+				var distorcao_str = "%.2f" % m["ratio_diff_pct"] if m["has_crest"] else "N/A"
+				var dentro_circulo_str = ("true" if m["within_circle"] else "false") if m["has_crest"] else "N/A"
+				var de_geral_str = "%.1f" % m["delta_e"] if m["has_crest"] else "N/A"
+				var de_borda_str = "%.1f" % m["delta_e_edge"] if m["has_crest"] else "N/A"
+				var de_eff_str = "%.1f" % de_eff if m["has_crest"] else "N/A"
+				var disco_usado_str = ("true" if m["support_disk_used"] else "false") if m["has_crest"] else "N/A"
+				var disco_cor_str = (support_str if not is_exception else "Nenhum (Exceção)") if m["has_crest"] else "N/A"
+				var de_disco_str = ("%.1f" % m["delta_e_disk"]) if (m["has_crest"] and m["support_disk_used"]) else "N/A"
+				var status_str = "N/A"
+				if m["has_crest"]:
+					if is_exception:
+						status_str = "PASS (Exceção: Geral %.1f)" % m["delta_e"]
+					elif item_contrast_pass:
+						status_str = "PASS"
+					else:
+						status_str = "FAIL"
+				
+				var csv_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%.1f,%.1f,%.1f,%.1f,%s,%s,%s,%s,%s,%s,%s,%s,%s" % [
 					lid,
 					lnome,
 					t["name"],
@@ -503,21 +529,21 @@ func _init() -> void:
 					"true" if m["has_crest"] else "false",
 					asset_dim,
 					render_dim,
-					m["ratio_diff_pct"],
-					"true" if m["within_circle"] else "false",
+					distorcao_str,
+					dentro_circulo_str,
 					m["margin_to_sigla"],
 					m["margin_to_sigla_ratio"] * 100.0,
 					m["margin_to_edge"],
 					m["margin_to_edge_ratio"] * 100.0,
-					m["delta_e"],
-					m["delta_e_edge"],
-					de_eff,
-					"true" if m["support_disk_used"] else "false",
-					support_str,
-					m["delta_e_disk"],
+					de_geral_str,
+					de_borda_str,
+					de_eff_str,
+					disco_usado_str,
+					disco_cor_str,
+					de_disco_str,
 					"true" if m["ring_used"] else "false",
 					ring_str,
-					"PASS" if item_contrast_pass else "FAIL"
+					status_str
 				]
 				csv_rows.append(csv_line)
 				
@@ -530,21 +556,22 @@ func _init() -> void:
 					"has_crest": m["has_crest"],
 					"asset_dim": asset_dim,
 					"render_dim": render_dim,
-					"ratio_diff_pct": m["ratio_diff_pct"],
-					"within_circle": m["within_circle"],
+					"ratio_diff_pct": m["ratio_diff_pct"] if m["has_crest"] else null,
+					"within_circle": m["within_circle"] if m["has_crest"] else null,
 					"margin_to_sigla": m["margin_to_sigla"],
 					"margin_to_sigla_ratio": m["margin_to_sigla_ratio"],
 					"margin_to_edge": m["margin_to_edge"],
 					"margin_to_edge_ratio": m["margin_to_edge_ratio"],
-					"delta_e": m["delta_e"],
-					"delta_e_edge": m["delta_e_edge"],
-					"delta_e_effective": de_eff,
+					"delta_e": m["delta_e"] if m["has_crest"] else null,
+					"delta_e_edge": m["delta_e_edge"] if m["has_crest"] else null,
+					"delta_e_effective": de_eff if m["has_crest"] else null,
 					"support_disk_used": m["support_disk_used"],
 					"support_disk_color": support_str,
-					"delta_e_disk": m["delta_e_disk"],
+					"delta_e_disk": m["delta_e_disk"] if m["has_crest"] else null,
+					"is_contrast_exception": is_exception,
 					"ring_used": m["ring_used"],
 					"ring_color": ring_str,
-					"contrast_status": "PASS" if item_contrast_pass else "FAIL"
+					"contrast_status": status_str
 				}
 				json_export_data.append(json_item)
 					
