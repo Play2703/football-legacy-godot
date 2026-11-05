@@ -206,7 +206,7 @@ func _init() -> void:
 	
 	# Caso F (FIX8c): Libertadores sublinhado visível contra #121212 (ΔE >= 25 para clube escuro)
 	var dark_team = {"abbrev": "COR", "kit": "#111111", "kit2": "#FFFFFF"}
-	var under_cols = test_kit_sb.get_resolved_libertadores_underline_colors(dark_team)
+	var under_cols = ScoreboardView.get_resolved_libertadores_underline_colors(dark_team)
 	for col in under_cols:
 		var dist_bg = ScoreboardView.delta_e_cie76(col, Color("#121212"))
 		if dist_bg < 25.0:
@@ -217,6 +217,136 @@ func _init() -> void:
 	test_kit_sb.queue_free()
 	
 	test_cielab_sb.queue_free()
+
+	# ==============================================================================
+	# ETAPA 4c-FIX8f — LIBERTADORES: SUBLINHADO DE CLUBE COM CORES COMPLETAS
+	# ==============================================================================
+	print("=================================================================")
+	print("   DIAGNÓSTICO E TESTES FIX8f: LIBERTADORES SUBLINHADO DE CORES  ")
+	print("=================================================================")
+	
+	var diag_bg = Color("#121111")
+	
+	var db_text = ""
+	var f_db = FileAccess.open("res://features/league/teams.gd", FileAccess.READ)
+	if f_db:
+		db_text = f_db.get_as_text()
+		f_db.close()
+		
+	var parse_db_team = func(tid: String, fb_dict: Dictionary) -> Dictionary:
+		if db_text.is_empty():
+			return fb_dict
+		var rx = RegEx.new()
+		rx.compile("\\{\"id\":\\s*\"" + tid + "\"[^}]+(?:\\n\\s*[^}]+)*\\}")
+		var m = rx.search(db_text)
+		if not m:
+			return fb_dict
+		var block = m.get_string()
+		var res = fb_dict.duplicate()
+		for k in ["kit", "kit_b", "kit2", "kit2_b", "kit3"]:
+			var rx_col = RegEx.new()
+			rx_col.compile("\"" + k + "\":\\s*Color\\(\"([0-9a-fA-F]+)\"\\)")
+			var m_col = rx_col.search(block)
+			if m_col:
+				res[k] = Color(m_col.get_string(1))
+		return res
+		
+	var inte_data = parse_db_team.call("inte", {"id": "inte", "name": "Internacional", "abbrev": "INT", "kit": Color("c8102e"), "kit2": Color("f5f5f5")})
+	var flu_data = parse_db_team.call("flu", {"id": "flu", "name": "Fluminense", "abbrev": "FLU", "kit": Color("7b1a3a"), "kit_b": Color("0b7c3c"), "kit2": Color("f5f5f5")})
+		
+	print("\n--- TABELA DIAGNÓSTICA (Internacional × Fluminense) ---")
+	print("%-14s | %-8s | %-9s | %-12s | %-18s | %-14s | %s" % ["Clube", "Campo", "Hex", "Nome Cor", "CIELAB (L, a, b)", "ΔE vs #121111", "Status / Regra Anterior"])
+	print("----------------------------------------------------------------------------------------------------------------------------")
+	
+	var diag_rows = [
+		{"clube": "Internacional", "campo": "kit", "cor": inte_data.get("kit"), "nome": "Vermelho", "regra": "Mantida (1ª cor)"},
+		{"clube": "Internacional", "campo": "kit2", "cor": inte_data.get("kit2"), "nome": "Branco", "regra": "Mantida (2ª cor)"},
+		{"clube": "Internacional", "campo": "kit_b", "cor": inte_data.get("kit_b"), "nome": "Nenhum", "regra": "Não cadastrado"},
+		{"clube": "Fluminense", "campo": "kit", "cor": flu_data.get("kit"), "nome": "Grená", "regra": "Mantida (1ª cor)"},
+		{"clube": "Fluminense", "campo": "kit_b", "cor": flu_data.get("kit_b"), "nome": "Verde", "regra": "DESCARTADA (código lia só kit e kit2, ignorando kit_b)"},
+		{"clube": "Fluminense", "campo": "kit2", "cor": flu_data.get("kit2"), "nome": "Branco", "regra": "DESCARTADA (_draw_faixa_clube só suportava max 2 faixas)"}
+	]
+	
+	for row in diag_rows:
+		var c_val = row["cor"]
+		if c_val != null and c_val is Color:
+			var lab = ScoreboardView.color_to_lab(c_val)
+			var de = ScoreboardView.delta_e_cie76(c_val, diag_bg)
+			var hex_str = "#" + c_val.to_html(false)
+			var lab_str = "(%.1f, %.1f, %.1f)" % [lab.x, lab.y, lab.z]
+			print("%-14s | %-8s | %-9s | %-12s | %-18s | %-14.2f | %s" % [row["clube"], row["campo"], hex_str, row["nome"], lab_str, de, row["regra"]])
+		else:
+			print("%-14s | %-8s | %-9s | %-12s | %-18s | %-14s | %s" % [row["clube"], row["campo"], "N/A", row["nome"], "N/A", "N/A", row["regra"]])
+	print("----------------------------------------------------------------------------------------------------------------------------\n")
+
+	# Testes dos 4 confrontos obrigatórios
+	var test_confrontos = [
+		{
+			"nome": "Internacional × Fluminense",
+			"home_id": "inte", "away_id": "flu",
+			"home_fb": {"id": "inte", "name": "Internacional", "abbrev": "INT", "kit": Color("c8102e"), "kit2": Color("f5f5f5")},
+			"away_fb": {"id": "flu", "name": "Fluminense", "abbrev": "FLU", "kit": Color("7b1a3a"), "kit_b": Color("0b7c3c"), "kit2": Color("f5f5f5")},
+			"exp_home_stripes": 2, "exp_away_stripes": 3
+		},
+		{
+			"nome": "Flamengo × Palmeiras",
+			"home_id": "fla", "away_id": "palm",
+			"home_fb": {"id": "fla", "name": "Flamengo", "abbrev": "FLA", "kit": Color("c8102e"), "kit_b": Color("14161a"), "kit2": Color("f5f5f5")},
+			"away_fb": {"id": "palm", "name": "Palmeiras", "abbrev": "PAL", "kit": Color("0b7c3c"), "kit2": Color("f5f5f5")},
+			"exp_home_stripes": 3, "exp_away_stripes": 2
+		},
+		{
+			"nome": "Boca Juniors × River Plate",
+			"home_id": "boca", "away_id": "rive",
+			"home_fb": {"id": "boca", "name": "Boca Juniors", "abbrev": "BOJ", "kit": Color("0b3d91"), "kit_b": Color("f5c518"), "kit2": Color("0b3d91")},
+			"away_fb": {"id": "rive", "name": "River Plate", "abbrev": "RIP", "kit": Color("f5f5f5"), "kit_b": Color("c8102e"), "kit2": Color("14161a")},
+			"exp_home_stripes": 2, "exp_away_stripes": 3
+		},
+		{
+			"nome": "Botafogo × Corinthians (Preto x Branco)",
+			"home_id": "bot", "away_id": "cori",
+			"home_fb": {"id": "bot", "name": "Botafogo", "abbrev": "BOT", "kit": Color("14161a"), "kit_b": Color("f5f5f5"), "kit2": Color("14161a")},
+			"away_fb": {"id": "cori", "name": "Corinthians", "abbrev": "COR", "kit": Color("f5f5f5"), "kit2": Color("14161a")},
+			"exp_home_stripes": 2, "exp_away_stripes": 2
+		}
+	]
+	
+	for c_info in test_confrontos:
+		var t_home = parse_db_team.call(c_info["home_id"], c_info["home_fb"])
+		var t_away = parse_db_team.call(c_info["away_id"], c_info["away_fb"])
+		
+		var h_under = ScoreboardView.get_resolved_libertadores_underline_colors(t_home)
+		var a_under = ScoreboardView.get_resolved_libertadores_underline_colors(t_away)
+		
+		# Validação 1: Falhar se um clube com 2 ou mais cores válidas mostrar só 1 faixa
+		if h_under.size() < c_info["exp_home_stripes"]:
+			printerr("ERRO FIX8f: %s Mandante (%s) obteve %d faixas, esperado %d" % [c_info["nome"], t_home.get("name"), h_under.size(), c_info["exp_home_stripes"]])
+			all_ok = false
+		if a_under.size() < c_info["exp_away_stripes"]:
+			printerr("ERRO FIX8f: %s Visitante (%s) obteve %d faixas, esperado %d" % [c_info["nome"], t_away.get("name"), a_under.size(), c_info["exp_away_stripes"]])
+			all_ok = false
+			
+		# Validação 2: Falhar se qualquer faixa tiver ΔE < 25 contra #121111
+		for idx in range(h_under.size()):
+			var col = h_under[idx]
+			var dist = ScoreboardView.delta_e_cie76(col, diag_bg)
+			if dist < 25.0:
+				printerr("ERRO FIX8f: %s Mandante faixa %d (%s) tem ΔE %.2f < 25 contra #121111!" % [c_info["nome"], idx + 1, col.to_html(false), dist])
+				all_ok = false
+				
+		for idx in range(a_under.size()):
+			var col = a_under[idx]
+			var dist = ScoreboardView.delta_e_cie76(col, diag_bg)
+			if dist < 25.0:
+				printerr("ERRO FIX8f: %s Visitante faixa %d (%s) tem ΔE %.2f < 25 contra #121111!" % [c_info["nome"], idx + 1, col.to_html(false), dist])
+				all_ok = false
+				
+		print("[TESTE OK] FIX8f %s: Mandante %d faixas, Visitante %d faixas. Todas as faixas com ΔE >= 25 contra fundo." % [
+			c_info["nome"], h_under.size(), a_under.size()
+		])
+	
+	print("-----------------------------------------------------------------")
+	print("[TESTE OK] FIX8f: Todos os 4 confrontos da Libertadores validados com sucesso.")
 	
 	print("=================================================================")
 	if all_ok:

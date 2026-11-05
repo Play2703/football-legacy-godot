@@ -864,8 +864,11 @@ func _draw_modulos_separados() -> void:
 			"time_casa":
 				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
 				_draw_auto_text(home_team.get("abbrev", "INT"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				# Requisito 2 (FIX8c): sublinhado fino com contraste CIELAB >= 25 contra #121212
-				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
+				# Requisito FIX8f: sublinhado com altura ~0.07*H e margem lateral de 0.05*W da célula
+				var under_h = max(4.0, round(H * 0.07))
+				var under_margin_x = cell_w * 0.05
+				var under_y = H - under_h - 2.0
+				var under_rect = Rect2(rect.position.x + under_margin_x, under_y, cell_w - 2.0 * under_margin_x, under_h)
 				var under_colors = get_resolved_libertadores_underline_colors(home_team)
 				_draw_faixa_clube(under_rect, under_colors, "horizontal")
 				
@@ -876,8 +879,11 @@ func _draw_modulos_separados() -> void:
 			"time_fora":
 				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
 				_draw_auto_text(away_team.get("abbrev", "FLU"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				# Requisito 2 (FIX8c): sublinhado fino com contraste CIELAB >= 25 contra #121212
-				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
+				# Requisito FIX8f: sublinhado com altura ~0.07*H e margem lateral de 0.05*W da célula
+				var under_h = max(4.0, round(H * 0.07))
+				var under_margin_x = cell_w * 0.05
+				var under_y = H - under_h - 2.0
+				var under_rect = Rect2(rect.position.x + under_margin_x, under_y, cell_w - 2.0 * under_margin_x, under_h)
 				var under_colors = get_resolved_libertadores_underline_colors(away_team)
 				_draw_faixa_clube(under_rect, under_colors, "horizontal")
 				
@@ -1260,6 +1266,28 @@ static func color_to_lab(c: Color) -> Vector3:
 	var b_val = 200.0 * (fy - fz)
 	return Vector3(L, a, b_val)
 
+static func lab_to_color(lab: Vector3) -> Color:
+	var L = lab.x
+	var a = lab.y
+	var b_val = lab.z
+	var fy = (L + 16.0) / 116.0
+	var fx = a / 500.0 + fy
+	var fz = fy - b_val / 200.0
+	
+	var x = (fx ** 3.0 if fx ** 3.0 > 0.008856 else (fx - 16.0 / 116.0) / 7.787) * 0.95047
+	var y = (fy ** 3.0 if fy ** 3.0 > 0.008856 else (fy - 16.0 / 116.0) / 7.787) * 1.00000
+	var z = (fz ** 3.0 if fz ** 3.0 > 0.008856 else (fz - 16.0 / 116.0) / 7.787) * 1.08883
+	
+	var r_lin = x * 3.2406 - y * 1.5372 - z * 0.4986
+	var g_lin = -x * 0.9689 + y * 1.8758 + z * 0.0415
+	var b_lin = x * 0.0557 - y * 0.2040 + z * 1.0570
+	
+	var r = 1.055 * (r_lin ** (1.0 / 2.4)) - 0.055 if r_lin > 0.0031308 else 12.92 * r_lin
+	var g = 1.055 * (g_lin ** (1.0 / 2.4)) - 0.055 if g_lin > 0.0031308 else 12.92 * g_lin
+	var b = 1.055 * (b_lin ** (1.0 / 2.4)) - 0.055 if b_lin > 0.0031308 else 12.92 * b_lin
+	
+	return Color(clampf(r, 0.0, 1.0), clampf(g, 0.0, 1.0), clampf(b, 0.0, 1.0))
+
 static func delta_e_cie76(c1: Color, c2: Color) -> float:
 	var lab1 = color_to_lab(c1)
 	var lab2 = color_to_lab(c2)
@@ -1322,18 +1350,23 @@ func get_resolved_club_strip_colors() -> Dictionary:
 func _draw_faixa_clube(rect: Rect2, colors: Array[Color], orientation: String) -> void:
 	if colors.is_empty():
 		return
-	if colors.size() == 1:
+	var n = colors.size()
+	if n == 1:
 		draw_rect(rect, colors[0])
 		return
 		
 	if orientation == "vertical":
-		var half_h = rect.size.y * 0.5
-		draw_rect(Rect2(rect.position.x, rect.position.y, rect.size.x, half_h), colors[0])
-		draw_rect(Rect2(rect.position.x, rect.position.y + half_h, rect.size.x, rect.size.y - half_h), colors[1])
+		var seg_h = rect.size.y / float(n)
+		for i in range(n):
+			var y = rect.position.y + i * seg_h
+			var h = seg_h if i < n - 1 else (rect.position.y + rect.size.y - y)
+			draw_rect(Rect2(rect.position.x, y, rect.size.x, h), colors[i])
 	else: # "horizontal"
-		var half_w = rect.size.x * 0.5
-		draw_rect(Rect2(rect.position.x, rect.position.y, half_w, rect.size.y), colors[0])
-		draw_rect(Rect2(rect.position.x + half_w, rect.position.y, rect.size.x - half_w, rect.size.y), colors[1])
+		var seg_w = rect.size.x / float(n)
+		for i in range(n):
+			var x = rect.position.x + i * seg_w
+			var w = seg_w if i < n - 1 else (rect.position.x + rect.size.x - x)
+			draw_rect(Rect2(x, rect.position.y, w, rect.size.y), colors[i])
 
 # ==============================================================================
 # WCAG CONTRASTE & RESOLUÇÃO DE CORES POR CLUBE (FIX8 / FIX8c)
@@ -1447,27 +1480,46 @@ func _resolve_team_kit_colors() -> Dictionary:
 		"primary_dist": dist
 	}
 
-func get_resolved_libertadores_underline_colors(team: Dictionary) -> Array[Color]:
-	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
-	if c1.a == 0.0:
-		c1 = Color.WHITE
-	var c2 = _parse_color_resilient(team.get("kit2", ""))
+static func lighten_color_to_contrast(c: Color, bg: Color, min_delta_e: float = 25.0) -> Color:
+	if delta_e_cie76(c, bg) >= min_delta_e:
+		return c
+	var lab = color_to_lab(c)
+	var cur_L = lab.x
+	var a = lab.y
+	var b_val = lab.z
+	var result = c
+	while cur_L < 98.0 and delta_e_cie76(result, bg) < min_delta_e:
+		cur_L += 0.5
+		result = lab_to_color(Vector3(cur_L, a, b_val))
+	if delta_e_cie76(result, bg) < min_delta_e:
+		return Color.WHITE
+	return result
+
+static func get_resolved_libertadores_underline_colors(team: Dictionary) -> Array[Color]:
+	var candidate_keys = ["kit", "kit_b", "kit2", "kit2_b", "kit3"]
+	var raw_colors: Array[Color] = []
+	for k in candidate_keys:
+		if team.has(k) and team[k] != null:
+			var c = _parse_color_resilient(team[k])
+			if c.a > 0.0:
+				var is_dup = false
+				for existing in raw_colors:
+					if delta_e_cie76(c, existing) < 15.0:
+						is_dup = true
+						break
+				if not is_dup:
+					raw_colors.append(c)
+				if raw_colors.size() >= 3:
+					break
 	
-	var raw_colors: Array[Color] = [c1]
-	if c2.a > 0.0 and delta_e_cie76(c1, c2) >= 15.0:
-		raw_colors.append(c2)
+	if raw_colors.is_empty():
+		raw_colors.append(Color.WHITE)
 		
-	var bg = Color("#121212")
+	var bg = Color("#121111")
 	var result: Array[Color] = []
-	for i in range(raw_colors.size()):
-		var c = raw_colors[i]
-		if delta_e_cie76(c, bg) < 25.0:
-			if c2.a > 0.0 and delta_e_cie76(c2, bg) >= 25.0 and raw_colors.size() == 1:
-				result.append(c2)
-			else:
-				result.append(Color.WHITE)
-		else:
-			result.append(c)
+	for c in raw_colors:
+		var adjusted = lighten_color_to_contrast(c, bg, 25.0)
+		result.append(adjusted)
 	return result
 
 func _tr(key: String) -> String:
