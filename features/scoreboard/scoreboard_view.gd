@@ -42,6 +42,120 @@ var _current_scale: float = 1.0
 var _unscaled_size: Vector2 = Vector2.ZERO
 var _last_text_overlap_warning: String = ""
 
+var drawn_cells_info: Array[Dictionary] = []
+var similar_color_dividers: Array[Dictionary] = []
+
+func get_drawn_cells_info() -> Array[Dictionary]:
+	return drawn_cells_info
+
+func get_similar_color_dividers() -> Array[Dictionary]:
+	return similar_color_dividers
+
+func get_undrawn_cells() -> Array[Dictionary]:
+	var undrawn: Array[Dictionary] = []
+	if board_theme == null:
+		return undrawn
+	for i in range(board_theme.cells.size()):
+		var c = board_theme.cells[i]
+		if c.get("tipo") == "penaltis" and not shootout_active and penalties_score.is_empty():
+			continue
+		var found = false
+		for d in drawn_cells_info:
+			if d.get("idx") == i:
+				found = true
+				break
+		if not found:
+			undrawn.append(c)
+	return undrawn
+
+func are_all_cells_drawn() -> bool:
+	return get_undrawn_cells().is_empty()
+
+func validate_cells_support() -> Array[Dictionary]:
+	var unsupported: Array[Dictionary] = []
+	if board_theme == null:
+		return unsupported
+		
+	var fam = board_theme.familia
+	var tid = board_theme.theme_id
+	var supported_types: Array[String] = []
+	
+	if tid == "brasileirao" or tid == "brasileirao_serie_a":
+		supported_types = ["time_casa", "placar_unico", "time_fora", "relogio", "penaltis"]
+	elif fam == "stack2":
+		supported_types = ["coluna_identidade", "coluna_times", "coluna_gols"]
+	elif fam == "modulos_separados":
+		supported_types = ["logo_liga", "time_casa", "placar_unico", "time_fora", "relogio", "penaltis"]
+	elif fam == "reto":
+		supported_types = ["logo_liga", "relogio", "divisor", "barra_unica", "tampa", "time_casa", "time_fora", "placar", "placar_unico", "penaltis"]
+	else: # skew
+		supported_types = ["logo_liga", "relogio", "time_casa", "placar", "placar_unico", "time_fora", "tampa", "penaltis"]
+		
+	for c in board_theme.cells:
+		var ct = String(c.get("tipo", ""))
+		if ct not in supported_types:
+			unsupported.append(c)
+	return unsupported
+
+func detect_similar_color_dividers() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if board_theme == null:
+		return result
+	
+	var is_kit_mode = (board_theme.cor_time == "kit")
+	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	var cells = board_theme.cells
+	
+	var cell_bgs: Array[Color] = []
+	var cell_txts: Array[Color] = []
+	for c in cells:
+		var ct = String(c.get("tipo", ""))
+		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
+		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
+		var b_col: Color
+		if ct == "time_casa" and is_kit_mode:
+			b_col = kit_cols["home_bg"]
+			t_col = kit_cols["home_txt"]
+		elif ct == "time_fora" and is_kit_mode:
+			b_col = kit_cols["away_bg"]
+			t_col = kit_cols["away_txt"]
+		else:
+			b_col = _resolve_color(c.get("fundo", "#101015"), (ct == "time_fora"))
+		cell_bgs.append(b_col)
+		cell_txts.append(t_col)
+		
+	for idx in range(cells.size()):
+		var c_tipo = String(cells[idx].get("tipo", ""))
+		if c_tipo == "time_casa" or c_tipo == "time_fora":
+			var team_name = home_team.get("abbrev", "") if c_tipo == "time_casa" else away_team.get("abbrev", "")
+			var bg_color = cell_bgs[idx]
+			var txt_col = cell_txts[idx]
+			if idx > 0:
+				var dist_l = delta_e_cie76(bg_color, cell_bgs[idx - 1])
+				if dist_l < 25.0:
+					result.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx - 1].get("tipo", "")),
+						"side": "left",
+						"delta_e": dist_l,
+						"color": txt_col.to_html()
+					})
+			if idx < cells.size() - 1:
+				var dist_r = delta_e_cie76(bg_color, cell_bgs[idx + 1])
+				if dist_r < 25.0:
+					result.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx + 1].get("tipo", "")),
+						"side": "right",
+						"delta_e": dist_r,
+						"color": txt_col.to_html()
+					})
+	return result
+
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_home_crest = CrestView.new()
@@ -152,6 +266,9 @@ func _draw() -> void:
 	if board_theme == null:
 		return
 	
+	drawn_cells_info.clear()
+	similar_color_dividers.clear()
+	
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(_current_scale, _current_scale))
 	
 	if board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a":
@@ -195,7 +312,7 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 				"etiqueta":
 					return int(round(ref_h * 0.365)) # Glifo ≈ 0.26·H
 				"pilula":
-					return int(round(ref_h * 0.55))
+					return int(round(ref_h * 0.84)) # Glifo ≈ 0.60·H da pílula
 				"penaltis":
 					return int(round(ref_h * 0.45))
 				_:
@@ -220,7 +337,7 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 				"etiqueta":
 					return int(round(ref_h * 0.31)) # Glifo ≈ 0.24·H
 				"pilula":
-					return int(round(ref_h * 0.45))
+					return int(round(ref_h * 0.83)) # Glifo ≈ 0.60·H da pílula
 				"penaltis":
 					return int(round(ref_h * 0.40))
 				_:
@@ -232,13 +349,13 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 				"etiqueta":
 					return int(round(ref_h * 0.31))
 				"pilula":
-					return int(round(ref_h * 0.45))
+					return int(round(ref_h * 0.83)) # Glifo ≈ 0.60·H da pílula
 				"penaltis":
 					return int(round(ref_h * 0.35))
 				_:
 					return int(round(ref_h * 0.38))
 		_:
-			return int(round(ref_h * 0.45))
+			return int(round(ref_h * 0.83))
 
 # ==============================================================================
 # BRASILEIRÃO (Requisito 2 & 1)
@@ -269,6 +386,7 @@ func _draw_brasileirao() -> void:
 		var bg_col = Color(c.get("fundo", "#FFFFFF"))
 		var txt_col = Color(c.get("cor_texto", "#101015"))
 		var c_tipo = String(c.get("tipo", ""))
+		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": rect})
 		
 		# Fundo com cantos arredondados nas pontas
 		var style = StyleBoxFlat.new()
@@ -352,6 +470,27 @@ func _draw_skew() -> void:
 	if total_peso <= 0.0:
 		total_peso = 1.0
 	
+	var is_kit_mode = (board_theme.cor_time == "kit")
+	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	
+	var cell_bgs: Array[Color] = []
+	var cell_txts: Array[Color] = []
+	for c in cells:
+		var ct = String(c.get("tipo", ""))
+		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
+		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
+		var b_col: Color
+		if ct == "time_casa" and is_kit_mode:
+			b_col = kit_cols["home_bg"]
+			t_col = kit_cols["home_txt"]
+		elif ct == "time_fora" and is_kit_mode:
+			b_col = kit_cols["away_bg"]
+			t_col = kit_cols["away_txt"]
+		else:
+			b_col = _resolve_color(c.get("fundo", "#101015"), (ct == "time_fora"))
+		cell_bgs.append(b_col)
+		cell_txts.append(t_col)
+	
 	var cur_x = 0.0
 	for idx in range(cells.size()):
 		var c = cells[idx]
@@ -367,28 +506,50 @@ func _draw_skew() -> void:
 		])
 		
 		var c_tipo = String(c.get("tipo", ""))
-		var is_kit_mode = (board_theme.cor_time == "kit")
-		var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+		var cell_rect = Rect2(cur_x + dx * 0.5, 0.0, cell_w, H)
+		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": cell_rect})
 		
-		var bg_color: Color
-		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
-		var txt_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
-		
-		if c_tipo == "time_casa" and is_kit_mode:
-			bg_color = kit_cols["home_bg"]
-			txt_col = kit_cols["home_txt"]
-		elif c_tipo == "time_fora" and is_kit_mode:
-			bg_color = kit_cols["away_bg"]
-			txt_col = kit_cols["away_txt"]
-		else:
-			bg_color = _resolve_color(c.get("fundo", "#101015"), (c_tipo == "time_fora"))
+		var bg_color: Color = cell_bgs[idx]
+		var txt_col: Color = cell_txts[idx]
 		
 		draw_colored_polygon(poly, bg_color)
 		
-		# Divisor idêntico em todas as células
+		# Divisor padrão
 		draw_line(Vector2(next_x + dx, 0.0), Vector2(next_x, H), Color(1.0, 1.0, 1.0, 0.12), 1.0)
 		
-		var cell_rect = Rect2(cur_x + dx * 0.5, 0.0, cell_w, H)
+		# Requisito 2 (FIX8e): DIVISA DE CORES PARECIDAS (CIELAB < 25)
+		if c_tipo == "time_casa" or c_tipo == "time_fora":
+			var team_name = home_team.get("abbrev", "") if c_tipo == "time_casa" else away_team.get("abbrev", "")
+			if idx > 0:
+				var dist_l = delta_e_cie76(bg_color, cell_bgs[idx - 1])
+				if dist_l < 25.0:
+					similar_color_dividers.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx - 1].get("tipo", "")),
+						"side": "left",
+						"delta_e": dist_l,
+						"color": txt_col.to_html()
+					})
+					draw_line(Vector2(cur_x + dx, 0.0), Vector2(cur_x, H), txt_col, 1.5)
+					draw_line(Vector2(cur_x + dx, 0.0), Vector2(next_x + dx, 0.0), txt_col, 1.5)
+					draw_line(Vector2(cur_x, H), Vector2(next_x, H), txt_col, 1.5)
+			if idx < cells.size() - 1:
+				var dist_r = delta_e_cie76(bg_color, cell_bgs[idx + 1])
+				if dist_r < 25.0:
+					similar_color_dividers.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx + 1].get("tipo", "")),
+						"side": "right",
+						"delta_e": dist_r,
+						"color": txt_col.to_html()
+					})
+					draw_line(Vector2(next_x + dx, 0.0), Vector2(next_x, H), txt_col, 1.5)
+					draw_line(Vector2(cur_x + dx, 0.0), Vector2(next_x + dx, 0.0), txt_col, 1.5)
+					draw_line(Vector2(cur_x, H), Vector2(next_x, H), txt_col, 1.5)
 		
 		match c_tipo:
 			"logo_liga":
@@ -491,21 +652,70 @@ func _draw_reto() -> void:
 	var cur_x = 0.0
 	var is_kit_mode = (board_theme.cor_time == "kit")
 	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	
+	var cell_bgs: Array[Color] = []
+	var cell_txts: Array[Color] = []
+	for c in cells:
+		var ct = String(c.get("tipo", ""))
+		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
+		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
+		var b_col: Color
+		if ct == "time_casa" and is_kit_mode:
+			b_col = kit_cols["home_bg"]
+			t_col = kit_cols["home_txt"]
+		elif ct == "time_fora" and is_kit_mode:
+			b_col = kit_cols["away_bg"]
+			t_col = kit_cols["away_txt"]
+		else:
+			b_col = _resolve_color(c.get("fundo", "#101015"), (ct == "time_fora"))
+		cell_bgs.append(b_col)
+		cell_txts.append(t_col)
+		
 	for idx in range(cells.size()):
 		var c = cells[idx]
 		var peso = float(c.get("peso", 1.0))
 		var cell_w = (peso / total_peso) * total_w
 		var rect = Rect2(cur_x, 0.0, cell_w, H)
 		var c_tipo = String(c.get("tipo", ""))
-		var bg_color: Color
-		if c_tipo == "time_casa" and is_kit_mode:
-			bg_color = kit_cols["home_bg"]
-		elif c_tipo == "time_fora" and is_kit_mode:
-			bg_color = kit_cols["away_bg"]
-		else:
-			bg_color = _resolve_color(c.get("fundo", "#101015"), (c_tipo == "time_fora"))
+		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": rect})
+		var bg_color: Color = cell_bgs[idx]
+		var txt_col: Color = cell_txts[idx]
 		
 		draw_rect(rect, bg_color)
+		
+		# Requisito 2 (FIX8e): DIVISA DE CORES PARECIDAS (CIELAB < 25)
+		if c_tipo == "time_casa" or c_tipo == "time_fora":
+			var team_name = home_team.get("abbrev", "") if c_tipo == "time_casa" else away_team.get("abbrev", "")
+			if idx > 0:
+				var dist_l = delta_e_cie76(bg_color, cell_bgs[idx - 1])
+				if dist_l < 25.0:
+					similar_color_dividers.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx - 1].get("tipo", "")),
+						"side": "left",
+						"delta_e": dist_l,
+						"color": txt_col.to_html()
+					})
+					draw_line(Vector2(cur_x, 0.0), Vector2(cur_x, H), txt_col, 1.5)
+					draw_line(Vector2(cur_x, 0.0), Vector2(cur_x + cell_w, 0.0), txt_col, 1.5)
+					draw_line(Vector2(cur_x, H), Vector2(cur_x + cell_w, H), txt_col, 1.5)
+			if idx < cells.size() - 1:
+				var dist_r = delta_e_cie76(bg_color, cell_bgs[idx + 1])
+				if dist_r < 25.0:
+					similar_color_dividers.append({
+						"comp": board_theme.theme_id,
+						"team": team_name,
+						"cell": c_tipo,
+						"neighbor": String(cells[idx + 1].get("tipo", "")),
+						"side": "right",
+						"delta_e": dist_r,
+						"color": txt_col.to_html()
+					})
+					draw_line(Vector2(cur_x + cell_w, 0.0), Vector2(cur_x + cell_w, H), txt_col, 1.5)
+					draw_line(Vector2(cur_x, 0.0), Vector2(cur_x + cell_w, 0.0), txt_col, 1.5)
+					draw_line(Vector2(cur_x, H), Vector2(cur_x + cell_w, H), txt_col, 1.5)
 		
 		if c_tipo == "barra_unica":
 			_draw_champions_barra_unica(rect, H)
@@ -644,6 +854,7 @@ func _draw_modulos_separados() -> void:
 		draw_style_box(style, rect)
 		
 		var c_tipo = String(c.get("tipo", ""))
+		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": rect})
 		var txt_col = Color(c.get("cor_texto", "#FFFFFF"))
 		
 		match c_tipo:
@@ -711,13 +922,15 @@ func _draw_stack2() -> void:
 		total_peso = 1.0
 		
 	var cur_x = 0.0
-	for col in cols:
+	for idx in range(cols.size()):
+		var col = cols[idx]
 		var col_w = (float(col.get("peso", 1.0)) / total_peso) * total_w
 		var col_rect = Rect2(cur_x, 0.0, col_w, total_h)
 		var bg_col = Color(col.get("fundo", "#10193A"))
 		draw_rect(col_rect, bg_col)
 		
 		var c_tipo = String(col.get("tipo", ""))
+		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": col_rect})
 		if c_tipo == "coluna_identidade":
 			var r_top = Rect2(cur_x, 0.0, col_w, row_h)
 			var r_bot = Rect2(cur_x, row_h, col_w, row_h)

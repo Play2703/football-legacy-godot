@@ -57,6 +57,12 @@ func _init() -> void:
 		sb.update_time(85, 6)
 		var size_norm = sb.get_real_size()
 		
+		# Teste 3b (FIX8e): Falhar se alguma célula do layout JSON não for suportada/desenhada
+		var unsupp = sb.validate_cells_support()
+		if not unsupp.is_empty():
+			printerr("ERRO: Células do JSON não possuem suporte para desenho em ", theme_id, ": ", unsupp)
+			all_ok = false
+		
 		# Teste 4: Configuração em caso de estresse extremo
 		sb.setup(stress_home, stress_away, theme_id, t["variant"], true)
 		sb.update_score(10, 10)
@@ -129,11 +135,11 @@ func _init() -> void:
 	var test_kit_sb = ScoreboardView.new()
 	root.add_child(test_kit_sb)
 	
-	print("\n-----------------------------------------------------------------")
-	print(" TABELA DE RESOLUÇÃO DE CORES E CONTRASTE WCAG (RENDER REAL)")
-	print("-----------------------------------------------------------------")
-	print("%-18s | %-12s | %-12s | %-8s | %-8s | %-16s" % ["Confronto", "Fundo Casa", "Fundo Fora", "CR Casa", "CR Fora", "Resolução Conflito"])
-	print("-----------------------------------------------------------------")
+	print("\n---------------------------------------------------------------------------------------------------------")
+	print(" TABELA DE RESOLUÇÃO DE CORES, CONTRASTE WCAG E DIVISA DE CORES PARECIDAS (RENDER REAL)")
+	print("---------------------------------------------------------------------------------------------------------")
+	print("%-18s | %-10s | %-10s | %-7s | %-7s | %-16s | %-24s" % ["Confronto", "Fundo Casa", "Fundo Fora", "CR Casa", "CR Fora", "Resolução Conflito", "Divisa Cores Parecidas"])
+	print("---------------------------------------------------------------------------------------------------------")
 	
 	var conflict_pairs = [
 		{"comp": "premier_league", "name": "Liverpool x Nottingham", "h": {"abbrev": "LIV", "kit": "#C8102E", "kit2": "#FFFFFF"}, "a": {"abbrev": "NOT", "kit": "#C8102E", "kit2": "#FFD100"}, "exp_away": Color("#FFD100")},
@@ -146,6 +152,7 @@ func _init() -> void:
 		{"comp": "bundesliga", "name": "Dortmund x Bayern", "h": {"abbrev": "BVB", "kit": "#FDE100", "kit2": "#000000"}, "a": {"abbrev": "FCB", "kit": "#DC052D", "kit2": "#FFFFFF"}, "exp_away": Color("#DC052D")}
 	]
 	
+	var found_similar_divider = false
 	for pair in conflict_pairs:
 		test_kit_sb.setup(pair["h"], pair["a"], pair["comp"], "", true)
 		var r_kit = test_kit_sb._resolve_team_kit_colors()
@@ -157,8 +164,17 @@ func _init() -> void:
 		if r_kit["conflict_detected"]:
 			res_str = "Kit2 " + a_hex if r_kit["conflict_resolution"] == "kit2" else "Neutro"
 			
-		print("%-18s | %-12s | %-12s | %-8.2f | %-8.2f | %-16s" % [
-			pair["name"], h_hex, a_hex, cr_h, cr_a, res_str
+		var divisa_str = "Nenhuma"
+		var divs = test_kit_sb.detect_similar_color_dividers()
+		if not divs.is_empty():
+			found_similar_divider = true
+			var desc_parts: Array[String] = []
+			for d in divs:
+				desc_parts.append("%s x %s (1.5px)" % [d["team"], d["neighbor"]])
+			divisa_str = ", ".join(desc_parts)
+			
+		print("%-18s | %-10s | %-10s | %-7.2f | %-7.2f | %-16s | %-24s" % [
+			pair["name"], h_hex, a_hex, cr_h, cr_a, res_str, divisa_str
 		])
 		
 		# Teste (b): Falhar se houver conflito CIELAB < 25 sem resolução
@@ -175,6 +191,15 @@ func _init() -> void:
 		if cr_a < 4.5:
 			printerr("ERRO WCAG CONTRASTE: %s Fora CR %.2f < 4.5:1 no fundo %s" % [pair["name"], cr_a, a_hex])
 			all_ok = false
+			
+	print("---------------------------------------------------------------------------------------------------------\n")
+	
+	# Teste 5 (FIX8e): Falhar se divisa de cores parecidas não tiver contorno (Tottenham x Placar na Premier)
+	if not found_similar_divider:
+		printerr("ERRO FIX8e: Nenhuma divisa de cor parecida (< 25 ΔE) detectada/contornada!")
+		all_ok = false
+	else:
+		print("[TESTE OK] FIX8e: Divisa de cores parecidas com contorno/divisor de 1.5px validada com sucesso.")
 			
 	print("-----------------------------------------------------------------\n")
 	print("[TESTE OK] FIX8d: Todos os 4 conflitos CIELAB < 25 resolvidos e contraste >= 4.5:1 sem tolerancia.")

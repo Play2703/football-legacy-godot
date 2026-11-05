@@ -13,7 +13,7 @@
       "tipo": "logo_liga",
       "peso": 0.96,
       "forma": "retangulo",
-      "fundo": "#2128CF",
+      "fundo": "#1F2BDB",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "logo"
@@ -23,7 +23,7 @@
       "tipo": "relogio",
       "peso": 2.4,
       "forma": "retangulo",
-      "fundo": "#E9ECF5",
+      "fundo": "#EEF1F8",
       "cor_texto": "#1A1485",
       "conteudo": [
         "minuto",
@@ -32,7 +32,7 @@
     },
     {
       "tipo": "divisor",
-      "peso": 0.03,
+      "peso": 0.04,
       "forma": "retangulo",
       "fundo": "#FFFFFF",
       "cor_texto": "",
@@ -58,13 +58,13 @@
       "tipo": "tampa",
       "peso": 0.22,
       "forma": "retangulo",
-      "fundo": "#EB3141",
+      "fundo": "#E0344A",
       "cor_texto": "",
       "conteudo": []
     }
   ],
   "etiqueta_acrescimo": {
-    "cor": "#EB3141",
+    "cor": "#E0344A",
     "texto_cor": "#FFFFFF",
     "canto": "superior_direito"
   },
