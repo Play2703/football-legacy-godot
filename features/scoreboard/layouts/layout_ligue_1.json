@@ -4,27 +4,27 @@
   "familia": "skew",
   "confianca": "medido",
   "fonte": "condensada",
-  "proporcao_barra": 10.23,
-  "skew_deg": 17.5,
+  "proporcao_barra": 8.5,
+  "skew_deg": 14.0,
   "raio_canto": 0.0,
   "gap": 0.0,
   "celulas": [
     {
       "tipo": "logo_liga",
-      "peso": 1.05,
+      "peso": 1.19,
       "forma": "paralelogramo",
-      "fundo": "#A5FB04",
-      "cor_texto": "#0A1C3E",
+      "fundo": "#0A1C3E",
+      "cor_texto": "#A6FF00",
       "conteudo": [
         "logo"
       ]
     },
     {
       "tipo": "relogio",
-      "peso": 2.14,
+      "peso": 1.7,
       "forma": "paralelogramo",
-      "fundo": "#A5FB04",
-      "cor_texto": "#0A1C3E",
+      "fundo": "#0A1C3E",
+      "cor_texto": "#FFFFFF",
       "conteudo": [
         "minuto",
         "acrescimo_etiqueta"
@@ -32,7 +32,7 @@
     },
     {
       "tipo": "time_casa",
-      "peso": 1.95,
+      "peso": 1.9,
       "forma": "paralelogramo",
       "fundo": "#0A1C3E",
       "cor_texto": "#FFFFFF",
@@ -44,9 +44,9 @@
     },
     {
       "tipo": "placar_unico",
-      "peso": 1.36,
+      "peso": 1.35,
       "forma": "paralelogramo",
-      "fundo": "#A5FB04",
+      "fundo": "#FFFFFF",
       "cor_texto": "#0A1C3E",
       "conteudo": [
         "gol_casa",
@@ -56,7 +56,7 @@
     },
     {
       "tipo": "time_fora",
-      "peso": 1.95,
+      "peso": 1.9,
       "forma": "paralelogramo",
       "fundo": "#0A1C3E",
       "cor_texto": "#FFFFFF",
@@ -68,28 +68,26 @@
     },
     {
       "tipo": "tampa",
-      "peso": 0.58,
+      "peso": 0.46,
       "forma": "paralelogramo",
-      "fundo": "#A6FB05",
+      "fundo": "#A6FF00",
       "cor_texto": "",
       "conteudo": []
     }
   ],
   "etiqueta_acrescimo": {
-    "cor": "#D82020",
+    "cor": "#E13432",
     "texto_cor": "#FFFFFF",
-    "canto": "superior_direito"
+    "canto": "superior_direito_relogio"
   },
   "pilula_periodo": {
-    "fundo": "#0B1D3E",
-    "texto_cor": "#A5FB04",
-    "borda_cor": "#A5FB04"
+    "fundo": "#0C1033",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#3A4565"
   },
   "variante_compacta": {
-    "habilitada": true,
-    "escala_fonte": 0.85,
-    "max_largura_retrato": 648
-  },
-  "largura_em_86": 777,
-  "largura_em_62": 560
+    "modo": "escala_proporcional",
+    "escala_fonte": 0.88,
+    "sigla_max_chars": 3
+  }
 }

@@ -4,24 +4,24 @@
   "familia": "skew",
   "confianca": "medido",
   "fonte": "condensada",
-  "proporcao_barra": 9.48,
-  "skew_deg": 18.0,
+  "proporcao_barra": 8.5,
+  "skew_deg": 14.0,
   "raio_canto": 0.0,
   "gap": 0.0,
   "celulas": [
     {
       "tipo": "logo_liga",
-      "peso": 1.1,
+      "peso": 1.19,
       "forma": "paralelogramo",
       "fundo": "#35053C",
-      "cor_texto": "#1BFB97",
+      "cor_texto": "#00FF87",
       "conteudo": [
         "logo"
       ]
     },
     {
       "tipo": "relogio",
-      "peso": 1.77,
+      "peso": 1.7,
       "forma": "paralelogramo",
       "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
@@ -32,7 +32,7 @@
     },
     {
       "tipo": "time_casa",
-      "peso": 1.83,
+      "peso": 1.9,
       "forma": "paralelogramo",
       "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
@@ -44,7 +44,7 @@
     },
     {
       "tipo": "placar_unico",
-      "peso": 1.34,
+      "peso": 1.35,
       "forma": "paralelogramo",
       "fundo": "#FEFEFE",
       "cor_texto": "#35053C",
@@ -56,7 +56,7 @@
     },
     {
       "tipo": "time_fora",
-      "peso": 1.83,
+      "peso": 1.9,
       "forma": "paralelogramo",
       "fundo": "#35053C",
       "cor_texto": "#FFFFFF",
@@ -68,28 +68,26 @@
     },
     {
       "tipo": "tampa",
-      "peso": 0.43,
+      "peso": 0.46,
       "forma": "paralelogramo",
-      "fundo": "#1BFB97",
+      "fundo": "#00FF87",
       "cor_texto": "",
       "conteudo": []
     }
   ],
   "etiqueta_acrescimo": {
-    "cor": "#D82020",
+    "cor": "#E13432",
     "texto_cor": "#FFFFFF",
-    "canto": "superior_direito"
+    "canto": "superior_direito_relogio"
   },
   "pilula_periodo": {
-    "fundo": "#35063D",
+    "fundo": "#0C1033",
     "texto_cor": "#FFFFFF",
-    "borda_cor": "#1BFB97"
+    "borda_cor": "#3A4565"
   },
   "variante_compacta": {
-    "habilitada": true,
-    "escala_fonte": 0.85,
-    "max_largura_retrato": 648
-  },
-  "largura_em_86": 714,
-  "largura_em_62": 515
+    "modo": "escala_proporcional",
+    "escala_fonte": 0.88,
+    "sigla_max_chars": 3
+  }
 }
