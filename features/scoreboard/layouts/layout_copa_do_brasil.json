@@ -23,8 +23,8 @@
       "tipo": "relogio",
       "peso": 1.7,
       "forma": "paralelogramo",
-      "fundo": "#093020",
-      "cor_texto": "#FFFFFF",
+      "fundo": "#EAB003",
+      "cor_texto": "#093020",
       "conteudo": [
         "minuto",
         "acrescimo_etiqueta"

@@ -11,7 +11,7 @@
   "celulas": [
     {
       "tipo": "coluna_identidade",
-      "peso": 0.72,
+      "peso": 0.45,
       "forma": "retangulo",
       "fundo": "#EF4435",
       "cor_texto": "#FFFFFF",
@@ -22,7 +22,7 @@
     },
     {
       "tipo": "coluna_times",
-      "peso": 0.85,
+      "peso": 0.25,
       "forma": "retangulo",
       "fundo": "#10193A",
       "cor_texto": "#FFFFFF",

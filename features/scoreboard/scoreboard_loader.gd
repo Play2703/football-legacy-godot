@@ -52,6 +52,7 @@ static func load_theme(theme_id: String, variant: String = "", use_local_tex: bo
 	theme.font_type = String(layout_data.get("fonte", "condensada"))
 	theme.font_res = resolve_scoreboard_font(theme.font_type)
 	theme.ordem_relogio = String(layout_data.get("ordem_relogio", "apos_times"))
+	theme.cor_time = String(layout_data.get("cor_time", "fixa"))
 	
 	var mode: String = String(layout_data.get("modo", "row"))
 	if theme.familia == "stack2" or mode == "stack2":

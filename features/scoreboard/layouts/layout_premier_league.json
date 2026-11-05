@@ -4,6 +4,7 @@
   "familia": "skew",
   "confianca": "medido",
   "fonte": "condensada",
+  "cor_time": "kit",
   "proporcao_barra": 8.5,
   "skew_deg": 14.0,
   "raio_canto": 0.0,
@@ -34,7 +35,7 @@
       "tipo": "time_casa",
       "peso": 1.9,
       "forma": "paralelogramo",
-      "fundo": "#35053C",
+      "fundo": "cor_clube",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "escudo",
@@ -58,7 +59,7 @@
       "tipo": "time_fora",
       "peso": 1.9,
       "forma": "paralelogramo",
-      "fundo": "#35053C",
+      "fundo": "cor_clube_fora",
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "escudo",

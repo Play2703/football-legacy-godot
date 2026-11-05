@@ -13,8 +13,8 @@
       "tipo": "logo_liga",
       "peso": 1.19,
       "forma": "paralelogramo",
-      "fundo": "#0D214B",
-      "cor_texto": "#30D6E1",
+      "fundo": "#EDE8D0",
+      "cor_texto": "#0D214B",
       "conteudo": [
         "logo"
       ]
@@ -23,8 +23,8 @@
       "tipo": "relogio",
       "peso": 1.7,
       "forma": "paralelogramo",
-      "fundo": "#0D214B",
-      "cor_texto": "#FFFFFF",
+      "fundo": "#EDE8D0",
+      "cor_texto": "#0D214B",
       "conteudo": [
         "minuto",
         "acrescimo_etiqueta"
