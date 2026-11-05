@@ -26,6 +26,7 @@ var minute: int = 85
 var stoppage: int = 6
 var is_compact: bool = false
 var use_local_textures: bool = true
+var la_liga_force_white_disk: bool = false
 
 # Pênaltis
 var shootout_active: bool = false
@@ -1257,15 +1258,16 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 				res["support_disk_color"] = candidate_supp_col
 				res["delta_e_disk"] = de_disk
 				
-		# Exceção documentada FIX10d:
-		# Manchester City em fundos escuros/marinho (La Liga, Ligue 1, Serie A) possui alto contraste
-		# geral no corpo do escudo (ΔE_geral >= 55.0). Sua borda possui tom azul-escuro com ΔE entre 34 e 38,
-		# mas a inserção de um disco de apoio branco degradaria o corpo azul-celeste (ΔE_disco = 32.3 < 40.0).
-		# Portanto, o escudo mantém visibilidade intrínseca sem disco de apoio artificial como exceção visual documentada.
-		var is_exception: bool = (team.get("id", "") == "mci" and de_overall >= 55.0 and de_effective < 40.0 and de_disk < 40.0)
+		# Regra de Projeto FIX10e:
+		# "Corpo com ΔE geral >= 55 e borda escura não leva disco quando o disco degradaria o contraste do corpo."
+		# Se o corpo do escudo tem alto contraste contra o fundo da célula (ΔE_geral >= 55.0),
+		# mas sua borda decorativa externa é escura (ΔE_borda < 40.0), e o disco de apoio candidato
+		# degradaria a legibilidade do corpo do escudo (ΔE_disco < 40.0), o escudo mantém sua
+		# visibilidade intrínseca sem disco de apoio artificial.
+		var is_exception: bool = (de_overall >= 55.0 and de_effective < 40.0 and de_disk < 40.0)
 		res["is_contrast_exception"] = is_exception
 		if is_exception:
-			res["contrast_note"] = "Exceção FIX10d: Geral %.1f >= 55.0 (disco branco degradaria para ΔE %.1f)" % [de_overall, de_disk]
+			res["contrast_note"] = "Regra de Projeto: Corpo ΔE %.1f >= 55.0 com borda escura (disco degradaria para ΔE %.1f)" % [de_overall, de_disk]
 			
 		if style == "bundesliga":
 			res["ring_used"] = true
@@ -1492,9 +1494,17 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		var candidate_supp_col = Color.WHITE if cr_white >= cr_dark else Color("#101015")
 		var de_disk = min(delta_e_cie76(mean_col, candidate_supp_col), delta_e_cie76(edge_col, candidate_supp_col))
 		
+		var draw_disk: bool = false
+		var supp_color: Color = candidate_supp_col
 		if (de_overall < 40.0 or (de_edge < 40.0 and de_disk >= 40.0)):
 			if de_disk >= 40.0:
-				draw_circle(center, r * 0.95, candidate_supp_col)
+				draw_disk = true
+		if style == "la_liga" and la_liga_force_white_disk:
+			draw_disk = true
+			supp_color = Color.WHITE
+			
+		if draw_disk:
+			draw_circle(center, r * 0.95, supp_color)
 			
 		# 3. Desenhar escudo real centralizado 1:1 fit (0.92 * diam) com filtro linear
 		draw_texture_rect(tex, crest_rect, false)

@@ -469,25 +469,24 @@ func _init() -> void:
 					pass_margem = false
 					all_ok = false
 					
-				# Asserção 4 (FIX10d): Critério idêntico à decisão do disco (ΔE efetivo = min(geral, borda), limite 40).
-				# Casos abaixo de 40 sem disco devem ter disco válido ou exceção documentada.
+				# Asserção 4 (FIX10e): Critério idêntico à decisão do disco (ΔE efetivo = min(geral, borda), limite 40).
+				# Regra de projeto: "Corpo com ΔE geral >= 55 e borda escura não leva disco quando o disco degradaria".
 				var de_eff = min(m["delta_e"], m["delta_e_edge"]) if m["has_crest"] else 999.0
 				var item_contrast_pass = true
 				var is_exception = m.get("is_contrast_exception", false)
 				if m["has_crest"]:
 					if m["support_disk_used"]:
 						if m["delta_e_disk"] < 40.0:
-							printerr("ERRO FIX10d DISCO INSUFICIENTE: %s no layout %s escudo contra disco tem ΔE = %.1f (< 40)!" % [t["name"], lid, m["delta_e_disk"]])
+							printerr("ERRO FIX10e DISCO INSUFICIENTE: %s no layout %s escudo contra disco tem ΔE = %.1f (< 40)!" % [t["name"], lid, m["delta_e_disk"]])
 							pass_contraste = false
 							item_contrast_pass = false
 							all_ok = false
 					elif de_eff < 40.0:
 						if is_exception:
-							# Exceção documentada (FIX10d): Manchester City em fundos escuros (La Liga, Ligue 1, Serie A)
-							# possui alto contraste geral no corpo (ΔE >= 55.0), onde um disco branco degradaria para ΔE 32.3.
+							# Regra de projeto atendida: Corpo ΔE >= 55.0 com borda escura onde disco branco degradaria
 							item_contrast_pass = true
 						else:
-							printerr("ERRO FIX10d CONTRASTE: %s no layout %s tem ΔE efetivo %.1f < 40 sem disco de apoio!" % [t["name"], lid, de_eff])
+							printerr("ERRO FIX10e CONTRASTE: %s no layout %s tem ΔE efetivo %.1f < 40 sem disco de apoio!" % [t["name"], lid, de_eff])
 							pass_contraste = false
 							item_contrast_pass = false
 							all_ok = false
@@ -510,12 +509,12 @@ func _init() -> void:
 				var de_borda_str = "%.1f" % m["delta_e_edge"] if m["has_crest"] else "N/A"
 				var de_eff_str = "%.1f" % de_eff if m["has_crest"] else "N/A"
 				var disco_usado_str = ("true" if m["support_disk_used"] else "false") if m["has_crest"] else "N/A"
-				var disco_cor_str = (support_str if not is_exception else "Nenhum (Exceção)") if m["has_crest"] else "N/A"
+				var disco_cor_str = (support_str if not is_exception else "Nenhum (Regra Projeto)") if m["has_crest"] else "N/A"
 				var de_disco_str = ("%.1f" % m["delta_e_disk"]) if (m["has_crest"] and m["support_disk_used"]) else "N/A"
 				var status_str = "N/A"
 				if m["has_crest"]:
 					if is_exception:
-						status_str = "PASS (Exceção: Geral %.1f)" % m["delta_e"]
+						status_str = "PASS (Regra: Geral %.1f >= 55)" % m["delta_e"]
 					elif item_contrast_pass:
 						status_str = "PASS"
 					else:

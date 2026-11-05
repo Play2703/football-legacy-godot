@@ -15,7 +15,7 @@ bundesliga,Bundesliga,Tottenham,Casa,true,136x256,21.9×41.1,0.00,true,48.3,17.0
 bundesliga,Bundesliga,Pordenone,Fora,true,154x255,24.8×41.1,0.00,true,42.3,14.9,27.0,9.5,0.3,40.5,0.3,true,#ffffff,74.5,true,#ffffff,PASS
 bundesliga,Bundesliga,Fulham,Casa,true,192x255,31.0×41.1,0.00,true,44.7,15.8,23.9,8.4,46.9,55.7,46.9,false,Nenhum,N/A,true,#ffffff,PASS
 bundesliga,Bundesliga,Chicago Fire,Fora,false,N/A,N/A,N/A,N/A,41.4,14.6,17.0,6.0,N/A,N/A,N/A,N/A,N/A,N/A,true,#ffffff,N/A
-la_liga,La Liga EA Sports,Manchester City,Casa,true,256x256,20.3×20.3,0.00,true,9.9,24.7,9.9,24.7,61.6,37.8,37.8,false,Nenhum (Exceção),N/A,true,#ffffff,PASS (Exceção: Geral 61.6)
+la_liga,La Liga EA Sports,Manchester City,Casa,true,256x256,20.3×20.3,0.00,true,9.9,24.7,9.9,24.7,61.6,37.8,37.8,false,Nenhum (Regra Projeto),N/A,true,#ffffff,PASS (Regra: Geral 61.6 >= 55)
 la_liga,La Liga EA Sports,Nottingham,Fora,true,120x256,9.5×20.3,0.00,true,15.3,38.1,15.3,38.1,110.7,110.8,110.7,false,Nenhum,N/A,true,#ffffff,PASS
 la_liga,La Liga EA Sports,Derby County,Casa,true,256x180,20.3×14.3,0.00,true,9.9,24.7,9.9,24.7,80.1,91.0,80.1,false,Nenhum,N/A,true,#ffffff,PASS
 la_liga,La Liga EA Sports,Chelsea,Fora,true,256x256,20.3×20.3,0.00,true,9.9,24.7,9.9,24.7,41.5,24.0,24.0,true,#ffffff,61.2,true,#ffffff,PASS
@@ -31,7 +31,7 @@ premier_league,Premier League,Tottenham,Casa,true,136x256,23.1×43.5,0.00,true,2
 premier_league,Premier League,Pordenone,Fora,true,154x255,26.3×43.5,0.00,true,26.6,16.8,20.0,12.6,0.3,40.5,0.3,true,#ffffff,74.5,false,Não,PASS
 premier_league,Premier League,Fulham,Casa,true,192x255,32.8×43.5,0.00,true,23.4,14.8,16.8,10.6,46.9,55.7,46.9,false,Nenhum,N/A,false,Não,PASS
 premier_league,Premier League,Chicago Fire,Fora,false,N/A,N/A,N/A,N/A,16.1,10.2,9.5,6.0,N/A,N/A,N/A,N/A,N/A,N/A,false,Não,N/A
-ligue_1,Ligue 1 McDonald's,Manchester City,Casa,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,60.7,36.4,36.4,false,Nenhum (Exceção),N/A,false,Não,PASS (Exceção: Geral 60.7)
+ligue_1,Ligue 1 McDonald's,Manchester City,Casa,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,60.7,36.4,36.4,false,Nenhum (Regra Projeto),N/A,false,Não,PASS (Regra: Geral 60.7 >= 55)
 ligue_1,Ligue 1 McDonald's,Nottingham,Fora,true,120x256,20.4×43.5,0.00,true,29.6,18.7,23.0,14.5,112.4,112.5,112.4,false,Nenhum,N/A,false,Não,PASS
 ligue_1,Ligue 1 McDonald's,Derby County,Casa,true,256x180,43.5×30.6,0.00,true,18.0,11.4,11.4,7.2,79.4,90.2,79.4,false,Nenhum,N/A,false,Não,PASS
 ligue_1,Ligue 1 McDonald's,Chelsea,Fora,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,40.6,23.7,23.7,true,#ffffff,61.2,false,Não,PASS
@@ -39,7 +39,7 @@ ligue_1,Ligue 1 McDonald's,Tottenham,Casa,true,136x256,23.1×43.5,0.00,true,28.2
 ligue_1,Ligue 1 McDonald's,Pordenone,Fora,true,154x255,26.3×43.5,0.00,true,26.6,16.8,20.0,12.6,47.3,82.3,47.3,false,Nenhum,N/A,false,Não,PASS
 ligue_1,Ligue 1 McDonald's,Fulham,Casa,true,192x255,32.8×43.5,0.00,true,23.4,14.8,16.8,10.6,50.8,41.7,41.7,false,Nenhum,N/A,false,Não,PASS
 ligue_1,Ligue 1 McDonald's,Chicago Fire,Fora,false,N/A,N/A,N/A,N/A,16.1,10.2,9.5,6.0,N/A,N/A,N/A,N/A,N/A,N/A,false,Não,N/A
-serie_a,Serie A Enilive,Manchester City,Casa,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,59.7,34.3,34.3,false,Nenhum (Exceção),N/A,false,Não,PASS (Exceção: Geral 59.7)
+serie_a,Serie A Enilive,Manchester City,Casa,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,59.7,34.3,34.3,false,Nenhum (Regra Projeto),N/A,false,Não,PASS (Regra: Geral 59.7 >= 55)
 serie_a,Serie A Enilive,Nottingham,Fora,true,120x256,20.4×43.5,0.00,true,29.6,18.7,23.0,14.5,113.6,113.7,113.6,false,Nenhum,N/A,false,Não,PASS
 serie_a,Serie A Enilive,Derby County,Casa,true,256x180,43.5×30.6,0.00,true,18.0,11.4,11.4,7.2,78.5,89.0,78.5,false,Nenhum,N/A,false,Não,PASS
 serie_a,Serie A Enilive,Chelsea,Fora,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,36.7,21.4,21.4,true,#ffffff,61.2,false,Não,PASS
