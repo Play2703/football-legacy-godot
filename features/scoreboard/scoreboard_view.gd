@@ -966,7 +966,7 @@ func _draw_stack2() -> void:
 				var stop_y = total_h - stop_h - 2.0
 				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
-				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.75), 0.4 * stop_h, true)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.85), 0.60 * stop_h, true)
 				
 				var r_clk = Rect2(cur_x, row_h + 1.0, col_w, row_h - stop_h - 2.0)
 				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
@@ -983,7 +983,7 @@ func _draw_stack2() -> void:
 				_draw_sigla_stack2(home_team.get("abbrev", "RMA"), r_home_sig, target_sig_sz, col_w * 0.80)
 				_draw_sigla_stack2(away_team.get("abbrev", "STU"), r_away_sig, target_sig_sz, col_w * 0.80)
 			else:
-				var diam = clamp(col_w * 0.30, 16.0, row_h * 0.52)
+				var diam = min(col_w * 0.55, row_h * 0.65)
 				var crest_x = cur_x + (col_w - diam) * 0.5
 				var crest_y_home = (row_h - diam) * 0.5
 				var crest_y_away = row_h + (row_h - diam) * 0.5
@@ -1053,6 +1053,7 @@ func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 # ==============================================================================
 static var _crest_tex_cache: Dictionary = {}
 static var _crest_mean_color_cache: Dictionary = {}
+static var _crest_edge_color_cache: Dictionary = {}
 
 static func get_team_crest_texture(team: Dictionary) -> Texture2D:
 	var tid = String(team.get("id", ""))
@@ -1116,6 +1117,64 @@ static func get_team_crest_mean_color(team: Dictionary) -> Color:
 	_crest_mean_color_cache[tid] = res
 	return res
 
+static func get_team_crest_edge_mean_color(team: Dictionary) -> Color:
+	var tid = String(team.get("id", ""))
+	if _crest_edge_color_cache.has(tid):
+		return _crest_edge_color_cache[tid]
+	var path = "user://logos/%s.png" % tid
+	if team.has("crest_path"):
+		path = String(team["crest_path"])
+	elif team.has("logo_path"):
+		path = String(team["logo_path"])
+		
+	if not FileAccess.file_exists(path):
+		return get_team_crest_mean_color(team)
+		
+	var img = Image.load_from_file(path)
+	if img == null or img.is_empty():
+		return get_team_crest_mean_color(team)
+		
+	var w = img.get_width()
+	var h = img.get_height()
+	var cx = float(w) * 0.5
+	var cy = float(h) * 0.5
+	
+	var max_d: float = 0.0
+	for y in range(h):
+		for x in range(w):
+			if img.get_pixel(x, y).a > 0.1:
+				var dx = float(x) - cx
+				var dy = float(y) - cy
+				var d = sqrt(dx * dx + dy * dy)
+				if d > max_d:
+					max_d = d
+					
+	if max_d <= 0.0:
+		return get_team_crest_mean_color(team)
+		
+	var ring_r_inner = max_d * 0.85
+	var sum_r: float = 0.0
+	var sum_g: float = 0.0
+	var sum_b: float = 0.0
+	var count: int = 0
+	
+	for y in range(h):
+		for x in range(w):
+			var px = img.get_pixel(x, y)
+			if px.a > 0.1:
+				var dx = float(x) - cx
+				var dy = float(y) - cy
+				var d = sqrt(dx * dx + dy * dy)
+				if d >= ring_r_inner:
+					sum_r += px.r
+					sum_g += px.g
+					sum_b += px.b
+					count += 1
+					
+	var res = Color(sum_r / float(count), sum_g / float(count), sum_b / float(count)) if count > 0 else get_team_crest_mean_color(team)
+	_crest_edge_color_cache[tid] = res
+	return res
+
 static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, style: String, block_bg: Color, cell_w: float, H: float, is_casa: bool = true) -> Dictionary:
 	var tex = get_team_crest_texture(team)
 	var center = pos + Vector2(diam, diam) * 0.5
@@ -1137,13 +1196,18 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		"margin_to_sigla": 0.0,
 		"margin_to_sigla_ratio": 0.0,
 		"mean_color": Color.WHITE,
+		"edge_color": Color.WHITE,
 		"block_bg": block_bg,
 		"delta_e": 0.0,
+		"delta_e_edge": 0.0,
 		"support_disk_used": false,
 		"support_disk_color": Color.TRANSPARENT,
 		"ring_used": false,
 		"ring_color": Color.TRANSPARENT
 	}
+	
+	var rw = diam
+	var rh = diam
 	
 	if tex != null and tex.get_width() > 0 and tex.get_height() > 0:
 		var ts = tex.get_size()
@@ -1153,8 +1217,8 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		
 		var max_side = diam * 0.92
 		var k = max_side / max(ts.x, ts.y)
-		var rw = ts.x * k
-		var rh = ts.y * k
+		rw = ts.x * k
+		rh = ts.y * k
 		res["rendered_w"] = rw
 		res["rendered_h"] = rh
 		res["rendered_ratio"] = rw / rh
@@ -1166,14 +1230,21 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 								crest_rect.position.y >= pos.y and crest_rect.end.y <= pos.y + diam)
 								
 		var mean_col = get_team_crest_mean_color(team)
+		var edge_col = get_team_crest_edge_mean_color(team)
 		res["mean_color"] = mean_col
-		var de = delta_e_cie76(mean_col, block_bg)
-		res["delta_e"] = de
+		res["edge_color"] = edge_col
 		
-		if de < 25.0:
+		var de_overall = delta_e_cie76(mean_col, block_bg)
+		var de_edge = delta_e_cie76(edge_col, block_bg)
+		var de_effective = min(de_overall, de_edge)
+		res["delta_e"] = de_overall
+		res["delta_e_edge"] = de_edge
+		
+		# Limite 40 (FIX10b): Mede borda (anel 15%) e geral; desenha disco se abaixo de 40
+		if de_effective < 40.0:
 			res["support_disk_used"] = true
-			var de_white = delta_e_cie76(mean_col, Color.WHITE)
-			var de_dark = delta_e_cie76(mean_col, Color("#101015"))
+			var de_white = min(delta_e_cie76(mean_col, Color.WHITE), delta_e_cie76(edge_col, Color.WHITE))
+			var de_dark = min(delta_e_cie76(mean_col, Color("#101015")), delta_e_cie76(edge_col, Color("#101015")))
 			res["support_disk_color"] = Color.WHITE if de_white >= de_dark else Color("#101015")
 			
 		if style == "bundesliga":
@@ -1188,24 +1259,26 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 			res["ring_used"] = true
 			res["ring_color"] = Color("#808080") if style == "brasileirao" else Color.WHITE
 			
-	# Margens
+	# Margens medidas a partir do ESCUDO DESENHADO (crest_rect), não apenas do slot
+	var crest_offset = (diam - rw) * 0.5
 	if style == "brasileirao":
-		if is_casa:
-			var edge_dist = cell_w - (pos.x - (pos.x - (cell_w - cell_w * 0.06 - diam))) # pos.x is relative to cell start
-			res["margin_to_edge"] = cell_w * 0.06
-			res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
-		else:
-			res["margin_to_edge"] = cell_w * 0.06
-			res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+		var base_margin = cell_w * 0.06
+		var base_gap = max(cell_w * 0.06, 8.0)
+		res["margin_to_edge"] = base_margin + crest_offset
+		res["margin_to_sigla"] = base_gap + crest_offset
 	elif style == "inclinada":
-		res["margin_to_edge"] = max(cell_w * 0.06, 8.0)
-		res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+		var base_div = max(cell_w * 0.06, 8.0)
+		var base_gap = max(cell_w * 0.06, 8.0)
+		res["margin_to_edge"] = base_div + crest_offset
+		res["margin_to_sigla"] = base_gap + crest_offset
 	elif style == "bundesliga":
-		res["margin_to_edge"] = max(cell_w * 0.06, 8.0)
-		res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+		var base_div = max(cell_w * 0.06, 8.0)
+		var base_gap = max(cell_w * 0.06, 8.0)
+		res["margin_to_edge"] = base_div + crest_offset
+		res["margin_to_sigla"] = base_gap + crest_offset
 	elif style == "la_liga":
-		res["margin_to_edge"] = (cell_w - diam) * 0.5
-		res["margin_to_sigla"] = (cell_w - diam) * 0.5
+		res["margin_to_edge"] = (cell_w - rw) * 0.5
+		res["margin_to_sigla"] = (cell_w - rw) * 0.5
 		
 	res["margin_to_edge_ratio"] = res["margin_to_edge"] / cell_w if cell_w > 0.0 else 0.0
 	res["margin_to_sigla_ratio"] = res["margin_to_sigla"] / cell_w if cell_w > 0.0 else 0.0
@@ -1256,8 +1329,13 @@ func get_layout_crest_measurements() -> Dictionary:
 			total_peso = 1.0
 		var kit_cols = _resolve_team_kit_colors()
 		var is_kit = (board_theme.cor_time == "kit")
-		var home_bg = kit_cols["home_bg"] if is_kit else Color("#101010")
-		var away_bg = kit_cols["away_bg"] if is_kit else Color("#101010")
+		var cell_h_dict: Dictionary = {}
+		var cell_a_dict: Dictionary = {}
+		for c in board_theme.cells:
+			if c.get("tipo") == "time_casa": cell_h_dict = c
+			elif c.get("tipo") == "time_fora": cell_a_dict = c
+		var home_bg = kit_cols["home_bg"] if is_kit else Color(cell_h_dict.get("fundo", "#101015"))
+		var away_bg = kit_cols["away_bg"] if is_kit else Color(cell_a_dict.get("fundo", "#101015"))
 		var cell_w = 0.0
 		for c in board_theme.cells:
 			if c.get("tipo") in ["time_casa", "time_fora"]:
@@ -1292,11 +1370,11 @@ func get_layout_crest_measurements() -> Dictionary:
 		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false)
 	elif fam == "stack2":
 		res["has_crests"] = true
-		var col1_w = W * 0.45
-		var diam = col1_w * 0.30
-		var pos = Vector2((col1_w - diam) * 0.5, (H - diam) * 0.5)
-		res["home"] = measure_crest_render(home_team, pos, diam, "la_liga", Color("#10193A"), col1_w, H, true)
-		res["away"] = measure_crest_render(away_team, pos, diam, "la_liga", Color("#10193A"), col1_w, H, false)
+		var col_times_w = W * 0.25 # coluna_times (marinho) tem 0.25 de peso no schema da La Liga
+		var diam = min(col_times_w * 0.55, (H * 0.5) * 0.65) # Requisito FIX10b: diametro ≈ 0.55 da largura da coluna marinho
+		var pos = Vector2((col_times_w - diam) * 0.5, (H * 0.5 - diam) * 0.5)
+		res["home"] = measure_crest_render(home_team, pos, diam, "la_liga", Color("#10193A"), col_times_w, H, true)
+		res["away"] = measure_crest_render(away_team, pos, diam, "la_liga", Color("#10193A"), col_times_w, H, false)
 	return res
 
 func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary, block_bg: Color = Color(0, 0, 0, 0)) -> void:
@@ -1330,12 +1408,15 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 			draw_circle(center, r - 1.5, Color("#10193A"))
 			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
 			
-		# 2. Contraste e Disco de Apoio (ΔE CIELAB < 25):
+		# 2. Contraste e Disco de Apoio (ΔE CIELAB < 40 no anel 15% ou média geral):
 		var mean_col = get_team_crest_mean_color(team)
-		var de = delta_e_cie76(mean_col, block_bg)
-		if de < 25.0:
-			var de_white = delta_e_cie76(mean_col, Color.WHITE)
-			var de_dark = delta_e_cie76(mean_col, Color("#101015"))
+		var edge_col = get_team_crest_edge_mean_color(team)
+		var de_overall = delta_e_cie76(mean_col, block_bg)
+		var de_edge = delta_e_cie76(edge_col, block_bg)
+		var de_effective = min(de_overall, de_edge)
+		if de_effective < 40.0:
+			var de_white = min(delta_e_cie76(mean_col, Color.WHITE), delta_e_cie76(edge_col, Color.WHITE))
+			var de_dark = min(delta_e_cie76(mean_col, Color("#101015")), delta_e_cie76(edge_col, Color("#101015")))
 			var support_col = Color.WHITE if de_white >= de_dark else Color("#101015")
 			draw_circle(center, r * 0.95, support_col)
 			
