@@ -29,11 +29,13 @@ var THEME_OPTIONS: Array[Dictionary] = [
 	{"name": "Bundesliga (Reto - Clube Integrado)", "id": "bundesliga", "variant": ""},
 	{"name": "UEFA Champions League (Reto - Barra Única Fina)", "id": "champions_league", "variant": ""},
 	{"name": "CONMEBOL Libertadores (Módulos Separados Pretos)", "id": "libertadores", "variant": ""},
+	{"name": "CONMEBOL Libertadores (Relógio após Logo)", "id": "libertadores", "variant": "relogio_logo"},
 	{"name": "Premier League (Skew)", "id": "premier_league", "variant": ""},
 	{"name": "Ligue 1 McDonald's (Skew)", "id": "ligue_1", "variant": ""},
 	{"name": "Serie A Enilive (Skew)", "id": "serie_a", "variant": ""},
 	{"name": "Copa Betano do Brasil (Skew)", "id": "copa_do_brasil", "variant": ""},
-	{"name": "LaLiga EA Sports (Stack2)", "id": "la_liga", "variant": "tv"}
+	{"name": "LaLiga EA Sports (Stack2)", "id": "la_liga", "variant": "tv"},
+	{"name": "LaLiga EA Sports (Stack2 - Variante com Siglas)", "id": "la_liga", "variant": "siglas"}
 ]
 
 var current_theme_idx: int = 0
@@ -45,24 +47,29 @@ var kit_presets = [
 		"away": {"abbrev": "PAL", "name": "Palmeiras", "kit": "#006437", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"}
 	},
 	{
-		"name": "Bundesliga (Holstein Kiel vs Mainz 05)",
-		"home": {"abbrev": "HOL", "name": "Holstein Kiel", "kit": "#3563A2", "kit2": "#FFFFFF", "kit_b": "#EDBB00"},
-		"away": {"abbrev": "M05", "name": "Mainz 05", "kit": "#E13432", "kit2": "#FFFFFF", "kit_b": "#272E61"}
-	},
-	{
-		"name": "Champions (Real Madrid vs Stuttgart)",
-		"home": {"abbrev": "RMA", "name": "Real Madrid", "kit": "#FFFFFF", "kit2": "#1A1485", "kit_b": "#FEBE10"},
-		"away": {"abbrev": "STU", "name": "Stuttgart", "kit": "#EB3141", "kit2": "#FFFFFF", "kit_b": "#111111"}
-	},
-	{
-		"name": "Libertadores (Internacional vs Fluminense)",
+		"name": "Par 1: Vermelho x Branco (Internacional vs Real Madrid)",
 		"home": {"abbrev": "INT", "name": "Internacional", "kit": "#E02020", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"},
-		"away": {"abbrev": "FLU", "name": "Fluminense", "kit": "#8F0028", "kit2": "#006437", "kit_b": "#FFFFFF"}
+		"away": {"abbrev": "RMA", "name": "Real Madrid", "kit": "#FFFFFF", "kit2": "#1A1485", "kit_b": "#FEBE10"}
 	},
 	{
-		"name": "Premier League (Arsenal vs Chelsea)",
-		"home": {"abbrev": "ARS", "name": "Arsenal", "kit": "#EF0107", "kit2": "#FFFFFF", "kit_b": "#063672"},
-		"away": {"abbrev": "CHE", "name": "Chelsea", "kit": "#034694", "kit2": "#FFFFFF", "kit_b": "#EE242C"}
+		"name": "Par 2: Azul x Amarelo (Chelsea vs Villarreal)",
+		"home": {"abbrev": "CHE", "name": "Chelsea", "kit": "#034694", "kit2": "#FFFFFF", "kit_b": "#EE242C"},
+		"away": {"abbrev": "VIL", "name": "Villarreal", "kit": "#F5C800", "kit2": "#034694", "kit_b": "#034694"}
+	},
+	{
+		"name": "Par 3: Preto x Branco (Corinthians vs Santos)",
+		"home": {"abbrev": "COR", "name": "Corinthians", "kit": "#111111", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"},
+		"away": {"abbrev": "SAN", "name": "Santos", "kit": "#FFFFFF", "kit2": "#111111", "kit_b": "#111111"}
+	},
+	{
+		"name": "Par 4: 2 Cores x 1 Cor (Flamengo vs Chelsea)",
+		"home": {"abbrev": "FLA", "name": "Flamengo", "kit": "#C00000", "kit2": "#111111", "kit_b": "#FFFFFF"},
+		"away": {"abbrev": "CHE", "name": "Chelsea", "kit": "#034694", "kit2": "#034694", "kit_b": "#FFFFFF"}
+	},
+	{
+		"name": "Par 5: Cores Iguais (Inter vs Toluca - Conflito CIELAB < 25)",
+		"home": {"abbrev": "INT", "name": "Internacional", "kit": "#E02020", "kit2": "#FFFFFF", "kit_b": "#FFFFFF"},
+		"away": {"abbrev": "TOL", "name": "Toluca", "kit": "#E02020", "kit2": "#000000", "kit_b": "#FFFFFF"}
 	},
 	{
 		"name": "Estresse Extremo (WWW vs MMM - Gols 10-10)",
@@ -128,6 +135,10 @@ func _apply_current_state() -> void:
 		t_info["variant"],
 		chk_local_tex.button_pressed if chk_local_tex else true
 	)
+	if t_info.get("variant") == "relogio_logo":
+		scoreboard.set_ordem_relogio("apos_logo")
+	else:
+		scoreboard.set_ordem_relogio("apos_times")
 	scoreboard.update_score(home_goals, away_goals)
 	scoreboard.update_time(minute, stoppage)
 	if chk_compact:

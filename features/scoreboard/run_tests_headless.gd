@@ -79,9 +79,57 @@ func _init() -> void:
 		])
 	
 	sb.queue_free()
+	
+	# Teste 6 (FIX8b): Validação de Faixa de Clube e Conflito CIELAB
+	var test_cielab_sb = ScoreboardView.new()
+	root.add_child(test_cielab_sb)
+	
+	# Caso A: Cores Iguais (Conflito CIELAB < 25) -> deve resolver para kit2
+	var home_conflict = {"abbrev": "INT", "kit": "#E02020", "kit2": "#FFFFFF"}
+	var away_conflict = {"abbrev": "TOL", "kit": "#E02020", "kit2": "#000000"}
+	test_cielab_sb.setup(home_conflict, away_conflict, "la_liga", "tv", true)
+	var resolved = test_cielab_sb.get_resolved_club_strip_colors()
+	if resolved["away"][0] != Color("#000000"):
+		printerr("ERRO CIELAB: Away deveria ter selecionado kit2 (#000000), obteve: ", resolved["away"][0])
+		all_ok = false
+	else:
+		print("[TESTE OK] FIX8b CIELAB: Conflito de cores iguais resolvido para kit2 com sucesso.")
+		
+	# Caso B: Cores Iguais sem kit2 válido -> deve resolver para cor neutra branca (#FFFFFF)
+	var away_conflict_no_kit2 = {"abbrev": "TOL", "kit": "#E02020"}
+	test_cielab_sb.setup(home_conflict, away_conflict_no_kit2, "libertadores", "", true)
+	var resolved_neutral = test_cielab_sb.get_resolved_club_strip_colors()
+	if resolved_neutral["away"][0] != Color.WHITE:
+		printerr("ERRO CIELAB: Away sem kit2 deveria ter selecionado branco neutro, obteve: ", resolved_neutral["away"][0])
+		all_ok = false
+	else:
+		print("[TESTE OK] FIX8b CIELAB: Conflito sem kit2 resolvido para neutro com sucesso.")
+		
+	# Caso C: La Liga variante com siglas
+	test_cielab_sb.setup(norm_home, norm_away, "la_liga", "siglas", true)
+	if not test_cielab_sb.variante_siglas:
+		printerr("ERRO: La Liga variante siglas nao ativada via flag/variante.")
+		all_ok = false
+	else:
+		print("[TESTE OK] FIX8b La Liga: Variante com siglas validada com sucesso.")
+		
+	# Caso D: Libertadores ordem_relogio
+	test_cielab_sb.setup(norm_home, norm_away, "libertadores", "", true)
+	if test_cielab_sb.ordem_relogio != "apos_times":
+		printerr("ERRO: Libertadores padrao ordem_relogio deveria ser apos_times.")
+		all_ok = false
+	test_cielab_sb.set_ordem_relogio("apos_logo")
+	if test_cielab_sb.ordem_relogio != "apos_logo":
+		printerr("ERRO: Libertadores set_ordem_relogio apos_logo falhou.")
+		all_ok = false
+	else:
+		print("[TESTE OK] FIX8b Libertadores: ordem_relogio (apos_times e apos_logo) validada com sucesso.")
+		
+	test_cielab_sb.queue_free()
+	
 	print("=================================================================")
 	if all_ok:
-		print("RESULTADO FINAL: TODOS OS 9 PLACARES FORAM VALIDADOS COM SUCESSO!")
+		print("RESULTADO FINAL: TODOS OS 9 PLACARES E REGRAS FIX8b FORAM VALIDADOS COM SUCESSO!")
 	else:
 		print("RESULTADO FINAL: FALHAS DETECTADAS!")
 	print("=================================================================")
