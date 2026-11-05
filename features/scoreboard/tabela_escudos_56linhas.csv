@@ -15,14 +15,6 @@ bundesliga,Bundesliga,Tottenham,Casa,true,136x256,21.9×41.1,0.00,true,48.3,17.0
 bundesliga,Bundesliga,Pordenone,Fora,true,154x255,24.8×41.1,0.00,true,42.3,14.9,27.0,9.5,0.3,40.5,0.3,true,#ffffff,74.5,false,Não,PASS
 bundesliga,Bundesliga,Fulham,Casa,true,192x255,31.0×41.1,0.00,true,44.7,15.8,23.9,8.4,46.9,55.7,46.9,false,Nenhum,N/A,false,Não,PASS
 bundesliga,Bundesliga,Chicago Fire,Fora,false,N/A,N/A,N/A,N/A,41.4,14.6,17.0,6.0,N/A,N/A,N/A,N/A,N/A,N/A,true,#ffffff,N/A
-la_liga,La Liga EA Sports,Manchester City,Casa,true,256x256,20.3×20.3,0.00,true,9.9,24.7,9.9,24.7,61.6,37.8,37.8,false,Nenhum (Regra Projeto),N/A,false,Não,PASS (Regra: Geral 61.6 >= 55)
-la_liga,La Liga EA Sports,Nottingham,Fora,true,120x256,9.5×20.3,0.00,true,15.3,38.1,15.3,38.1,110.7,110.8,110.7,false,Nenhum,N/A,false,Não,PASS
-la_liga,La Liga EA Sports,Derby County,Casa,true,256x180,20.3×14.3,0.00,true,9.9,24.7,9.9,24.7,80.1,91.0,80.1,false,Nenhum,N/A,false,Não,PASS
-la_liga,La Liga EA Sports,Chelsea,Fora,true,256x256,20.3×20.3,0.00,true,9.9,24.7,9.9,24.7,41.5,24.0,24.0,true,#ffffff,61.2,false,Não,PASS
-la_liga,La Liga EA Sports,Tottenham,Casa,true,136x256,10.8×20.3,0.00,true,14.7,36.6,14.7,36.6,71.4,89.1,71.4,false,Nenhum,N/A,false,Não,PASS
-la_liga,La Liga EA Sports,Pordenone,Fora,true,154x255,12.3×20.3,0.00,true,14.0,34.7,14.0,34.7,47.6,83.0,47.6,false,Nenhum,N/A,false,Não,PASS
-la_liga,La Liga EA Sports,Fulham,Casa,true,192x255,15.3×20.3,0.00,true,12.4,31.0,12.4,31.0,51.0,42.2,42.2,false,Nenhum,N/A,false,Não,PASS
-la_liga,La Liga EA Sports,Chicago Fire,Fora,false,N/A,N/A,N/A,N/A,9.0,22.5,9.0,22.5,N/A,N/A,N/A,N/A,N/A,N/A,true,#ffffff,N/A
 premier_league,Premier League,Manchester City,Casa,true,256x256,43.5×43.5,0.00,true,18.0,11.4,11.4,7.2,23.4,22.9,22.9,true,#101015,47.3,false,Não,PASS
 premier_league,Premier League,Nottingham,Fora,true,120x256,20.4×43.5,0.00,true,29.6,18.7,23.0,14.5,25.9,25.9,25.9,true,#ffffff,108.4,false,Não,PASS
 premier_league,Premier League,Derby County,Casa,true,256x180,43.5×30.6,0.00,true,18.0,11.4,11.4,7.2,13.9,2.5,2.5,true,#101015,81.4,false,Não,PASS

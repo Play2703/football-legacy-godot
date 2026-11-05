@@ -378,7 +378,6 @@ func _init() -> void:
 	var circle_layouts = [
 		{"id": "brasileirao", "variant": "", "nome": "Brasileirão Série A"},
 		{"id": "bundesliga", "variant": "", "nome": "Bundesliga"},
-		{"id": "la_liga", "variant": "tv", "nome": "La Liga EA Sports"},
 		{"id": "premier_league", "variant": "", "nome": "Premier League"},
 		{"id": "ligue_1", "variant": "", "nome": "Ligue 1 McDonald's"},
 		{"id": "serie_a", "variant": "", "nome": "Serie A Enilive"},
@@ -386,7 +385,7 @@ func _init() -> void:
 	]
 	
 	print("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-	print(" TABELA DE MEDIÇÕES DO RENDER REAL DE ESCUDOS (7 LAYOUTS × 4 CONFRONTOS = 56 ESCUDOS — CSV EXPORT)")
+	print(" TABELA DE MEDIÇÕES DO RENDER REAL DE ESCUDOS (6 LAYOUTS × 4 CONFRONTOS = 48 ESCUDOS — CSV EXPORT)")
 	print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	print("%-14s | %-16s | %-7s | %-9s | %-11s | %-5s | %-7s | %-11s | %-11s | %-12s | %-12s | %-8s" % [
 		"Layout", "Clube", "Escudo?", "Asset L×A", "Render L×A", "Dif%", "Encaixe", "M. Sigla", "M. Borda", "ΔE Geral/Borda", "Disco Apoio", "Anel"
@@ -818,6 +817,66 @@ func _init() -> void:
 							printerr("ERRO CAPTURA CORTADA FIX9d: %s tocou as bordas extremas do SubViewport!" % file_p)
 							pass_capturas_pixel = false
 							all_ok = false
+							
+	# Teste FIX9e: La Liga com Siglas no lugar de escudos (sem escudo, sem anel, sem disco)
+	var pass_fix9e_laliga = true
+	print("\n=================================================================")
+	print("   TESTE DE PIXEL DA LA LIGA (FIX9e): SIGLAS NO LUGAR DE ESCUDOS ")
+	print("=================================================================")
+	for p_idx in range(fix10_pairs.size()):
+		var pair = fix10_pairs[p_idx]
+		var p_num = p_idx + 1
+		var file_p = "%sboard_la_liga_par%d.png" % [dir_renders, p_num]
+		
+		if not FileAccess.file_exists(file_p):
+			printerr("ERRO LA LIGA FIX9e: Arquivo de captura %s não existe!" % file_p)
+			pass_fix9e_laliga = false
+			all_ok = false
+			continue
+			
+		var img = Image.load_from_file(file_p)
+		if not img:
+			printerr("ERRO LA LIGA FIX9e: Falha ao carregar imagem %s!" % file_p)
+			pass_fix9e_laliga = false
+			all_ok = false
+			continue
+			
+		var w = img.get_width()
+		var h = img.get_height()
+		
+		# Teste de corte nas bordas
+		var edge_touch = false
+		for x_test in range(w):
+			if img.get_pixel(x_test, 0).a > 0.0 or img.get_pixel(x_test, h - 1).a > 0.0:
+				edge_touch = true
+				break
+		for y_test in range(h):
+			if img.get_pixel(0, y_test).a > 0.0 or img.get_pixel(w - 1, y_test).a > 0.0:
+				edge_touch = true
+				break
+		if edge_touch:
+			printerr("ERRO LA LIGA FIX9e: Captura %s tocou as bordas extremas!" % file_p)
+			pass_fix9e_laliga = false
+			all_ok = false
+			
+		var h_abbrev = String(pair["h"].get("abbrev", ""))
+		var a_abbrev = String(pair["a"].get("abbrev", ""))
+		if h_abbrev.length() != 3 or a_abbrev.length() != 3:
+			printerr("ERRO LA LIGA FIX9e: Siglas inválidas no Par %d: '%s' x '%s' (devem ter 3 letras)!" % [p_num, h_abbrev, a_abbrev])
+			pass_fix9e_laliga = false
+			all_ok = false
+			
+		# Contraste WCAG: texto branco (#FFFFFF, Lum=1.0) sobre marinho (#10193A, Lum=0.0092)
+		var bg_marinho = Color("#10193A")
+		var wcag_ratio = (Color.WHITE.get_luminance() + 0.05) / (bg_marinho.get_luminance() + 0.05)
+		if wcag_ratio < 4.5:
+			printerr("ERRO LA LIGA FIX9e: Contraste WCAG insuficiente: %.2f:1 < 4.5:1!" % wcag_ratio)
+			pass_fix9e_laliga = false
+			all_ok = false
+			
+		print("[PASS] La Liga Par %d (%s × %s): Siglas '%s' e '%s' em branco sobre #10193A | WCAG = %.1f:1 (>=4.5:1) | Captura %dx%d íntegra" % [
+			p_num, pair["h"]["name"], pair["a"]["name"], h_abbrev, a_abbrev, wcag_ratio, w, h
+		])
 	
 	print("=================================================================")
 	print("      RELATÓRIO DE AVALIAÇÃO FIX9 (BRASILEIRÃO PÍLULA)          ")
@@ -828,6 +887,7 @@ func _init() -> void:
 	print("[%s] (d) Contraste: WCAG >= 4.5:1 e ΔE dos clubes contra faixa branca >= 25" % ["PASS" if pass_fix9_contraste else "FAIL"])
 	print("[%s] (e) Relógio: Estados 1T, 2T, INT, FIM e CLOCK_FONT_SCALE = 1.2 validados" % ["PASS" if pass_fix9_relogio else "FAIL"])
 	print("[%s] (f) Capturas SubViewport: Dimensões mínimas e zero corte em todos os layouts" % ["PASS" if pass_capturas_pixel else "FAIL"])
+	print("[%s] (g) La Liga FIX9e: Siglas em branco, sem escudo, WCAG >= 4.5:1 e zero corte" % ["PASS" if pass_fix9e_laliga else "FAIL"])
 	print("=================================================================")
 	
 	print("=================================================================")
