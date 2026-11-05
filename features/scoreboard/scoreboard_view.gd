@@ -402,8 +402,8 @@ func _draw_brasileirao() -> void:
 	var h_col = _resolve_club_accent_color(home_team)
 	var a_col = _resolve_club_accent_color(away_team)
 	
-	# Faixa do relógio verde-limão sob a pílula central (SVG: 453.18 × 73.12 visível, raio inferior 30 px)
-	var clk_w = 453.18 * scale
+	# Faixa do relógio verde-limão sob a pílula central (FIX9b: largura ≈ 1.05 × largura da pílula)
+	var clk_w = pill_w * 1.05
 	var clk_x = cx - clk_w * 0.5
 	var clk_top = pill_y + pill_h
 	var clk_vis_h = 73.12 * scale
@@ -442,14 +442,12 @@ func _draw_brasileirao() -> void:
 	style_wr.corner_radius_bottom_right = int(50.0 * scale)
 	draw_style_box(style_wr, Rect2(right_bar_x, 0.0, right_bar_w, H))
 	
-	# 5. Escudo e Sigla Mandante (escudo em círculo à esquerda, sigla navy bold à direita)
+	# 5. Escudo e Sigla Mandante (círculo é só gabarito; sem preenchimento colorido atrás do escudo)
 	var diam = min(H * 0.82, bar_w * 0.42)
 	var base_margin = max(11.5, bar_w * 0.065)
 	var crest_x = base_margin
 	var crest_y = (H - diam) * 0.5
-	var crest_center = Vector2(crest_x + diam * 0.5, H * 0.5)
-	draw_circle(crest_center, diam * 0.5, h_col)
-	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, h_col)
+	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
 	
 	var gap_sigla = max(bar_w * 0.06, 8.0)
 	var sigla_start_x = crest_x + diam + gap_sigla
@@ -458,7 +456,7 @@ func _draw_brasileirao() -> void:
 	var r_sigla = Rect2(sigla_start_x, 0.0, sigla_w, H)
 	_draw_auto_text(home_team.get("abbrev", "CRU"), r_sigla, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
-	# 6. Sigla e Escudo Visitante (sigla navy bold à esquerda, escudo em círculo à direita)
+	# 6. Sigla e Escudo Visitante (sigla navy bold à esquerda, escudo à direita sobre a faixa branca)
 	var gap_sigla_a = max(right_bar_w * 0.06, 8.0)
 	var a_crest_x = total_w - base_margin - diam
 	var sigla_start_x_a = right_bar_x + (right_bar_w * 0.06)
@@ -467,9 +465,7 @@ func _draw_brasileirao() -> void:
 	var r_sigla_a = Rect2(sigla_start_x_a, 0.0, sigla_w_a, H)
 	_draw_auto_text(away_team.get("abbrev", "MIR"), r_sigla_a, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
-	var a_crest_center = Vector2(a_crest_x + diam * 0.5, H * 0.5)
-	draw_circle(a_crest_center, diam * 0.5, a_col)
-	_draw_crest_unified(_away_crest, Vector2(a_crest_x, crest_y), diam, "brasileirao", away_team, a_col)
+	_draw_crest_unified(_away_crest, Vector2(a_crest_x, crest_y), diam, "brasileirao", away_team, Color.WHITE)
 	
 	# 7. Desenhar Pílula Central (branca, cantos bem arredondados, sombra suave)
 	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
@@ -485,42 +481,72 @@ func _draw_brasileirao() -> void:
 	draw_style_box(pill_style, pill_rect)
 	
 	# Divisor vertical central fino em roxo/índigo (#260EFB)
-	var div_w = max(2.5, 6.0 * scale)
+	var div_w = 3.0
 	var div_h = 135.75 * scale
 	var div_x = cx - div_w * 0.5
+	var div_r = cx + div_w * 0.5
 	var div_y = pill_y + (pill_h - div_h) * 0.5
 	draw_rect(Rect2(div_x, div_y, div_w, div_h), Color("#260EFB"))
 	
-	# Placar mandante e visitante (dígitos grandes navy #051838 sem encostar no divisor)
-	var r_home_score = Rect2(pill_x + 10.0, pill_y, (cx - div_w * 0.5) - (pill_x + 10.0) - 6.0, pill_h)
-	var r_away_score = Rect2(cx + div_w * 0.5 + 6.0, pill_y, (pill_x + pill_w - 10.0) - (cx + div_w * 0.5 + 6.0), pill_h)
+	# Placar mandante e visitante perfeitamente simétricos
+	var half_w = div_x - pill_x
+	var dist_center = half_w * 0.5
+	var c_left = div_x - dist_center
+	var c_right = div_r + dist_center
+	var score_box_w = half_w - 16.0
+	
+	# Ajuste fino de centro óptico de tinta para glifos assimétricos (ex: '1' no Bebas Neue)
+	var opt_h = 1.5 if str(home_score) == "1" else 0.0
+	var opt_a = 1.5 if str(away_score) == "1" else 0.0
+	
+	var r_home_score = Rect2(c_left - score_box_w * 0.5 + opt_h, pill_y, score_box_w, pill_h)
+	var r_away_score = Rect2(c_right - score_box_w * 0.5 + opt_a, pill_y, score_box_w, pill_h)
 	_draw_auto_text(str(home_score), r_home_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
 	_draw_auto_text(str(away_score), r_away_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
 	
-	# 8. Texto e divisor da Faixa do Relógio
+	# 8. Texto e divisor da Faixa do Relógio (FIX9b: relógio completo com tempo e minutos)
 	var time_str: String = ""
-	if match_state != "":
+	if match_state == "INT" or match_state == "FIM":
 		time_str = match_state
 	else:
-		if minute <= 45:
-			time_str = "1T %02d:%02d" % [minute, second]
-		else:
-			time_str = "2T %02d:%02d" % [minute, second]
+		var prefix = "1T"
+		if match_state == "2T" or minute > 45:
+			prefix = "2T"
+		elif match_state == "1T" or minute <= 45:
+			prefix = "1T"
+		time_str = "%s %02d:%02d" % [prefix, minute, second]
 			
+	var clk_font_target = _get_font_size("relogio", clk_vis_h * 1.5)
+	
 	if stoppage > 0 and time_str != "INT" and time_str != "FIM":
-		var r_clk = Rect2(clk_x + 8.0, clk_top, clk_w * 0.64 - 8.0, clk_vis_h)
-		_draw_clock_tabular(time_str, r_clk, Color("#051838"), _get_font_size("relogio", clk_vis_h * 1.5))
-		
-		var cdiv_x = clk_x + clk_w * 0.67
+		var stop_str = "+%d" % stoppage
+		# Divisor posicionado para equilibrar tempo à esquerda e acréscimo à direita
+		var cdiv_x = clk_x + clk_w * 0.72
 		var cdiv_h = clk_vis_h * 0.55
 		var cdiv_y = clk_top + (clk_vis_h - cdiv_h) * 0.5
 		draw_rect(Rect2(cdiv_x, cdiv_y, 1.5, cdiv_h), Color("#051838"))
 		
-		var r_stop = Rect2(cdiv_x + 4.0, clk_top, clk_x + clk_w - cdiv_x - 12.0, clk_vis_h)
-		_draw_auto_text("+%d" % stoppage, r_stop, Color("#051838"), _get_font_size("etiqueta", clk_vis_h * 1.3), 8.0, true)
+		# Mesma fonte e mesmo tamanho para tempo e acréscimo
+		var r_clk = Rect2(clk_x + 8.0, clk_top, (cdiv_x - clk_x) - 12.0, clk_vis_h)
+		var r_stop = Rect2(cdiv_x + 4.0, clk_top, (clk_x + clk_w - cdiv_x) - 10.0, clk_vis_h)
+		
+		# Calcular tamanho que caiba confortavelmente em ambos
+		var f_clk = _get_font()
+		var sz_t = f_clk.get_string_size(time_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, clk_font_target)
+		var sz_s = f_clk.get_string_size(stop_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, clk_font_target)
+		var max_h = clk_vis_h * 0.65
+		var cur_sz = clk_font_target
+		if sz_t.y > max_h or sz_t.x > r_clk.size.x:
+			var ratio_h = max_h / max(1.0, sz_t.y)
+			var ratio_w = r_clk.size.x / max(1.0, sz_t.x)
+			cur_sz = int(cur_sz * min(ratio_h, ratio_w))
+		
+		_draw_auto_text(time_str, r_clk, Color("#051838"), cur_sz, 10.0, true)
+		_draw_auto_text(stop_str, r_stop, Color("#051838"), cur_sz, 10.0, true)
 	else:
-		var r_clk = Rect2(clk_x, clk_top, clk_w, clk_vis_h)
-		_draw_clock_tabular(time_str, r_clk, Color("#051838"), _get_font_size("relogio", clk_vis_h * 1.5))
+		# Sem acréscimo: tempo centralizado na faixa, sem divisor
+		var r_clk_full = Rect2(clk_x + 8.0, clk_top, clk_w - 16.0, clk_vis_h)
+		_draw_auto_text(time_str, r_clk_full, Color("#051838"), clk_font_target, 10.0, true)
 		
 	# 9. Registrar células desenhadas para integridade de validação
 	var cells_map = {
@@ -1360,7 +1386,7 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		if style in ["bundesliga", "la_liga", "brasileirao"]:
 			res["ring_used"] = true
 			if style == "brasileirao":
-				res["ring_color"] = Color.WHITE if get_contrast_ratio(block_bg, Color.WHITE) >= 4.5 else Color("#101015")
+				res["ring_color"] = Color("#808080")
 			else:
 				res["ring_color"] = Color.WHITE
 			
@@ -1596,9 +1622,8 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 	# Placeholder quando NÃO há escudo real
 	match style:
 		"brasileirao":
-			# Anel fino contrastante sobre o círculo colorido do clube
-			var ph_col = Color.WHITE if get_contrast_ratio(block_bg, Color.WHITE) >= 4.5 else Color("#101015")
-			draw_arc(center, r * 0.70, 0.0, TAU, 32, ph_col, 2.5, true)
+			# Anel fino cinza (#808080, 3 px), sem preenchimento
+			draw_arc(center, r * 0.85, 0.0, TAU, 32, Color("#808080"), 3.0, true)
 		"inclinada":
 			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
 			draw_circle(center, r, Color.WHITE)
@@ -1635,7 +1660,7 @@ func _resolve_club_accent_color(team: Dictionary) -> Color:
 func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
 	match style:
 		"brasileirao":
-			return _resolve_club_accent_color(team)
+			return Color.WHITE
 		"la_liga":
 			return Color("#10193A")
 		"bundesliga":
@@ -1806,7 +1831,7 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	var cap_h = float(font_size) * cap_ratio
 	var text_y = rect.position.y + (rect.size.y + cap_h) * 0.5
 	
-	draw_string(font, Vector2(text_x, text_y), text, align, rect.size.x, font_size, color)
+	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
 
 func _resolve_color(fundo: String, is_away: bool) -> Color:
 	if fundo == "cor_clube":

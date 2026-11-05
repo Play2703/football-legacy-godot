@@ -645,7 +645,7 @@ func _init() -> void:
 		"pilula_central": {"x": 200.3, "w": 243.5, "h": 103.0},
 		"bloco_cor_fora": {"x": 443.8, "w": 26.4, "h": 86.0},
 		"faixa_fora": {"x": 470.2, "w": 173.9, "h": 86.0},
-		"relogio_inferior": {"x": 207.1, "w": 230.0, "h": 37.1}
+		"relogio_inferior": {"x": 194.1, "w": 255.8, "h": 37.1}
 	}
 	
 	for mod_tipo in expected_mods:

@@ -127,10 +127,10 @@ func _ready() -> void:
 		sb.update_time(p_item["min"], p_item["stop"], p_item["sec"], p_item["state"])
 		
 		# Viewport com folga adequada para a pílula que sobressai no topo (-8.5px) e o relógio embaixo (+45.6px)
-		var needed_w = int(ceil(sb.size.x + 48.0))
-		var needed_h = int(ceil(sb.size.y + 80.0))
+		var needed_w = int(ceil(sb.size.x + 64.0))
+		var needed_h = int(ceil(sb.size.y + 90.0))
 		vp.size = Vector2i(needed_w, needed_h)
-		sb.position = Vector2(24.0, 20.0)
+		sb.position = Vector2(32.0, 24.0)
 		
 		await get_tree().process_frame
 		await get_tree().process_frame
