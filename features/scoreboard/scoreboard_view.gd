@@ -17,10 +17,10 @@ const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _
 const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
-# FIX9c: Constantes nomeadas de contraste e relógio
+# FIX9c/d: Constantes nomeadas de contraste e relógio
 const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
 const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
-const CLOCK_FONT_SCALE: float = 1.0
+const CLOCK_FONT_SCALE: float = 1.2
 
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
@@ -257,7 +257,8 @@ func set_use_local_textures(enabled: bool) -> void:
 		queue_redraw()
 
 func get_real_size() -> Vector2:
-	return Vector2(_unscaled_size.x * _current_scale, TOTAL_HUD_H * _current_scale)
+	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) if (board_theme and board_theme.familia == "stack2") else TOTAL_HUD_H
+	return Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 
 func _recalculate_dimensions() -> void:
 	if board_theme == null:
@@ -280,7 +281,8 @@ func _recalculate_dimensions() -> void:
 	else:
 		_current_scale = 1.0
 	
-	var final_size = Vector2(_unscaled_size.x * _current_scale, TOTAL_HUD_H * _current_scale)
+	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) if (board_theme and board_theme.familia == "stack2") else TOTAL_HUD_H
+	var final_size = Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 	custom_minimum_size = final_size
 	size = final_size
 
@@ -451,24 +453,24 @@ func _draw_brasileirao() -> void:
 	style_wr.corner_radius_bottom_right = int(50.0 * scale)
 	draw_style_box(style_wr, Rect2(right_bar_x, 0.0, right_bar_w, H))
 	
-	# 5. Escudo e Sigla Mandante (círculo é só gabarito; sem preenchimento colorido atrás do escudo)
-	var diam = min(H * 0.82, bar_w * 0.42)
-	var base_margin = max(11.5, bar_w * 0.065)
+	# 5. Escudo e Sigla Mandante (FIX9d: escudo ajustado ao mockup real, diam ~80px e margem ~4.5px na curva)
+	var diam = min(H * 0.93, bar_w * 0.46)
+	var base_margin = max(4.5, bar_w * 0.026)
 	var crest_x = base_margin
 	var crest_y = (H - diam) * 0.5
 	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
 	
-	var gap_sigla = max(bar_w * 0.06, 8.0)
+	var gap_sigla = max(bar_w * 0.035, 6.0)
 	var sigla_start_x = crest_x + diam + gap_sigla
-	var sigla_end_x = bar_w - (bar_w * 0.06)
+	var sigla_end_x = bar_w - (bar_w * 0.045)
 	var sigla_w = sigla_end_x - sigla_start_x
 	var r_sigla = Rect2(sigla_start_x, 0.0, sigla_w, H)
 	_draw_auto_text(home_team.get("abbrev", "CRU"), r_sigla, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
 	# 6. Sigla e Escudo Visitante (sigla navy bold à esquerda, escudo à direita sobre a faixa branca)
-	var gap_sigla_a = max(right_bar_w * 0.06, 8.0)
+	var gap_sigla_a = max(right_bar_w * 0.035, 6.0)
 	var a_crest_x = total_w - base_margin - diam
-	var sigla_start_x_a = right_bar_x + (right_bar_w * 0.06)
+	var sigla_start_x_a = right_bar_x + (right_bar_w * 0.045)
 	var sigla_end_x_a = a_crest_x - gap_sigla_a
 	var sigla_w_a = sigla_end_x_a - sigla_start_x_a
 	var r_sigla_a = Rect2(sigla_start_x_a, 0.0, sigla_w_a, H)
@@ -677,14 +679,15 @@ func _draw_skew() -> void:
 			"relogio":
 				var time_str = "%02d:%02d" % [minute, 0]
 				var tag_w = clamp(cell_rect.size.x * 0.28, 26.0, 36.0)
+				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
 				if stoppage > 0:
 					var r_clock = Rect2(cell_rect.position.x + 4.0, 0.0, cell_rect.size.x - tag_w - 8.0, H)
-					_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
+					_draw_clock_tabular(time_str, r_clock, txt_col, clk_target_sz)
 					var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
 					_draw_stoppage_tag(cell_rect, H, "+%d" % stoppage, stop_col)
 				else:
 					var r_clock = Rect2(cell_rect.position.x + 4.0, 0.0, cell_rect.size.x - 8.0, H)
-					_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
+					_draw_clock_tabular(time_str, r_clock, txt_col, clk_target_sz)
 					
 			"time_casa":
 				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
@@ -850,18 +853,19 @@ func _draw_reto() -> void:
 			_draw_logo_in_rect(rect, Color.WHITE)
 		elif c_tipo == "relogio":
 			var time_str = "%02d:%02d" % [minute, 0]
+			var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
 			# Requisito 3: "+6" SEM invadir o bloco vizinho
 			var tag_w = clamp(rect.size.x * 0.25, 24.0, 34.0)
 			if stoppage > 0:
 				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 6.0, H)
-				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), _get_font_size("relogio", H))
+				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), clk_target_sz)
 				var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
 				var stop_rect = Rect2(rect.position.x + rect.size.x - tag_w - 2.0, 2.0, tag_w, H * 0.30)
 				draw_rect(stop_rect, stop_col)
-				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(round(_get_font_size("etiqueta", H) * CLOCK_FONT_SCALE)), 8.0, true)
 			else:
 				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - 8.0, H)
-				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), _get_font_size("relogio", H))
+				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), clk_target_sz)
 				
 		cur_x += cell_w
 
@@ -1019,15 +1023,16 @@ func _draw_modulos_separados() -> void:
 				var clk_txt_col = Color("#101010")
 				var tag_w = cell_w * 0.30
 				var tag_h = H * 0.30
+				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
 				if stoppage > 0:
 					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w - tag_w - cell_w * 0.10, H)
-					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
+					_draw_clock_tabular(time_str, r_clk, clk_txt_col, clk_target_sz)
 					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 4.0, 3.0, tag_w, tag_h)
 					draw_rect(stop_rect, Color("#D82020"))
-					_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
+					_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(round(_get_font_size("etiqueta", H) * CLOCK_FONT_SCALE)), 8.0, true)
 				else:
 					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w * 0.84, H)
-					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
+					_draw_clock_tabular(time_str, r_clk, clk_txt_col, clk_target_sz)
 					
 			"penaltis":
 				var pen_str = penalties_score if not penalties_score.is_empty() else "(0-0)"
@@ -1071,7 +1076,7 @@ func _draw_stack2() -> void:
 			_draw_logo_in_rect(r_top, Color.WHITE)
 			
 			var time_str = "%02d:%02d" % [minute, 0]
-			var clk_sz = _get_font_size("relogio", total_h)
+			var clk_sz = int(round(_get_font_size("relogio", total_h) * CLOCK_FONT_SCALE))
 			
 			if stoppage > 0:
 				var stop_w = col_w * 0.45
@@ -1080,7 +1085,7 @@ func _draw_stack2() -> void:
 				var stop_y = total_h - stop_h - 2.0
 				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
-				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.85), 0.60 * stop_h, true)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(round(stop_h * 0.85 * CLOCK_FONT_SCALE)), 0.60 * stop_h, true)
 				
 				var r_clk = Rect2(cur_x, row_h + 1.0, col_w, row_h - stop_h - 2.0)
 				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
@@ -1397,7 +1402,7 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 	# Margem até a sigla medida até a caixa do texto da sigla (FIX10c).
 	var crest_offset = (diam - rw) * 0.5
 	if style == "brasileirao":
-		var base_margin = max(11.5, cell_w * 0.065)
+		var base_margin = max(4.5, cell_w * 0.026)
 		res["margin_to_edge"] = base_margin + crest_offset
 		if sigla_box_coord >= 0.0:
 			if is_casa:
@@ -1668,8 +1673,9 @@ func _draw_bottom_pill() -> void:
 		return
 	var pill_w: float = 160.0
 	var pill_h: float = 28.0
+	var bar_h: float = BASE_BAR_H * 1.8 if (board_theme and board_theme.familia == "stack2") else BASE_BAR_H
+	var pill_y: float = bar_h + 4.0
 	var pill_x: float = (_unscaled_size.x - pill_w) * 0.5
-	var pill_y: float = BASE_BAR_H + 4.0
 	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
 	
 	var bg_col = Color(board_theme.pilula_periodo.get("fundo", "#0C1033"))
