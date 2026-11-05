@@ -1,84 +1,101 @@
 {
   "id": "brasileirao",
   "nome": "Brasileirão Betano",
-  "familia": "reto",
-  "confianca": "medido",
+  "familia": "central_pill",
+  "confianca": "medido_svg",
   "fonte": "condensada",
-  "proporcao_barra": 8.04,
+  "proporcao_barra": 7.49,
   "skew_deg": 0.0,
-  "raio_canto": 6.0,
+  "raio_canto": 26.0,
   "gap": 0.0,
-  "faixa_inferior": {
-    "cor": "#A6FC05",
-    "altura": 5.0,
-    "modulos": [
-      "time_casa",
-      "placar_unico",
-      "time_fora"
-    ]
-  },
   "celulas": [
     {
-      "tipo": "time_casa",
-      "peso": 2.16,
-      "forma": "retangulo",
+      "tipo": "faixa_casa",
+      "peso": 2.02,
+      "forma": "retangulo_arredondado",
       "fundo": "#FFFFFF",
-      "cor_texto": "#101015",
+      "cor_texto": "#051838",
       "conteudo": [
-        "sigla",
-        "escudo"
-      ]
-    },
-    {
-      "tipo": "placar_unico",
-      "peso": 1.84,
-      "forma": "retangulo",
-      "fundo": "#0C1032",
-      "cor_texto": "#FFFFFF",
-      "conteudo": [
-        "gol_casa",
-        "divisor_fino",
-        "gol_fora"
-      ]
-    },
-    {
-      "tipo": "time_fora",
-      "peso": 2.16,
-      "forma": "retangulo",
-      "fundo": "#FFFFFF",
-      "cor_texto": "#101015",
-      "conteudo": [
-        "escudo",
+        "escudo_circulo",
         "sigla"
       ]
     },
     {
-      "tipo": "relogio",
-      "peso": 1.88,
+      "tipo": "bloco_cor_casa",
+      "peso": 0.31,
       "forma": "retangulo",
-      "fundo": "#2A1F5C",
+      "fundo": "cor_clube",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "minuto",
-        "acrescimo_etiqueta"
+        "cor_clube"
+      ]
+    },
+    {
+      "tipo": "pilula_central",
+      "peso": 2.83,
+      "forma": "pilula",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#051838",
+      "conteudo": [
+        "gol_casa",
+        "divisor_vertical",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "bloco_cor_fora",
+      "peso": 0.31,
+      "forma": "retangulo",
+      "fundo": "cor_clube_fora",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "cor_clube"
+      ]
+    },
+    {
+      "tipo": "faixa_fora",
+      "peso": 2.02,
+      "forma": "retangulo_arredondado",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#051838",
+      "conteudo": [
+        "sigla",
+        "escudo_circulo"
+      ]
+    },
+    {
+      "tipo": "relogio_inferior",
+      "peso": 2.67,
+      "forma": "pilula_inferior",
+      "fundo": "#D0FB0D",
+      "cor_texto": "#051838",
+      "conteudo": [
+        "tempo",
+        "divisor_relogio",
+        "acrescimo"
       ]
     }
   ],
+  "divisor_central": {
+    "cor": "#260EFB",
+    "largura": 3.0,
+    "altura": 69.0
+  },
   "etiqueta_acrescimo": {
-    "cor": "#E13432",
-    "texto_cor": "#FFFFFF",
-    "canto": "superior_direito"
+    "cor": "#D0FB0D",
+    "texto_cor": "#051838",
+    "canto": "direita"
   },
   "pilula_periodo": {
-    "fundo": "#0C1033",
-    "texto_cor": "#A6FC05",
-    "borda_cor": "#A6FC05"
+    "fundo": "#D0FB0D",
+    "texto_cor": "#051838",
+    "borda_cor": "#D0FB0D"
   },
   "variante_compacta": {
     "habilitada": true,
     "escala_fonte": 0.85,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 691,
-  "largura_em_62": 498
+  "largura_em_86": 644,
+  "largura_em_62": 464
 }

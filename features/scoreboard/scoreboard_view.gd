@@ -36,6 +36,9 @@ var penalties_score: String = ""
 @export var ordem_relogio: String = "" # "apos_times" ou "apos_logo" (se vazio, usa board_theme)
 @export var variante_siglas: bool = false # La Liga: siglas no lugar de escudos
 
+var second: int = 0
+var match_state: String = "" # "", "1T", "2T", "INT", "FIM"
+
 var _home_crest: CrestView
 var _away_crest: CrestView
 var _comp_logo: CompLogo
@@ -82,7 +85,7 @@ func validate_cells_support() -> Array[Dictionary]:
 	var supported_types: Array[String] = []
 	
 	if tid == "brasileirao" or tid == "brasileirao_serie_a":
-		supported_types = ["time_casa", "placar_unico", "time_fora", "relogio", "penaltis"]
+		supported_types = ["time_casa", "placar_unico", "time_fora", "relogio", "penaltis", "faixa_casa", "bloco_cor_casa", "pilula_central", "bloco_cor_fora", "faixa_fora", "relogio_inferior"]
 	elif fam == "stack2":
 		supported_types = ["coluna_identidade", "coluna_times", "coluna_gols"]
 	elif fam == "modulos_separados":
@@ -213,11 +216,17 @@ func update_score(p_home: int, p_away: int) -> void:
 		away_score = p_away
 		queue_redraw()
 
-func update_time(p_minute: int, p_stoppage: int = 0) -> void:
-	if minute != p_minute or stoppage != p_stoppage:
+func update_time(p_minute: int, p_stoppage: int = 0, p_second: int = 0, p_state: String = "") -> void:
+	if minute != p_minute or stoppage != p_stoppage or second != p_second or match_state != p_state:
 		minute = p_minute
 		stoppage = p_stoppage
+		second = p_second
+		match_state = p_state
 		queue_redraw()
+
+func set_match_state(p_state: String) -> void:
+	match_state = p_state
+	queue_redraw()
 
 func set_shootout(active: bool, score_str: String = "") -> void:
 	shootout_active = active
@@ -362,100 +371,171 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 			return int(round(ref_h * 0.83))
 
 # ==============================================================================
-# BRASILEIRÃO (Requisito 2 & 1)
-# Sigla à esquerda com margem 0.08·W, escudo à direita com folga 0.06·W até o bloco escuro;
-# Visitante espelhado (escudo à esquerda folga 0.06·W, sigla à direita margem 0.08·W)
-# Escudo placeholder: anel fino cinza-escuro #808080, contorno 3 px, miolo transparente.
+# BRASILEIRÃO NOVO COM PÍLULA CENTRAL (ETAPA 4c-FIX9)
+# Referência: Placar Brasileirão Série A(3).svg / Placar Brasileirão Série A.png
+# Estrutura:
+# [Faixa branca esq (escudo circular kit mandante + sigla navy bold)]
+# [Filete vertical de cor do mandante]
+# [Pílula central branca com cantos arredondados, sombra e placar]
+# [Filete vertical de cor do visitante]
+# [Faixa branca dir (sigla navy bold + escudo circular kit visitante)]
+# [Faixa do relógio verde-limão colada sob a pílula central]
 # ==============================================================================
 func _draw_brasileirao() -> void:
 	var H = BASE_BAR_H
+	var scale = H / 169.5
 	var total_w = _unscaled_size.x
-	var radius = 6.0
-	var strip_h = 5.0
-	var strip_col = Color("#A6FC05") # Faixa lima
+	var cx = total_w * 0.5
 	
-	var cells = board_theme.cells
-	var total_peso: float = 0.0
-	for c in cells:
-		total_peso += float(c.get("peso", 1.0))
-	if total_peso <= 0.0:
-		total_peso = 8.04
+	# Dimensões da pílula central (SVG: 480 × 202.93, raio 41 px)
+	var pill_w = 480.0 * scale
+	var pill_h = 202.93 * scale
+	var pill_x = cx - pill_w * 0.5
+	var pill_y = (H - pill_h) * 0.5
+	var pill_radius = 41.0 * scale
+	
+	# Dimensões dos filetes de cor dos clubes (SVG: 51.96 × 169.5)
+	var sliver_w = 51.96 * scale
+	var bar_w = pill_x - sliver_w
+	
+	# Cores dos clubes ajustadas para contraste contra branco (ΔE >= 25)
+	var h_col = _resolve_club_accent_color(home_team)
+	var a_col = _resolve_club_accent_color(away_team)
+	
+	# Faixa do relógio verde-limão sob a pílula central (SVG: 453.18 × 73.12 visível, raio inferior 30 px)
+	var clk_w = 453.18 * scale
+	var clk_x = cx - clk_w * 0.5
+	var clk_top = pill_y + pill_h
+	var clk_vis_h = 73.12 * scale
+	var clk_r = 30.0 * scale
+	
+	# 1. Desenhar Faixa do Relógio verde-limão (top plano sob a pílula, cantos inferiores arredondados)
+	var clk_style = StyleBoxFlat.new()
+	clk_style.bg_color = Color("#D0FB0D")
+	clk_style.corner_radius_top_left = 0
+	clk_style.corner_radius_top_right = 0
+	clk_style.corner_radius_bottom_left = int(clk_r)
+	clk_style.corner_radius_bottom_right = int(clk_r)
+	draw_style_box(clk_style, Rect2(clk_x, clk_top - 4.0, clk_w, clk_vis_h + 4.0))
+	
+	# 2. Desenhar Filetes de cor dos clubes
+	draw_rect(Rect2(pill_x - sliver_w, 0.0, sliver_w, H), h_col)
+	draw_rect(Rect2(pill_x + pill_w, 0.0, sliver_w, H), a_col)
+	
+	# 3. Desenhar Faixa Branca Esquerda (mandante) com cantos esquerdos arredondados (SVG raio 52 px)
+	var style_wl = StyleBoxFlat.new()
+	style_wl.bg_color = Color.WHITE
+	style_wl.corner_radius_top_left = int(52.0 * scale)
+	style_wl.corner_radius_bottom_left = int(52.0 * scale)
+	style_wl.corner_radius_top_right = 0
+	style_wl.corner_radius_bottom_right = 0
+	draw_style_box(style_wl, Rect2(0.0, 0.0, bar_w, H))
+	
+	# 4. Desenhar Faixa Branca Direita (visitante) com cantos direitos arredondados (SVG raio 50 px)
+	var right_bar_x = pill_x + pill_w + sliver_w
+	var right_bar_w = total_w - right_bar_x
+	var style_wr = StyleBoxFlat.new()
+	style_wr.bg_color = Color.WHITE
+	style_wr.corner_radius_top_left = 0
+	style_wr.corner_radius_bottom_left = 0
+	style_wr.corner_radius_top_right = int(50.0 * scale)
+	style_wr.corner_radius_bottom_right = int(50.0 * scale)
+	draw_style_box(style_wr, Rect2(right_bar_x, 0.0, right_bar_w, H))
+	
+	# 5. Escudo e Sigla Mandante (escudo em círculo à esquerda, sigla navy bold à direita)
+	var diam = min(H * 0.82, bar_w * 0.42)
+	var base_margin = max(11.5, bar_w * 0.065)
+	var crest_x = base_margin
+	var crest_y = (H - diam) * 0.5
+	var crest_center = Vector2(crest_x + diam * 0.5, H * 0.5)
+	draw_circle(crest_center, diam * 0.5, h_col)
+	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, h_col)
+	
+	var gap_sigla = max(bar_w * 0.06, 8.0)
+	var sigla_start_x = crest_x + diam + gap_sigla
+	var sigla_end_x = bar_w - (bar_w * 0.06)
+	var sigla_w = sigla_end_x - sigla_start_x
+	var r_sigla = Rect2(sigla_start_x, 0.0, sigla_w, H)
+	_draw_auto_text(home_team.get("abbrev", "CRU"), r_sigla, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
+	
+	# 6. Sigla e Escudo Visitante (sigla navy bold à esquerda, escudo em círculo à direita)
+	var gap_sigla_a = max(right_bar_w * 0.06, 8.0)
+	var a_crest_x = total_w - base_margin - diam
+	var sigla_start_x_a = right_bar_x + (right_bar_w * 0.06)
+	var sigla_end_x_a = a_crest_x - gap_sigla_a
+	var sigla_w_a = sigla_end_x_a - sigla_start_x_a
+	var r_sigla_a = Rect2(sigla_start_x_a, 0.0, sigla_w_a, H)
+	_draw_auto_text(away_team.get("abbrev", "MIR"), r_sigla_a, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
+	
+	var a_crest_center = Vector2(a_crest_x + diam * 0.5, H * 0.5)
+	draw_circle(a_crest_center, diam * 0.5, a_col)
+	_draw_crest_unified(_away_crest, Vector2(a_crest_x, crest_y), diam, "brasileirao", away_team, a_col)
+	
+	# 7. Desenhar Pílula Central (branca, cantos bem arredondados, sombra suave)
+	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
+	
+	var shadow_style = StyleBoxFlat.new()
+	shadow_style.bg_color = Color(0.0, 0.0, 0.0, 0.10)
+	shadow_style.set_corner_radius_all(int(pill_radius))
+	draw_style_box(shadow_style, Rect2(pill_x + 1.0, pill_y + 2.5, pill_w, pill_h))
+	
+	var pill_style = StyleBoxFlat.new()
+	pill_style.bg_color = Color.WHITE
+	pill_style.set_corner_radius_all(int(pill_radius))
+	draw_style_box(pill_style, pill_rect)
+	
+	# Divisor vertical central fino em roxo/índigo (#260EFB)
+	var div_w = max(2.5, 6.0 * scale)
+	var div_h = 135.75 * scale
+	var div_x = cx - div_w * 0.5
+	var div_y = pill_y + (pill_h - div_h) * 0.5
+	draw_rect(Rect2(div_x, div_y, div_w, div_h), Color("#260EFB"))
+	
+	# Placar mandante e visitante (dígitos grandes navy #051838 sem encostar no divisor)
+	var r_home_score = Rect2(pill_x + 10.0, pill_y, (cx - div_w * 0.5) - (pill_x + 10.0) - 6.0, pill_h)
+	var r_away_score = Rect2(cx + div_w * 0.5 + 6.0, pill_y, (pill_x + pill_w - 10.0) - (cx + div_w * 0.5 + 6.0), pill_h)
+	_draw_auto_text(str(home_score), r_home_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
+	_draw_auto_text(str(away_score), r_away_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
+	
+	# 8. Texto e divisor da Faixa do Relógio
+	var time_str: String = ""
+	if match_state != "":
+		time_str = match_state
+	else:
+		if minute <= 45:
+			time_str = "1T %02d:%02d" % [minute, second]
+		else:
+			time_str = "2T %02d:%02d" % [minute, second]
+			
+	if stoppage > 0 and time_str != "INT" and time_str != "FIM":
+		var r_clk = Rect2(clk_x + 8.0, clk_top, clk_w * 0.64 - 8.0, clk_vis_h)
+		_draw_clock_tabular(time_str, r_clk, Color("#051838"), _get_font_size("relogio", clk_vis_h * 1.5))
 		
-	var cur_x = 0.0
-	for idx in range(cells.size()):
-		var c = cells[idx]
-		var peso = float(c.get("peso", 1.0))
-		var cell_w = (peso / total_peso) * total_w
-		var rect = Rect2(cur_x, 0.0, cell_w, H)
-		var bg_col = Color(c.get("fundo", "#FFFFFF"))
-		var txt_col = Color(c.get("cor_texto", "#101015"))
-		var c_tipo = String(c.get("tipo", ""))
-		drawn_cells_info.append({"idx": idx, "tipo": c_tipo, "rect": rect})
+		var cdiv_x = clk_x + clk_w * 0.67
+		var cdiv_h = clk_vis_h * 0.55
+		var cdiv_y = clk_top + (clk_vis_h - cdiv_h) * 0.5
+		draw_rect(Rect2(cdiv_x, cdiv_y, 1.5, cdiv_h), Color("#051838"))
 		
-		# Fundo com cantos arredondados nas pontas
-		var style = StyleBoxFlat.new()
-		style.bg_color = bg_col
-		if idx == 0:
-			style.corner_radius_top_left = int(radius)
-			style.corner_radius_bottom_left = int(radius)
-		elif idx == cells.size() - 1:
-			style.corner_radius_top_right = int(radius)
-			style.corner_radius_bottom_right = int(radius)
-		draw_style_box(style, rect)
+		var r_stop = Rect2(cdiv_x + 4.0, clk_top, clk_x + clk_w - cdiv_x - 12.0, clk_vis_h)
+		_draw_auto_text("+%d" % stoppage, r_stop, Color("#051838"), _get_font_size("etiqueta", clk_vis_h * 1.3), 8.0, true)
+	else:
+		var r_clk = Rect2(clk_x, clk_top, clk_w, clk_vis_h)
+		_draw_clock_tabular(time_str, r_clk, Color("#051838"), _get_font_size("relogio", clk_vis_h * 1.5))
 		
-		# Faixa lima sob os 3 primeiros módulos
-		if idx < 3:
-			draw_rect(Rect2(rect.position.x, H - strip_h, rect.size.x, strip_h), strip_col)
-			
-		if c_tipo == "time_casa":
-			# Requisito 2 & FIX10: sigla à esquerda com margem >= 0.08·W, escudo à direita com folga >= 0.06·W
-			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
-			var crest_x = rect.position.x + cell_w - (cell_w * 0.06) - diam
-			var crest_y = (H - strip_h - diam) * 0.5
-			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
-			
-			var sigla_start_x = rect.position.x + (cell_w * 0.08)
-			var gap_sigla = max(cell_w * 0.06, 8.0)
-			var sigla_w = crest_x - gap_sigla - sigla_start_x
-			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
-			_draw_auto_text(home_team.get("abbrev", "FLA"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
-			
-		elif c_tipo == "placar_unico":
-			var seg_w = cell_w * 0.5
-			var r_hg = Rect2(rect.position.x, 0.0, seg_w, H - strip_h)
-			var r_ag = Rect2(rect.position.x + seg_w, 0.0, seg_w, H - strip_h)
-			_draw_auto_text(str(home_score), r_hg, txt_col, _get_font_size("gol", H - strip_h), 0.30 * H, true)
-			_draw_auto_text(str(away_score), r_ag, txt_col, _get_font_size("gol", H - strip_h), 0.30 * H, true)
-			var div_h = (H - strip_h) * 0.60
-			var div_y = (H - strip_h - div_h) * 0.5
-			draw_line(Vector2(rect.position.x + seg_w, div_y), Vector2(rect.position.x + seg_w, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
-			
-		elif c_tipo == "time_fora":
-			# Requisito 2 & FIX10: visitante espelhado (escudo à esquerda folga >= 0.06·W, sigla à direita margem >= 0.08·W)
-			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
-			var crest_x = rect.position.x + (cell_w * 0.06)
-			var crest_y = (H - strip_h - diam) * 0.5
-			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "brasileirao", away_team, Color.WHITE)
-			
-			var gap_sigla = max(cell_w * 0.06, 8.0)
-			var sigla_start_x = crest_x + diam + gap_sigla
-			var sigla_end_x = rect.position.x + cell_w - (cell_w * 0.08)
-			var sigla_w = sigla_end_x - sigla_start_x
-			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
-			_draw_auto_text(away_team.get("abbrev", "PAL"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true, HORIZONTAL_ALIGNMENT_RIGHT)
-			
-		elif c_tipo == "relogio":
-			var time_str = "%02d:%02d" % [minute, 0]
-			var tag_w = clamp(rect.size.x * 0.28, 26.0, 36.0)
-			if stoppage > 0:
-				var r_clock = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 8.0, H)
-				_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
-				_draw_stoppage_tag(rect, H, "+%d" % stoppage, Color("#E13432"))
-			else:
-				var r_clock = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - 8.0, H)
-				_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
-				
-		cur_x += cell_w
+	# 9. Registrar células desenhadas para integridade de validação
+	var cells_map = {
+		"faixa_casa": Rect2(0.0, 0.0, bar_w, H),
+		"bloco_cor_casa": Rect2(pill_x - sliver_w, 0.0, sliver_w, H),
+		"pilula_central": pill_rect,
+		"bloco_cor_fora": Rect2(pill_x + pill_w, 0.0, sliver_w, H),
+		"faixa_fora": Rect2(right_bar_x, 0.0, right_bar_w, H),
+		"relogio_inferior": Rect2(clk_x, clk_top, clk_w, clk_vis_h)
+	}
+	for idx in range(board_theme.cells.size()):
+		var c = board_theme.cells[idx]
+		var ct = String(c.get("tipo", ""))
+		var r = cells_map.get(ct, pill_rect)
+		drawn_cells_info.append({"idx": idx, "tipo": ct, "rect": r})
 
 # ==============================================================================
 # FAMÍLIA SKEW (Premier League, Ligue 1, Serie A, Copa do Brasil) (Requisitos 1, 6, 7)
@@ -1279,21 +1359,24 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		# Placeholder
 		if style in ["bundesliga", "la_liga", "brasileirao"]:
 			res["ring_used"] = true
-			res["ring_color"] = Color("#808080") if style == "brasileirao" else Color.WHITE
+			if style == "brasileirao":
+				res["ring_color"] = Color.WHITE if get_contrast_ratio(block_bg, Color.WHITE) >= 4.5 else Color("#101015")
+			else:
+				res["ring_color"] = Color.WHITE
 			
 	# Margens medidas a partir do ESCUDO DESENHADO (crest_rect), não apenas do slot.
 	# Margem até a sigla medida até a caixa do texto da sigla (FIX10c).
 	var crest_offset = (diam - rw) * 0.5
 	if style == "brasileirao":
-		var base_margin = cell_w * 0.06
+		var base_margin = max(11.5, cell_w * 0.065)
 		res["margin_to_edge"] = base_margin + crest_offset
 		if sigla_box_coord >= 0.0:
 			if is_casa:
-				var crest_draw_start_x = pos.x + crest_offset
-				res["margin_to_sigla"] = max(0.0, crest_draw_start_x - sigla_box_coord)
-			else:
 				var crest_draw_end_x = pos.x + crest_offset + rw
 				res["margin_to_sigla"] = max(0.0, sigla_box_coord - crest_draw_end_x)
+			else:
+				var crest_draw_start_x = pos.x + crest_offset
+				res["margin_to_sigla"] = max(0.0, crest_draw_start_x - sigla_box_coord)
 		else:
 			var base_gap = max(cell_w * 0.06, 8.0)
 			res["margin_to_sigla"] = base_gap + crest_offset
@@ -1325,49 +1408,49 @@ func get_layout_crest_measurements() -> Dictionary:
 	
 	if tid in ["brasileirao", "brasileirao_serie_a"]:
 		res["has_crests"] = true
-		var strip_h = 4.0
-		var eff_h = H - strip_h
-		var cells = board_theme.cells
-		var total_peso: float = 0.0
-		for c in cells:
-			total_peso += float(c.get("peso", 1.0))
-		if total_peso <= 0.0:
-			total_peso = 8.04
-		var cell_home_w = 0.0
-		var cell_away_w = 0.0
-		for c in cells:
-			var peso = float(c.get("peso", 1.0))
-			if c.get("tipo") == "time_casa":
-				cell_home_w = (peso / total_peso) * W
-			elif c.get("tipo") == "time_fora":
-				cell_away_w = (peso / total_peso) * W
-		var diam_h = min(eff_h * 0.54, cell_home_w * 0.25)
-		var diam_a = min(eff_h * 0.54, cell_away_w * 0.25)
-		var pos_h = Vector2(cell_home_w - (cell_home_w * 0.06) - diam_h, (eff_h - diam_h) * 0.5)
-		var pos_a = Vector2(cell_away_w * 0.06, (eff_h - diam_a) * 0.5)
+		var scale = H / 169.5
+		var total_w = W
+		var cx = total_w * 0.5
+		var pill_w = 480.0 * scale
+		var pill_x = cx - pill_w * 0.5
+		var sliver_w = 51.96 * scale
+		var bar_w = pill_x - sliver_w
 		
-		# Sigla mandante (à esquerda da célula): alinhada à esquerda com margem 8%
-		var abbrev_h = String(home_team.get("abbrev", "HOM"))
-		var f_sz_h = _get_font_size("sigla", eff_h)
+		var diam = min(H * 0.82, bar_w * 0.42)
+		var base_margin = max(11.5, bar_w * 0.065)
+		var crest_x_h = base_margin
+		var crest_y_h = (H - diam) * 0.5
+		var pos_h = Vector2(crest_x_h, crest_y_h)
+		
+		var gap_sigla = max(bar_w * 0.06, 8.0)
+		var sigla_start_x_h = crest_x_h + diam + gap_sigla
+		var sigla_end_x_h = bar_w - (bar_w * 0.06)
+		var sigla_w_h = sigla_end_x_h - sigla_start_x_h
+		
 		var font_h = _get_font()
-		var txt_w_h = font_h.get_string_size(abbrev_h, HORIZONTAL_ALIGNMENT_LEFT, -1.0, f_sz_h).x
-		var sigla_start_x = cell_home_w * 0.08
-		var gap_sigla = max(cell_home_w * 0.06, 8.0)
-		var sigla_w_h = pos_h.x - gap_sigla - sigla_start_x
-		var text_box_right_h = sigla_start_x + (sigla_w_h * 0.08) + txt_w_h
+		var f_sz_h = _get_font_size("sigla", H)
+		var abbrev_h = String(home_team.get("abbrev", "HOM"))
+		var txt_w_h = font_h.get_string_size(abbrev_h, HORIZONTAL_ALIGNMENT_CENTER, -1.0, f_sz_h).x
+		var text_box_left_h = sigla_start_x_h + max(0.0, (sigla_w_h - txt_w_h) * 0.5)
 		
-		# Sigla visitante (à direita da célula): alinhada à direita com margem 8%
-		var abbrev_a = String(away_team.get("abbrev", "AWY"))
-		var f_sz_a = _get_font_size("sigla", eff_h)
-		var txt_w_a = font_h.get_string_size(abbrev_a, HORIZONTAL_ALIGNMENT_RIGHT, -1.0, f_sz_a).x
-		var gap_sigla_a = max(cell_away_w * 0.06, 8.0)
-		var sigla_start_x_a = pos_a.x + diam_a + gap_sigla_a
-		var sigla_end_x_a = cell_away_w - (cell_away_w * 0.08)
+		var right_bar_x = pill_x + pill_w + sliver_w
+		var right_bar_w = total_w - right_bar_x
+		var gap_sigla_a = max(right_bar_w * 0.06, 8.0)
+		var a_crest_x = total_w - base_margin - diam
+		var pos_a = Vector2(a_crest_x, crest_y_h)
+		
+		var sigla_start_x_a = right_bar_x + (right_bar_w * 0.06)
+		var sigla_end_x_a = a_crest_x - gap_sigla_a
 		var sigla_w_a = sigla_end_x_a - sigla_start_x_a
-		var text_box_left_a = sigla_end_x_a - (sigla_w_a * 0.08) - txt_w_a
+		var abbrev_a = String(away_team.get("abbrev", "AWY"))
+		var txt_w_a = font_h.get_string_size(abbrev_a, HORIZONTAL_ALIGNMENT_CENTER, -1.0, f_sz_h).x
+		var text_box_right_a = sigla_start_x_a + sigla_w_a - max(0.0, (sigla_w_a - txt_w_a) * 0.5)
 		
-		res["home"] = measure_crest_render(home_team, pos_h, diam_h, "brasileirao", Color.WHITE, cell_home_w, H, true, text_box_right_h)
-		res["away"] = measure_crest_render(away_team, pos_a, diam_a, "brasileirao", Color.WHITE, cell_away_w, H, false, text_box_left_a)
+		var h_bg = _resolve_club_accent_color(home_team)
+		var a_bg = _resolve_club_accent_color(away_team)
+		
+		res["home"] = measure_crest_render(home_team, pos_h, diam, "brasileirao", h_bg, bar_w, H, true, text_box_left_h)
+		res["away"] = measure_crest_render(away_team, pos_a, diam, "brasileirao", a_bg, right_bar_w, H, false, text_box_right_a)
 	elif fam == "skew":
 		res["has_crests"] = true
 		var diam = H * 0.55
@@ -1513,8 +1596,9 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 	# Placeholder quando NÃO há escudo real
 	match style:
 		"brasileirao":
-			# Anel fino cinza-escuro (#808080), contorno 3 px, miolo transparente
-			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color("#808080"), 3.0, true)
+			# Anel fino contrastante sobre o círculo colorido do clube
+			var ph_col = Color.WHITE if get_contrast_ratio(block_bg, Color.WHITE) >= 4.5 else Color("#101015")
+			draw_arc(center, r * 0.70, 0.0, TAU, 32, ph_col, 2.5, true)
 		"inclinada":
 			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
 			draw_circle(center, r, Color.WHITE)
@@ -1531,10 +1615,27 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		_:
 			draw_circle(center, r, Color.WHITE)
 
+func _resolve_club_accent_color(team: Dictionary) -> Color:
+	var kit_str = team.get("kit", "#14318f")
+	var col = Color(kit_str)
+	var de_white = delta_e_cie76(col, Color.WHITE)
+	if de_white < 25.0:
+		var kit2_str = team.get("kit2", "")
+		if kit2_str != "":
+			var col2 = Color(kit2_str)
+			if delta_e_cie76(col2, Color.WHITE) >= 25.0:
+				return col2
+		var lab = color_to_lab(col)
+		var cur_L = lab.x
+		while cur_L > 10.0 and delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), Color.WHITE) < 25.0:
+			cur_L -= 2.0
+		return lab_to_color(Vector3(cur_L, lab.y, lab.z))
+	return col
+
 func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
 	match style:
 		"brasileirao":
-			return Color.WHITE
+			return _resolve_club_accent_color(team)
 		"la_liga":
 			return Color("#10193A")
 		"bundesliga":
@@ -1552,6 +1653,8 @@ func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
 # PÍLULA INFERIOR UNIVERSAL ("1T  27'")
 # ==============================================================================
 func _draw_bottom_pill() -> void:
+	if board_theme and (board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a"):
+		return
 	var pill_w: float = 160.0
 	var pill_h: float = 28.0
 	var pill_x: float = (_unscaled_size.x - pill_w) * 0.5
