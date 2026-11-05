@@ -31,6 +31,10 @@ var use_local_textures: bool = true
 var shootout_active: bool = false
 var penalties_score: String = ""
 
+# FIX8b: Ordem do relógio e variantes
+@export var ordem_relogio: String = "" # "apos_times" ou "apos_logo" (se vazio, usa board_theme)
+@export var variante_siglas: bool = false # La Liga: siglas no lugar de escudos
+
 var _home_crest: CrestView
 var _away_crest: CrestView
 var _comp_logo: CompLogo
@@ -63,14 +67,27 @@ func setup(p_home: Dictionary, p_away: Dictionary, theme_id: String, variant: St
 	home_team = p_home
 	away_team = p_away
 	use_local_textures = p_use_local_tex
+	variante_siglas = (variant == "siglas" or "siglas" in variant)
 	
 	board_theme = ScoreboardLoader.load_theme(theme_id, variant, use_local_textures)
+	if board_theme and not board_theme.ordem_relogio.is_empty():
+		ordem_relogio = board_theme.ordem_relogio
 	_home_crest.set_team(home_team)
 	_away_crest.set_team(away_team)
 	_comp_logo.set_type(board_theme.competition_logo_type)
 	
 	_recalculate_dimensions()
 	queue_redraw()
+
+func set_ordem_relogio(order: String) -> void:
+	if ordem_relogio != order:
+		ordem_relogio = order
+		queue_redraw()
+
+func set_variante_siglas(enabled: bool) -> void:
+	if variante_siglas != enabled:
+		variante_siglas = enabled
+		queue_redraw()
 
 func update_score(p_home: int, p_away: int) -> void:
 	if home_score != p_home or away_score != p_away:
@@ -525,8 +542,9 @@ func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
 		draw_line(Vector2(dx_div, div_y), Vector2(dx_div, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
 
 # ==============================================================================
-# MODULOS SEPARADOS (Libertadores) (Requisito 4)
-# Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo levemente a borda superior
+# MODULOS SEPARADOS (Libertadores) (Requisito 4 & FIX8b)
+# Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo levemente a borda superior;
+# Sublinhado fino do módulo de cada time com 1 ou 2 cores divididas; ordem_relogio configurável.
 # ==============================================================================
 func _draw_modulos_separados() -> void:
 	var H = BASE_BAR_H
@@ -541,6 +559,22 @@ func _draw_modulos_separados() -> void:
 			continue
 		active_cells.append(c)
 		
+	# Requisito 3 (FIX8b): Opção "ordem_relogio": "apos_times" (padrão) ou "apos_logo"
+	var eff_ordem = ordem_relogio
+	if eff_ordem.is_empty() and board_theme:
+		eff_ordem = board_theme.ordem_relogio
+	if eff_ordem == "apos_logo":
+		var relogio_idx = -1
+		for i in range(active_cells.size()):
+			if active_cells[i].get("tipo") == "relogio":
+				relogio_idx = i
+				break
+		if relogio_idx != -1:
+			var relogio_cell = active_cells[relogio_idx]
+			active_cells.remove_at(relogio_idx)
+			var insert_pos = 1 if (active_cells.size() > 0 and active_cells[0].get("tipo") == "logo_liga") else 0
+			active_cells.insert(insert_pos, relogio_cell)
+		
 	var total_gaps = max(0, active_cells.size() - 1) * gap_px
 	var available_w = total_w - total_gaps
 	
@@ -551,6 +585,7 @@ func _draw_modulos_separados() -> void:
 		total_peso = 1.0
 		
 	var cur_x = 0.0
+	var strip_colors = get_resolved_club_strip_colors()
 	for idx in range(active_cells.size()):
 		var c = active_cells[idx]
 		var peso = float(c.get("peso", 1.0))
@@ -572,8 +607,9 @@ func _draw_modulos_separados() -> void:
 				
 			"time_casa":
 				_draw_auto_text(home_team.get("abbrev", "INT"), rect, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				var kit_col = _get_team_color(home_team)
-				draw_rect(Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0), kit_col)
+				# Requisito 3 (FIX8b): sublinhado fino com 1 ou 2 cores divididas; clube branco gera sublinhado branco
+				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
+				_draw_faixa_clube(under_rect, strip_colors["home"], "horizontal")
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
@@ -581,8 +617,9 @@ func _draw_modulos_separados() -> void:
 				
 			"time_fora":
 				_draw_auto_text(away_team.get("abbrev", "FLU"), rect, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				var kit_col = _get_team_color(away_team)
-				draw_rect(Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0), kit_col)
+				# Requisito 3 (FIX8b): sublinhado fino com 1 ou 2 cores divididas; clube branco gera sublinhado branco
+				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
+				_draw_faixa_clube(under_rect, strip_colors["away"], "horizontal")
 				
 			"relogio":
 				# Requisito 4: Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo borda superior
@@ -607,10 +644,10 @@ func _draw_modulos_separados() -> void:
 		cur_x += cell_w + gap_px
 
 # ==============================================================================
-# STACK2 (La Liga) (Requisitos 1 & 5)
+# STACK2 (La Liga) (Requisitos 1 & 5 & FIX8b)
 # Gols ≈ 0.62·H da linha; relógio ≈ 0.26·H do bloco; "+5" larg ≈ 0.45 da coluna e alt ≈ 0.12·H
-# Faixa vertical fina na borda esquerda da coluna dos gols: azul (#2D5BE3) em cima, amarelo (#F2C200) embaixo (larg ≈ 0.06 da coluna)
-# Escudos: anel branco 3px vazio (miolo marinho), diâmetro ≈ 0.30 da largura da coluna, sem cor de clube
+# Faixa vertical fina na borda esquerda da coluna dos gols: cores reais dos clubes (metade superior = casa, metade inferior = fora);
+# Variante com siglas disponível por flag (siglas no lugar dos escudos).
 # ==============================================================================
 func _draw_stack2() -> void:
 	var total_w = _unscaled_size.x
@@ -656,24 +693,34 @@ func _draw_stack2() -> void:
 				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.70), 0.4 * stop_h, true)
 				
 		elif c_tipo == "coluna_times":
-			# Requisito 1 & 5: círculos brancos finos e vazios (anel 3 px, miolo na cor marinho), diâmetro ≈ 0.30·W
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
-			var diam = clamp(col_w * 0.30, 20.0, row_h * 0.52)
-			var crest_x = cur_x + (col_w - diam) * 0.5
-			var crest_y_home = (row_h - diam) * 0.5
-			var crest_y_away = row_h + (row_h - diam) * 0.5
-			
-			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team)
-			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team)
-			
+			if variante_siglas:
+				# Requisito 2 (FIX8b): Variante com siglas (siglas no lugar dos escudos)
+				var r_home_sig = Rect2(cur_x, 0.0, col_w, row_h)
+				var r_away_sig = Rect2(cur_x, row_h, col_w, row_h)
+				var sig_sz = _get_font_size("sigla", row_h * 1.3)
+				_draw_auto_text(home_team.get("abbrev", "RMA"), r_home_sig, Color.WHITE, sig_sz, 8.0, true)
+				_draw_auto_text(away_team.get("abbrev", "STU"), r_away_sig, Color.WHITE, sig_sz, 8.0, true)
+			else:
+				# Requisito 1 & 5: círculos brancos finos e vazios (anel 3 px, miolo na cor marinho), diâmetro ≈ 0.30·W
+				var diam = clamp(col_w * 0.30, 20.0, row_h * 0.52)
+				var crest_x = cur_x + (col_w - diam) * 0.5
+				var crest_y_home = (row_h - diam) * 0.5
+				var crest_y_away = row_h + (row_h - diam) * 0.5
+				
+				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team)
+				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team)
+				
 		elif c_tipo == "coluna_gols":
 			draw_rect(col_rect, Color("#FFFFFF"))
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(0.8, 0.8, 0.8), 1.0)
 			
-			# Requisito 5: Faixa vertical fina na borda esquerda: azul (#2D5BE3) em cima, amarelo (#F2C200) embaixo (largura ≈ 0.06 da coluna)
+			# Requisito 2 (FIX8b): Faixa vertical na borda esquerda: metade cima = mandante, metade baixo = visitante,
+			# cada metade com até 2 cores empilhadas (divisão meio a meio vertical).
 			var stripe_w = max(3.0, col_w * 0.06)
-			draw_rect(Rect2(cur_x, 0.0, stripe_w, row_h), Color("#2D5BE3"))
-			draw_rect(Rect2(cur_x, row_h, stripe_w, row_h), Color("#F2C200"))
+			var strip_colors = get_resolved_club_strip_colors()
+			_draw_faixa_clube(Rect2(cur_x, 0.0, stripe_w, row_h), strip_colors["home"], "vertical")
+			_draw_faixa_clube(Rect2(cur_x, row_h, stripe_w, row_h), strip_colors["away"], "vertical")
 			
 			# Requisito 5: Gols ≈ 0.62·H da LINHA (cada dígito ocupa quase toda a altura da linha)
 			var gol_sz = int(round(row_h * 0.88)) # Glifo ≈ 0.62 * row_h
@@ -906,9 +953,106 @@ func _resolve_color(fundo: String, is_away: bool) -> Color:
 
 func _get_team_color(team: Dictionary) -> Color:
 	var raw = team.get("kit", "#FFFFFF")
-	if raw is Color:
-		return raw
-	return Color(String(raw))
+	return _parse_color_resilient(raw)
+
+# ==============================================================================
+# CIELAB & RESOLUÇÃO DE CORES DE CLUBES (FIX8b / Requisito 1 & 5)
+# ==============================================================================
+static func color_to_lab(c: Color) -> Vector3:
+	var r = c.r
+	var g = c.g
+	var b = c.b
+	r = ((r + 0.055) / 1.055) ** 2.4 if r > 0.04045 else r / 12.92
+	g = ((g + 0.055) / 1.055) ** 2.4 if g > 0.04045 else g / 12.92
+	b = ((b + 0.055) / 1.055) ** 2.4 if b > 0.04045 else b / 12.92
+	
+	var x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047
+	var y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000
+	var z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883
+	
+	var fx = x ** (1.0/3.0) if x > 0.008856 else (7.787 * x) + (16.0 / 116.0)
+	var fy = y ** (1.0/3.0) if y > 0.008856 else (7.787 * y) + (16.0 / 116.0)
+	var fz = z ** (1.0/3.0) if z > 0.008856 else (7.787 * z) + (16.0 / 116.0)
+	
+	var L = (116.0 * fy) - 16.0
+	var a = 500.0 * (fx - fy)
+	var b_val = 200.0 * (fy - fz)
+	return Vector3(L, a, b_val)
+
+static func delta_e_cie76(c1: Color, c2: Color) -> float:
+	var lab1 = color_to_lab(c1)
+	var lab2 = color_to_lab(c2)
+	return sqrt((lab1.x - lab2.x) ** 2 + (lab1.y - lab2.y) ** 2 + (lab1.z - lab2.z) ** 2)
+
+static func _parse_color_resilient(raw_val: Variant) -> Color:
+	if raw_val is Color:
+		return raw_val
+	var s = String(raw_val).strip_edges()
+	if s.is_empty():
+		return Color(0, 0, 0, 0)
+	if not s.begins_with("#") and not Color.html_is_valid(s):
+		s = "#" + s
+	if Color.html_is_valid(s):
+		return Color(s)
+	return Color(0, 0, 0, 0)
+
+func get_resolved_club_strip_colors() -> Dictionary:
+	var h_c1 = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
+	if h_c1.a == 0.0:
+		h_c1 = Color.WHITE
+	var h_c2 = _parse_color_resilient(home_team.get("kit2", ""))
+	
+	var home_colors: Array[Color] = [h_c1]
+	if h_c2.a > 0.0 and delta_e_cie76(h_c1, h_c2) >= 15.0:
+		home_colors.append(h_c2)
+		
+	var a_c1 = _parse_color_resilient(away_team.get("kit", "#FFFFFF"))
+	if a_c1.a == 0.0:
+		a_c1 = Color.WHITE
+	var a_c2 = _parse_color_resilient(away_team.get("kit2", ""))
+	
+	var away_colors: Array[Color] = []
+	
+	# Verificar distância CIELAB entre a cor primária de casa e fora
+	var primary_dist = delta_e_cie76(h_c1, a_c1)
+	if primary_dist < 25.0:
+		# Conflito detectado (< 25). Regra FIX8: tentar kit2 do visitante, depois cor neutra.
+		if a_c2.a > 0.0 and delta_e_cie76(h_c1, a_c2) >= 25.0:
+			away_colors.append(a_c2)
+		else:
+			# Ambas conflitam ou kit2 ausente: escolher neutra
+			var h_lab = color_to_lab(h_c1)
+			if h_lab.x < 50.0:
+				away_colors.append(Color.WHITE) # #FFFFFF
+			else:
+				away_colors.append(Color("#111111"))
+	else:
+		# Sem conflito
+		away_colors.append(a_c1)
+		if a_c2.a > 0.0 and delta_e_cie76(a_c1, a_c2) >= 15.0:
+			if delta_e_cie76(h_c1, a_c2) >= 15.0:
+				away_colors.append(a_c2)
+				
+	return {
+		"home": home_colors,
+		"away": away_colors
+	}
+
+func _draw_faixa_clube(rect: Rect2, colors: Array[Color], orientation: String) -> void:
+	if colors.is_empty():
+		return
+	if colors.size() == 1:
+		draw_rect(rect, colors[0])
+		return
+		
+	if orientation == "vertical":
+		var half_h = rect.size.y * 0.5
+		draw_rect(Rect2(rect.position.x, rect.position.y, rect.size.x, half_h), colors[0])
+		draw_rect(Rect2(rect.position.x, rect.position.y + half_h, rect.size.x, rect.size.y - half_h), colors[1])
+	else: # "horizontal"
+		var half_w = rect.size.x * 0.5
+		draw_rect(Rect2(rect.position.x, rect.position.y, half_w, rect.size.y), colors[0])
+		draw_rect(Rect2(rect.position.x + half_w, rect.position.y, rect.size.x - half_w, rect.size.y), colors[1])
 
 func _tr(key: String) -> String:
 	var root = get_tree().root if is_inside_tree() else null
