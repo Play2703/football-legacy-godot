@@ -158,12 +158,15 @@ func detect_similar_color_dividers() -> Array[Dictionary]:
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_home_crest = CrestView.new()
 	_away_crest = CrestView.new()
 	_comp_logo = CompLogo.new()
 	_home_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_away_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_comp_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_away_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	add_child(_home_crest)
 	add_child(_away_crest)
 	add_child(_comp_logo)
@@ -404,14 +407,15 @@ func _draw_brasileirao() -> void:
 			draw_rect(Rect2(rect.position.x, H - strip_h, rect.size.x, strip_h), strip_col)
 			
 		if c_tipo == "time_casa":
-			# Requisito 2: sigla alinhada à esquerda com margem 0.08·W, escudo à direita com folga 0.06·W
+			# Requisito 2 & FIX10: sigla à esquerda com margem >= 0.08·W, escudo à direita com folga >= 0.06·W
 			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
 			var crest_x = rect.position.x + cell_w - (cell_w * 0.06) - diam
 			var crest_y = (H - strip_h - diam) * 0.5
-			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team)
+			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
 			
 			var sigla_start_x = rect.position.x + (cell_w * 0.08)
-			var sigla_w = crest_x - 8.0 - sigla_start_x
+			var gap_sigla = max(cell_w * 0.06, 8.0)
+			var sigla_w = crest_x - gap_sigla - sigla_start_x
 			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
 			_draw_auto_text(home_team.get("abbrev", "FLA"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
 			
@@ -426,13 +430,14 @@ func _draw_brasileirao() -> void:
 			draw_line(Vector2(rect.position.x + seg_w, div_y), Vector2(rect.position.x + seg_w, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
 			
 		elif c_tipo == "time_fora":
-			# Requisito 2: visitante espelhado (escudo à esquerda com folga 0.06·W, sigla à direita com margem 0.08·W)
+			# Requisito 2 & FIX10: visitante espelhado (escudo à esquerda folga >= 0.06·W, sigla à direita margem >= 0.08·W)
 			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
 			var crest_x = rect.position.x + (cell_w * 0.06)
 			var crest_y = (H - strip_h - diam) * 0.5
-			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "brasileirao", away_team)
+			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "brasileirao", away_team, Color.WHITE)
 			
-			var sigla_start_x = crest_x + diam + 8.0
+			var gap_sigla = max(cell_w * 0.06, 8.0)
+			var sigla_start_x = crest_x + diam + gap_sigla
 			var sigla_end_x = rect.position.x + cell_w - (cell_w * 0.08)
 			var sigla_w = sigla_end_x - sigla_start_x
 			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
@@ -572,10 +577,12 @@ func _draw_skew() -> void:
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team, txt_col if is_kit_mode else Color(0, 0, 0, 0))
+				var cell_bg = kit_cols["home_bg"] if is_kit_mode else Color(c.get("fundo", "#101010"))
+				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team, cell_bg)
 				
-				var sigla_x = crest_x + diam + 8.0
-				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
+				var gap_sigla = max(cell_rect.size.x * 0.06, 8.0)
+				var sigla_x = crest_x + diam + gap_sigla
+				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - max(cell_rect.size.x * 0.06, 8.0)
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
 				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), home_team.get("abbrev", "HOM"))
@@ -589,10 +596,12 @@ func _draw_skew() -> void:
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team, txt_col if is_kit_mode else Color(0, 0, 0, 0))
+				var cell_bg = kit_cols["away_bg"] if is_kit_mode else Color(c.get("fundo", "#101010"))
+				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team, cell_bg)
 				
-				var sigla_x = crest_x + diam + 8.0
-				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
+				var gap_sigla = max(cell_rect.size.x * 0.06, 8.0)
+				var sigla_x = crest_x + diam + gap_sigla
+				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - max(cell_rect.size.x * 0.06, 8.0)
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
 				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), away_team.get("abbrev", "AWY"))
@@ -753,18 +762,21 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var is_kit_mode = (board_theme.cor_time == "kit")
 	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
 	var txt_col = (kit_cols["home_txt"] if is_home else kit_cols["away_txt"]) if is_kit_mode else Color.WHITE
+	var cell_bg = (kit_cols["home_bg"] if is_home else kit_cols["away_bg"]) if is_kit_mode else Color("#242A3A")
 	
 	var crest_diam = min(H * 0.54, rect.size.x * 0.24)
-	var crest_x = rect.position.x + 8.0
+	var margin_edge = max(rect.size.x * 0.06, 8.0)
+	var crest_x = rect.position.x + margin_edge
 	var crest_y = (H - crest_diam) * 0.5
-	_draw_crest_unified(crest, Vector2(crest_x, crest_y), crest_diam, "bundesliga", team, txt_col)
+	_draw_crest_unified(crest, Vector2(crest_x, crest_y), crest_diam, "bundesliga", team, cell_bg)
 	
 	var score_box_w = clamp(H * 0.48, 30.0, rect.size.x * 0.20)
-	var r_score = Rect2(rect.position.x + rect.size.x - score_box_w - 4.0, 0.0, score_box_w, H)
+	var margin_score = max(rect.size.x * 0.06, 6.0)
+	var r_score = Rect2(rect.position.x + rect.size.x - score_box_w - margin_score, 0.0, score_box_w, H)
 	_draw_auto_text(str(score), r_score, txt_col, _get_font_size("gol", H), 12.0, true)
 	
-	var margin_between = max(rect.size.x * 0.08, 8.0)
-	var sigla_x = crest_x + crest_diam + 8.0
+	var margin_between = max(rect.size.x * 0.06, 8.0)
+	var sigla_x = crest_x + crest_diam + margin_between
 	var sigla_w = r_score.position.x - margin_between - sigla_x
 	var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 	_draw_auto_text(abbrev, r_sigla, txt_col, _get_font_size("sigla", H), 10.0, true)
@@ -976,8 +988,8 @@ func _draw_stack2() -> void:
 				var crest_y_home = (row_h - diam) * 0.5
 				var crest_y_away = row_h + (row_h - diam) * 0.5
 				
-				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team)
-				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team)
+				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team, Color("#10193A"))
+				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team, Color("#10193A"))
 				
 		elif c_tipo == "coluna_gols":
 			draw_rect(col_rect, Color("#FFFFFF"))
@@ -1037,21 +1049,301 @@ func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 		_comp_logo.visible = false
 
 # ==============================================================================
-# ESCUDO UNIFICADO (Requisito 1: Placeholder ou CrestView real 1:1)
+# ESCUDO UNIFICADO (Requisitos FIX7 & FIX10: Encaixe 1:1, Fit 0.92, Filtro Linear, Anel e Disco de Apoio)
 # ==============================================================================
-func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary, custom_color: Color = Color(0, 0, 0, 0)) -> void:
-	var has_real = crest.is_logo()
-	if has_real:
-		crest.visible = true
-		crest.position = pos
-		crest.size = Vector2(diam, diam)
-		crest.custom_minimum_size = Vector2(diam, diam)
-		return
+static var _crest_tex_cache: Dictionary = {}
+static var _crest_mean_color_cache: Dictionary = {}
+
+static func get_team_crest_texture(team: Dictionary) -> Texture2D:
+	var tid = String(team.get("id", ""))
+	if tid.is_empty():
+		return null
+	if _crest_tex_cache.has(tid):
+		return _crest_tex_cache[tid]
+	var path = "user://logos/%s.png" % tid
+	if team.has("crest_path"):
+		path = String(team["crest_path"])
+	elif team.has("logo_path"):
+		path = String(team["logo_path"])
 		
-	crest.visible = false
+	if not FileAccess.file_exists(path):
+		return null
+	var img = Image.load_from_file(path)
+	if img == null or img.is_empty():
+		return null
+	if not img.has_mipmaps():
+		img.generate_mipmaps()
+	var tex = ImageTexture.create_from_image(img)
+	_crest_tex_cache[tid] = tex
+	return tex
+
+static func get_team_crest_mean_color(team: Dictionary) -> Color:
+	var tid = String(team.get("id", ""))
+	if _crest_mean_color_cache.has(tid):
+		return _crest_mean_color_cache[tid]
+	var path = "user://logos/%s.png" % tid
+	if team.has("crest_path"):
+		path = String(team["crest_path"])
+	elif team.has("logo_path"):
+		path = String(team["logo_path"])
+		
+	if not FileAccess.file_exists(path):
+		var fallback_col = _parse_color_resilient(team.get("kit", "#FFFFFF"))
+		_crest_mean_color_cache[tid] = fallback_col
+		return fallback_col
+		
+	var img = Image.load_from_file(path)
+	if img == null or img.is_empty():
+		var fallback_col = _parse_color_resilient(team.get("kit", "#FFFFFF"))
+		_crest_mean_color_cache[tid] = fallback_col
+		return fallback_col
+		
+	var sum_r: float = 0.0
+	var sum_g: float = 0.0
+	var sum_b: float = 0.0
+	var count: int = 0
+	var w = img.get_width()
+	var h = img.get_height()
+	for y in range(h):
+		for x in range(w):
+			var px = img.get_pixel(x, y)
+			if px.a > 0.1:
+				sum_r += px.r
+				sum_g += px.g
+				sum_b += px.b
+				count += 1
+	var res = Color(sum_r / float(count), sum_g / float(count), sum_b / float(count)) if count > 0 else Color.WHITE
+	_crest_mean_color_cache[tid] = res
+	return res
+
+static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, style: String, block_bg: Color, cell_w: float, H: float, is_casa: bool = true) -> Dictionary:
+	var tex = get_team_crest_texture(team)
 	var center = pos + Vector2(diam, diam) * 0.5
 	var r = diam * 0.5
 	
+	var res = {
+		"has_crest": (tex != null),
+		"asset_w": 0.0,
+		"asset_h": 0.0,
+		"asset_ratio": 0.0,
+		"rendered_w": 0.0,
+		"rendered_h": 0.0,
+		"rendered_ratio": 0.0,
+		"ratio_diff_pct": 0.0,
+		"max_side": 0.0,
+		"within_circle": true,
+		"margin_to_edge": 0.0,
+		"margin_to_edge_ratio": 0.0,
+		"margin_to_sigla": 0.0,
+		"margin_to_sigla_ratio": 0.0,
+		"mean_color": Color.WHITE,
+		"block_bg": block_bg,
+		"delta_e": 0.0,
+		"support_disk_used": false,
+		"support_disk_color": Color.TRANSPARENT,
+		"ring_used": false,
+		"ring_color": Color.TRANSPARENT
+	}
+	
+	if tex != null and tex.get_width() > 0 and tex.get_height() > 0:
+		var ts = tex.get_size()
+		res["asset_w"] = ts.x
+		res["asset_h"] = ts.y
+		res["asset_ratio"] = ts.x / ts.y
+		
+		var max_side = diam * 0.92
+		var k = max_side / max(ts.x, ts.y)
+		var rw = ts.x * k
+		var rh = ts.y * k
+		res["rendered_w"] = rw
+		res["rendered_h"] = rh
+		res["rendered_ratio"] = rw / rh
+		res["ratio_diff_pct"] = absf((rw / rh) - (ts.x / ts.y)) / (ts.x / ts.y) * 100.0
+		res["max_side"] = max(rw, rh)
+		
+		var crest_rect = Rect2(center.x - rw * 0.5, center.y - rh * 0.5, rw, rh)
+		res["within_circle"] = (crest_rect.position.x >= pos.x and crest_rect.end.x <= pos.x + diam and
+								crest_rect.position.y >= pos.y and crest_rect.end.y <= pos.y + diam)
+								
+		var mean_col = get_team_crest_mean_color(team)
+		res["mean_color"] = mean_col
+		var de = delta_e_cie76(mean_col, block_bg)
+		res["delta_e"] = de
+		
+		if de < 25.0:
+			res["support_disk_used"] = true
+			var de_white = delta_e_cie76(mean_col, Color.WHITE)
+			var de_dark = delta_e_cie76(mean_col, Color("#101015"))
+			res["support_disk_color"] = Color.WHITE if de_white >= de_dark else Color("#101015")
+			
+		if style == "bundesliga":
+			res["ring_used"] = true
+			res["ring_color"] = Color.WHITE
+		elif style == "la_liga":
+			res["ring_used"] = true
+			res["ring_color"] = Color.WHITE
+	else:
+		# Placeholder
+		if style in ["bundesliga", "la_liga", "brasileirao"]:
+			res["ring_used"] = true
+			res["ring_color"] = Color("#808080") if style == "brasileirao" else Color.WHITE
+			
+	# Margens
+	if style == "brasileirao":
+		if is_casa:
+			var edge_dist = cell_w - (pos.x - (pos.x - (cell_w - cell_w * 0.06 - diam))) # pos.x is relative to cell start
+			res["margin_to_edge"] = cell_w * 0.06
+			res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+		else:
+			res["margin_to_edge"] = cell_w * 0.06
+			res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+	elif style == "inclinada":
+		res["margin_to_edge"] = max(cell_w * 0.06, 8.0)
+		res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+	elif style == "bundesliga":
+		res["margin_to_edge"] = max(cell_w * 0.06, 8.0)
+		res["margin_to_sigla"] = max(cell_w * 0.06, 8.0)
+	elif style == "la_liga":
+		res["margin_to_edge"] = (cell_w - diam) * 0.5
+		res["margin_to_sigla"] = (cell_w - diam) * 0.5
+		
+	res["margin_to_edge_ratio"] = res["margin_to_edge"] / cell_w if cell_w > 0.0 else 0.0
+	res["margin_to_sigla_ratio"] = res["margin_to_sigla"] / cell_w if cell_w > 0.0 else 0.0
+	return res
+
+func get_layout_crest_measurements() -> Dictionary:
+	var res = {"has_crests": false, "home": {}, "away": {}}
+	if board_theme == null:
+		return res
+	var fam = board_theme.familia
+	var H = board_theme.reference_height
+	var W = H * board_theme.aspect_ratio
+	var tid = board_theme.theme_id
+	
+	if tid in ["brasileirao", "brasileirao_serie_a"]:
+		res["has_crests"] = true
+		var strip_h = 4.0
+		var eff_h = H - strip_h
+		var cells = board_theme.cells
+		var total_peso: float = 0.0
+		for c in cells:
+			total_peso += float(c.get("peso", 1.0))
+		if total_peso <= 0.0:
+			total_peso = 8.04
+		var cell_home_w = 0.0
+		var cell_away_w = 0.0
+		for c in cells:
+			var peso = float(c.get("peso", 1.0))
+			if c.get("tipo") == "time_casa":
+				cell_home_w = (peso / total_peso) * W
+			elif c.get("tipo") == "time_fora":
+				cell_away_w = (peso / total_peso) * W
+		var diam_h = min(eff_h * 0.54, cell_home_w * 0.25)
+		var diam_a = min(eff_h * 0.54, cell_away_w * 0.25)
+		var pos_h = Vector2(cell_home_w - (cell_home_w * 0.06) - diam_h, (eff_h - diam_h) * 0.5)
+		var pos_a = Vector2(cell_away_w * 0.06, (eff_h - diam_a) * 0.5)
+		res["home"] = measure_crest_render(home_team, pos_h, diam_h, "brasileirao", Color.WHITE, cell_home_w, H, true)
+		res["away"] = measure_crest_render(away_team, pos_a, diam_a, "brasileirao", Color.WHITE, cell_away_w, H, false)
+	elif fam == "skew":
+		res["has_crests"] = true
+		var diam = H * 0.55
+		var skew_angle = board_theme.skew_deg
+		var dx = H * tan(deg_to_rad(skew_angle))
+		var total_peso: float = 0.0
+		for c in board_theme.cells:
+			total_peso += float(c.get("peso", 1.0))
+		if total_peso <= 0.0:
+			total_peso = 1.0
+		var kit_cols = _resolve_team_kit_colors()
+		var is_kit = (board_theme.cor_time == "kit")
+		var home_bg = kit_cols["home_bg"] if is_kit else Color("#101010")
+		var away_bg = kit_cols["away_bg"] if is_kit else Color("#101010")
+		var cell_w = 0.0
+		for c in board_theme.cells:
+			if c.get("tipo") in ["time_casa", "time_fora"]:
+				var peso = float(c.get("peso", 1.0))
+				cell_w = (peso / total_peso) * (W - dx)
+				break
+		var margin_div = max(cell_w * 0.06, 8.0)
+		var pos = Vector2(margin_div, (H - diam) * 0.5)
+		res["home"] = measure_crest_render(home_team, pos, diam, "inclinada", home_bg, cell_w, H, true)
+		res["away"] = measure_crest_render(away_team, pos, diam, "inclinada", away_bg, cell_w, H, false)
+	elif fam == "reto" and tid == "bundesliga":
+		res["has_crests"] = true
+		var diam = H * 0.52
+		var total_peso: float = 0.0
+		for c in board_theme.cells:
+			total_peso += float(c.get("peso", 1.0))
+		if total_peso <= 0.0:
+			total_peso = 1.0
+		var kit_cols = _resolve_team_kit_colors()
+		var is_kit = (board_theme.cor_time == "kit")
+		var home_bg = kit_cols["home_bg"] if is_kit else Color("#242A3A")
+		var away_bg = kit_cols["away_bg"] if is_kit else Color("#242A3A")
+		var cell_w = 0.0
+		for c in board_theme.cells:
+			if c.get("tipo") in ["time_casa", "time_fora"]:
+				var peso = float(c.get("peso", 1.0))
+				cell_w = (peso / total_peso) * W
+				break
+		var margin_left = max(cell_w * 0.06, 8.0)
+		var pos = Vector2(margin_left, (H - diam) * 0.5)
+		res["home"] = measure_crest_render(home_team, pos, diam, "bundesliga", home_bg, cell_w, H, true)
+		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false)
+	elif fam == "stack2":
+		res["has_crests"] = true
+		var col1_w = W * 0.45
+		var diam = col1_w * 0.30
+		var pos = Vector2((col1_w - diam) * 0.5, (H - diam) * 0.5)
+		res["home"] = measure_crest_render(home_team, pos, diam, "la_liga", Color("#10193A"), col1_w, H, true)
+		res["away"] = measure_crest_render(away_team, pos, diam, "la_liga", Color("#10193A"), col1_w, H, false)
+	return res
+
+func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary, block_bg: Color = Color(0, 0, 0, 0)) -> void:
+	if crest != null:
+		crest.visible = false
+		
+	var tex = get_team_crest_texture(team)
+	var center = pos + Vector2(diam, diam) * 0.5
+	var r = diam * 0.5
+	
+	if block_bg.a == 0.0:
+		block_bg = _resolve_crest_block_bg(style, team)
+		
+	if tex != null and tex.get_width() > 0 and tex.get_height() > 0:
+		var ts = tex.get_size()
+		var max_side = diam * 0.92
+		var k = max_side / max(ts.x, ts.y)
+		var rw = ts.x * k
+		var rh = ts.y * k
+		var crest_rect = Rect2(center.x - rw * 0.5, center.y - rh * 0.5, rw, rh)
+		
+		# 1. Anel de contorno por decisão de layout:
+		# Padrão: some quando há escudo real.
+		# Exceções onde o mockup mostra anel:
+		# - Bundesliga: anel branco fino (2.5 px) com miolo do bloco permanece.
+		# - La Liga: anel branco fino (3.0 px) com miolo marinho #10193A permanece.
+		if style == "bundesliga":
+			draw_circle(center, r - 1.25, block_bg)
+			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
+		elif style == "la_liga":
+			draw_circle(center, r - 1.5, Color("#10193A"))
+			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
+			
+		# 2. Contraste e Disco de Apoio (ΔE CIELAB < 25):
+		var mean_col = get_team_crest_mean_color(team)
+		var de = delta_e_cie76(mean_col, block_bg)
+		if de < 25.0:
+			var de_white = delta_e_cie76(mean_col, Color.WHITE)
+			var de_dark = delta_e_cie76(mean_col, Color("#101015"))
+			var support_col = Color.WHITE if de_white >= de_dark else Color("#101015")
+			draw_circle(center, r * 0.95, support_col)
+			
+		# 3. Desenhar escudo real centralizado 1:1 fit (0.92 * diam) com filtro linear
+		draw_texture_rect(tex, crest_rect, false)
+		return
+		
+	# Placeholder quando NÃO há escudo real
 	match style:
 		"brasileirao":
 			# Anel fino cinza-escuro (#808080), contorno 3 px, miolo transparente
@@ -1059,20 +1351,35 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		"inclinada":
 			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
 			draw_circle(center, r, Color.WHITE)
-			if custom_color.a > 0.0 and custom_color != Color.WHITE:
-				draw_arc(center, r - 1.0, 0.0, TAU, 32, custom_color, 2.0, true)
+			if block_bg.a > 0.0 and block_bg != Color.WHITE:
+				draw_arc(center, r - 1.0, 0.0, TAU, 32, block_bg, 2.0, true)
 		"bundesliga":
 			# Anel branco fino (2.5 px), miolo na cor do bloco do clube
-			var bg_col = _get_team_color(team)
-			draw_circle(center, r - 1.25, bg_col)
-			var ring_col = custom_color if custom_color.a > 0.0 else Color.WHITE
-			draw_arc(center, r - 1.25, 0.0, TAU, 32, ring_col, 2.5, true)
+			draw_circle(center, r - 1.25, block_bg)
+			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
 		"la_liga":
 			# Círculos brancos finos e VAZIOS (anel 3 px, miolo na cor marinho #10193A), sem cor de clube
 			draw_circle(center, r - 1.5, Color("#10193A"))
 			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
 		_:
 			draw_circle(center, r, Color.WHITE)
+
+func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
+	match style:
+		"brasileirao":
+			return Color.WHITE
+		"la_liga":
+			return Color("#10193A")
+		"bundesliga":
+			if board_theme and board_theme.cor_time == "kit":
+				return _get_team_color(team)
+			return Color("#242A3A")
+		"inclinada":
+			if board_theme and board_theme.cor_time == "kit":
+				return _get_team_color(team)
+			return Color("#101010")
+		_:
+			return Color.WHITE
 
 # ==============================================================================
 # PÍLULA INFERIOR UNIVERSAL ("1T  27'")

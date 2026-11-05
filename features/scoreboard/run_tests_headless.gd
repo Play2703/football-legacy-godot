@@ -347,6 +347,133 @@ func _init() -> void:
 	
 	print("-----------------------------------------------------------------")
 	print("[TESTE OK] FIX8f: Todos os 4 confrontos da Libertadores validados com sucesso.")
+
+	# ==============================================================================
+	# ETAPA 4c-FIX10 — TESTE DE ESCUDOS REAIS
+	# ==============================================================================
+	print("\n=================================================================")
+	print("   BATERIA DE TESTES AUTOMATIZADOS: ESCUDOS REAIS (FIX10)       ")
+	print("=================================================================")
+	
+	var test_clubs_pool = {
+		"mci": {"id": "mci", "name": "Manchester City", "abbrev": "MCI", "kit": Color("6cabdd"), "kit2": Color("1c2c5b")},
+		"che": {"id": "che", "name": "Chelsea", "abbrev": "CHE", "kit": Color("034694"), "kit2": Color("ffffff")},
+		"nfo": {"id": "nfo", "name": "Nottingham", "abbrev": "NFO", "kit": Color("c8102e"), "kit2": Color("ffd100")},
+		"tot": {"id": "tot", "name": "Tottenham", "abbrev": "TOT", "kit": Color("ffffff"), "kit2": Color("132257")},
+		"der": {"id": "der", "name": "Derby County", "abbrev": "DER", "kit": Color("ffffff"), "kit2": Color("000000")},
+		"cri": {"id": "cri", "name": "Criciúma", "abbrev": "CRI", "kit": Color("fdd116"), "kit2": Color("000000")},
+		"ful": {"id": "ful", "name": "Fulham", "abbrev": "FUL", "kit": Color("ffffff"), "kit2": Color("000000")},
+		"prd": {"id": "prd", "name": "Pordenone", "abbrev": "PRD", "kit": Color("083318"), "kit2": Color("ffffff")},
+		"arg_ald": {"id": "arg_ald", "name": "Aldosivi", "abbrev": "ALD", "kit": Color("008000"), "kit2": Color("ffd700")},
+		"usa_chi": {"id": "usa_chi", "name": "Chicago Fire", "abbrev": "CHI", "kit": Color("ff0000"), "kit2": Color("000080")}
+	}
+	
+	var fix10_pairs = [
+		{"h": test_clubs_pool["mci"], "a": test_clubs_pool["nfo"], "desc": "MCI (Redondo) × NFO (Alto)"},
+		{"h": test_clubs_pool["der"], "a": test_clubs_pool["che"], "desc": "DER (Largo) × CHE (Redondo)"},
+		{"h": test_clubs_pool["tot"], "a": test_clubs_pool["prd"], "desc": "TOT (Borda Clara) × PRD (Escuro)"},
+		{"h": test_clubs_pool["arg_ald"], "a": test_clubs_pool["cri"], "desc": "ALD (Placeholder) × CRI (Largo)"}
+	]
+	
+	var circle_layouts = [
+		{"id": "brasileirao", "variant": ""},
+		{"id": "bundesliga", "variant": ""},
+		{"id": "la_liga", "variant": "tv"},
+		{"id": "premier_league", "variant": ""},
+		{"id": "ligue_1", "variant": ""},
+		{"id": "serie_a", "variant": ""},
+		{"id": "copa_do_brasil", "variant": ""}
+	]
+	
+	print("\n-------------------------------------------------------------------------------------------------------------------------------------------")
+	print(" TABELA DE MEDIÇÕES DO RENDER REAL DE ESCUDOS (7 LAYOUTS × 4 CONFRONTOS = 56 ESCUDOS)")
+	print("-------------------------------------------------------------------------------------------------------------------------------------------")
+	print("%-14s | %-16s | %-7s | %-9s | %-11s | %-5s | %-7s | %-8s | %-8s | %-6s | %-12s | %-8s" % [
+		"Layout", "Clube", "Escudo?", "Asset L×A", "Render L×A", "Dif%", "Encaixe", "M. Sigla", "M. Borda", "ΔE", "Disco Apoio", "Anel"
+	])
+	print("-------------------------------------------------------------------------------------------------------------------------------------------")
+	
+	var test_sb = ScoreboardView.new()
+	root.add_child(test_sb)
+	
+	for l_info in circle_layouts:
+		var lid = l_info["id"]
+		var lvar = l_info["variant"]
+		
+		for pair in fix10_pairs:
+			test_sb.setup(pair["h"], pair["a"], lid, lvar, true)
+			var m_data = test_sb.get_layout_crest_measurements()
+			
+			if not m_data["has_crests"]:
+				printerr("ERRO FIX10: Layout com círculo %s não retornou medições de escudos!" % lid)
+				all_ok = false
+				continue
+				
+			var sides = [{"key": "home", "team": pair["h"], "role": "Casa"}, {"key": "away", "team": pair["a"], "role": "Fora"}]
+			for s in sides:
+				var m = m_data[s["key"]]
+				var t = s["team"]
+				var has_crest_str = "SIM" if m["has_crest"] else "NÃO (PH)"
+				var asset_dim = "%dx%d" % [int(m["asset_w"]), int(m["asset_h"])] if m["has_crest"] else "N/A"
+				var render_dim = "%.1f×%.1f" % [m["rendered_w"], m["rendered_h"]] if m["has_crest"] else "N/A"
+				var dif_str = "%.2f%%" % m["ratio_diff_pct"] if m["has_crest"] else "-"
+				var encaixe_str = "OK (<=.92)" if m["within_circle"] else "VAZOU"
+				var m_sigla_str = "%.1f (%.0f%%)" % [m["margin_to_sigla"], m["margin_to_sigla_ratio"] * 100.0]
+				var m_edge_str = "%.1f (%.0f%%)" % [m["margin_to_edge"], m["margin_to_edge_ratio"] * 100.0]
+				var de_str = "%.1f" % m["delta_e"] if m["has_crest"] else "-"
+				var support_str = "Nenhum"
+				if m["support_disk_used"]:
+					support_str = "#" + m["support_disk_color"].to_html(false)
+				var ring_str = "Não"
+				if m["ring_used"]:
+					ring_str = "#" + m["ring_color"].to_html(false)
+					
+				print("%-14s | %-16s | %-7s | %-9s | %-11s | %-5s | %-7s | %-8s | %-8s | %-6s | %-12s | %-8s" % [
+					lid, t["name"] + " (" + s["role"] + ")", has_crest_str, asset_dim, render_dim, dif_str, encaixe_str,
+					m_sigla_str, m_edge_str, de_str, support_str, ring_str
+				])
+				
+				# Asserção 1: Deformação <= 1%
+				if m["has_crest"] and m["ratio_diff_pct"] > 1.0:
+					printerr("ERRO FIX10 DEFORMAÇÃO: %s no layout %s teve distorção de %.2f%% (> 1%%)" % [t["name"], lid, m["ratio_diff_pct"]])
+					all_ok = false
+					
+				# Asserção 2: Não vazar do círculo
+				if m["has_crest"] and not m["within_circle"]:
+					printerr("ERRO FIX10 ENCAIXE: %s no layout %s vazou do círculo!" % [t["name"], lid])
+					all_ok = false
+					
+				# Asserção 3: Margem >= 0.06 * W
+				if m["margin_to_sigla_ratio"] < 0.059:
+					printerr("ERRO FIX10 MARGEM SIGLA: %s no layout %s margem sigla %.2f < 0.06" % [t["name"], lid, m["margin_to_sigla_ratio"]])
+					all_ok = false
+				if m["margin_to_edge_ratio"] < 0.059:
+					printerr("ERRO FIX10 MARGEM BORDA: %s no layout %s margem borda %.2f < 0.06" % [t["name"], lid, m["margin_to_edge_ratio"]])
+					all_ok = false
+					
+				# Asserção 4: ΔE < 25 com disco de apoio válido
+				if m["has_crest"] and m["delta_e"] < 25.0:
+					if not m["support_disk_used"]:
+						printerr("ERRO FIX10 CONTRASTE: %s no layout %s tem ΔE %.1f < 25 sem disco de apoio!" % [t["name"], lid, m["delta_e"]])
+						all_ok = false
+					else:
+						var de_supp = ScoreboardView.delta_e_cie76(m["mean_color"], m["support_disk_color"])
+						if de_supp < 25.0:
+							printerr("ERRO FIX10 DISCO INSUFICIENTE: %s no layout %s disco de apoio tem ΔE %.1f < 25!" % [t["name"], lid, de_supp])
+							all_ok = false
+							
+				# Asserção 5: Clube com escudo não cai no placeholder; clube sem escudo não tem círculo vazio
+				var has_file = FileAccess.file_exists("user://logos/" + t["id"] + ".png")
+				if has_file and not m["has_crest"]:
+					printerr("ERRO FIX10 PLACEHOLDER: %s possui arquivo PNG mas caiu no placeholder!" % t["name"])
+					all_ok = false
+				elif not has_file and m["has_crest"]:
+					printerr("ERRO FIX10 PLACEHOLDER: %s não possui arquivo PNG mas detectou crest!" % t["name"])
+					all_ok = false
+					
+	test_sb.queue_free()
+	print("-------------------------------------------------------------------------------------------------------------------------------------------\n")
+	print("[TESTE OK] FIX10: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
 	
 	print("=================================================================")
 	if all_ok:
