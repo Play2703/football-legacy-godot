@@ -31,7 +31,6 @@ var minute: int = 85
 var stoppage: int = 6
 var is_compact: bool = false
 var use_local_textures: bool = true
-var la_liga_force_white_disk: bool = false
 
 # FIX9c: Escala do relógio e opção de fonte geométrica
 @export var clock_scale: float = CLOCK_FONT_SCALE
@@ -1095,20 +1094,14 @@ func _draw_stack2() -> void:
 				
 		elif c_tipo == "coluna_times":
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
-			if variante_siglas:
-				var r_home_sig = Rect2(cur_x, 0.0, col_w, row_h)
-				var r_away_sig = Rect2(cur_x, row_h, col_w, row_h)
-				var target_sig_sz = int(round(row_h * 0.31))
-				_draw_sigla_stack2(home_team.get("abbrev", "RMA"), r_home_sig, target_sig_sz, col_w * 0.80)
-				_draw_sigla_stack2(away_team.get("abbrev", "STU"), r_away_sig, target_sig_sz, col_w * 0.80)
-			else:
-				var diam = min(col_w * 0.55, row_h * 0.65)
-				var crest_x = cur_x + (col_w - diam) * 0.5
-				var crest_y_home = (row_h - diam) * 0.5
-				var crest_y_away = row_h + (row_h - diam) * 0.5
-				
-				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team, Color("#10193A"))
-				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team, Color("#10193A"))
+			# FIX9e: La Liga mostra SEMPRE a sigla do clube em branco, nunca o escudo
+			var r_home_sig = Rect2(cur_x, 0.0, col_w, row_h)
+			var r_away_sig = Rect2(cur_x, row_h, col_w, row_h)
+			var max_w = col_w * 0.80
+			var max_h = row_h * 0.50
+			var target_sig_sz = int(round(row_h * 0.38))
+			_draw_sigla_stack2(home_team.get("abbrev", "???"), r_home_sig, target_sig_sz, max_w, max_h)
+			_draw_sigla_stack2(away_team.get("abbrev", "???"), r_away_sig, target_sig_sz, max_w, max_h)
 				
 		elif c_tipo == "coluna_gols":
 			draw_rect(col_rect, Color("#FFFFFF"))
@@ -1127,23 +1120,36 @@ func _draw_stack2() -> void:
 			
 		cur_x += col_w
 
-func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w: float) -> void:
+func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w: float, max_h: float = 0.0) -> void:
 	if text.is_empty():
 		return
 	var font = _get_font()
 	var font_size = target_font_size
+	var cap_ratio = 0.71
+	
+	if max_h > 0.0:
+		var glyph_h = float(font_size) * cap_ratio
+		if glyph_h > max_h:
+			font_size = int(max_h / cap_ratio)
+			
 	var text_sz = font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size)
 	if text_sz.x > max_w:
 		var ratio = max_w / text_sz.x
-		var safe_floor = float(target_font_size) * 0.60
+		var safe_floor = float(MIN_FONT_SIZE)
 		font_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		text_sz = font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size)
-	var cap_h = float(font_size) * 0.71
+		
+	var cap_h = float(font_size) * cap_ratio
 	var text_y = rect.position.y + (rect.size.y + cap_h) * 0.5
 	var text_x = rect.position.x + (rect.size.x - text_sz.x) * 0.5
-	if text_x + text_sz.x > rect.position.x + rect.size.x:
-		text_x = rect.position.x + rect.size.x - text_sz.x
-	text_x = max(text_x, rect.position.x)
+	
+	# Margem mínima de 0.06 * W para não tocar bordas nem divisas
+	var min_margin_x = rect.size.x * 0.06
+	if text_x < rect.position.x + min_margin_x:
+		text_x = rect.position.x + min_margin_x
+	elif text_x + text_sz.x > rect.position.x + rect.size.x - min_margin_x:
+		text_x = rect.position.x + rect.size.x - min_margin_x - text_sz.x
+		
 	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, font_size, Color.WHITE)
 
 # ==============================================================================
@@ -1561,12 +1567,8 @@ func get_layout_crest_measurements() -> Dictionary:
 		res["home"] = measure_crest_render(home_team, pos, diam, "bundesliga", home_bg, cell_w, H, true, text_box_left_h)
 		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false, text_box_left_a)
 	elif fam == "stack2":
-		res["has_crests"] = true
-		var col_times_w = W * 0.25 # coluna_times (marinho) tem 0.25 de peso no schema da La Liga
-		var diam = min(col_times_w * 0.55, (H * 0.5) * 0.65) # Requisito FIX10b: diametro ≈ 0.55 da largura da coluna marinho
-		var pos = Vector2((col_times_w - diam) * 0.5, (H * 0.5 - diam) * 0.5)
-		res["home"] = measure_crest_render(home_team, pos, diam, "la_liga", Color("#10193A"), col_times_w, H, true)
-		res["away"] = measure_crest_render(away_team, pos, diam, "la_liga", Color("#10193A"), col_times_w, H, false)
+		# FIX9e: La Liga usa siglas no lugar de escudos, sem medições de escudos
+		res["has_crests"] = false
 	return res
 
 func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary, block_bg: Color = Color(0, 0, 0, 0)) -> void:
@@ -1612,9 +1614,6 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 				draw_disk = false
 			elif de_disk >= CONTRAST_THRESHOLD_SUPPORT_DISK:
 				draw_disk = true
-		if style == "la_liga" and la_liga_force_white_disk:
-			draw_disk = true
-			supp_color = Color.WHITE
 			
 		if draw_disk:
 			draw_circle(center, r * 0.95, supp_color)
