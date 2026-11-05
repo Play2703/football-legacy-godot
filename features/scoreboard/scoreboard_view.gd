@@ -17,6 +17,11 @@ const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _
 const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
+# FIX9c: Constantes nomeadas de contraste e relógio
+const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
+const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
+const CLOCK_FONT_SCALE: float = 1.0
+
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
 var away_team: Dictionary = {}
@@ -27,6 +32,10 @@ var stoppage: int = 6
 var is_compact: bool = false
 var use_local_textures: bool = true
 var la_liga_force_white_disk: bool = false
+
+# FIX9c: Escala do relógio e opção de fonte geométrica
+@export var clock_scale: float = CLOCK_FONT_SCALE
+@export var clock_font_geom: bool = false
 
 # Pênaltis
 var shootout_active: bool = false
@@ -504,7 +513,7 @@ func _draw_brasileirao() -> void:
 	_draw_auto_text(str(home_score), r_home_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
 	_draw_auto_text(str(away_score), r_away_score, Color("#051838"), _get_font_size("gol", pill_h), 14.0, true)
 	
-	# 8. Texto e divisor da Faixa do Relógio (FIX9b: relógio completo com tempo e minutos)
+	# 8. Texto e divisor da Faixa do Relógio (FIX9c: relógio maior e consistente com CLOCK_FONT_SCALE)
 	var time_str: String = ""
 	if match_state == "INT" or match_state == "FIM":
 		time_str = match_state
@@ -516,37 +525,35 @@ func _draw_brasileirao() -> void:
 			prefix = "1T"
 		time_str = "%s %02d:%02d" % [prefix, minute, second]
 			
-	var clk_font_target = _get_font_size("relogio", clk_vis_h * 1.5)
+	var f_custom: Font = null
+	if clock_font_geom:
+		f_custom = ScoreboardLoader.resolve_scoreboard_font("larga_negrito")
+	
+	# Tamanho de fonte único para tempo e acréscimo em todos os pares e estados:
+	# Mockup tem razão letra / faixa = 0.50 (54 / 108 px).
+	# Para Bebas Neue (cap-height 0.71), tamanho 26 px dá altura de letra ~18.5 px (0.50 * 37.1).
+	# Para Montserrat (cap-height 0.72), tamanho 20 px dá altura ~14.4 px e largura equilibrada.
+	var base_clk_sz = 20 if clock_font_geom else 26
+	var clk_font_target = int(round(float(base_clk_sz) * clock_scale))
 	
 	if stoppage > 0 and time_str != "INT" and time_str != "FIM":
 		var stop_str = "+%d" % stoppage
 		# Divisor posicionado para equilibrar tempo à esquerda e acréscimo à direita
-		var cdiv_x = clk_x + clk_w * 0.72
+		var cdiv_x = clk_x + clk_w * 0.74
 		var cdiv_h = clk_vis_h * 0.55
 		var cdiv_y = clk_top + (clk_vis_h - cdiv_h) * 0.5
 		draw_rect(Rect2(cdiv_x, cdiv_y, 1.5, cdiv_h), Color("#051838"))
 		
 		# Mesma fonte e mesmo tamanho para tempo e acréscimo
-		var r_clk = Rect2(clk_x + 8.0, clk_top, (cdiv_x - clk_x) - 12.0, clk_vis_h)
-		var r_stop = Rect2(cdiv_x + 4.0, clk_top, (clk_x + clk_w - cdiv_x) - 10.0, clk_vis_h)
+		var r_clk = Rect2(clk_x + 6.0, clk_top, (cdiv_x - clk_x) - 10.0, clk_vis_h)
+		var r_stop = Rect2(cdiv_x + 4.0, clk_top, (clk_x + clk_w - cdiv_x) - 8.0, clk_vis_h)
 		
-		# Calcular tamanho que caiba confortavelmente em ambos
-		var f_clk = _get_font()
-		var sz_t = f_clk.get_string_size(time_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, clk_font_target)
-		var sz_s = f_clk.get_string_size(stop_str, HORIZONTAL_ALIGNMENT_CENTER, -1.0, clk_font_target)
-		var max_h = clk_vis_h * 0.65
-		var cur_sz = clk_font_target
-		if sz_t.y > max_h or sz_t.x > r_clk.size.x:
-			var ratio_h = max_h / max(1.0, sz_t.y)
-			var ratio_w = r_clk.size.x / max(1.0, sz_t.x)
-			cur_sz = int(cur_sz * min(ratio_h, ratio_w))
-		
-		_draw_auto_text(time_str, r_clk, Color("#051838"), cur_sz, 10.0, true)
-		_draw_auto_text(stop_str, r_stop, Color("#051838"), cur_sz, 10.0, true)
+		_draw_auto_text(time_str, r_clk, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
+		_draw_auto_text(stop_str, r_stop, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
 	else:
-		# Sem acréscimo: tempo centralizado na faixa, sem divisor
-		var r_clk_full = Rect2(clk_x + 8.0, clk_top, clk_w - 16.0, clk_vis_h)
-		_draw_auto_text(time_str, r_clk_full, Color("#051838"), clk_font_target, 10.0, true)
+		# Sem acréscimo: tempo centralizado na faixa, sem divisor, COM O MESMO TAMANHO DE FONTE
+		var r_clk_full = Rect2(clk_x + 6.0, clk_top, clk_w - 12.0, clk_vis_h)
+		_draw_auto_text(time_str, r_clk_full, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
 		
 	# 9. Registrar células desenhadas para integridade de validação
 	var cells_map = {
@@ -1375,20 +1382,16 @@ static func measure_crest_render(team: Dictionary, pos: Vector2, diam: float, st
 		if is_exception:
 			res["contrast_note"] = "Regra de Projeto: Corpo ΔE %.1f >= 55.0 com borda escura (disco degradaria para ΔE %.1f)" % [de_overall, de_disk]
 			
-		if style == "bundesliga":
-			res["ring_used"] = true
-			res["ring_color"] = Color.WHITE
-		elif style == "la_liga":
-			res["ring_used"] = true
-			res["ring_color"] = Color.WHITE
+		# Regra FIX9c: Com escudo real, NENHUM anel, círculo colorido ou contorno atrás dele.
+		res["ring_used"] = false
+		res["ring_color"] = Color.TRANSPARENT
 	else:
-		# Placeholder
-		if style in ["bundesliga", "la_liga", "brasileirao"]:
-			res["ring_used"] = true
-			if style == "brasileirao":
-				res["ring_color"] = Color("#808080")
-			else:
-				res["ring_color"] = Color.WHITE
+		# Placeholder quando NÃO há escudo real (FIX9c):
+		# Contorno fino (anel 3 px), SEM preenchimento, contrastando com o fundo do bloco:
+		# Cinza #808080 sobre fundo claro, branco sobre fundo escuro ou colorido.
+		res["ring_used"] = true
+		var is_light_bg = (block_bg.get_luminance() > 0.6) or (delta_e_cie76(block_bg, Color.WHITE) < 30.0)
+		res["ring_color"] = Color("#808080") if is_light_bg else Color.WHITE
 			
 	# Margens medidas a partir do ESCUDO DESENHADO (crest_rect), não apenas do slot.
 	# Margem até a sigla medida até a caixa do texto da sigla (FIX10c).
@@ -1580,18 +1583,11 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		var rh = ts.y * k
 		var crest_rect = Rect2(center.x - rw * 0.5, center.y - rh * 0.5, rw, rh)
 		
-		# 1. Anel de contorno por decisão de layout:
-		# Padrão: some quando há escudo real.
-		# Exceções onde o mockup mostra anel:
-		# - Bundesliga: anel branco fino (2.5 px) com miolo do bloco permanece.
-		# - La Liga: anel branco fino (3.0 px) com miolo marinho #10193A permanece.
-		if style == "bundesliga":
-			draw_circle(center, r - 1.25, block_bg)
-			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
-		elif style == "la_liga":
-			draw_circle(center, r - 1.5, Color("#10193A"))
-			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
-			
+		# 1. Regra FIX9c: Círculo é só gabarito. Com escudo real, NENHUM anel,
+		# círculo colorido ou contorno atrás dele em TODOS os 7 layouts.
+		# O ÚNICO elemento permitido atrás do escudo real é o disco de apoio
+		# quando exigido pela regra de contraste (ΔE efetivo < CONTRAST_THRESHOLD_SUPPORT_DISK).
+		
 		# 2. Contraste e Disco de Apoio (ΔE CIELAB < 40 no anel 15% ou média geral):
 		var mean_col = get_team_crest_mean_color(team)
 		var edge_col = get_team_crest_edge_mean_color(team)
@@ -1605,8 +1601,11 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		
 		var draw_disk: bool = false
 		var supp_color: Color = candidate_supp_col
-		if (de_overall < 40.0 or (de_edge < 40.0 and de_disk >= 40.0)):
-			if de_disk >= 40.0:
+		if (de_overall < CONTRAST_THRESHOLD_SUPPORT_DISK or (de_edge < CONTRAST_THRESHOLD_SUPPORT_DISK and de_disk >= CONTRAST_THRESHOLD_SUPPORT_DISK)):
+			# Regra de Projeto: Corpo com ΔE geral >= 55 e borda escura não leva disco quando o disco degradaria o corpo
+			if de_overall >= CONTRAST_EXCEPTION_BODY_THRESHOLD and de_disk < CONTRAST_THRESHOLD_SUPPORT_DISK:
+				draw_disk = false
+			elif de_disk >= CONTRAST_THRESHOLD_SUPPORT_DISK:
 				draw_disk = true
 		if style == "la_liga" and la_liga_force_white_disk:
 			draw_disk = true
@@ -1619,26 +1618,13 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		draw_texture_rect(tex, crest_rect, false)
 		return
 		
-	# Placeholder quando NÃO há escudo real
-	match style:
-		"brasileirao":
-			# Anel fino cinza (#808080, 3 px), sem preenchimento
-			draw_arc(center, r * 0.85, 0.0, TAU, 32, Color("#808080"), 3.0, true)
-		"inclinada":
-			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
-			draw_circle(center, r, Color.WHITE)
-			if block_bg.a > 0.0 and block_bg != Color.WHITE:
-				draw_arc(center, r - 1.0, 0.0, TAU, 32, block_bg, 2.0, true)
-		"bundesliga":
-			# Anel branco fino (2.5 px), miolo na cor do bloco do clube
-			draw_circle(center, r - 1.25, block_bg)
-			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
-		"la_liga":
-			# Círculos brancos finos e VAZIOS (anel 3 px, miolo na cor marinho #10193A), sem cor de clube
-			draw_circle(center, r - 1.5, Color("#10193A"))
-			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
-		_:
-			draw_circle(center, r, Color.WHITE)
+	# Placeholder quando NÃO há escudo real (FIX9c):
+	# Contorno fino (anel 3 px), SEM preenchimento, contrastando com o fundo do bloco:
+	# Cinza #808080 sobre fundo claro, branco sobre fundo escuro ou colorido.
+	# Isso troca os discos brancos e pretos cheios em todos os layouts.
+	var is_light_bg = (block_bg.get_luminance() > 0.6) or (delta_e_cie76(block_bg, Color.WHITE) < 30.0)
+	var ring_col = Color("#808080") if is_light_bg else Color.WHITE
+	draw_arc(center, r * 0.85, 0.0, TAU, 32, ring_col, 3.0, true)
 
 func _resolve_club_accent_color(team: Dictionary) -> Color:
 	var kit_str = team.get("kit", "#14318f")
@@ -1786,11 +1772,11 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 # ==============================================================================
 # RENDERIZADOR DE TEXTO COM LIMITES E CAP-HEIGHT
 # ==============================================================================
-func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: int, min_floor: float, bold: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER) -> void:
+func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: int, min_floor: float, bold: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER, custom_font: Font = null) -> void:
 	if text.is_empty():
 		return
 	
-	var font: Font = _get_font()
+	var font: Font = custom_font if custom_font != null else _get_font()
 	var font_size = target_font_size
 	
 	var margin_x = rect.size.x * 0.08
@@ -1799,7 +1785,9 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	
 	var ftype = board_theme.font_type if board_theme else "condensada"
 	var cap_ratio = 0.71
-	if ftype == "larga_negrito":
+	if custom_font != null:
+		cap_ratio = 0.72
+	elif ftype == "larga_negrito":
 		cap_ratio = 0.72
 	elif ftype == "larga_espacada":
 		cap_ratio = 0.72
