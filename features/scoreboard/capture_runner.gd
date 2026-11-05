@@ -112,19 +112,81 @@ func _ready() -> void:
 			b_img.save_png(b_path)
 			print("[BRASILEIRAO FIX9 RENDER] Salvo: %s (%dx%d)" % [b_path, b_img.get_width(), b_img.get_height()])
 		
-	# Capturas de variantes do relógio para a Folha 2x (Item 2: Escala 1.0x, 1.2x, 1.4x e Fonte Condensada vs Geométrica)
-	print("Gerando variantes do relógio (escalas 1.0x, 1.2x, 1.4x e fontes)...")
+	# Capturas FIX9f — La Liga: Comparação de Escalas (1.0x, 1.25x, 1.5x)
+	print("Gerando comparativo de escalas da La Liga (1.0x, 1.25x, 1.5x)...")
+	var la_liga_scales = [
+		{"scale": 1.0, "id": "10"},
+		{"scale": 1.25, "id": "125"},
+		{"scale": 1.5, "id": "15"}
+	]
+	for sc in la_liga_scales:
+		sb.la_liga_scale_override = sc["scale"]
+		sb.la_liga_bar_ratio_override = 0.0
+		sb.setup(test_clubs["mci"], test_clubs["nfo"], "la_liga", "", true)
+		sb.update_score(1, 0)
+		sb.update_time(85, 6)
+		
+		var sb_size = sb.get_real_size()
+		var needed_w = int(ceil(max(sb.size.x, sb_size.x) + 48.0))
+		var needed_h = int(ceil(max(sb.size.y, sb_size.y) + 48.0))
+		vp.size = Vector2i(needed_w, needed_h)
+		sb.position = Vector2(24.0, 24.0)
+		
+		await get_tree().process_frame
+		await get_tree().process_frame
+		
+		var sc_img = vp.get_texture().get_image()
+		if sc_img:
+			var sc_path = "res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/board_la_liga_scale_%s.png" % sc["id"]
+			sc_img.save_png(sc_path)
+			print("[LA LIGA SCALE] Salvo: %s (%dx%d)" % [sc_path, sc_img.get_width(), sc_img.get_height()])
+
+	# Capturas FIX9f — La Liga: Opções de espessura de barra (1.5x, 2.0x, 2.5x a atual de 3px)
+	print("Gerando opções de espessura de barra da La Liga (1.5x, 2.0x, 2.5x)...")
+	# Espessura atual = 3.0px em 1.0x (~0.0745 da coluna marinho)
+	# Opção 1: 1.5x atual (~0.09 da coluna)
+	# Opção 2: 2.0x atual (0.12 da coluna - padrão novo)
+	# Opção 3: 2.5x atual (~0.15 da coluna)
+	var bar_options = [
+		{"ratio": 0.09, "id": "15x"},
+		{"ratio": 0.12, "id": "20x"},
+		{"ratio": 0.15, "id": "25x"}
+	]
+	for bo in bar_options:
+		sb.la_liga_scale_override = 1.25
+		sb.la_liga_bar_ratio_override = bo["ratio"]
+		sb.setup(test_clubs["der"], test_clubs["che"], "la_liga", "", true)
+		sb.update_score(0, 2)
+		sb.update_time(85, 6)
+		
+		var sb_size = sb.get_real_size()
+		var needed_w = int(ceil(max(sb.size.x, sb_size.x) + 48.0))
+		var needed_h = int(ceil(max(sb.size.y, sb_size.y) + 48.0))
+		vp.size = Vector2i(needed_w, needed_h)
+		sb.position = Vector2(24.0, 24.0)
+		
+		await get_tree().process_frame
+		await get_tree().process_frame
+		
+		var bo_img = vp.get_texture().get_image()
+		if bo_img:
+			var bo_path = "res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/board_la_liga_bar_%s.png" % bo["id"]
+			bo_img.save_png(bo_path)
+			print("[LA LIGA BAR OPTION] Salvo: %s (%dx%d)" % [bo_path, bo_img.get_width(), bo_img.get_height()])
+
+	# Resetar overrides da La Liga
+	sb.la_liga_scale_override = 0.0
+	sb.la_liga_bar_ratio_override = 0.0
+
+	# Capturas de variantes do relógio Bebas Neue (escalas 1.0x, 1.2x, 1.4x)
+	print("Gerando variantes do relógio Bebas Neue (escalas 1.0x, 1.2x, 1.4x)...")
 	var clock_variants = [
-		{"scale": 1.0, "geom": false, "id": "cond_10"},
-		{"scale": 1.2, "geom": false, "id": "cond_12"},
-		{"scale": 1.4, "geom": false, "id": "cond_14"},
-		{"scale": 1.0, "geom": true,  "id": "geom_10"},
-		{"scale": 1.2, "geom": true,  "id": "geom_12"},
-		{"scale": 1.4, "geom": true,  "id": "geom_14"}
+		{"scale": 1.0, "id": "cond_10"},
+		{"scale": 1.2, "id": "cond_12"},
+		{"scale": 1.4, "id": "cond_14"}
 	]
 	for cv in clock_variants:
 		sb.clock_scale = cv["scale"]
-		sb.clock_font_geom = cv["geom"]
 		sb.setup(cru_club, mir_club, "brasileirao", "", true)
 		sb.update_score(0, 0)
 		sb.update_time(0, 1, 48, "1T")
@@ -142,8 +204,7 @@ func _ready() -> void:
 			print("[CLOCK VARIANT] Salvo: %s" % c_path)
 			
 	# Resetar para padrão
-	sb.clock_scale = 1.0
-	sb.clock_font_geom = false
+	sb.clock_scale = ScoreboardView.CLOCK_FONT_SCALE
 		
 	print("Todas as capturas do Viewport do Godot foram geradas com sucesso!")
 	get_tree().quit(0)
