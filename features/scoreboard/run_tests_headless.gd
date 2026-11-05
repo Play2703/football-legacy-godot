@@ -125,6 +125,39 @@ func _init() -> void:
 	else:
 		print("[TESTE OK] FIX8b Libertadores: ordem_relogio (apos_times e apos_logo) validada com sucesso.")
 		
+	# Caso E (FIX8 & FIX8c): Validação de Contraste WCAG >= 4.5:1 em Premier e Bundesliga
+	var test_kit_sb = ScoreboardView.new()
+	root.add_child(test_kit_sb)
+	var test_pairs = [
+		{"h": {"abbrev": "ARS", "kit": "#EF0107", "kit2": "#063672"}, "a": {"abbrev": "CHE", "kit": "#034694", "kit2": "#FFFFFF"}},
+		{"h": {"abbrev": "MCI", "kit": "#6CABDD", "kit2": "#1C2C5B"}, "a": {"abbrev": "NEW", "kit": "#241F20", "kit2": "#FFFFFF"}},
+		{"h": {"abbrev": "TOT", "kit": "#FFFFFF", "kit2": "#132257"}, "a": {"abbrev": "FUL", "kit": "#FFFFFF", "kit2": "#000000"}} # Conflito branco x branco
+	]
+	for pair in test_pairs:
+		test_kit_sb.setup(pair["h"], pair["a"], "premier_league", "", true)
+		var resolved_kit = test_kit_sb._resolve_team_kit_colors()
+		var cr_home = ScoreboardView.get_contrast_ratio(resolved_kit["home_txt"], resolved_kit["home_bg"])
+		var cr_away = ScoreboardView.get_contrast_ratio(resolved_kit["away_txt"], resolved_kit["away_bg"])
+		if cr_home < 4.4:
+			printerr("ERRO WCAG: Home contrast ratio %.2f < 4.5:1 para fundo %s" % [cr_home, str(resolved_kit["home_bg"])])
+			all_ok = false
+		if cr_away < 4.4:
+			printerr("ERRO WCAG: Away contrast ratio %.2f < 4.5:1 para fundo %s" % [cr_away, str(resolved_kit["away_bg"])])
+			all_ok = false
+	print("[TESTE OK] FIX8 & FIX8c: Contraste WCAG >= 4.5:1 validado para todas as combinacoes de clubes.")
+	
+	# Caso F (FIX8c): Libertadores sublinhado visível contra #121212 (ΔE >= 25 para clube escuro)
+	var dark_team = {"abbrev": "COR", "kit": "#111111", "kit2": "#FFFFFF"}
+	var under_cols = test_kit_sb.get_resolved_libertadores_underline_colors(dark_team)
+	for col in under_cols:
+		var dist_bg = ScoreboardView.delta_e_cie76(col, Color("#121212"))
+		if dist_bg < 25.0:
+			printerr("ERRO FIX8c: Sublinhado da Libertadores tem ΔE %.2f < 25 contra #121212 para cor %s" % [dist_bg, str(col)])
+			all_ok = false
+	if under_cols.size() > 0:
+		print("[TESTE OK] FIX8c Libertadores: Sublinhado de clube escuro (Corinthians) possui ΔE >= 25 contra fundo #121212.")
+	test_kit_sb.queue_free()
+	
 	test_cielab_sb.queue_free()
 	
 	print("=================================================================")

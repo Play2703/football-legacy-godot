@@ -187,8 +187,8 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 					return int(round(ref_h * 0.69)) # Glifo ≈ 0.50·H
 				"relogio":
 					if comp_id == "la_liga":
-						# La Liga: relógio ≈ 0.26·H do bloco
-						return int(round(ref_h * 0.37))
+						# La Liga: relógio ≈ 0.22·H do bloco
+						return int(round(ref_h * 0.31))
 					return int(round(ref_h * 0.69)) # Glifo ≈ 0.50·H
 				"sigla":
 					return int(round(ref_h * 0.645)) # Glifo ≈ 0.45·H
@@ -213,6 +213,9 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 						return int(round(ref_h * 0.47))
 					return int(round(ref_h * 0.50))
 				"sigla":
+					if comp_id == "libertadores":
+						# Libertadores: siglas ≤ 0.36·H (Requisito 2 FIX8c)
+						return int(round(ref_h * 0.50)) # 0.50 * 0.72 = 0.36·H
 					return int(round(ref_h * 0.50)) # Glifo ≈ 0.36·H
 				"etiqueta":
 					return int(round(ref_h * 0.31)) # Glifo ≈ 0.24·H
@@ -363,15 +366,29 @@ func _draw_skew() -> void:
 			Vector2(cur_x, H)
 		])
 		
-		var bg_color = _resolve_color(c.get("fundo", "#101015"), false)
+		var c_tipo = String(c.get("tipo", ""))
+		var is_kit_mode = (board_theme.cor_time == "kit")
+		var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+		
+		var bg_color: Color
+		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
+		var txt_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
+		
+		if c_tipo == "time_casa" and is_kit_mode:
+			bg_color = kit_cols["home_bg"]
+			txt_col = kit_cols["home_txt"]
+		elif c_tipo == "time_fora" and is_kit_mode:
+			bg_color = kit_cols["away_bg"]
+			txt_col = kit_cols["away_txt"]
+		else:
+			bg_color = _resolve_color(c.get("fundo", "#101015"), (c_tipo == "time_fora"))
+		
 		draw_colored_polygon(poly, bg_color)
 		
 		# Divisor idêntico em todas as células
 		draw_line(Vector2(next_x + dx, 0.0), Vector2(next_x, H), Color(1.0, 1.0, 1.0, 0.12), 1.0)
 		
 		var cell_rect = Rect2(cur_x + dx * 0.5, 0.0, cell_w, H)
-		var c_tipo = String(c.get("tipo", ""))
-		var txt_col = Color(c.get("cor_texto", "#FFFFFF"))
 		
 		match c_tipo:
 			"logo_liga":
@@ -390,18 +407,17 @@ func _draw_skew() -> void:
 					_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
 					
 			"time_casa":
-				# Requisito 1: DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, a ≥ 0.06·W da divisa
 				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team)
+				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team, txt_col if is_kit_mode else Color(0, 0, 0, 0))
 				
 				var sigla_x = crest_x + diam + 8.0
 				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
-				_draw_skew_3_stripes(sigla_x, sigla_w, H)
+				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), home_team.get("abbrev", "HOM"))
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
@@ -412,31 +428,42 @@ func _draw_skew() -> void:
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team)
+				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team, txt_col if is_kit_mode else Color(0, 0, 0, 0))
 				
 				var sigla_x = crest_x + diam + 8.0
 				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
-				_draw_skew_3_stripes(sigla_x, sigla_w, H)
+				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), away_team.get("abbrev", "AWY"))
 				
 		cur_x = next_x
 
-# Requisito 7: 3 linhas horizontais de 2px, espaçamento 3px, comprimento ≈ 0.75 da sigla, alinhadas à esquerda
-func _draw_skew_3_stripes(sigla_x: float, sigla_w: float, H: float) -> void:
+# Requisito 7 & FIX8c: 3 linhas horizontais de 2px, dentro da barra, abaixo da sigla
+func _draw_skew_3_stripes(sigla_x: float, sigla_w: float, H: float, custom_accent: Color = Color(0, 0, 0, 0), abbrev_text: String = "") -> void:
 	var comp_id = board_theme.theme_id if board_theme else ""
-	var accent_col = Color("#00FF87") # Premier
-	if comp_id == "copa_do_brasil":
+	var accent_col = Color("#00FF87") # Premier padrão
+	if custom_accent.a > 0.0:
+		accent_col = custom_accent
+	elif comp_id == "copa_do_brasil":
 		accent_col = Color("#F4B800")
 	elif comp_id == "ligue_1":
 		accent_col = Color("#A6FF00")
 	elif comp_id == "serie_a":
 		accent_col = Color("#30D6E1")
 		
-	var line_len = sigla_w * 0.75
-	var start_y = H - 12.0
+	var font = _get_font()
+	var line_len: float
+	if not abbrev_text.is_empty():
+		var font_sz = _get_font_size("sigla", H)
+		var text_sz = font.get_string_size(abbrev_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_sz)
+		line_len = min(text_sz.x * 0.75, sigla_w * 0.70)
+	else:
+		line_len = sigla_w * 0.50
+		
+	line_len = max(line_len, 14.0)
+	var start_y = H - 11.0
 	for i in range(3):
-		var y = start_y + float(i) * 5.0 # 2px de espessura + 3px de espaçamento
+		var y = start_y + float(i) * 3.5 # 2px espessura, max y = H - 4.0 (dentro da barra!)
 		draw_line(Vector2(sigla_x, y), Vector2(sigla_x + line_len, y), accent_col, 2.0)
 
 func _draw_stoppage_tag(rect: Rect2, H: float, text: String, color: Color) -> void:
@@ -462,16 +489,24 @@ func _draw_reto() -> void:
 		total_peso = 10.0
 		
 	var cur_x = 0.0
+	var is_kit_mode = (board_theme.cor_time == "kit")
+	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
 	for idx in range(cells.size()):
 		var c = cells[idx]
 		var peso = float(c.get("peso", 1.0))
 		var cell_w = (peso / total_peso) * total_w
 		var rect = Rect2(cur_x, 0.0, cell_w, H)
-		var bg_color = _resolve_color(c.get("fundo", "#101015"), (c.get("tipo") == "time_fora"))
+		var c_tipo = String(c.get("tipo", ""))
+		var bg_color: Color
+		if c_tipo == "time_casa" and is_kit_mode:
+			bg_color = kit_cols["home_bg"]
+		elif c_tipo == "time_fora" and is_kit_mode:
+			bg_color = kit_cols["away_bg"]
+		else:
+			bg_color = _resolve_color(c.get("fundo", "#101015"), (c_tipo == "time_fora"))
 		
 		draw_rect(rect, bg_color)
 		
-		var c_tipo = String(c.get("tipo", ""))
 		if c_tipo == "barra_unica":
 			_draw_champions_barra_unica(rect, H)
 		elif c_tipo == "time_casa" and board_theme.theme_id == "bundesliga":
@@ -497,28 +532,39 @@ func _draw_reto() -> void:
 				
 		cur_x += cell_w
 
-# Requisito 1 & 4: BUNDESLIGA [escudo à esquerda da sigla][sigla][gol alinhado à direita]
-# Escudo placeholder: anel branco fino 2.5px, miolo na cor do clube
+# Requisito 1 & 4 & FIX8: BUNDESLIGA [escudo à esquerda da sigla][sigla][gol alinhado à direita]
+# Se cor_time == "kit", fundo vem de kit/kit2 do clube, texto por contraste WCAG ≥ 4,5:1, faixa fina na cor secundária
 func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var team = home_team if is_home else away_team
 	var score = home_score if is_home else away_score
 	var crest = _home_crest if is_home else _away_crest
 	var abbrev = team.get("abbrev", "HOL" if is_home else "M05")
 	
+	var is_kit_mode = (board_theme.cor_time == "kit")
+	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	var txt_col = (kit_cols["home_txt"] if is_home else kit_cols["away_txt"]) if is_kit_mode else Color.WHITE
+	
 	var crest_diam = min(H * 0.54, rect.size.x * 0.24)
 	var crest_x = rect.position.x + 8.0
 	var crest_y = (H - crest_diam) * 0.5
-	_draw_crest_unified(crest, Vector2(crest_x, crest_y), crest_diam, "bundesliga", team)
+	_draw_crest_unified(crest, Vector2(crest_x, crest_y), crest_diam, "bundesliga", team, txt_col)
 	
 	var score_box_w = clamp(H * 0.48, 30.0, rect.size.x * 0.20)
 	var r_score = Rect2(rect.position.x + rect.size.x - score_box_w - 4.0, 0.0, score_box_w, H)
-	_draw_auto_text(str(score), r_score, Color.WHITE, _get_font_size("gol", H), 12.0, true)
+	_draw_auto_text(str(score), r_score, txt_col, _get_font_size("gol", H), 12.0, true)
 	
 	var margin_between = max(rect.size.x * 0.08, 8.0)
 	var sigla_x = crest_x + crest_diam + 8.0
 	var sigla_w = r_score.position.x - margin_between - sigla_x
 	var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
-	_draw_auto_text(abbrev, r_sigla, Color.WHITE, _get_font_size("sigla", H), 10.0, true)
+	_draw_auto_text(abbrev, r_sigla, txt_col, _get_font_size("sigla", H), 10.0, true)
+	
+	# Faixa fina sob o bloco na cor secundária do clube (Requisito 1 FIX8)
+	var raw_kit2 = team.get("kit2", "")
+	var strip_col = _parse_color_resilient(raw_kit2) if not String(raw_kit2).is_empty() else txt_col
+	if strip_col.a == 0.0:
+		strip_col = txt_col
+	draw_rect(Rect2(rect.position.x + 4.0, H - 4.0, rect.size.x - 8.0, 3.0), strip_col)
 
 func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
 	var h_abbrev = home_team.get("abbrev", "RMA")
@@ -585,7 +631,6 @@ func _draw_modulos_separados() -> void:
 		total_peso = 1.0
 		
 	var cur_x = 0.0
-	var strip_colors = get_resolved_club_strip_colors()
 	for idx in range(active_cells.size()):
 		var c = active_cells[idx]
 		var peso = float(c.get("peso", 1.0))
@@ -606,36 +651,40 @@ func _draw_modulos_separados() -> void:
 				_draw_logo_in_rect(rect, txt_col)
 				
 			"time_casa":
-				_draw_auto_text(home_team.get("abbrev", "INT"), rect, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				# Requisito 3 (FIX8b): sublinhado fino com 1 ou 2 cores divididas; clube branco gera sublinhado branco
+				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
+				_draw_auto_text(home_team.get("abbrev", "INT"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
+				# Requisito 2 (FIX8c): sublinhado fino com contraste CIELAB >= 25 contra #121212
 				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
-				_draw_faixa_clube(under_rect, strip_colors["home"], "horizontal")
+				var under_colors = get_resolved_libertadores_underline_colors(home_team)
+				_draw_faixa_clube(under_rect, under_colors, "horizontal")
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
 				_draw_auto_text(score_str, rect, Color.WHITE, _get_font_size("gol", H), 0.30 * H, true)
 				
 			"time_fora":
-				_draw_auto_text(away_team.get("abbrev", "FLU"), rect, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				# Requisito 3 (FIX8b): sublinhado fino com 1 ou 2 cores divididas; clube branco gera sublinhado branco
+				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
+				_draw_auto_text(away_team.get("abbrev", "FLU"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
+				# Requisito 2 (FIX8c): sublinhado fino com contraste CIELAB >= 25 contra #121212
 				var under_rect = Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0)
-				_draw_faixa_clube(under_rect, strip_colors["away"], "horizontal")
+				var under_colors = get_resolved_libertadores_underline_colors(away_team)
+				_draw_faixa_clube(under_rect, under_colors, "horizontal")
 				
 			"relogio":
-				# Requisito 4: Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo borda superior
+				# Requisito 2 (FIX8c): Relógio dourado com dígitos #101010 (nunca dourado sobre dourado), auto-fit; "+6" com larg/alt ≈ 0.30
 				var time_str = "%02d:%02d" % [minute, 0]
-				var gold_col = Color("#FFC700")
+				var clk_txt_col = Color("#101010")
 				var tag_w = cell_w * 0.30
 				var tag_h = H * 0.30
 				if stoppage > 0:
 					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - tag_w - 6.0, H)
-					_draw_clock_tabular(time_str, r_clk, gold_col, _get_font_size("relogio", H))
-					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 2.0, -3.0, tag_w, tag_h)
+					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
+					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 2.0, 2.0, tag_w, tag_h)
 					draw_rect(stop_rect, Color("#D82020"))
 					_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
 				else:
 					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - 8.0, H)
-					_draw_clock_tabular(time_str, r_clk, gold_col, _get_font_size("relogio", H))
+					_draw_clock_tabular(time_str, r_clk, clk_txt_col, _get_font_size("relogio", H))
 					
 			"penaltis":
 				var pen_str = penalties_score if not penalties_score.is_empty() else "(0-0)"
@@ -644,9 +693,9 @@ func _draw_modulos_separados() -> void:
 		cur_x += cell_w + gap_px
 
 # ==============================================================================
-# STACK2 (La Liga) (Requisitos 1 & 5 & FIX8b)
-# Gols ≈ 0.62·H da linha; relógio ≈ 0.26·H do bloco; "+5" larg ≈ 0.45 da coluna e alt ≈ 0.12·H
-# Faixa vertical fina na borda esquerda da coluna dos gols: cores reais dos clubes (metade superior = casa, metade inferior = fora);
+# STACK2 (La Liga) (Requisitos 1 & 5 & FIX8c)
+# Gols ≈ 0.62·H da linha; relógio ≈ 0.22·H do bloco; "+5" larg ≈ 0.45 da coluna e alt ≈ 0.12·H
+# Faixa vertical fina na borda esquerda da coluna dos gols: cores reais dos clubes;
 # Variante com siglas disponível por flag (siglas no lugar dos escudos).
 # ==============================================================================
 func _draw_stack2() -> void:
@@ -659,7 +708,7 @@ func _draw_stack2() -> void:
 	for col in cols:
 		total_peso += float(col.get("peso", 1.0))
 	if total_peso <= 0.0:
-		total_peso = 1.87
+		total_peso = 1.0
 		
 	var cur_x = 0.0
 	for col in cols:
@@ -677,33 +726,33 @@ func _draw_stack2() -> void:
 			_draw_logo_in_rect(r_top, Color.WHITE)
 			
 			var time_str = "%02d:%02d" % [minute, 0]
-			# Requisito 5: relógio ≈ 0.26·H do bloco
 			var clk_sz = _get_font_size("relogio", total_h)
-			var r_clk = Rect2(cur_x, row_h + 4.0, col_w, row_h * 0.44)
-			_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
 			
 			if stoppage > 0:
-				# Requisito 5: "+5" com largura ≈ 0.45 da coluna e altura ≈ 0.12·H (total_h), texto ≥ 0.60
 				var stop_w = col_w * 0.45
 				var stop_h = total_h * 0.12
 				var stop_x = cur_x + (col_w - stop_w) * 0.5
-				var stop_y = total_h - stop_h - 4.0
+				var stop_y = total_h - stop_h - 2.0
 				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
-				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.70), 0.4 * stop_h, true)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.75), 0.4 * stop_h, true)
+				
+				var r_clk = Rect2(cur_x, row_h + 1.0, col_w, row_h - stop_h - 2.0)
+				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
+			else:
+				var r_clk = Rect2(cur_x, row_h, col_w, row_h)
+				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
 				
 		elif c_tipo == "coluna_times":
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
 			if variante_siglas:
-				# Requisito 2 (FIX8b): Variante com siglas (siglas no lugar dos escudos)
 				var r_home_sig = Rect2(cur_x, 0.0, col_w, row_h)
 				var r_away_sig = Rect2(cur_x, row_h, col_w, row_h)
-				var sig_sz = _get_font_size("sigla", row_h * 1.3)
-				_draw_auto_text(home_team.get("abbrev", "RMA"), r_home_sig, Color.WHITE, sig_sz, 8.0, true)
-				_draw_auto_text(away_team.get("abbrev", "STU"), r_away_sig, Color.WHITE, sig_sz, 8.0, true)
+				var target_sig_sz = int(round(row_h * 0.31))
+				_draw_sigla_stack2(home_team.get("abbrev", "RMA"), r_home_sig, target_sig_sz, col_w * 0.80)
+				_draw_sigla_stack2(away_team.get("abbrev", "STU"), r_away_sig, target_sig_sz, col_w * 0.80)
 			else:
-				# Requisito 1 & 5: círculos brancos finos e vazios (anel 3 px, miolo na cor marinho), diâmetro ≈ 0.30·W
-				var diam = clamp(col_w * 0.30, 20.0, row_h * 0.52)
+				var diam = clamp(col_w * 0.30, 16.0, row_h * 0.52)
 				var crest_x = cur_x + (col_w - diam) * 0.5
 				var crest_y_home = (row_h - diam) * 0.5
 				var crest_y_away = row_h + (row_h - diam) * 0.5
@@ -715,21 +764,37 @@ func _draw_stack2() -> void:
 			draw_rect(col_rect, Color("#FFFFFF"))
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(0.8, 0.8, 0.8), 1.0)
 			
-			# Requisito 2 (FIX8b): Faixa vertical na borda esquerda: metade cima = mandante, metade baixo = visitante,
-			# cada metade com até 2 cores empilhadas (divisão meio a meio vertical).
 			var stripe_w = max(3.0, col_w * 0.06)
 			var strip_colors = get_resolved_club_strip_colors()
 			_draw_faixa_clube(Rect2(cur_x, 0.0, stripe_w, row_h), strip_colors["home"], "vertical")
 			_draw_faixa_clube(Rect2(cur_x, row_h, stripe_w, row_h), strip_colors["away"], "vertical")
 			
-			# Requisito 5: Gols ≈ 0.62·H da LINHA (cada dígito ocupa quase toda a altura da linha)
-			var gol_sz = int(round(row_h * 0.88)) # Glifo ≈ 0.62 * row_h
+			var gol_sz = int(round(row_h * 0.873))
 			var r_hg = Rect2(cur_x + stripe_w, 0.0, col_w - stripe_w, row_h)
 			var r_ag = Rect2(cur_x + stripe_w, row_h, col_w - stripe_w, row_h)
-			_draw_auto_text(str(home_score), r_hg, Color("#101015"), gol_sz, 0.35 * total_h, true)
-			_draw_auto_text(str(away_score), r_ag, Color("#101015"), gol_sz, 0.35 * total_h, true)
+			_draw_auto_text(str(home_score), r_hg, Color("#101015"), gol_sz, 0.35 * total_h, true, HORIZONTAL_ALIGNMENT_CENTER)
+			_draw_auto_text(str(away_score), r_ag, Color("#101015"), gol_sz, 0.35 * total_h, true, HORIZONTAL_ALIGNMENT_CENTER)
 			
 		cur_x += col_w
+
+func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w: float) -> void:
+	if text.is_empty():
+		return
+	var font = _get_font()
+	var font_size = target_font_size
+	var text_sz = font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size)
+	if text_sz.x > max_w:
+		var ratio = max_w / text_sz.x
+		var safe_floor = float(target_font_size) * 0.60
+		font_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
+		text_sz = font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size)
+	var cap_h = float(font_size) * 0.71
+	var text_y = rect.position.y + (rect.size.y + cap_h) * 0.5
+	var text_x = rect.position.x + (rect.size.x - text_sz.x) * 0.5
+	if text_x + text_sz.x > rect.position.x + rect.size.x:
+		text_x = rect.position.x + rect.size.x - text_sz.x
+	text_x = max(text_x, rect.position.x)
+	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, font_size, Color.WHITE)
 
 # ==============================================================================
 # LOGOS DE LIGA
@@ -755,7 +820,7 @@ func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 # ==============================================================================
 # ESCUDO UNIFICADO (Requisito 1: Placeholder ou CrestView real 1:1)
 # ==============================================================================
-func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary) -> void:
+func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary, custom_color: Color = Color(0, 0, 0, 0)) -> void:
 	var has_real = crest.is_logo()
 	if has_real:
 		crest.visible = true
@@ -775,11 +840,14 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		"inclinada":
 			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
 			draw_circle(center, r, Color.WHITE)
+			if custom_color.a > 0.0 and custom_color != Color.WHITE:
+				draw_arc(center, r - 1.0, 0.0, TAU, 32, custom_color, 2.0, true)
 		"bundesliga":
 			# Anel branco fino (2.5 px), miolo na cor do bloco do clube
 			var bg_col = _get_team_color(team)
 			draw_circle(center, r - 1.25, bg_col)
-			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
+			var ring_col = custom_color if custom_color.a > 0.0 else Color.WHITE
+			draw_arc(center, r - 1.25, 0.0, TAU, 32, ring_col, 2.5, true)
 		"la_liga":
 			# Círculos brancos finos e VAZIOS (anel 3 px, miolo na cor marinho #10193A), sem cor de clube
 			draw_circle(center, r - 1.5, Color("#10193A"))
@@ -1053,6 +1121,89 @@ func _draw_faixa_clube(rect: Rect2, colors: Array[Color], orientation: String) -
 		var half_w = rect.size.x * 0.5
 		draw_rect(Rect2(rect.position.x, rect.position.y, half_w, rect.size.y), colors[0])
 		draw_rect(Rect2(rect.position.x + half_w, rect.position.y, rect.size.x - half_w, rect.size.y), colors[1])
+
+# ==============================================================================
+# WCAG CONTRASTE & RESOLUÇÃO DE CORES POR CLUBE (FIX8 / FIX8c)
+# ==============================================================================
+static func get_relative_luminance(c: Color) -> float:
+	var r = c.r
+	var g = c.g
+	var b = c.b
+	var r_lin = r / 12.92 if r <= 0.04045 else ((r + 0.055) / 1.055) ** 2.4
+	var g_lin = g / 12.92 if g <= 0.04045 else ((g + 0.055) / 1.055) ** 2.4
+	var b_lin = b / 12.92 if b <= 0.04045 else ((b + 0.055) / 1.055) ** 2.4
+	return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
+
+static func get_contrast_ratio(c1: Color, c2: Color) -> float:
+	var l1 = get_relative_luminance(c1)
+	var l2 = get_relative_luminance(c2)
+	var lighter = max(l1, l2)
+	var darker = min(l1, l2)
+	return (lighter + 0.05) / (darker + 0.05)
+
+static func get_best_contrast_color(bg: Color) -> Color:
+	var cr_white = get_contrast_ratio(Color.WHITE, bg)
+	var cr_dark = get_contrast_ratio(Color("#101015"), bg)
+	if cr_white >= cr_dark:
+		return Color.WHITE
+	return Color("#101015")
+
+func _resolve_team_kit_colors() -> Dictionary:
+	var h_bg = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
+	if h_bg.a == 0.0:
+		h_bg = Color.WHITE
+		
+	var a_bg = _parse_color_resilient(away_team.get("kit", "#FFFFFF"))
+	if a_bg.a == 0.0:
+		a_bg = Color.WHITE
+		
+	var a_kit2 = _parse_color_resilient(away_team.get("kit2", ""))
+	
+	var dist = delta_e_cie76(h_bg, a_bg)
+	if dist < 25.0:
+		if a_kit2.a > 0.0 and delta_e_cie76(h_bg, a_kit2) >= 25.0:
+			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE), visitante alternado para kit2: %s" % str(a_kit2))
+			a_bg = a_kit2
+		else:
+			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE) e kit2 incompatível, visitante alternado para neutro")
+			var h_lab = color_to_lab(h_bg)
+			if h_lab.x < 50.0:
+				a_bg = Color.WHITE
+			else:
+				a_bg = Color("#111111")
+				
+	var h_txt = get_best_contrast_color(h_bg)
+	var a_txt = get_best_contrast_color(a_bg)
+	
+	return {
+		"home_bg": h_bg,
+		"away_bg": a_bg,
+		"home_txt": h_txt,
+		"away_txt": a_txt
+	}
+
+func get_resolved_libertadores_underline_colors(team: Dictionary) -> Array[Color]:
+	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
+	if c1.a == 0.0:
+		c1 = Color.WHITE
+	var c2 = _parse_color_resilient(team.get("kit2", ""))
+	
+	var raw_colors: Array[Color] = [c1]
+	if c2.a > 0.0 and delta_e_cie76(c1, c2) >= 15.0:
+		raw_colors.append(c2)
+		
+	var bg = Color("#121212")
+	var result: Array[Color] = []
+	for i in range(raw_colors.size()):
+		var c = raw_colors[i]
+		if delta_e_cie76(c, bg) < 25.0:
+			if c2.a > 0.0 and delta_e_cie76(c2, bg) >= 25.0 and raw_colors.size() == 1:
+				result.append(c2)
+			else:
+				result.append(Color.WHITE)
+		else:
+			result.append(c)
+	return result
 
 func _tr(key: String) -> String:
 	var root = get_tree().root if is_inside_tree() else null
