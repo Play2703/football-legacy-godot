@@ -4,6 +4,7 @@
   "familia": "modulos_separados",
   "confianca": "medido",
   "fonte": "larga_negrito",
+  "ordem_relogio": "apos_times",
   "proporcao_barra": 9.31,
   "skew_deg": 0.0,
   "raio_canto": 6.0,
@@ -27,7 +28,7 @@
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "sigla",
-        "sublinhado_grosso"
+        "faixa_clube"
       ]
     },
     {
@@ -50,7 +51,7 @@
       "cor_texto": "#FFFFFF",
       "conteudo": [
         "sigla",
-        "sublinhado_grosso"
+        "faixa_clube"
       ]
     },
     {

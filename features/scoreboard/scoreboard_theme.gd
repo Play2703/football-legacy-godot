@@ -39,6 +39,7 @@ extends Resource
 # Cores e Configurações de Transmissão
 @export var font_type: String = "condensada" # "condensada", "larga_negrito", "larga_espacada"
 @export var font_res: Font = null
+@export var ordem_relogio: String = "apos_times" # "apos_times" ou "apos_logo" (Libertadores)
 @export var primary_color: Color = Color("#111114")
 @export var accent_color: Color = Color("#FF004B")
 @export var stoppage_bg_color: Color = Color("#FF004B")
