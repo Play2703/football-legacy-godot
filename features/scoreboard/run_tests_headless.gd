@@ -400,6 +400,7 @@ func _init() -> void:
 	var pass_fora_circulo = true
 	var pass_margem = true
 	var pass_contraste = true
+	var pass_fix9c_sem_circulo = true
 	var pass_placeholder = true
 	
 	var csv_rows: Array[String] = []
@@ -502,6 +503,18 @@ func _init() -> void:
 					pass_placeholder = false
 					all_ok = false
 					
+				# Asserção FIX9c: Regra do círculo em todos os 7 layouts (nenhum anel em escudo real; placeholder com anel fino)
+				if m["has_crest"]:
+					if m["ring_used"]:
+						printerr("ERRO FIX9c ANEL INDEVIDO: %s no layout %s tem escudo real mas desenhou anel decorativo!" % [t["name"], lid])
+						pass_fix9c_sem_circulo = false
+						all_ok = false
+				else:
+					if not m["ring_used"]:
+						printerr("ERRO FIX9c PLACEHOLDER SEM ANEL: %s no layout %s não possui anel de placeholder!" % [t["name"], lid])
+						pass_fix9c_sem_circulo = false
+						all_ok = false
+					
 				# Coleta para CSV e JSON (FIX10d: placeholders com "N/A" em distorção, ΔE e dentro_circulo)
 				var distorcao_str = "%.2f" % m["ratio_diff_pct"] if m["has_crest"] else "N/A"
 				var dentro_circulo_str = ("true" if m["within_circle"] else "false") if m["has_crest"] else "N/A"
@@ -599,8 +612,9 @@ func _init() -> void:
 	print("[%s] (c) Margens mínimas: Todas as margens escudo-sigla (até a caixa de texto) e escudo-borda >= 0.06·W" % ["PASS" if pass_margem else "FAIL"])
 	print("[%s] (d) Contraste e Disco: 100%% dos casos possuem contraste contra fundo ou disco >= 40" % ["PASS" if pass_contraste else "FAIL"])
 	print("[%s] (e) Integridade: Nenhum escudo real caiu no placeholder; nenhum placeholder vazio" % ["PASS" if pass_placeholder else "FAIL"])
+	print("[%s] (f) FIX9c Círculo: Círculo é só gabarito; NENHUM anel atrás de escudo real e placeholder é anel fino" % ["PASS" if pass_fix9c_sem_circulo else "FAIL"])
 	print("=================================================================")
-	print("[TESTE OK] FIX10c: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
+	print("[TESTE OK] FIX10c/FIX9c: Todos os 56 testes de escudos reais e placeholders nos 7 layouts validados com sucesso.")
 
 	# ==============================================================================
 	# ETAPA 4c-FIX9 — TESTE DO NOVO BRASILEIRÃO (PÍLULA CENTRAL)
@@ -695,6 +709,21 @@ func _init() -> void:
 			all_ok = false
 		if txt_aw > r_ag.size.x:
 			printerr("ERRO FIX9 PLACAR CORTADO: Placar visitante '%s' (%f px) vaza r_ag (%f px) no par %s" % [a_str, txt_aw, r_ag.size.x, p_info["desc"]])
+			pass_fix9_placar = false
+			all_ok = false
+			
+		# (a2) Simetria FIX9c: Distância do centro do número ao centro da metade da pílula <= 2.0 px
+		var half_w = (cx - div_w * 0.5) - pill_rect.position.x
+		var c_left = pill_rect.position.x + half_w * 0.5
+		var c_right = (cx + div_w * 0.5) + half_w * 0.5
+		var opt_h = 1.5 if h_str == "1" else 0.0
+		var opt_a = 1.5 if a_str == "1" else 0.0
+		var center_h = c_left + opt_h
+		var center_a = c_right + opt_a
+		var dist_sym_h = abs(center_h - c_left)
+		var dist_sym_a = abs(center_a - c_right)
+		if dist_sym_h > 2.0 or dist_sym_a > 2.0:
+			printerr("ERRO FIX9c SIMETRIA: Placar diverge do centro da metade por > 2px no par %s (H: %.2fpx, A: %.2fpx)" % [p_info["desc"], dist_sym_h, dist_sym_a])
 			pass_fix9_placar = false
 			all_ok = false
 			

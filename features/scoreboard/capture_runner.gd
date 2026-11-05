@@ -141,5 +141,38 @@ func _ready() -> void:
 			b_img.save_png(b_path)
 			print("[BRASILEIRAO FIX9 RENDER] Salvo: %s (%dx%d)" % [b_path, b_img.get_width(), b_img.get_height()])
 		
+	# Capturas de variantes do relógio para a Folha 2x (Item 2: Escala 1.0x, 1.2x, 1.4x e Fonte Condensada vs Geométrica)
+	print("Gerando variantes do relógio (escalas 1.0x, 1.2x, 1.4x e fontes)...")
+	var clock_variants = [
+		{"scale": 1.0, "geom": false, "id": "cond_10"},
+		{"scale": 1.2, "geom": false, "id": "cond_12"},
+		{"scale": 1.4, "geom": false, "id": "cond_14"},
+		{"scale": 1.0, "geom": true,  "id": "geom_10"},
+		{"scale": 1.2, "geom": true,  "id": "geom_12"},
+		{"scale": 1.4, "geom": true,  "id": "geom_14"}
+	]
+	for cv in clock_variants:
+		sb.clock_scale = cv["scale"]
+		sb.clock_font_geom = cv["geom"]
+		sb.setup(cru_club, mir_club, "brasileirao", "", true)
+		sb.update_score(0, 0)
+		sb.update_time(0, 1, 48, "1T")
+		
+		var needed_w = int(ceil(sb.size.x + 64.0))
+		var needed_h = int(ceil(sb.size.y + 90.0))
+		vp.size = Vector2i(needed_w, needed_h)
+		sb.position = Vector2(32.0, 24.0)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var c_img = vp.get_texture().get_image()
+		if c_img:
+			var c_path = "res://REFERENCIAS_SCOREBOARD/capturas_teste/godot_renders/board_brasileirao_clock_%s.png" % cv["id"]
+			c_img.save_png(c_path)
+			print("[CLOCK VARIANT] Salvo: %s" % c_path)
+			
+	# Resetar para padrão
+	sb.clock_scale = 1.0
+	sb.clock_font_geom = false
+		
 	print("Todas as capturas do Viewport do Godot foram geradas com sucesso!")
 	get_tree().quit(0)
