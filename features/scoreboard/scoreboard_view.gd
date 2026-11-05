@@ -17,10 +17,13 @@ const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _
 const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
-# FIX9c/d: Constantes nomeadas de contraste e relógio
+# FIX9c/d/f: Constantes nomeadas de contraste, relógio e La Liga
 const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
 const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
 const CLOCK_FONT_SCALE: float = 1.2
+const LA_LIGA_SCALE: float = 1.25
+const LA_LIGA_BAR_W_RATIO: float = 0.12 # fração da coluna marinho (~0.12, aprox o dobro do anterior)
+const LA_LIGA_BASE_BAR_THICKNESS: float = 3.0 # espessura anterior medida em 1.0x (px)
 
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
@@ -32,9 +35,12 @@ var stoppage: int = 6
 var is_compact: bool = false
 var use_local_textures: bool = true
 
-# FIX9c: Escala do relógio e opção de fonte geométrica
+# FIX9c: Escala do relógio (padrão único Bebas 1.2x fixado)
 @export var clock_scale: float = CLOCK_FONT_SCALE
-@export var clock_font_geom: bool = false
+
+# FIX9f: Overrides de escala e barra para La Liga (testes e comparação de opções)
+@export var la_liga_scale_override: float = 0.0
+@export var la_liga_bar_ratio_override: float = 0.0
 
 # Pênaltis
 var shootout_active: bool = false
@@ -255,8 +261,20 @@ func set_use_local_textures(enabled: bool) -> void:
 		_recalculate_dimensions()
 		queue_redraw()
 
+func get_la_liga_scale() -> float:
+	if la_liga_scale_override > 0.0:
+		return la_liga_scale_override
+	return LA_LIGA_SCALE
+
+func get_la_liga_bar_ratio() -> float:
+	if la_liga_bar_ratio_override > 0.0:
+		return la_liga_bar_ratio_override
+	return LA_LIGA_BAR_W_RATIO
+
 func get_real_size() -> Vector2:
-	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) if (board_theme and board_theme.familia == "stack2") else TOTAL_HUD_H
+	var is_ll = (board_theme and board_theme.familia == "stack2")
+	var ll_scale = get_la_liga_scale() if is_ll else 1.0
+	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) * ll_scale if is_ll else TOTAL_HUD_H
 	return Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 
 func _recalculate_dimensions() -> void:
@@ -267,8 +285,11 @@ func _recalculate_dimensions() -> void:
 		size = custom_minimum_size
 		return
 	
-	var h: float = BASE_BAR_H
-	var w: float = h * board_theme.aspect_ratio
+	var is_ll = (board_theme and board_theme.familia == "stack2")
+	var ll_scale = get_la_liga_scale() if is_ll else 1.0
+	
+	var h: float = BASE_BAR_H * (1.8 * ll_scale if is_ll else 1.0)
+	var w: float = (BASE_BAR_H * board_theme.aspect_ratio) * (ll_scale if is_ll else 1.0)
 	_unscaled_size = Vector2(w, h)
 	
 	if is_compact:
@@ -280,7 +301,7 @@ func _recalculate_dimensions() -> void:
 	else:
 		_current_scale = 1.0
 	
-	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) if (board_theme and board_theme.familia == "stack2") else TOTAL_HUD_H
+	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) * ll_scale if is_ll else TOTAL_HUD_H
 	var final_size = Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 	custom_minimum_size = final_size
 	size = final_size
@@ -526,15 +547,10 @@ func _draw_brasileirao() -> void:
 			prefix = "1T"
 		time_str = "%s %02d:%02d" % [prefix, minute, second]
 			
-	var f_custom: Font = null
-	if clock_font_geom:
-		f_custom = ScoreboardLoader.resolve_scoreboard_font("larga_negrito")
-	
-	# Tamanho de fonte único para tempo e acréscimo em todos os pares e estados:
+	# Tamanho de fonte único para tempo e acréscimo em todos os pares e estados (Bebas Neue 1.2x padrão ativo):
 	# Mockup tem razão letra / faixa = 0.50 (54 / 108 px).
-	# Para Bebas Neue (cap-height 0.71), tamanho 26 px dá altura de letra ~18.5 px (0.50 * 37.1).
-	# Para Montserrat (cap-height 0.72), tamanho 20 px dá altura ~14.4 px e largura equilibrada.
-	var base_clk_sz = 20 if clock_font_geom else 26
+	# Para Bebas Neue (cap-height 0.71), base 26 px * CLOCK_FONT_SCALE (1.2) = 31 px (~18.5 px altura de glifo).
+	var base_clk_sz = 26
 	var clk_font_target = int(round(float(base_clk_sz) * clock_scale))
 	
 	if stoppage > 0 and time_str != "INT" and time_str != "FIM":
@@ -549,12 +565,12 @@ func _draw_brasileirao() -> void:
 		var r_clk = Rect2(clk_x + 6.0, clk_top, (cdiv_x - clk_x) - 10.0, clk_vis_h)
 		var r_stop = Rect2(cdiv_x + 4.0, clk_top, (clk_x + clk_w - cdiv_x) - 8.0, clk_vis_h)
 		
-		_draw_auto_text(time_str, r_clk, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
-		_draw_auto_text(stop_str, r_stop, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
+		_draw_auto_text(time_str, r_clk, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER)
+		_draw_auto_text(stop_str, r_stop, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER)
 	else:
 		# Sem acréscimo: tempo centralizado na faixa, sem divisor, COM O MESMO TAMANHO DE FONTE
 		var r_clk_full = Rect2(clk_x + 6.0, clk_top, clk_w - 12.0, clk_vis_h)
-		_draw_auto_text(time_str, r_clk_full, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER, f_custom)
+		_draw_auto_text(time_str, r_clk_full, Color("#051838"), clk_font_target, 10.0, true, HORIZONTAL_ALIGNMENT_CENTER)
 		
 	# 9. Registrar células desenhadas para integridade de validação
 	var cells_map = {
@@ -1046,8 +1062,10 @@ func _draw_modulos_separados() -> void:
 # Variante com siglas disponível por flag (siglas no lugar dos escudos).
 # ==============================================================================
 func _draw_stack2() -> void:
+	var ll_scale = get_la_liga_scale()
+	var bar_ratio = get_la_liga_bar_ratio()
 	var total_w = _unscaled_size.x
-	var total_h = BASE_BAR_H * 1.8
+	var total_h = BASE_BAR_H * 1.8 * ll_scale
 	var row_h = total_h * 0.5
 	var cols = board_theme.cells
 	
@@ -1075,18 +1093,18 @@ func _draw_stack2() -> void:
 			_draw_logo_in_rect(r_top, Color.WHITE)
 			
 			var time_str = "%02d:%02d" % [minute, 0]
-			var clk_sz = int(round(_get_font_size("relogio", total_h) * CLOCK_FONT_SCALE))
+			var clk_sz = int(round(_get_font_size("relogio", BASE_BAR_H * 1.8) * CLOCK_FONT_SCALE * ll_scale))
 			
 			if stoppage > 0:
 				var stop_w = col_w * 0.45
 				var stop_h = total_h * 0.12
 				var stop_x = cur_x + (col_w - stop_w) * 0.5
-				var stop_y = total_h - stop_h - 2.0
+				var stop_y = total_h - stop_h - 2.0 * ll_scale
 				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
 				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(round(stop_h * 0.85 * CLOCK_FONT_SCALE)), 0.60 * stop_h, true)
 				
-				var r_clk = Rect2(cur_x, row_h + 1.0, col_w, row_h - stop_h - 2.0)
+				var r_clk = Rect2(cur_x, row_h + 1.0, col_w, row_h - stop_h - 2.0 * ll_scale)
 				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
 			else:
 				var r_clk = Rect2(cur_x, row_h, col_w, row_h)
@@ -1107,10 +1125,14 @@ func _draw_stack2() -> void:
 			draw_rect(col_rect, Color("#FFFFFF"))
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(0.8, 0.8, 0.8), 1.0)
 			
-			var stripe_w = max(3.0, col_w * 0.06)
-			var strip_colors = get_resolved_club_strip_colors()
-			_draw_faixa_clube(Rect2(cur_x, 0.0, stripe_w, row_h), strip_colors["home"], "vertical")
-			_draw_faixa_clube(Rect2(cur_x, row_h, stripe_w, row_h), strip_colors["away"], "vertical")
+			# FIX9f: Barra de cor do clube com espessura controlada por LA_LIGA_BAR_W_RATIO
+			# Largura da coluna marinho: cols[1].peso / total_peso * total_w
+			var col_times_w = (float(cols[1].get("peso", 1.0)) / total_peso) * total_w
+			var stripe_w = max(3.0 * ll_scale, round(col_times_w * bar_ratio))
+			var h_strip = get_la_liga_club_strip_colors(home_team, Color("#10193A"))
+			var a_strip = get_la_liga_club_strip_colors(away_team, Color("#10193A"))
+			_draw_la_liga_club_bar(Rect2(cur_x, 0.0, stripe_w, row_h), h_strip)
+			_draw_la_liga_club_bar(Rect2(cur_x, row_h, stripe_w, row_h), a_strip)
 			
 			var gol_sz = int(round(row_h * 0.873))
 			var r_hg = Rect2(cur_x + stripe_w, 0.0, col_w - stripe_w, row_h)
@@ -1670,10 +1692,12 @@ func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
 func _draw_bottom_pill() -> void:
 	if board_theme and (board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a"):
 		return
-	var pill_w: float = 160.0
-	var pill_h: float = 28.0
-	var bar_h: float = BASE_BAR_H * 1.8 if (board_theme and board_theme.familia == "stack2") else BASE_BAR_H
-	var pill_y: float = bar_h + 4.0
+	var is_ll = (board_theme and board_theme.familia == "stack2")
+	var ll_scale = get_la_liga_scale() if is_ll else 1.0
+	var pill_w: float = 160.0 * ll_scale
+	var pill_h: float = 28.0 * ll_scale
+	var bar_h: float = (BASE_BAR_H * 1.8) * ll_scale if is_ll else BASE_BAR_H
+	var pill_y: float = bar_h + 4.0 * ll_scale
 	var pill_x: float = (_unscaled_size.x - pill_w) * 0.5
 	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
 	
@@ -1684,7 +1708,7 @@ func _draw_bottom_pill() -> void:
 	style.bg_color = bg_col
 	style.border_color = border_col
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
+	style.set_corner_radius_all(int(round(6.0 * ll_scale)))
 	draw_style_box(style, pill_rect)
 	
 	var period_str = "1T"
@@ -1697,7 +1721,7 @@ func _draw_bottom_pill() -> void:
 		
 	var time_str = "%d'" % minute
 	var full_text = "%s  %s" % [period_str, time_str]
-	_draw_auto_text(full_text, pill_rect, Color.WHITE, _get_font_size("pilula", pill_h), 10.0, true)
+	_draw_auto_text(full_text, pill_rect, Color.WHITE, int(round(_get_font_size("pilula", 28.0) * ll_scale)), 10.0 * ll_scale, true)
 
 # ==============================================================================
 # RENDERIZADOR TABULAR DO RELÓGIO
@@ -1899,6 +1923,43 @@ static func _parse_color_resilient(raw_val: Variant) -> Color:
 	if Color.html_is_valid(s):
 		return Color(s)
 	return Color(0, 0, 0, 0)
+
+static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float = 25.0) -> Color:
+	if delta_e_cie76(col, bg_col) >= min_de:
+		return col
+	var lab = color_to_lab(col)
+	var cur_L = lab.x
+	# Se a cor for muito escura ou conflitante contra o fundo, clarear mantendo matiz até atingir min_de
+	while cur_L < 92.0 and delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de:
+		cur_L += 1.5
+	return lab_to_color(Vector3(cur_L, lab.y, lab.z))
+
+static func get_la_liga_club_strip_colors(team: Dictionary, bg_marinho: Color = Color("#10193A")) -> Array[Color]:
+	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
+	if c1.a == 0.0:
+		c1 = Color.WHITE
+	c1 = ensure_min_contrast_cielab(c1, bg_marinho, 25.0)
+	var colors: Array[Color] = [c1]
+	
+	var c2 = _parse_color_resilient(team.get("kit2", ""))
+	if c2.a > 0.0 and delta_e_cie76(c1, c2) >= 15.0:
+		c2 = ensure_min_contrast_cielab(c2, bg_marinho, 25.0)
+		colors.append(c2)
+		
+	return colors
+
+func _draw_la_liga_club_bar(rect: Rect2, colors: Array[Color]) -> void:
+	if colors.is_empty():
+		return
+	var n = colors.size()
+	if n == 1:
+		draw_rect(rect, colors[0])
+		return
+	var sub_w = rect.size.x / float(n)
+	for i in range(n):
+		var sub_x = rect.position.x + i * sub_w
+		var sub_width = sub_w if i < n - 1 else (rect.position.x + rect.size.x - sub_x)
+		draw_rect(Rect2(sub_x, rect.position.y, sub_width, rect.size.y), colors[i])
 
 func get_resolved_club_strip_colors() -> Dictionary:
 	var h_c1 = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
