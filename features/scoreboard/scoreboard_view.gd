@@ -1,10 +1,10 @@
 class_name ScoreboardView
 extends Control
 
-## ScoreboardView: Renderizador universal de placares de transmissão reais (Etapa 4c-FIX6).
+## ScoreboardView: Renderizador universal de placares de transmissão reais (Etapa 4c-FIX7).
 ## Suporta fielmente as 3 famílias visuais (skew, reto, modulos_separados) + stack2,
-## com proporção tipográfica precisa, escudos 1:1 via CrestView, relógio desimpedido da etiqueta,
-## pílula estrita "1T  27'", Bundesliga com escudo-sigla-gol simétrico e La Liga sem siglas.
+## com placeholders específicos por liga quando sem escudo real, proporção tipográfica exata,
+## relógio sem invasão de bloco, La Liga com faixa bicolor e traços de 3 linhas sob siglas.
 
 const ScoreboardTheme = preload("res://features/scoreboard/scoreboard_theme.gd")
 const ScoreboardLoader = preload("res://features/scoreboard/scoreboard_loader.gd")
@@ -137,8 +137,6 @@ func _draw() -> void:
 	
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(_current_scale, _current_scale))
 	
-	# Removida linha cinza/sombra sob a barra para manter contorno limpo (Requisito 7)
-	
 	if board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a":
 		_draw_brasileirao()
 	elif board_theme.familia == "stack2":
@@ -154,7 +152,7 @@ func _draw() -> void:
 	_draw_bottom_pill()
 
 # ==============================================================================
-# TIPOGRAFIA CALIBRADA E UTILITÁRIOS DE FONTE (Requisito 1)
+# TIPOGRAFIA CALIBRADA E UTILITÁRIOS DE FONTE (Requisitos 1, 3, 4, 5)
 # ==============================================================================
 func _get_font() -> Font:
 	if board_theme and board_theme.font_res:
@@ -163,27 +161,44 @@ func _get_font() -> Font:
 
 func _get_font_size(tipo: String, ref_h: float) -> int:
 	var ftype = board_theme.font_type if board_theme else "condensada"
+	var comp_id = board_theme.theme_id if board_theme else ""
+	
 	match ftype:
 		"condensada": # Bebas Neue: cap-height ≈ 0.71 * font_size
 			match tipo:
-				"gol", "relogio":
-					return int(round(ref_h * 0.69)) # Glifo ≈ 0.50·H (43px em H=86)
+				"gol":
+					return int(round(ref_h * 0.69)) # Glifo ≈ 0.50·H
+				"relogio":
+					if comp_id == "la_liga":
+						# La Liga: relógio ≈ 0.26·H do bloco
+						return int(round(ref_h * 0.37))
+					return int(round(ref_h * 0.69)) # Glifo ≈ 0.50·H
 				"sigla":
-					return int(round(ref_h * 0.645)) # Glifo ≈ 0.45·H (39px em H=86)
+					return int(round(ref_h * 0.645)) # Glifo ≈ 0.45·H
 				"etiqueta":
-					return int(round(ref_h * 0.365)) # Glifo ≈ 0.26·H (22px em H=86)
+					return int(round(ref_h * 0.365)) # Glifo ≈ 0.26·H
 				"pilula":
-					return int(round(ref_h * 0.55)) # Glifo ≈ 0.38·pill_h
+					return int(round(ref_h * 0.55))
 				"penaltis":
 					return int(round(ref_h * 0.45))
 				_:
 					return int(round(ref_h * 0.50))
 		"larga_negrito": # Montserrat ExtraBold: cap-height ≈ 0.72 * font_size
 			match tipo:
-				"gol", "relogio", "sigla":
-					return int(round(ref_h * 0.50)) # Glifo ≈ 0.36·H (31px em H=86)
+				"gol":
+					return int(round(ref_h * 0.50)) # Glifo ≈ 0.36·H
+				"relogio":
+					if comp_id == "bundesliga":
+						# Bundesliga: relógio com altura de dígito ≈ 0.40·H (Requisito 3)
+						return int(round(ref_h * 0.55))
+					elif comp_id == "libertadores":
+						# Libertadores: dígitos ≈ 0.34·H (Requisito 4)
+						return int(round(ref_h * 0.47))
+					return int(round(ref_h * 0.50))
+				"sigla":
+					return int(round(ref_h * 0.50)) # Glifo ≈ 0.36·H
 				"etiqueta":
-					return int(round(ref_h * 0.31)) # Glifo ≈ 0.24·H (21px em H=86)
+					return int(round(ref_h * 0.31)) # Glifo ≈ 0.24·H
 				"pilula":
 					return int(round(ref_h * 0.45))
 				"penaltis":
@@ -193,7 +208,7 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 		"larga_espacada": # Champions League (Inter Medium): cap-height ≈ 0.72 * font_size
 			match tipo:
 				"gol", "relogio", "sigla":
-					return int(round(ref_h * 0.39)) # Glifo ≈ 0.28·H (24px em H=86)
+					return int(round(ref_h * 0.39)) # Glifo ≈ 0.28·H
 				"etiqueta":
 					return int(round(ref_h * 0.31))
 				"pilula":
@@ -206,8 +221,10 @@ func _get_font_size(tipo: String, ref_h: float) -> int:
 			return int(round(ref_h * 0.45))
 
 # ==============================================================================
-# BRASILEIRÃO: Retângulos sem inclinação, cantos 6px, faixa lima
-# [módulo BRANCO sigla+escudo][bloco ESCURO gol | gol][módulo BRANCO escudo+sigla][relógio ROXO]
+# BRASILEIRÃO (Requisito 2 & 1)
+# Sigla à esquerda com margem 0.08·W, escudo à direita com folga 0.06·W até o bloco escuro;
+# Visitante espelhado (escudo à esquerda folga 0.06·W, sigla à direita margem 0.08·W)
+# Escudo placeholder: anel fino cinza-escuro #808080, contorno 3 px, miolo transparente.
 # ==============================================================================
 func _draw_brasileirao() -> void:
 	var H = BASE_BAR_H
@@ -249,15 +266,19 @@ func _draw_brasileirao() -> void:
 			draw_rect(Rect2(rect.position.x, H - strip_h, rect.size.x, strip_h), strip_col)
 			
 		if c_tipo == "time_casa":
-			# Escudo neutro (Requisito 6: CrestView com diâmetro ≤ 0.58·H, sem anéis grossos)
-			var diam = min((H - strip_h) * 0.54, rect.size.x * 0.26)
-			var crest_pos = Vector2(rect.position.x + rect.size.x - diam - 10.0, (H - strip_h - diam) * 0.5)
-			_position_crest(_home_crest, crest_pos, diam)
-			var r_text = Rect2(rect.position.x + 10.0, 0.0, rect.size.x - diam - 22.0, H - strip_h)
-			_draw_auto_text(home_team.get("abbrev", "FLA"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true)
+			# Requisito 2: sigla alinhada à esquerda com margem 0.08·W, escudo à direita com folga 0.06·W
+			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
+			var crest_x = rect.position.x + cell_w - (cell_w * 0.06) - diam
+			var crest_y = (H - strip_h - diam) * 0.5
+			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team)
+			
+			var sigla_start_x = rect.position.x + (cell_w * 0.08)
+			var sigla_w = crest_x - 8.0 - sigla_start_x
+			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
+			_draw_auto_text(home_team.get("abbrev", "FLA"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
 			
 		elif c_tipo == "placar_unico":
-			var seg_w = rect.size.x * 0.5
+			var seg_w = cell_w * 0.5
 			var r_hg = Rect2(rect.position.x, 0.0, seg_w, H - strip_h)
 			var r_ag = Rect2(rect.position.x + seg_w, 0.0, seg_w, H - strip_h)
 			_draw_auto_text(str(home_score), r_hg, txt_col, _get_font_size("gol", H - strip_h), 0.30 * H, true)
@@ -267,16 +288,21 @@ func _draw_brasileirao() -> void:
 			draw_line(Vector2(rect.position.x + seg_w, div_y), Vector2(rect.position.x + seg_w, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
 			
 		elif c_tipo == "time_fora":
-			var diam = min((H - strip_h) * 0.54, rect.size.x * 0.26)
-			var crest_pos = Vector2(rect.position.x + 10.0, (H - strip_h - diam) * 0.5)
-			_position_crest(_away_crest, crest_pos, diam)
-			var r_text = Rect2(rect.position.x + diam + 18.0, 0.0, rect.size.x - diam - 26.0, H - strip_h)
-			_draw_auto_text(away_team.get("abbrev", "PAL"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true)
+			# Requisito 2: visitante espelhado (escudo à esquerda com folga 0.06·W, sigla à direita com margem 0.08·W)
+			var diam = min((H - strip_h) * 0.54, cell_w * 0.25)
+			var crest_x = rect.position.x + (cell_w * 0.06)
+			var crest_y = (H - strip_h - diam) * 0.5
+			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "brasileirao", away_team)
+			
+			var sigla_start_x = crest_x + diam + 8.0
+			var sigla_end_x = rect.position.x + cell_w - (cell_w * 0.08)
+			var sigla_w = sigla_end_x - sigla_start_x
+			var r_text = Rect2(sigla_start_x, 0.0, sigla_w, H - strip_h)
+			_draw_auto_text(away_team.get("abbrev", "PAL"), r_text, txt_col, _get_font_size("sigla", H - strip_h), 0.25 * H, true, HORIZONTAL_ALIGNMENT_RIGHT)
 			
 		elif c_tipo == "relogio":
-			# Requisito 2: Se houver acréscimo, reservar faixa para a etiqueta e centralizar o relógio no espaço restante
 			var time_str = "%02d:%02d" % [minute, 0]
-			var tag_w = clamp(rect.size.x * 0.28, 26.0, 38.0)
+			var tag_w = clamp(rect.size.x * 0.28, 26.0, 36.0)
 			if stoppage > 0:
 				var r_clock = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 8.0, H)
 				_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
@@ -288,9 +314,10 @@ func _draw_brasileirao() -> void:
 		cur_x += cell_w
 
 # ==============================================================================
-# FAMÍLIA SKEW (Premier League, Ligue 1, Serie A, Copa do Brasil)
-# Ordem rigorosa: logo | relogio | time_casa | placar_unico | time_fora | tampa
-# Sem cunhas cinzas e sem linha cinza inferior (Requisito 7)
+# FAMÍLIA SKEW (Premier League, Ligue 1, Serie A, Copa do Brasil) (Requisitos 1, 6, 7)
+# Logo ≈ 0.14 da barra, relógio ≈ 0.20 da barra. Divisa inclinada idêntica.
+# Placeholder: DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, a ≥ 0.06·W da divisa inclinada.
+# Traços sob a sigla: 3 linhas horizontais de 2px, espaçamento 3px, compr ≈ 0.75 da sigla, alinhadas à esq.
 # ==============================================================================
 func _draw_skew() -> void:
 	var H = BASE_BAR_H
@@ -312,7 +339,6 @@ func _draw_skew() -> void:
 		var cell_w = (peso / total_peso) * (total_w - dx)
 		var next_x = cur_x + cell_w
 		
-		# Polígono do paralelogramo da célula
 		var poly = PackedVector2Array([
 			Vector2(cur_x + dx, 0.0),
 			Vector2(next_x + dx, 0.0),
@@ -323,7 +349,7 @@ func _draw_skew() -> void:
 		var bg_color = _resolve_color(c.get("fundo", "#101015"), false)
 		draw_colored_polygon(poly, bg_color)
 		
-		# Divisor sutil
+		# Divisor idêntico em todas as células
 		draw_line(Vector2(next_x + dx, 0.0), Vector2(next_x, H), Color(1.0, 1.0, 1.0, 0.12), 1.0)
 		
 		var cell_rect = Rect2(cur_x + dx * 0.5, 0.0, cell_w, H)
@@ -336,7 +362,7 @@ func _draw_skew() -> void:
 				
 			"relogio":
 				var time_str = "%02d:%02d" % [minute, 0]
-				var tag_w = clamp(cell_rect.size.x * 0.28, 26.0, 38.0)
+				var tag_w = clamp(cell_rect.size.x * 0.28, 26.0, 36.0)
 				if stoppage > 0:
 					var r_clock = Rect2(cell_rect.position.x + 4.0, 0.0, cell_rect.size.x - tag_w - 8.0, H)
 					_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
@@ -347,52 +373,63 @@ func _draw_skew() -> void:
 					_draw_clock_tabular(time_str, r_clock, txt_col, _get_font_size("relogio", H))
 					
 			"time_casa":
-				var diam = min(H * 0.52, (cell_rect.size.x - 16.0) * 0.30)
-				var crest_x = cell_rect.position.x + 8.0
+				# Requisito 1: DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, a ≥ 0.06·W da divisa
+				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
+				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
+				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_position_crest(_home_crest, Vector2(crest_x, crest_y), diam)
+				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team)
 				
-				var r_sigla = Rect2(crest_x + diam + 8.0, 0.0, cell_rect.size.x - diam - 20.0, H)
-				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				_draw_skew_team_stripes(r_sigla, H, home_team)
+				var sigla_x = crest_x + diam + 8.0
+				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
+				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
+				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
+				_draw_skew_3_stripes(sigla_x, sigla_w, H)
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
 				_draw_auto_text(score_str, cell_rect, txt_col, _get_font_size("gol", H), 0.30 * H, true)
 				
 			"time_fora":
-				var diam = min(H * 0.52, (cell_rect.size.x - 16.0) * 0.30)
-				var crest_x = cell_rect.position.x + 8.0
+				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
+				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
+				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				_position_crest(_away_crest, Vector2(crest_x, crest_y), diam)
+				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team)
 				
-				var r_sigla = Rect2(crest_x + diam + 8.0, 0.0, cell_rect.size.x - diam - 20.0, H)
-				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
-				_draw_skew_team_stripes(r_sigla, H, away_team)
+				var sigla_x = crest_x + diam + 8.0
+				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - 12.0
+				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
+				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
+				_draw_skew_3_stripes(sigla_x, sigla_w, H)
 				
 		cur_x = next_x
 
+# Requisito 7: 3 linhas horizontais de 2px, espaçamento 3px, comprimento ≈ 0.75 da sigla, alinhadas à esquerda
+func _draw_skew_3_stripes(sigla_x: float, sigla_w: float, H: float) -> void:
+	var comp_id = board_theme.theme_id if board_theme else ""
+	var accent_col = Color("#00FF87") # Premier
+	if comp_id == "copa_do_brasil":
+		accent_col = Color("#F4B800")
+	elif comp_id == "ligue_1":
+		accent_col = Color("#A6FF00")
+	elif comp_id == "serie_a":
+		accent_col = Color("#30D6E1")
+		
+	var line_len = sigla_w * 0.75
+	var start_y = H - 12.0
+	for i in range(3):
+		var y = start_y + float(i) * 5.0 # 2px de espessura + 3px de espaçamento
+		draw_line(Vector2(sigla_x, y), Vector2(sigla_x + line_len, y), accent_col, 2.0)
+
 func _draw_stoppage_tag(rect: Rect2, H: float, text: String, color: Color) -> void:
-	# Requisito 2: Elemento preso ao canto superior direito da célula do relógio
-	var tab_w = clamp(rect.size.x * 0.28, 26.0, 38.0)
+	var tab_w = clamp(rect.size.x * 0.28, 26.0, 36.0)
 	var tab_h = H * 0.30
 	var tab_x = rect.position.x + rect.size.x - tab_w - 2.0
 	var tab_y = 2.0
 	var r_tag = Rect2(tab_x, tab_y, tab_w, tab_h)
 	draw_rect(r_tag, color)
 	_draw_auto_text(text, r_tag, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
-
-func _draw_skew_team_stripes(rect: Rect2, H: float, team: Dictionary) -> void:
-	# Requisito 7: 3 linhas finas sob a sigla, não "---"
-	var dec_y = H - 6.0
-	var dw = 9.0
-	var gap = 4.0
-	var start_x = rect.position.x + (rect.size.x - (dw * 3.0 + gap * 2.0)) * 0.5
-	var line_col = Color("#30D6E1") if board_theme.theme_id == "serie_a" else _get_team_color(team)
-	
-	for d in range(3):
-		var sx = start_x + float(d) * (dw + gap)
-		draw_line(Vector2(sx, dec_y), Vector2(sx + dw, dec_y), line_col, 1.5)
 
 # ==============================================================================
 # RETO (Bundesliga & Champions League)
@@ -428,37 +465,38 @@ func _draw_reto() -> void:
 			_draw_logo_in_rect(rect, Color.WHITE)
 		elif c_tipo == "relogio":
 			var time_str = "%02d:%02d" % [minute, 0]
-			var tag_w = clamp(rect.size.x * 0.28, 26.0, 38.0)
+			# Requisito 3: "+6" SEM invadir o bloco vizinho
+			var tag_w = clamp(rect.size.x * 0.25, 24.0, 34.0)
 			if stoppage > 0:
-				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 8.0, H)
+				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 6.0, H)
 				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), _get_font_size("relogio", H))
 				var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
-				_draw_stoppage_tag(rect, H, "+%d" % stoppage, stop_col)
+				var stop_rect = Rect2(rect.position.x + rect.size.x - tag_w - 2.0, 2.0, tag_w, H * 0.30)
+				draw_rect(stop_rect, stop_col)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
 			else:
 				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - 8.0, H)
 				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), _get_font_size("relogio", H))
 				
 		cur_x += cell_w
 
-# Requisito 4: BUNDESLIGA [escudo à esquerda da sigla][sigla][gol alinhado à direita], casa E visitante
+# Requisito 1 & 4: BUNDESLIGA [escudo à esquerda da sigla][sigla][gol alinhado à direita]
+# Escudo placeholder: anel branco fino 2.5px, miolo na cor do clube
 func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var team = home_team if is_home else away_team
 	var score = home_score if is_home else away_score
 	var crest = _home_crest if is_home else _away_crest
 	var abbrev = team.get("abbrev", "HOL" if is_home else "M05")
 	
-	# Escudo à esquerda
 	var crest_diam = min(H * 0.54, rect.size.x * 0.24)
 	var crest_x = rect.position.x + 8.0
 	var crest_y = (H - crest_diam) * 0.5
-	_position_crest(crest, Vector2(crest_x, crest_y), crest_diam)
+	_draw_crest_unified(crest, Vector2(crest_x, crest_y), crest_diam, "bundesliga", team)
 	
-	# Gol alinhado à direita da célula
 	var score_box_w = clamp(H * 0.48, 30.0, rect.size.x * 0.20)
 	var r_score = Rect2(rect.position.x + rect.size.x - score_box_w - 4.0, 0.0, score_box_w, H)
 	_draw_auto_text(str(score), r_score, Color.WHITE, _get_font_size("gol", H), 12.0, true)
 	
-	# Margem ≥ 0.08 * W entre sigla e gol
 	var margin_between = max(rect.size.x * 0.08, 8.0)
 	var sigla_x = crest_x + crest_diam + 8.0
 	var sigla_w = r_score.position.x - margin_between - sigla_x
@@ -466,7 +504,6 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	_draw_auto_text(abbrev, r_sigla, Color.WHITE, _get_font_size("sigla", H), 10.0, true)
 
 func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
-	# Champions: barra contínua fina, RMA | 0 | 0 | STU
 	var h_abbrev = home_team.get("abbrev", "RMA")
 	var a_abbrev = away_team.get("abbrev", "STU")
 	var seg_w = rect.size.x * 0.25
@@ -488,8 +525,8 @@ func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
 		draw_line(Vector2(dx_div, div_y), Vector2(dx_div, div_y + div_h), Color(1.0, 1.0, 1.0, 0.25), 1.5)
 
 # ==============================================================================
-# MODULOS SEPARADOS (Libertadores)
-# Placar em módulo PRETO #121212; sublinhado grosso na cor do clube; +6 etiqueta
+# MODULOS SEPARADOS (Libertadores) (Requisito 4)
+# Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo levemente a borda superior
 # ==============================================================================
 func _draw_modulos_separados() -> void:
 	var H = BASE_BAR_H
@@ -548,15 +585,20 @@ func _draw_modulos_separados() -> void:
 				draw_rect(Rect2(rect.position.x + 8.0, H - 7.0, rect.size.x - 16.0, 5.0), kit_col)
 				
 			"relogio":
+				# Requisito 4: Relógio dourado com dígitos ≈ 0.34·H; "+6" com larg/alt ≈ 0.30 sobrepondo borda superior
 				var time_str = "%02d:%02d" % [minute, 0]
-				var tag_w = clamp(rect.size.x * 0.28, 26.0, 38.0)
+				var gold_col = Color("#FFC700")
+				var tag_w = cell_w * 0.30
+				var tag_h = H * 0.30
 				if stoppage > 0:
-					var r_clk = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 8.0, H)
-					_draw_clock_tabular(time_str, r_clk, txt_col, _get_font_size("relogio", H))
-					_draw_stoppage_tag(rect, H, "+%d" % stoppage, Color("#D82020"))
+					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - tag_w - 6.0, H)
+					_draw_clock_tabular(time_str, r_clk, gold_col, _get_font_size("relogio", H))
+					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 2.0, -3.0, tag_w, tag_h)
+					draw_rect(stop_rect, Color("#D82020"))
+					_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", H), 8.0, true)
 				else:
-					var r_clk = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - 8.0, H)
-					_draw_clock_tabular(time_str, r_clk, txt_col, _get_font_size("relogio", H))
+					var r_clk = Rect2(rect.position.x + 4.0, 0.0, cell_w - 8.0, H)
+					_draw_clock_tabular(time_str, r_clk, gold_col, _get_font_size("relogio", H))
 					
 			"penaltis":
 				var pen_str = penalties_score if not penalties_score.is_empty() else "(0-0)"
@@ -565,9 +607,10 @@ func _draw_modulos_separados() -> void:
 		cur_x += cell_w + gap_px
 
 # ==============================================================================
-# STACK2 (La Liga)
-# Requisito 5: coluna marinho só com 2 escudos circulares (diâm ≈ 0.30·W), SEM siglas
-# Gols ≈ 0.62·H da linha, relógio ≈ 0.22·H do bloco
+# STACK2 (La Liga) (Requisitos 1 & 5)
+# Gols ≈ 0.62·H da linha; relógio ≈ 0.26·H do bloco; "+5" larg ≈ 0.45 da coluna e alt ≈ 0.12·H
+# Faixa vertical fina na borda esquerda da coluna dos gols: azul (#2D5BE3) em cima, amarelo (#F2C200) embaixo (larg ≈ 0.06 da coluna)
+# Escudos: anel branco 3px vazio (miolo marinho), diâmetro ≈ 0.30 da largura da coluna, sem cor de clube
 # ==============================================================================
 func _draw_stack2() -> void:
 	var total_w = _unscaled_size.x
@@ -597,45 +640,52 @@ func _draw_stack2() -> void:
 			_draw_logo_in_rect(r_top, Color.WHITE)
 			
 			var time_str = "%02d:%02d" % [minute, 0]
-			# Relógio ≈ 0.22·H do bloco total (total_h ≈ 155px -> glifo ≈ 34px)
-			var clk_sz = _get_font_size("relogio", row_h * 0.70)
-			var r_clk = Rect2(cur_x, row_h + 4.0, col_w, row_h * 0.46)
+			# Requisito 5: relógio ≈ 0.26·H do bloco
+			var clk_sz = _get_font_size("relogio", total_h)
+			var r_clk = Rect2(cur_x, row_h + 4.0, col_w, row_h * 0.44)
 			_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
 			
 			if stoppage > 0:
-				var stop_w = col_w * 0.32
-				var stop_h = row_h * 0.30
+				# Requisito 5: "+5" com largura ≈ 0.45 da coluna e altura ≈ 0.12·H (total_h), texto ≥ 0.60
+				var stop_w = col_w * 0.45
+				var stop_h = total_h * 0.12
 				var stop_x = cur_x + (col_w - stop_w) * 0.5
-				var stop_y = row_h + row_h * 0.56
+				var stop_y = total_h - stop_h - 4.0
 				var stop_rect = Rect2(stop_x, stop_y, stop_w, stop_h)
 				draw_rect(stop_rect, Color("#EF4435"))
-				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, _get_font_size("etiqueta", stop_h * 1.5), 0.4 * stop_h, true)
+				_draw_auto_text("+%d" % stoppage, stop_rect, Color.WHITE, int(stop_h * 0.70), 0.4 * stop_h, true)
 				
 		elif c_tipo == "coluna_times":
-			# Requisito 5: Apenas 2 escudos circulares pequenos (diâmetro ≈ 0.30 da largura da coluna), SEM siglas
+			# Requisito 1 & 5: círculos brancos finos e vazios (anel 3 px, miolo na cor marinho), diâmetro ≈ 0.30·W
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
 			var diam = clamp(col_w * 0.30, 20.0, row_h * 0.52)
 			var crest_x = cur_x + (col_w - diam) * 0.5
 			var crest_y_home = (row_h - diam) * 0.5
 			var crest_y_away = row_h + (row_h - diam) * 0.5
 			
-			_position_crest(_home_crest, Vector2(crest_x, crest_y_home), diam)
-			_position_crest(_away_crest, Vector2(crest_x, crest_y_away), diam)
+			_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y_home), diam, "la_liga", home_team)
+			_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y_away), diam, "la_liga", away_team)
 			
 		elif c_tipo == "coluna_gols":
 			draw_rect(col_rect, Color("#FFFFFF"))
 			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(0.8, 0.8, 0.8), 1.0)
-			var r_hg = Rect2(cur_x, 0.0, col_w, row_h)
-			var r_ag = Rect2(cur_x, row_h, col_w, row_h)
-			# Requisito 5: Gols ≈ 0.62·H da linha
-			var gol_sz = _get_font_size("gol", row_h * 0.90)
+			
+			# Requisito 5: Faixa vertical fina na borda esquerda: azul (#2D5BE3) em cima, amarelo (#F2C200) embaixo (largura ≈ 0.06 da coluna)
+			var stripe_w = max(3.0, col_w * 0.06)
+			draw_rect(Rect2(cur_x, 0.0, stripe_w, row_h), Color("#2D5BE3"))
+			draw_rect(Rect2(cur_x, row_h, stripe_w, row_h), Color("#F2C200"))
+			
+			# Requisito 5: Gols ≈ 0.62·H da LINHA (cada dígito ocupa quase toda a altura da linha)
+			var gol_sz = int(round(row_h * 0.88)) # Glifo ≈ 0.62 * row_h
+			var r_hg = Rect2(cur_x + stripe_w, 0.0, col_w - stripe_w, row_h)
+			var r_ag = Rect2(cur_x + stripe_w, row_h, col_w - stripe_w, row_h)
 			_draw_auto_text(str(home_score), r_hg, Color("#101015"), gol_sz, 0.35 * total_h, true)
 			_draw_auto_text(str(away_score), r_ag, Color("#101015"), gol_sz, 0.35 * total_h, true)
 			
 		cur_x += col_w
 
 # ==============================================================================
-# LOGOS DE LIGA (Textura oficial ou nada: sem texto, sem ponto colorido)
+# LOGOS DE LIGA
 # ==============================================================================
 func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 	if board_theme.texture_logo != null:
@@ -656,7 +706,42 @@ func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 		_comp_logo.visible = false
 
 # ==============================================================================
-# PÍLULA INFERIOR UNIVERSAL ("1T  27'") (Requisito 3)
+# ESCUDO UNIFICADO (Requisito 1: Placeholder ou CrestView real 1:1)
+# ==============================================================================
+func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: String, team: Dictionary) -> void:
+	var has_real = crest.is_logo()
+	if has_real:
+		crest.visible = true
+		crest.position = pos
+		crest.size = Vector2(diam, diam)
+		crest.custom_minimum_size = Vector2(diam, diam)
+		return
+		
+	crest.visible = false
+	var center = pos + Vector2(diam, diam) * 0.5
+	var r = diam * 0.5
+	
+	match style:
+		"brasileirao":
+			# Anel fino cinza-escuro (#808080), contorno 3 px, miolo transparente
+			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color("#808080"), 3.0, true)
+		"inclinada":
+			# DISCO BRANCO SÓLIDO, diâmetro ≈ 0.55·H, sem anel interno
+			draw_circle(center, r, Color.WHITE)
+		"bundesliga":
+			# Anel branco fino (2.5 px), miolo na cor do bloco do clube
+			var bg_col = _get_team_color(team)
+			draw_circle(center, r - 1.25, bg_col)
+			draw_arc(center, r - 1.25, 0.0, TAU, 32, Color.WHITE, 2.5, true)
+		"la_liga":
+			# Círculos brancos finos e VAZIOS (anel 3 px, miolo na cor marinho #10193A), sem cor de clube
+			draw_circle(center, r - 1.5, Color("#10193A"))
+			draw_arc(center, r - 1.5, 0.0, TAU, 32, Color.WHITE, 3.0, true)
+		_:
+			draw_circle(center, r, Color.WHITE)
+
+# ==============================================================================
+# PÍLULA INFERIOR UNIVERSAL ("1T  27'")
 # ==============================================================================
 func _draw_bottom_pill() -> void:
 	var pill_w: float = 160.0
@@ -684,18 +769,11 @@ func _draw_bottom_pill() -> void:
 		period_str = "PEN"
 		
 	var time_str = "%d'" % minute
-	# Requisito 3: Texto exatamente "1T  27'" (período + minuto). NUNCA acrescentar "+6" nem outro valor.
 	var full_text = "%s  %s" % [period_str, time_str]
 	_draw_auto_text(full_text, pill_rect, Color.WHITE, _get_font_size("pilula", pill_h), 10.0, true)
 
-func _position_crest(crest: CrestView, pos: Vector2, diam: float) -> void:
-	crest.visible = true
-	crest.position = pos
-	crest.size = Vector2(diam, diam)
-	crest.custom_minimum_size = Vector2(diam, diam)
-
 # ==============================================================================
-# RENDERIZADOR TABULAR DO RELÓGIO (Requisitos 1 & 2)
+# RENDERIZADOR TABULAR DO RELÓGIO
 # ==============================================================================
 func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_font_size: int) -> void:
 	if time_str.is_empty():
@@ -703,7 +781,6 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 	var font = _get_font()
 	var font_size = target_font_size
 	
-	# Largura útil respeitando margem interna de 0.08·W
 	var margin_x = rect.size.x * 0.08
 	var available_w = max(4.0, rect.size.x * 0.84)
 	var max_glyph_h = rect.size.y * 0.70
@@ -719,7 +796,6 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 	if cur_cap_h > max_glyph_h:
 		font_size = int(max_glyph_h / cap_ratio)
 	
-	# Largura fixa máxima entre os dígitos 0..9
 	var max_digit_w: float = 0.0
 	for d in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
 		var sz = font.get_string_size(d, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
@@ -755,11 +831,8 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 				else:
 					total_w += font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 					
-	# Centralização vertical por cap-height
 	var cap_h = float(font_size) * cap_ratio
 	var text_y = rect.position.y + (rect.size.y + cap_h) * 0.5
-	
-	# Posição X inicial centralizada
 	var cur_x = rect.position.x + (rect.size.x - total_w) * 0.5
 	
 	for i in range(time_str.length()):
@@ -775,7 +848,7 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 			cur_x += cw
 
 # ==============================================================================
-# RENDERIZADOR DE TEXTO COM LIMITES E CAP-HEIGHT (Requisito 1)
+# RENDERIZADOR DE TEXTO COM LIMITES E CAP-HEIGHT
 # ==============================================================================
 func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: int, min_floor: float, bold: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER) -> void:
 	if text.is_empty():
@@ -784,13 +857,10 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	var font: Font = _get_font()
 	var font_size = target_font_size
 	
-	# Restrições de segurança (Requisito 1):
-	# Margem interna mínima de 0.08·W (largura máxima 0.84·W)
 	var margin_x = rect.size.x * 0.08
 	var available_w = max(4.0, rect.size.x * 0.84)
-	
-	# Altura máxima do glifo limitada a 0.70·H
 	var max_glyph_h = rect.size.y * 0.70
+	
 	var ftype = board_theme.font_type if board_theme else "condensada"
 	var cap_ratio = 0.71
 	if ftype == "larga_negrito":
