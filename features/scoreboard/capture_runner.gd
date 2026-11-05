@@ -57,10 +57,11 @@ func _ready() -> void:
 			sb.update_score(1, 0)
 			sb.update_time(85, 6)
 			
-			var needed_w = int(ceil(sb.size.x + 32.0))
-			var needed_h = int(ceil(sb.size.y + 32.0))
+			var sb_size = sb.get_real_size()
+			var needed_w = int(ceil(max(sb.size.x, sb_size.x) + 48.0))
+			var needed_h = int(ceil(max(sb.size.y, sb_size.y) + 48.0))
 			vp.size = Vector2i(needed_w, needed_h)
-			sb.position = Vector2(16.0, 16.0)
+			sb.position = Vector2(24.0, 24.0)
 			
 			# Aguardar process_frame para renderizar
 			await get_tree().process_frame
@@ -82,8 +83,9 @@ func _ready() -> void:
 	sb.setup(test_clubs["prd"], test_clubs["nfo"], "la_liga", "", true)
 	sb.update_score(0, 0)
 	sb.update_time(85, 5)
-	vp.size = Vector2i(int(ceil(sb.size.x + 32.0)), int(ceil(sb.size.y + 32.0)))
-	sb.position = Vector2(16.0, 16.0)
+	var sb_sz_sem = sb.get_real_size()
+	vp.size = Vector2i(int(ceil(max(sb.size.x, sb_sz_sem.x) + 48.0)), int(ceil(max(sb.size.y, sb_sz_sem.y) + 48.0)))
+	sb.position = Vector2(24.0, 24.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var img_sem = vp.get_texture().get_image()
@@ -96,8 +98,9 @@ func _ready() -> void:
 	sb.setup(test_clubs["prd"], test_clubs["nfo"], "la_liga", "", true)
 	sb.update_score(0, 0)
 	sb.update_time(85, 5)
-	vp.size = Vector2i(int(ceil(sb.size.x + 32.0)), int(ceil(sb.size.y + 32.0)))
-	sb.position = Vector2(16.0, 16.0)
+	var sb_sz_com = sb.get_real_size()
+	vp.size = Vector2i(int(ceil(max(sb.size.x, sb_sz_com.x) + 48.0)), int(ceil(max(sb.size.y, sb_sz_com.y) + 48.0)))
+	sb.position = Vector2(24.0, 24.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var img_com = vp.get_texture().get_image()
