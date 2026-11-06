@@ -297,6 +297,9 @@ var _bug: PanelContainer
 
 
 
+const USE_TEAM_COLOR_HEADER: bool = true
+var _team_header_bg: Control = null
+
 var _bug_band: OpenBand
 var _comp_cap: PanelContainer
 var _comp_cap_sb: StyleBoxFlat
@@ -983,6 +986,8 @@ func nuevo_partido() -> void:
 	_pulso_ilado = PackedByteArray()
 	_pulso_irank = PackedByteArray()
 	_pinta_marcas()
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 
 
 
@@ -1106,6 +1111,8 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 
 
 	_pinta_marcas()
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 
 
 
@@ -3366,6 +3373,12 @@ func _build_score_row() -> Control:
 	margin.add_theme_constant_override("margin_bottom", 22)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+	if USE_TEAM_COLOR_HEADER:
+		_team_header_bg = Control.new()
+		_team_header_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_team_header_bg.draw.connect(_on_draw_team_header_bg)
+		margin.add_child(_team_header_bg)
+
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 26)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -3605,6 +3618,235 @@ func _viste_bug(accent: Color) -> void:
 	var m: Vector2 = _bug_band.margenes()
 	_comp_cap_sb.content_margin_top = 8.0 + m.x
 	_score_row.add_theme_constant_override("margin_bottom", int(22.0 + m.y))
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
+
+const TEAM_COLOR_HEADER_OVERRIDES: Dictionary = {
+	"fla": {
+		"colors": [Color("#C3281E"), Color("#111111")], # Flamengo: rubro-negro
+		"pattern": "stripes_h",
+		"source": "Paleta oficial CR Flamengo (rubro-negro)"
+	},
+	"palm": {
+		"colors": [Color("#006437")], # Palmeiras: verde
+		"pattern": "solid",
+		"source": "Paleta oficial SE Palmeiras (verde)"
+	},
+	"pal": {
+		"colors": [Color("#006437")], # Palmeiras: verde
+		"pattern": "solid",
+		"source": "Paleta oficial SE Palmeiras (verde)"
+	},
+	"rma": {
+		"colors": [Color("#FFFFFF")], # Real Madrid: branco
+		"pattern": "solid",
+		"source": "Paleta oficial Real Madrid CF (blanco)"
+	},
+	"bar": {
+		"colors": [Color("#004D98"), Color("#A50044")], # Barcelona: blaugrana
+		"pattern": "stripes_v",
+		"source": "Paleta oficial FC Barcelona (blaugrana #004D98 e #A50044)"
+	},
+	"mci": {
+		"colors": [Color("#6CABDD")], # Man City: azul celeste
+		"pattern": "solid",
+		"source": "Paleta oficial Manchester City (sky blue)"
+	},
+	"mun": {
+		"colors": [Color("#DA291C"), Color("#111111")], # Man United: vermelho e preto
+		"pattern": "stripes_v",
+		"source": "Paleta oficial Manchester United (red & black)"
+	},
+	"bay": {
+		"colors": [Color("#DC052D"), Color("#FFFFFF")], # Bayern: vermelho e branco
+		"pattern": "stripes_v",
+		"source": "Paleta oficial FC Bayern München (rot & weiß)"
+	},
+	"dor": {
+		"colors": [Color("#FDE100"), Color("#111111")], # Dortmund: amarelo e preto
+		"pattern": "stripes_v",
+		"source": "Paleta oficial Borussia Dortmund (schwarzgelb)"
+	}
+}
+
+func _get_team_header_style(team_data: Dictionary) -> Dictionary:
+	var tid = String(team_data.get("id", "")).to_lower()
+	if TEAM_COLOR_HEADER_OVERRIDES.has(tid):
+		return TEAM_COLOR_HEADER_OVERRIDES[tid]
+	var c1 = team_data.get("kit", null)
+	var c2 = team_data.get("kit2", null)
+	if c1 is Color and c2 is Color and c1 != c2:
+		return {"colors": [c1, c2], "pattern": "stripes_v", "source": "Kit oficial do banco"}
+	elif c1 is Color:
+		return {"colors": [c1], "pattern": "solid", "source": "Kit primário do banco"}
+	return {"colors": [Color("#1b202c")], "pattern": "solid", "source": "Fallback"}
+
+func _update_team_color_header() -> void:
+	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:
+		return
+	if is_instance_valid(_team_header_bg):
+		_team_header_bg.queue_redraw()
+	
+	var home_t: Dictionary = _you_team if _soy_local else _rival_team
+	var away_t: Dictionary = _rival_team if _soy_local else _you_team
+	var home_cfg: Dictionary = _get_team_header_style(home_t)
+	var away_cfg: Dictionary = _get_team_header_style(away_t)
+	
+	var home_col: Color = home_cfg["colors"][0] if not home_cfg["colors"].is_empty() else Color("#202028")
+	var away_col: Color = away_cfg["colors"][0] if not away_cfg["colors"].is_empty() else Color("#202028")
+	
+	var home_lbl: Label = _you_name if _soy_local else _rival_name
+	var away_lbl: Label = _rival_name if _soy_local else _you_name
+	var home_sub: Label = _you_sub if _soy_local else _riv_sub
+	var away_sub: Label = _riv_sub if _soy_local else _you_sub
+	
+	_apply_header_text_contrast(home_lbl, home_sub, home_col)
+	_apply_header_text_contrast(away_lbl, away_sub, away_col)
+
+func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, bg_col: Color) -> void:
+	if name_lbl == null or not is_instance_valid(name_lbl):
+		return
+	var lum: float = 0.2126 * bg_col.r + 0.7152 * bg_col.g + 0.0722 * bg_col.b
+	if lum > 0.55:
+		name_lbl.add_theme_color_override("font_color", Color("#101018"))
+		name_lbl.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.5))
+		name_lbl.add_theme_constant_override("outline_size", 2)
+		if sub_lbl != null and is_instance_valid(sub_lbl):
+			sub_lbl.add_theme_color_override("font_color", Color("#252830"))
+	else:
+		name_lbl.add_theme_color_override("font_color", Color.WHITE)
+		name_lbl.add_theme_color_override("font_outline_color", UiKit.OUTLINE_HARD)
+		name_lbl.add_theme_constant_override("outline_size", 6)
+		if sub_lbl != null and is_instance_valid(sub_lbl):
+			sub_lbl.add_theme_color_override("font_color", Color("#E2E6ED"))
+
+func _on_draw_team_header_bg() -> void:
+	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:
+		return
+	var par: MarginContainer = _team_header_bg.get_parent() as MarginContainer
+	var ml: float = float(par.get_theme_constant("margin_left")) if par else 20.0
+	var mr: float = float(par.get_theme_constant("margin_right")) if par else 20.0
+	var mt: float = float(par.get_theme_constant("margin_top")) if par else 18.0
+	var mb: float = float(par.get_theme_constant("margin_bottom")) if par else 22.0
+	
+	var origin_x: float = -ml
+	var origin_y: float = -mt
+	var total_w: float = _team_header_bg.size.x + ml + mr
+	var total_h: float = _team_header_bg.size.y + mt + mb
+	if total_w <= 0.0 or total_h <= 0.0:
+		return
+		
+	var mid_x: float = origin_x + total_w * 0.5
+	var skew_dx: float = 32.0
+	var x_top: float = mid_x + skew_dx
+	var x_bot: float = mid_x - skew_dx
+	
+	var home_t: Dictionary = _you_team if _soy_local else _rival_team
+	var away_t: Dictionary = _rival_team if _soy_local else _you_team
+	var home_cfg: Dictionary = _get_team_header_style(home_t)
+	var away_cfg: Dictionary = _get_team_header_style(away_t)
+	
+	_draw_header_team_side(home_cfg, true, origin_x, origin_y, x_top, x_bot, total_w, total_h)
+	_draw_header_team_side(away_cfg, false, origin_x, origin_y, x_top, x_bot, total_w, total_h)
+	
+	_team_header_bg.draw_line(Vector2(x_top, origin_y), Vector2(x_bot, origin_y + total_h), Color(0.0, 0.0, 0.0, 0.40), 2.5)
+	_team_header_bg.draw_line(Vector2(x_top + 1.0, origin_y), Vector2(x_bot + 1.0, origin_y + total_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+	
+	var center_w: float = minf(total_w * 0.36, 360.0)
+	var center_x: float = (total_w - center_w) * 0.5 + origin_x
+	_team_header_bg.draw_rect(Rect2(center_x, origin_y, center_w, total_h), Color(0.04, 0.05, 0.08, 0.65))
+
+func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float, x_top: float, x_bot: float, W: float, H: float) -> void:
+	var colors: Array = cfg.get("colors", [Color("#1a1a24")])
+	var pattern: String = cfg.get("pattern", "solid")
+	if colors.is_empty():
+		colors = [Color("#1a1a24")]
+		
+	var right_bound: float = ox + W
+	var bottom_bound: float = oy + H
+	var poly: PackedVector2Array
+	if is_home:
+		poly = PackedVector2Array([
+			Vector2(ox, oy),
+			Vector2(x_top, oy),
+			Vector2(x_bot, bottom_bound),
+			Vector2(ox, bottom_bound)
+		])
+	else:
+		poly = PackedVector2Array([
+			Vector2(x_top, oy),
+			Vector2(right_bound, oy),
+			Vector2(right_bound, bottom_bound),
+			Vector2(x_bot, bottom_bound)
+		])
+		
+	if colors.size() == 1 or pattern == "solid":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+	elif pattern == "stripes_h":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+		var stripe_h: float = 24.0
+		var num_stripes: int = int(ceil(H / stripe_h))
+		for i in range(1, num_stripes, 2):
+			var y1: float = oy + float(i) * stripe_h
+			var y2: float = minf(y1 + stripe_h, bottom_bound)
+			if y1 >= bottom_bound:
+				break
+			var t1: float = (y1 - oy) / H
+			var t2: float = (y2 - oy) / H
+			var cur_x1: float = lerpf(x_top, x_bot, t1)
+			var cur_x2: float = lerpf(x_top, x_bot, t2)
+			var stripe_poly: PackedVector2Array
+			if is_home:
+				stripe_poly = PackedVector2Array([
+					Vector2(ox, y1),
+					Vector2(cur_x1, y1),
+					Vector2(cur_x2, y2),
+					Vector2(ox, y2)
+				])
+			else:
+				stripe_poly = PackedVector2Array([
+					Vector2(cur_x1, y1),
+					Vector2(right_bound, y1),
+					Vector2(right_bound, y2),
+					Vector2(cur_x2, y2)
+				])
+			_team_header_bg.draw_colored_polygon(stripe_poly, colors[1])
+	elif pattern == "stripes_v":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+		var stripe_w: float = 28.0
+		var start_x: float = ox if is_home else x_bot
+		var end_x: float = x_top if is_home else right_bound
+		var total_span: float = end_x - start_x
+		var num_v: int = int(ceil(total_span / stripe_w))
+		for i in range(1, num_v, 2):
+			var sx1: float = start_x + float(i) * stripe_w
+			var sx2: float = minf(sx1 + stripe_w, end_x)
+			if sx1 >= end_x:
+				break
+			var v_poly: PackedVector2Array
+			if is_home:
+				var cx1_top: float = minf(sx1, x_top)
+				var cx2_top: float = minf(sx2, x_top)
+				var cx1_bot: float = minf(sx1, x_bot)
+				var cx2_bot: float = minf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			else:
+				var cx1_top: float = maxf(sx1, x_top)
+				var cx2_top: float = maxf(sx2, x_top)
+				var cx1_bot: float = maxf(sx1, x_bot)
+				var cx2_bot: float = maxf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			_team_header_bg.draw_colored_polygon(v_poly, colors[1])
 
 
 func _make_name(color: Color) -> Label:
@@ -4387,6 +4629,8 @@ func _rehace_pulso() -> void:
 	caja.add_child(_pulso_fila)
 	caja.move_child(_pulso_fila, pos_fila)
 	_pinta_marcas()
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 	_pulso_eje = _eje_minutos()
 	caja.add_child(_pulso_eje)
 	caja.move_child(_pulso_eje, pos_eje)
@@ -4475,6 +4719,8 @@ func _marca_evento(kind: String, minuto: int, tuyo: bool = true) -> void:
 
 	if cambia_marca:
 		_pinta_marcas()
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 
 
 
