@@ -3666,6 +3666,26 @@ const TEAM_COLOR_HEADER_OVERRIDES: Dictionary = {
 		"colors": [Color("#FDE100"), Color("#111111")], # Dortmund: amarelo e preto
 		"pattern": "stripes_v",
 		"source": "Paleta oficial Borussia Dortmund (schwarzgelb)"
+	},
+	"liv": {
+		"colors": [Color("#C8102E")], # Liverpool: vermelho oficial
+		"pattern": "solid",
+		"source": "Paleta oficial Liverpool FC (red)"
+	},
+	"che": {
+		"colors": [Color("#034694")], # Chelsea: azul royal oficial
+		"pattern": "solid",
+		"source": "Paleta oficial Chelsea FC (royal blue)"
+	},
+	"lei": {
+		"colors": [Color("#F5F5F5"), Color("#DD0741")], # RB Leipzig: branco e vermelho
+		"pattern": "stripes_v",
+		"source": "Paleta oficial RB Leipzig (weiß & rot)"
+	},
+	"lev": {
+		"colors": [Color("#E32219"), Color("#14161A")], # Bayer Leverkusen: vermelho e preto
+		"pattern": "stripes_v",
+		"source": "Paleta oficial Bayer 04 Leverkusen (werkself)"
 	}
 }
 
@@ -3706,19 +3726,14 @@ func _update_team_color_header() -> void:
 func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, bg_col: Color) -> void:
 	if name_lbl == null or not is_instance_valid(name_lbl):
 		return
-	var lum: float = 0.2126 * bg_col.r + 0.7152 * bg_col.g + 0.0722 * bg_col.b
-	if lum > 0.55:
-		name_lbl.add_theme_color_override("font_color", Color("#101018"))
-		name_lbl.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.5))
-		name_lbl.add_theme_constant_override("outline_size", 2)
-		if sub_lbl != null and is_instance_valid(sub_lbl):
-			sub_lbl.add_theme_color_override("font_color", Color("#252830"))
-	else:
-		name_lbl.add_theme_color_override("font_color", Color.WHITE)
-		name_lbl.add_theme_color_override("font_outline_color", UiKit.OUTLINE_HARD)
-		name_lbl.add_theme_constant_override("outline_size", 6)
-		if sub_lbl != null and is_instance_valid(sub_lbl):
-			sub_lbl.add_theme_color_override("font_color", Color("#E2E6ED"))
+	# Nome do clube sempre em branco de alto contraste com contorno definido de 2 px (sem tingimento por cor do clube)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	name_lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.95))
+	name_lbl.add_theme_constant_override("outline_size", 2)
+	if sub_lbl != null and is_instance_valid(sub_lbl):
+		sub_lbl.add_theme_color_override("font_color", Color("#D4D8E0"))
+		sub_lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+		sub_lbl.add_theme_constant_override("outline_size", 2)
 
 func _on_draw_team_header_bg() -> void:
 	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:
@@ -3745,16 +3760,53 @@ func _on_draw_team_header_bg() -> void:
 	var away_t: Dictionary = _rival_team if _soy_local else _you_team
 	var home_cfg: Dictionary = _get_team_header_style(home_t)
 	var away_cfg: Dictionary = _get_team_header_style(away_t)
+	var home_col: Color = home_cfg["colors"][0] if not home_cfg["colors"].is_empty() else Color("#202028")
+	var away_col: Color = away_cfg["colors"][0] if not away_cfg["colors"].is_empty() else Color("#202028")
 	
+	# 1. Desenhar fundos e listras com amplitude suave
 	_draw_header_team_side(home_cfg, true, origin_x, origin_y, x_top, x_bot, total_w, total_h)
 	_draw_header_team_side(away_cfg, false, origin_x, origin_y, x_top, x_bot, total_w, total_h)
 	
-	_team_header_bg.draw_line(Vector2(x_top, origin_y), Vector2(x_bot, origin_y + total_h), Color(0.0, 0.0, 0.0, 0.40), 2.5)
-	_team_header_bg.draw_line(Vector2(x_top + 1.0, origin_y), Vector2(x_bot + 1.0, origin_y + total_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+	# 2. Divisória central diagonal
+	_team_header_bg.draw_line(Vector2(x_top, origin_y), Vector2(x_bot, origin_y + total_h), Color(0.0, 0.0, 0.0, 0.45), 2.5)
+	_team_header_bg.draw_line(Vector2(x_top + 1.0, origin_y), Vector2(x_bot + 1.0, origin_y + total_h), Color(1.0, 1.0, 1.0, 0.20), 1.0)
 	
-	var center_w: float = minf(total_w * 0.36, 360.0)
+	# 3. Suavizador atrás do mandante (escudo, nome e formação)
+	var right_bound: float = origin_x + total_w
+	var home_soft_w: float = minf((mid_x - origin_x) * 0.85, 420.0)
+	var home_soft_h: float = total_h - 14.0
+	var home_soft_x: float = (mid_x + origin_x) * 0.5 - home_soft_w * 0.5
+	var home_soft_y: float = origin_y + 7.0
+	var sb_home = StyleBoxFlat.new()
+	var h_lum: float = 0.2126 * home_col.r + 0.7152 * home_col.g + 0.0722 * home_col.b
+	sb_home.bg_color = Color(0.05, 0.06, 0.09, 0.82) if h_lum > 0.40 else Color(0.02, 0.03, 0.05, 0.65)
+	sb_home.set_corner_radius_all(16)
+	sb_home.border_color = Color(1.0, 1.0, 1.0, 0.12)
+	sb_home.set_border_width_all(1)
+	_team_header_bg.draw_style_box(sb_home, Rect2(home_soft_x, home_soft_y, home_soft_w, home_soft_h))
+	
+	# 4. Suavizador atrás do visitante (escudo, nome e formação)
+	var away_soft_w: float = minf((right_bound - mid_x) * 0.85, 420.0)
+	var away_soft_h: float = total_h - 14.0
+	var away_soft_x: float = (mid_x + right_bound) * 0.5 - away_soft_w * 0.5
+	var away_soft_y: float = origin_y + 7.0
+	var sb_away = StyleBoxFlat.new()
+	var a_lum: float = 0.2126 * away_col.r + 0.7152 * away_col.g + 0.0722 * away_col.b
+	sb_away.bg_color = Color(0.05, 0.06, 0.09, 0.82) if a_lum > 0.40 else Color(0.02, 0.03, 0.05, 0.65)
+	sb_away.set_corner_radius_all(16)
+	sb_away.border_color = Color(1.0, 1.0, 1.0, 0.12)
+	sb_away.set_border_width_all(1)
+	_team_header_bg.draw_style_box(sb_away, Rect2(away_soft_x, away_soft_y, away_soft_w, away_soft_h))
+	
+	# 5. Suavizador central do placar e "EN VIVO"
+	var center_w: float = minf(total_w * 0.32, 340.0)
 	var center_x: float = (total_w - center_w) * 0.5 + origin_x
-	_team_header_bg.draw_rect(Rect2(center_x, origin_y, center_w, total_h), Color(0.04, 0.05, 0.08, 0.65))
+	var sb_center = StyleBoxFlat.new()
+	sb_center.bg_color = Color(0.03, 0.04, 0.06, 0.88)
+	sb_center.set_corner_radius_all(14)
+	sb_center.border_color = Color(1.0, 1.0, 1.0, 0.15)
+	sb_center.set_border_width_all(1)
+	_team_header_bg.draw_style_box(sb_center, Rect2(center_x, origin_y + 6.0, center_w, total_h - 12.0))
 
 func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float, x_top: float, x_bot: float, W: float, H: float) -> void:
 	var colors: Array = cfg.get("colors", [Color("#1a1a24")])
@@ -3810,7 +3862,11 @@ func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float
 					Vector2(right_bound, y2),
 					Vector2(cur_x2, y2)
 				])
-			_team_header_bg.draw_colored_polygon(stripe_poly, colors[1])
+			# Atenuação suave das listras na faixa de texto
+			var c_stripe: Color = colors[1]
+			if y1 > oy + 60.0 and y2 < oy + 190.0:
+				c_stripe = colors[0].lerp(colors[1], 0.45)
+			_team_header_bg.draw_colored_polygon(stripe_poly, c_stripe)
 	elif pattern == "stripes_v":
 		_team_header_bg.draw_colored_polygon(poly, colors[0])
 		var stripe_w: float = 28.0
@@ -3818,6 +3874,35 @@ func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float
 		var end_x: float = x_top if is_home else right_bound
 		var total_span: float = end_x - start_x
 		var num_v: int = int(ceil(total_span / stripe_w))
+		for i in range(1, num_v, 2):
+			var sx1: float = start_x + float(i) * stripe_w
+			var sx2: float = minf(sx1 + stripe_w, end_x)
+			if sx1 >= end_x:
+				break
+			var v_poly: PackedVector2Array
+			if is_home:
+				var cx1_top: float = minf(sx1, x_top)
+				var cx2_top: float = minf(sx2, x_top)
+				var cx1_bot: float = minf(sx1, x_bot)
+				var cx2_bot: float = minf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			else:
+				var cx1_top: float = maxf(sx1, x_top)
+				var cx2_top: float = maxf(sx2, x_top)
+				var cx1_bot: float = maxf(sx1, x_bot)
+				var cx2_bot: float = maxf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			_team_header_bg.draw_colored_polygon(v_poly, colors[1])
 		for i in range(1, num_v, 2):
 			var sx1: float = start_x + float(i) * stripe_w
 			var sx2: float = minf(sx1 + stripe_w, end_x)
