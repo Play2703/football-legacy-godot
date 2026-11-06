@@ -367,6 +367,8 @@ var _goal_flash: ColorRect
 var _goal_tween: Tween
 
 @onready var _score_chip: PanelContainer = % ScoreChip
+const USE_NEW_SCOREBOARD: bool = true
+var _new_scoreboard: ScoreboardView = null
 
 
 
@@ -702,8 +704,11 @@ func set_minute(minute: int) -> void:
 	if _practice:
 		return
 
-
-
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		_new_scoreboard.minute = minute
+		_new_scoreboard.match_state = "1T" if minute <= 45 else ("2T" if minute <= 90 else "PR")
+		_new_scoreboard.queue_redraw()
+		return
 
 	_pinta_reloj()
 	_breathe_clock(minute)
@@ -869,6 +874,10 @@ func set_stoppage(base: int, added: int) -> void:
 		return
 	_stoppage_base = maxi(base, 0)
 	_stoppage_added = maxi(added, 0)
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		_new_scoreboard.stoppage = added
+		_new_scoreboard.queue_redraw()
+		return
 
 
 
@@ -2329,7 +2338,10 @@ func _msg_techo_h() -> float:
 		_score_chip.resized.connect(_refit_msg_tumbado)
 	var techo: float = 0.0
 	if _score_chip != null and is_instance_valid(_score_chip) and _score_chip.visible:
-		techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
+		if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
+			techo = _score_chip.offset_top + _new_scoreboard.get_real_size().y
+		else:
+			techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
 	if _dianas_box != null and is_instance_valid(_dianas_box) and _dianas_box.visible:
 		techo = maxf(techo, _dianas_box.position.y + _dianas_box.get_combined_minimum_size().y)
 	return techo + 16.0
@@ -2532,6 +2544,16 @@ const MEDALLON_LOGO_ANCHO: float = 80.0
 const MEDALLON_EMBLEMA: float = 60.0
 
 func _build_scorebug() -> void:
+	if USE_NEW_SCOREBOARD:
+		_score_chip.remove_child(_score_label)
+		_score_chip.add_theme_stylebox_override("panel", _transparent_sb())
+		_new_scoreboard = ScoreboardView.new()
+		_new_scoreboard.name = "ScoreboardView"
+		_score_chip.add_child(_new_scoreboard)
+		_new_scoreboard.resized.connect(_centra_marcador)
+		_score_chip.resized.connect(_centra_marcador)
+		return
+
 	_score_chip.remove_child(_score_label)
 
 
@@ -2785,6 +2807,16 @@ func _capsule_rect() -> Rect2:
 
 
 func _centra_marcador() -> void:
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
+		var b_sz: Vector2 = _new_scoreboard.get_real_size()
+		_score_chip.custom_minimum_size = b_sz
+		_score_chip.size = b_sz
+		var parent_w: float = _score_chip.get_parent_area_size().x
+		var x: float = roundf((parent_w - b_sz.x) * 0.5)
+		if not is_equal_approx(_score_chip.position.x, x):
+			_score_chip.position.x = x
+		return
+
 	if _cola_holder == null or _score_box == null or _score_bar == null:
 		return
 	var marco: Control = _score_bar.get_parent() as Control
@@ -3477,6 +3509,15 @@ func _style_scorebar() -> void:
 
 
 func set_competition(fixture: Dictionary) -> void:
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var theme_id = Competitions.scoreboard_theme_of(fixture)
+		var theme = ScoreboardLoader.load_theme(theme_id)
+		if theme != null:
+			_new_scoreboard.board_theme = theme
+			_new_scoreboard._recalculate_dimensions()
+			_centra_marcador()
+		return
+
 	_accent = Competitions.accent_of(fixture)
 
 
@@ -3503,6 +3544,20 @@ func set_competition(fixture: Dictionary) -> void:
 func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 	_you_team_data = you_team
 	_rival_team_data = rival_team
+
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var is_home = GameState.current_fixture().get("home", true) if (GameState and GameState.has_method("current_fixture")) else true
+		var home_t = you_team if is_home else rival_team
+		var away_t = rival_team if is_home else you_team
+		_new_scoreboard.home_team = home_t
+		_new_scoreboard.away_team = away_t
+		if _new_scoreboard._home_crest != null:
+			_new_scoreboard._home_crest.set_team(home_t)
+		if _new_scoreboard._away_crest != null:
+			_new_scoreboard._away_crest.set_team(away_t)
+		_new_scoreboard._recalculate_dimensions()
+		_centra_marcador()
+		return
 
 
 
@@ -3541,8 +3596,12 @@ func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 func set_score(you: int, rival: int) -> void:
 	_you_goals = you
 	_rival_goals = rival
-
-
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var is_home = GameState.current_fixture().get("home", true) if (GameState and GameState.has_method("current_fixture")) else true
+		_new_scoreboard.home_score = you if is_home else rival
+		_new_scoreboard.away_score = rival if is_home else you
+		_new_scoreboard.queue_redraw()
+		return
 
 	_score_label.text = "%d-%d" % [you, rival]
 
