@@ -8148,6 +8148,12 @@ func _band_tex(tex: Texture2D, top: bool) -> TextureRect:
 
 
 
+func _exit_tree() -> void:
+	for tw in [_fade_tw, _dom_tw, _gol_bug_tw, _gol_pop_tw, _energy_pulse_tw, _rating_tw, _alin_scroll_tw, _vivo_tw]:
+		if tw and is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
+
+
 class _Vecina extends Node:
 	var cambia: Callable
 
