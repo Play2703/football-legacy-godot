@@ -918,7 +918,7 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	
 	# Faixa fina sob o bloco na cor secundária do clube (Requisito 1 FIX8)
 	var raw_kit2 = team.get("kit2", "")
-	var strip_col = _parse_color_resilient(raw_kit2) if not String(raw_kit2).is_empty() else txt_col
+	var strip_col = _parse_color_resilient(raw_kit2) if (raw_kit2 is Color or not str(raw_kit2).is_empty()) else txt_col
 	if strip_col.a == 0.0:
 		strip_col = txt_col
 	draw_rect(Rect2(rect.position.x + 4.0, H - 4.0, rect.size.x - 8.0, 3.0), strip_col)
