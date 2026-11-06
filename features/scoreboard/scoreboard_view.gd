@@ -191,6 +191,16 @@ func _init() -> void:
 	add_child(_home_crest)
 	add_child(_away_crest)
 
+static var _active_instances: int = 0
+
+func _enter_tree() -> void:
+	_active_instances += 1
+
+func _exit_tree() -> void:
+	_active_instances = maxi(0, _active_instances - 1)
+	if _active_instances == 0:
+		clear_cache()
+
 func _ready() -> void:
 	if board_theme == null:
 		setup_default()
@@ -723,7 +733,7 @@ func _draw_skew() -> void:
 			"relogio":
 				var time_str = "%02d:%02d" % [minute, 0]
 				var tag_w = clamp(cell_rect.size.x * 0.28, 26.0, 36.0)
-				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
+				var clk_target_sz = int(round(_get_font_size("relogio", H) * (0.80 if is_stoppage_visible() else 1.0) * CLOCK_FONT_SCALE))
 				if is_stoppage_visible():
 					var r_clock = Rect2(cell_rect.position.x + 4.0, 0.0, cell_rect.size.x - tag_w - 8.0, H)
 					_draw_clock_tabular(time_str, r_clock, txt_col, clk_target_sz)
@@ -897,7 +907,7 @@ func _draw_reto() -> void:
 			_draw_logo_in_rect(rect, Color.WHITE)
 		elif c_tipo == "relogio":
 			var time_str = "%02d:%02d" % [minute, 0]
-			var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
+			var clk_target_sz = int(round(_get_font_size("relogio", H) * (0.80 if is_stoppage_visible() else 1.0) * CLOCK_FONT_SCALE))
 			# Requisito 3: "+6" SEM invadir o bloco vizinho
 			var tag_w = clamp(rect.size.x * 0.25, 24.0, 34.0)
 			if is_stoppage_visible():
@@ -1067,7 +1077,7 @@ func _draw_modulos_separados() -> void:
 				var clk_txt_col = Color("#101010")
 				var tag_w = cell_w * 0.30
 				var tag_h = H * 0.30
-				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
+				var clk_target_sz = int(round(_get_font_size("relogio", H) * (0.80 if is_stoppage_visible() else 1.0) * CLOCK_FONT_SCALE))
 				if is_stoppage_visible():
 					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w - tag_w - cell_w * 0.10, H)
 					_draw_clock_tabular(time_str, r_clk, clk_txt_col, clk_target_sz)
@@ -1230,6 +1240,11 @@ func _draw_logo_in_rect(rect: Rect2, tint_color: Color) -> void:
 static var _crest_tex_cache: Dictionary = {}
 static var _crest_mean_color_cache: Dictionary = {}
 static var _crest_edge_color_cache: Dictionary = {}
+
+static func clear_cache() -> void:
+	_crest_tex_cache.clear()
+	_crest_mean_color_cache.clear()
+	_crest_edge_color_cache.clear()
 
 static func get_team_crest_texture(team: Dictionary) -> Texture2D:
 	var tid = String(team.get("id", ""))
@@ -1761,8 +1776,8 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 	var font = _get_font()
 	var font_size = target_font_size
 	
-	var margin_x = rect.size.x * 0.08
-	var available_w = max(4.0, rect.size.x * 0.84)
+	var margin_x = clampf(rect.size.x * 0.03, 1.0, 4.0)
+	var available_w = maxf(4.0, rect.size.x - margin_x * 2.0)
 	var max_glyph_h = rect.size.y * 0.70
 	
 	var ftype = board_theme.font_type if board_theme else "condensada"
@@ -1792,11 +1807,12 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 			
 	if total_w > available_w:
 		var ratio = available_w / total_w
-		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.60)
+		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.50)
 		var new_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		if new_size < font_size:
 			_last_text_overlap_warning = "Relógio '%s' ajustado de %dpx para %dpx (disponível: %.1fpx)" % [time_str, font_size, new_size, available_w]
-			push_warning("ScoreboardView: " + _last_text_overlap_warning)
+			if new_size <= int(safe_floor) or (float(font_size - new_size) / float(font_size)) > 0.40:
+				push_warning("ScoreboardView: " + _last_text_overlap_warning)
 			font_size = new_size
 			max_digit_w = 0.0
 			for d in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
@@ -1837,8 +1853,8 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	var font: Font = custom_font if custom_font != null else _get_font()
 	var font_size = target_font_size
 	
-	var margin_x = rect.size.x * 0.08
-	var available_w = max(4.0, rect.size.x * 0.84)
+	var margin_x = clampf(rect.size.x * 0.03, 1.0, 4.0)
+	var available_w = maxf(4.0, rect.size.x - margin_x * 2.0)
 	var max_glyph_h = rect.size.y * 0.70
 	
 	var ftype = board_theme.font_type if board_theme else "condensada"
@@ -1858,11 +1874,12 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	
 	if text_size.x > available_w:
 		var ratio = available_w / text_size.x
-		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.60)
+		var safe_floor = max(float(MIN_FONT_SIZE), float(target_font_size) * 0.50)
 		var new_size = clamp(int(font_size * ratio), int(safe_floor), font_size)
 		if new_size < font_size:
 			_last_text_overlap_warning = "Texto '%s' ajustado de %dpx para %dpx (disponível: %.1fpx)" % [text, font_size, new_size, available_w]
-			push_warning("ScoreboardView: " + _last_text_overlap_warning)
+			if new_size <= int(safe_floor) or (float(font_size - new_size) / float(font_size)) > 0.40:
+				push_warning("ScoreboardView: " + _last_text_overlap_warning)
 			font_size = new_size
 			text_size = font.get_string_size(text, align, -1.0, font_size)
 	

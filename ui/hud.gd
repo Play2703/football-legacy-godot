@@ -257,6 +257,7 @@ var _center_sb: StyleBoxFlat
 
 var _score_box: PanelContainer
 var _cola_holder: MarginContainer
+var _cuelga_box: VBoxContainer
 
 
 var _clock_box: ClockTab
@@ -480,6 +481,28 @@ func _ready() -> void:
 
 
 	Entrada.botones_cambiados.connect(_repinta_hint)
+
+
+func _exit_tree() -> void:
+	if Settings.changed.is_connected(_fit_hint_box):
+		Settings.changed.disconnect(_fit_hint_box)
+	var vp = get_viewport()
+	if vp != null:
+		if vp.size_changed.is_connected(_apply_safe_area):
+			vp.size_changed.disconnect(_apply_safe_area)
+		if vp.size_changed.is_connected(_centra_marcador):
+			vp.size_changed.disconnect(_centra_marcador)
+	if _tic != null and is_instance_valid(_tic):
+		_tic.stop()
+	var tweens = [
+		_clock_pulse, _rating_count_tw, _rating_delta_tw, _pts_tw,
+		_fly_tw, _mood_tw, _heat_tw, _gol_bug_tw, _message_tween,
+		_sub_swap_tw, _aim_dim_tw, _mode_pulse_tween, _goal_tween,
+		_celeb_tween, _open_tw, _rec_tw, _rec_blink_tw, _rec_focus_tw
+	]
+	for tw in tweens:
+		if tw != null and is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
 
 
 
@@ -984,8 +1007,10 @@ func set_practice(label: String, attempt: int, releva: bool = false) -> void:
 
 	_chance_chip.visible = _calladas == 0 and not _chance_label.text.is_empty()
 	_chance_label.add_theme_color_override("font_color", _accent_text)
-	_rating_chip.visible = false
-	_momentum_chip.visible = false
+	if _rating_chip != null and is_instance_valid(_rating_chip):
+		_rating_chip.visible = false
+	if _momentum_chip != null and is_instance_valid(_momentum_chip):
+		_momentum_chip.visible = false
 
 
 	if _heat_bar != null:
@@ -1619,21 +1644,18 @@ func set_momentum(level: int, text: String) -> void:
 	if _practice:
 		return
 	_set_mood(level)
+	if _momentum_chip == null or not is_instance_valid(_momentum_chip):
+		return
 	if level == 0 or text.is_empty():
 		_momentum_chip.visible = false
 		return
 
+	if _momentum_label == null or not is_instance_valid(_momentum_label):
+		return
 
 	var changed: bool = not _momentum_chip.visible or _momentum_label.text != text
 
-
 	_momentum_label.text = text
-
-
-
-
-
-
 	_momentum_label.add_theme_color_override("font_color",
 		Momentum.HOT if level > 0 else Momentum.COLD)
 	_momentum_chip.visible = true
@@ -2581,6 +2603,45 @@ const MEDALLON_LOGO_ALTO: float = 46.0
 const MEDALLON_LOGO_ANCHO: float = 80.0
 const MEDALLON_EMBLEMA: float = 60.0
 
+func _build_momentum_and_stage_chips(parent_container: Control) -> void:
+	var mom_holder: CenterContainer = CenterContainer.new()
+	mom_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_momentum_chip = PanelContainer.new()
+	var mom_sb: StyleBoxFlat = StyleBoxFlat.new()
+	mom_sb.bg_color = HeatBar.TRACK
+	mom_sb.set_corner_radius_all(4)
+	mom_sb.content_margin_left = 12.0
+	mom_sb.content_margin_right = 12.0
+	mom_sb.content_margin_top = 2.0
+	mom_sb.content_margin_bottom = 2.0
+	_momentum_chip.add_theme_stylebox_override("panel", mom_sb)
+	_momentum_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_momentum_label = Label.new()
+	_momentum_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
+	_momentum_chip.add_child(_momentum_label)
+	_momentum_chip.visible = false
+	mom_holder.add_child(_momentum_chip)
+	parent_container.add_child(mom_holder)
+
+	var stage_holder: CenterContainer = CenterContainer.new()
+	stage_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_chip = PanelContainer.new()
+	_stage_sb = StyleBoxFlat.new()
+	_stage_sb.bg_color = _accent
+	_stage_sb.content_margin_left = 14.0
+	_stage_sb.content_margin_right = 14.0
+	_stage_sb.content_margin_top = 2.0
+	_stage_sb.content_margin_bottom = 2.0
+	_stage_chip.add_theme_stylebox_override("panel", _stage_sb)
+	_stage_chip.visible = false
+	_stage_label = Label.new()
+	_stage_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
+	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage_chip.add_child(_stage_label)
+	stage_holder.add_child(_stage_chip)
+	parent_container.add_child(stage_holder)
+
+
 func _build_scorebug() -> void:
 	if USE_NEW_SCOREBOARD:
 		_score_chip.remove_child(_score_label)
@@ -2590,6 +2651,18 @@ func _build_scorebug() -> void:
 		_new_scoreboard.la_liga_scale_override = INGAME_LA_LIGA_SCALE
 		_score_chip.add_child(_new_scoreboard)
 		_build_gol_bug(_score_chip)
+		_cuelga_box = VBoxContainer.new()
+		_cuelga_box.name = "CuelgaBox"
+		_cuelga_box.add_theme_constant_override("separation", 6)
+		_cuelga_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_score_chip.add_child(_cuelga_box)
+		_build_momentum_and_stage_chips(_cuelga_box)
+		if _tic == null:
+			_tic = Timer.new()
+			_tic.wait_time = 0.5
+			_tic.ignore_time_scale = true
+			_tic.timeout.connect(_on_tic)
+			add_child(_tic)
 		_new_scoreboard.resized.connect(_centra_marcador)
 		_score_chip.resized.connect(_centra_marcador)
 		if not get_viewport().size_changed.is_connected(_centra_marcador):
@@ -2782,43 +2855,7 @@ func _build_scorebug() -> void:
 
 
 
-	var mom_holder: CenterContainer = CenterContainer.new()
-	_momentum_chip = PanelContainer.new()
-	var mom_sb: StyleBoxFlat = StyleBoxFlat.new()
-	mom_sb.bg_color = HeatBar.TRACK
-	mom_sb.set_corner_radius_all(4)
-	mom_sb.content_margin_left = 12.0
-	mom_sb.content_margin_right = 12.0
-	mom_sb.content_margin_top = 2.0
-	mom_sb.content_margin_bottom = 2.0
-	_momentum_chip.add_theme_stylebox_override("panel", mom_sb)
-	_momentum_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_momentum_label = Label.new()
-	_momentum_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	_momentum_chip.add_child(_momentum_label)
-	_momentum_chip.visible = false
-	mom_holder.add_child(_momentum_chip)
-	cuelga.add_child(mom_holder)
-
-
-
-
-	var stage_holder: CenterContainer = CenterContainer.new()
-	_stage_chip = PanelContainer.new()
-	_stage_sb = StyleBoxFlat.new()
-	_stage_sb.bg_color = _accent
-	_stage_sb.content_margin_left = 14.0
-	_stage_sb.content_margin_right = 14.0
-	_stage_sb.content_margin_top = 2.0
-	_stage_sb.content_margin_bottom = 2.0
-	_stage_chip.add_theme_stylebox_override("panel", _stage_sb)
-	_stage_chip.visible = false
-	_stage_label = Label.new()
-	_stage_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_stage_chip.add_child(_stage_label)
-	stage_holder.add_child(_stage_chip)
-	cuelga.add_child(stage_holder)
+	_build_momentum_and_stage_chips(cuelga)
 
 
 
@@ -2887,6 +2924,9 @@ func _centra_marcador() -> void:
 		_score_chip.custom_minimum_size = scaled_sz
 		_score_chip.size = scaled_sz
 		_new_scoreboard.position = Vector2.ZERO
+		if _cuelga_box != null and is_instance_valid(_cuelga_box):
+			_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
+			_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
 		return
 
 	if _cola_holder == null or _score_box == null or _score_bar == null:
@@ -3605,9 +3645,10 @@ func set_competition(fixture: Dictionary) -> void:
 	_comp_style = Competitions.style_of(fixture)
 
 	var stage: String = Competitions.stage_of(fixture)
-	if _stage_chip != null:
+	if _stage_chip != null and is_instance_valid(_stage_chip):
 		_stage_chip.visible = not stage.is_empty()
-		_stage_label.text = I18n.t(stage)
+		if _stage_label != null and is_instance_valid(_stage_label):
+			_stage_label.text = I18n.t(stage)
 
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		var theme_id = Competitions.scoreboard_theme_of(fixture)
