@@ -299,7 +299,7 @@ const LEAGUE_CODE: Dictionary = {
 const COMP_STYLE: Dictionary = {
 	"liga": {"goal_entry": "sweep", "radius": 0, "strip": 8.0, "mark": 0.2,
 		"plate": "pill", "open_entry": "telon", "goal_morph": "crece",
-		"sting": "liga", "sim_beat": 1.0, "music": "sim"},
+		"sting": "liga", "sim_beat": 1.0, "music": "sim", "scoreboard_theme": "dynamic_league"},
 
 
 
@@ -310,28 +310,28 @@ const COMP_STYLE: Dictionary = {
 
 	"copa": {"goal_entry": "slam", "radius": 0, "strip": 12.0, "mark": 0.22,
 		"plate": "wedge", "open_entry": "martillo", "goal_morph": "slam",
-		"sting": "copa", "sim_beat": 0.85, "music": "copa"},
+		"sting": "copa", "sim_beat": 0.85, "music": "copa", "scoreboard_theme": "dynamic_cup"},
 	"champions": {"goal_entry": "burst", "radius": 0, "strip": 14.0, "mark": 0.26,
 		"plate": "block", "open_entry": "gala", "goal_morph": "despliega",
-		"sting": "champions", "sim_beat": 1.45, "music": "champions"},
+		"sting": "champions", "sim_beat": 1.45, "music": "champions", "scoreboard_theme": "champions_league"},
 	"europa": {"goal_entry": "burst", "radius": 6, "strip": 12.0, "mark": 0.24,
 		"plate": "romboide", "open_entry": "deslizo", "goal_morph": "cizalla",
-		"sting": "europa", "sim_beat": 1.2, "music": "europa"},
+		"sting": "europa", "sim_beat": 1.2, "music": "europa", "scoreboard_theme": "champions_league"},
 	"conference": {"goal_entry": "slam", "radius": 6, "strip": 10.0, "mark": 0.22,
 		"plate": "romboide", "open_entry": "abajo", "goal_morph": "rebota",
-		"sting": "europa", "sim_beat": 1.1, "music": "conference"},
+		"sting": "europa", "sim_beat": 1.1, "music": "conference", "scoreboard_theme": "champions_league"},
 	"clasif": {"goal_entry": "sweep", "radius": 10, "strip": 8.0, "mark": 0.2,
 		"plate": "pill", "open_entry": "barrido", "goal_morph": "barre",
-		"sting": "liga", "sim_beat": 1.0, "music": "clasif"},
+		"sting": "liga", "sim_beat": 1.0, "music": "clasif", "scoreboard_theme": "dynamic_league"},
 	"mundial": {"goal_entry": "burst", "radius": 10, "strip": 14.0, "mark": 0.26,
 		"plate": "wedge", "open_entry": "himno", "goal_morph": "ceremonia",
-		"sting": "mundial", "sim_beat": 1.35, "music": "mundial"},
+		"sting": "mundial", "sim_beat": 1.35, "music": "mundial", "scoreboard_theme": "champions_league"},
 
 
 
 	"mundialito": {"goal_entry": "burst", "radius": 6, "strip": 13.0, "mark": 0.25,
 		"plate": "wedge", "open_entry": "fiesta", "goal_morph": "vaiven",
-		"sting": "mundial", "sim_beat": 1.3, "music": "mundial"},
+		"sting": "mundial", "sim_beat": 1.3, "music": "mundial", "scoreboard_theme": "champions_league"},
 
 
 
@@ -344,13 +344,13 @@ const COMP_STYLE: Dictionary = {
 
 	"libertadores": {"goal_entry": "burst", "radius": 10, "strip": 14.0, "mark": 0.26,
 		"plate": "block", "open_entry": "gala", "goal_morph": "ceremonia",
-		"sting": "champions", "sim_beat": 1.4, "music": "libertadores"},
+		"sting": "champions", "sim_beat": 1.4, "music": "libertadores", "scoreboard_theme": "libertadores"},
 	"sudamericana": {"goal_entry": "burst", "radius": 10, "strip": 12.0, "mark": 0.24,
 		"plate": "romboide", "open_entry": "deslizo", "goal_morph": "cizalla",
-		"sting": "europa", "sim_beat": 1.2, "music": "sudamericana"},
+		"sting": "europa", "sim_beat": 1.2, "music": "sudamericana", "scoreboard_theme": "libertadores"},
 	"concacaf": {"goal_entry": "slam", "radius": 0, "strip": 13.0, "mark": 0.24,
 		"plate": "wedge", "open_entry": "martillo", "goal_morph": "rebota",
-		"sting": "copa", "sim_beat": 1.25, "music": "concacaf"},
+		"sting": "copa", "sim_beat": 1.25, "music": "concacaf", "scoreboard_theme": "champions_league"},
 
 
 
@@ -360,16 +360,16 @@ const COMP_STYLE: Dictionary = {
 
 	"recopa": {"goal_entry": "burst", "radius": 6, "strip": 13.0, "mark": 0.25,
 		"plate": "block", "open_entry": "gala", "goal_morph": "cizalla",
-		"sting": "champions", "sim_beat": 1.3, "music": "libertadores"},
+		"sting": "champions", "sim_beat": 1.3, "music": "libertadores", "scoreboard_theme": "libertadores"},
 	"intercontinental": {"goal_entry": "burst", "radius": 10, "strip": 13.5, "mark": 0.26,
 		"plate": "romboide", "open_entry": "fiesta", "goal_morph": "ceremonia",
-		"sting": "mundial", "sim_beat": 1.35, "music": "mundial"},
+		"sting": "mundial", "sim_beat": 1.35, "music": "mundial", "scoreboard_theme": "champions_league"},
 
 
 
 	"supereuropa": {"goal_entry": "burst", "radius": 6, "strip": 13.5, "mark": 0.26,
 		"plate": "block", "open_entry": "gala", "goal_morph": "despliega",
-		"sting": "europa", "sim_beat": 1.3, "music": "champions"},
+		"sting": "europa", "sim_beat": 1.3, "music": "champions", "scoreboard_theme": "champions_league"},
 
 
 
@@ -377,14 +377,14 @@ const COMP_STYLE: Dictionary = {
 
 	"superafrica": {"goal_entry": "burst", "radius": 6, "strip": 13.5, "mark": 0.26,
 		"plate": "pill", "open_entry": "gala", "goal_morph": "vaiven",
-		"sting": "europa", "sim_beat": 1.3, "music": "champions"},
+		"sting": "europa", "sim_beat": 1.3, "music": "champions", "scoreboard_theme": "champions_league"},
 
 
 
 
 	"ligas": {"goal_entry": "slam", "radius": 6, "strip": 12.5, "mark": 0.24,
 		"plate": "wedge", "open_entry": "fiesta", "goal_morph": "slam",
-		"sting": "copa", "sim_beat": 1.2, "music": "concacaf"},
+		"sting": "copa", "sim_beat": 1.2, "music": "concacaf", "scoreboard_theme": "dynamic_league"},
 
 
 
@@ -392,10 +392,10 @@ const COMP_STYLE: Dictionary = {
 
 	"oriente": {"goal_entry": "burst", "radius": 6, "strip": 14.0, "mark": 0.25,
 		"plate": "pill", "open_entry": "himno", "goal_morph": "despliega",
-		"sting": "champions", "sim_beat": 1.35, "music": "champions"},
+		"sting": "champions", "sim_beat": 1.35, "music": "champions", "scoreboard_theme": "champions_league"},
 	"sol": {"goal_entry": "slam", "radius": 10, "strip": 11.0, "mark": 0.23,
 		"plate": "block", "open_entry": "deslizo", "goal_morph": "rebota",
-		"sting": "europa", "sim_beat": 1.2, "music": "europa"},
+		"sting": "europa", "sim_beat": 1.2, "music": "europa", "scoreboard_theme": "champions_league"},
 
 
 
@@ -404,17 +404,17 @@ const COMP_STYLE: Dictionary = {
 
 	"atlas": {"goal_entry": "burst", "radius": 0, "strip": 14.0, "mark": 0.25,
 		"plate": "pill", "open_entry": "gala", "goal_morph": "vaiven",
-		"sting": "champions", "sim_beat": 1.35, "music": "champions"},
+		"sting": "champions", "sim_beat": 1.35, "music": "champions", "scoreboard_theme": "champions_league"},
 	"baobab": {"goal_entry": "sweep", "radius": 6, "strip": 11.0, "mark": 0.22,
 		"plate": "wedge", "open_entry": "barrido", "goal_morph": "crece",
-		"sting": "europa", "sim_beat": 1.15, "music": "europa"},
+		"sting": "europa", "sim_beat": 1.15, "music": "europa", "scoreboard_theme": "champions_league"},
 
 
 
 
 	"coral": {"goal_entry": "sweep", "radius": 10, "strip": 12.0, "mark": 0.22,
 		"plate": "romboide", "open_entry": "barrido", "goal_morph": "vaiven",
-		"sting": "europa", "sim_beat": 1.2, "music": "europa"},
+		"sting": "europa", "sim_beat": 1.2, "music": "europa", "scoreboard_theme": "champions_league"},
 }
 
 
@@ -449,6 +449,25 @@ static func music_of(fixture: Dictionary) -> String:
 		return "sim"
 	var st: Dictionary = COMP_STYLE.get(id_of(fixture), COMP_STYLE["liga"])
 	return String(st.get("music", "sim"))
+
+static func scoreboard_theme_of(fixture: Dictionary) -> String:
+	if fixture.has("scoreboard_theme"):
+		return String(fixture["scoreboard_theme"])
+	var c_id: String = id_of(fixture)
+	var pais: String = ""
+	if fixture.has("country"):
+		pais = String(fixture["country"])
+	elif fixture.has("pais"):
+		pais = String(fixture["pais"])
+	elif c_id == "liga" or c_id == "copa":
+		pais = country_of(fixture)
+		if pais.is_empty() and fixture.has("opp"):
+			pais = Teams.country_of(String(fixture["opp"]))
+	var st: Dictionary = COMP_STYLE.get(c_id, COMP_STYLE["liga"])
+	var base_theme: String = String(st.get("scoreboard_theme", ""))
+	if base_theme == "dynamic_league" or base_theme == "dynamic_cup" or base_theme.is_empty():
+		return ScoreboardResolver.resolve_layout_id(c_id, pais)
+	return base_theme
 
 
 
