@@ -17,7 +17,7 @@ const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _
 const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
-# FIX9c/d/f/g: Constantes nomeadas de contraste, relógio e La Liga
+# FIX9c/d/f/g/h: Constantes nomeadas de contraste, relógio e La Liga
 const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
 const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
 const CLOCK_FONT_SCALE: float = 1.2
@@ -25,6 +25,7 @@ const LA_LIGA_SCALE: float = 1.25
 const LA_LIGA_BAR_W_RATIO: float = 0.12 # fração da coluna marinho (~0.12, aprox o dobro do anterior)
 const LA_LIGA_BASE_BAR_THICKNESS: float = 3.0 # espessura anterior medida em 1.0x (px)
 const LA_LIGA_BAR_MIN_DE: float = 40.0 # limite de contraste ΔE contra o marinho #10193A (FIX9g)
+const LA_LIGA_BAR_MIN_DL: float = 20.0 # limite de diferença de luminosidade ΔL* contra o marinho #10193A (FIX9h)
 
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
@@ -1925,13 +1926,14 @@ static func _parse_color_resilient(raw_val: Variant) -> Color:
 		return Color(s)
 	return Color(0, 0, 0, 0)
 
-static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float = LA_LIGA_BAR_MIN_DE) -> Color:
-	if delta_e_cie76(col, bg_col) >= min_de:
-		return col
+static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float = LA_LIGA_BAR_MIN_DE, min_dl: float = LA_LIGA_BAR_MIN_DL) -> Color:
 	var lab = color_to_lab(col)
+	var bg_lab = color_to_lab(bg_col)
+	if delta_e_cie76(col, bg_col) >= min_de and abs(lab.x - bg_lab.x) >= min_dl:
+		return col
 	var cur_L = lab.x
-	# Se a cor for muito escura ou conflitante contra o fundo, clarear mantendo matiz até atingir min_de
-	while cur_L < 96.0 and delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de:
+	# Se a cor for muito escura ou conflitante contra o fundo, clarear mantendo matiz até atingir min_de e min_dl
+	while cur_L < 96.0 and (delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de or abs(cur_L - bg_lab.x) < min_dl):
 		cur_L += 0.5
 	return lab_to_color(Vector3(cur_L, lab.y, lab.z))
 

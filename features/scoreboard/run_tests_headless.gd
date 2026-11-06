@@ -874,30 +874,48 @@ func _init() -> void:
 			pass_fix9e_laliga = false
 			all_ok = false
 			
-		# FIX9g: Teste de contraste e espessura da barra dos clubes na La Liga
-		# Cores resolvidas devem ter ΔE >= 40 (LA_LIGA_BAR_MIN_DE) contra #10193A
+		# FIX9g/h: Teste de contraste e espessura da barra dos clubes na La Liga
+		# Cores resolvidas devem ter ΔE >= 40 (LA_LIGA_BAR_MIN_DE) e ΔL* >= 20 (LA_LIGA_BAR_MIN_DL) contra #10193A
 		var h_colors = ScoreboardView.get_la_liga_club_strip_colors(pair["h"], bg_marinho)
 		var a_colors = ScoreboardView.get_la_liga_club_strip_colors(pair["a"], bg_marinho)
+		var bg_lab = ScoreboardView.color_to_lab(bg_marinho)
 		var min_de_bar = 999.0
+		var min_dl_bar = 999.0
 		for c in h_colors:
 			var de = ScoreboardView.delta_e_cie76(c, bg_marinho)
+			var c_lab = ScoreboardView.color_to_lab(c)
+			var dl = abs(c_lab.x - bg_lab.x)
 			if de < min_de_bar:
 				min_de_bar = de
+			if dl < min_dl_bar:
+				min_dl_bar = dl
 			if de < ScoreboardView.LA_LIGA_BAR_MIN_DE:
 				printerr("ERRO LA LIGA FIX9g: Barra mandante (%s) com ΔE=%.1f < 40 contra marinho!" % [pair["h"]["name"], de])
 				pass_fix9e_laliga = false
 				all_ok = false
+			if dl < ScoreboardView.LA_LIGA_BAR_MIN_DL:
+				printerr("ERRO LA LIGA FIX9h: Barra mandante (%s) com ΔL*=%.1f < 20 contra marinho!" % [pair["h"]["name"], dl])
+				pass_fix9e_laliga = false
+				all_ok = false
 		for c in a_colors:
 			var de = ScoreboardView.delta_e_cie76(c, bg_marinho)
+			var c_lab = ScoreboardView.color_to_lab(c)
+			var dl = abs(c_lab.x - bg_lab.x)
 			if de < min_de_bar:
 				min_de_bar = de
+			if dl < min_dl_bar:
+				min_dl_bar = dl
 			if de < ScoreboardView.LA_LIGA_BAR_MIN_DE:
 				printerr("ERRO LA LIGA FIX9g: Barra visitante (%s) com ΔE=%.1f < 40 contra marinho!" % [pair["a"]["name"], de])
 				pass_fix9e_laliga = false
 				all_ok = false
+			if dl < ScoreboardView.LA_LIGA_BAR_MIN_DL:
+				printerr("ERRO LA LIGA FIX9h: Barra visitante (%s) com ΔL*=%.1f < 20 contra marinho!" % [pair["a"]["name"], dl])
+				pass_fix9e_laliga = false
+				all_ok = false
 				
-		print("[PASS] La Liga Par %d (%s × %s): Siglas '%s' e '%s' em branco sobre #10193A | WCAG = %.1f:1 | Barras ΔE_min = %.1f (>=40) | Captura %dx%d íntegra" % [
-			p_num, pair["h"]["name"], pair["a"]["name"], h_abbrev, a_abbrev, wcag_ratio, min_de_bar, w, h
+		print("[PASS] La Liga Par %d (%s × %s): Siglas '%s' e '%s' em branco sobre #10193A | WCAG = %.1f:1 | Barras ΔE_min = %.1f (>=40), ΔL*_min = %.1f (>=20) | Captura %dx%d íntegra" % [
+			p_num, pair["h"]["name"], pair["a"]["name"], h_abbrev, a_abbrev, wcag_ratio, min_de_bar, min_dl_bar, w, h
 		])
 	
 	print("=================================================================")
