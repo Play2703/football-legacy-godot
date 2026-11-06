@@ -370,6 +370,8 @@ var _goal_tween: Tween
 const USE_NEW_SCOREBOARD: bool = true
 const INGAME_BOARD_SCALE: float = 1.0
 const INGAME_LA_LIGA_SCALE: float = 1.0
+const INGAME_BOARD_WIDTH_FRAC: float = 0.50
+const INGAME_BOARD_HEIGHT_MAX_FRAC: float = 0.12
 var _new_scoreboard: ScoreboardView = null
 var _match_state: String = ""
 
@@ -706,7 +708,7 @@ func set_minute(minute: int) -> void:
 	if _practice:
 		return
 
-	var en_extra: bool = _stoppage_base > 0 and minute > _stoppage_base
+	var en_extra: bool = _stoppage_base > 0 and minute >= _stoppage_base
 	var ref: int = _stoppage_base if en_extra else minute
 
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
@@ -716,6 +718,8 @@ func set_minute(minute: int) -> void:
 		_new_scoreboard.match_state = _match_state
 		if en_extra and _stoppage_added > 0:
 			_new_scoreboard.stoppage = _stoppage_added
+		else:
+			_new_scoreboard.stoppage = 0
 		_new_scoreboard.queue_redraw()
 	else:
 		_pinta_reloj()
@@ -893,7 +897,11 @@ func set_stoppage(base: int, added: int) -> void:
 	_stoppage_base = maxi(base, 0)
 	_stoppage_added = maxi(added, 0)
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
-		_new_scoreboard.stoppage = added
+		var en_extra: bool = _stoppage_base > 0 and _new_scoreboard.minute >= _stoppage_base
+		if en_extra and _stoppage_added > 0:
+			_new_scoreboard.stoppage = _stoppage_added
+		else:
+			_new_scoreboard.stoppage = 0
 		_new_scoreboard.queue_redraw()
 	else:
 		_pinta_reloj()
@@ -902,6 +910,9 @@ func set_match_state(p_state: String) -> void:
 	_match_state = p_state
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		_new_scoreboard.set_match_state(p_state)
+		if p_state == "INT" or p_state == "FIM":
+			_new_scoreboard.stoppage = 0
+		_new_scoreboard.queue_redraw()
 
 
 
@@ -2580,6 +2591,8 @@ func _build_scorebug() -> void:
 		_build_gol_bug(_score_chip)
 		_new_scoreboard.resized.connect(_centra_marcador)
 		_score_chip.resized.connect(_centra_marcador)
+		if not get_viewport().size_changed.is_connected(_centra_marcador):
+			get_viewport().size_changed.connect(_centra_marcador)
 		return
 
 	_score_chip.remove_child(_score_label)
@@ -2836,17 +2849,41 @@ func _capsule_rect() -> Rect2:
 
 func _centra_marcador() -> void:
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
-		var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
-		var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
-		_new_scoreboard.scale = Vector2.ONE * scale_factor
+		var vp = get_viewport()
+		var vp_rect = vp.get_visible_rect() if vp != null else Rect2(0, 0, 1920, 1080)
+		var vp_w = vp_rect.size.x
+		var vp_h = vp_rect.size.y
 		var base_sz: Vector2 = _new_scoreboard.get_real_size()
+		
+		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
+		var scale_factor: float
+		if is_portrait:
+			var target_w = vp_w * INGAME_BOARD_WIDTH_FRAC
+			var max_h = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
+			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
+		else:
+			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
+			var max_h = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
+			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
+			
+		_new_scoreboard.scale = Vector2.ONE * scale_factor
 		var scaled_sz: Vector2 = base_sz * scale_factor
+		
+		_score_chip.anchor_left = 0.5
+		_score_chip.anchor_right = 0.5
+		_score_chip.anchor_top = 0.0
+		_score_chip.anchor_bottom = 0.0
+		_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_score_chip.grow_vertical = Control.GROW_DIRECTION_END
+		
+		var half_w = scaled_sz.x * 0.5
+		_score_chip.offset_left = -half_w
+		_score_chip.offset_right = half_w
+		_score_chip.offset_top = 24.0 * (vp_h / 1080.0)
+		_score_chip.offset_bottom = _score_chip.offset_top + scaled_sz.y
 		_score_chip.custom_minimum_size = scaled_sz
 		_score_chip.size = scaled_sz
-		var parent_w: float = _score_chip.get_parent_area_size().x
-		var x: float = roundf((parent_w - scaled_sz.x) * 0.5)
-		if not is_equal_approx(_score_chip.position.x, x):
-			_score_chip.position.x = x
+		_new_scoreboard.position = Vector2.ZERO
 		return
 
 	if _cola_holder == null or _score_box == null or _score_bar == null:
