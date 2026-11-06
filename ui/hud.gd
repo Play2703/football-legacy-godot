@@ -372,6 +372,7 @@ const INGAME_BOARD_SCALE: float = 1.0
 const INGAME_LA_LIGA_SCALE: float = 1.0
 const INGAME_BOARD_WIDTH_FRAC: float = 0.50
 const INGAME_BOARD_HEIGHT_MAX_FRAC: float = 0.12
+var custom_board_width_frac: float = 0.0
 var _new_scoreboard: ScoreboardView = null
 var _match_state: String = ""
 
@@ -2857,17 +2858,19 @@ func _centra_marcador() -> void:
 		
 		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
 		var scale_factor: float
-		if is_portrait:
+		var max_h: float = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
+		if custom_board_width_frac > 0.0:
+			var target_w = vp_w * custom_board_width_frac
+			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
+		elif is_portrait:
 			var target_w = vp_w * INGAME_BOARD_WIDTH_FRAC
-			var max_h = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		else:
 			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
-			var max_h = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
 			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
 			
 		_new_scoreboard.scale = Vector2.ONE * scale_factor
-		var scaled_sz: Vector2 = base_sz * scale_factor
+		var scaled_sz: Vector2 = Vector2(roundf(base_sz.x * scale_factor), roundf(base_sz.y * scale_factor))
 		
 		_score_chip.anchor_left = 0.5
 		_score_chip.anchor_right = 0.5
@@ -2879,7 +2882,7 @@ func _centra_marcador() -> void:
 		var half_w = scaled_sz.x * 0.5
 		_score_chip.offset_left = -half_w
 		_score_chip.offset_right = half_w
-		_score_chip.offset_top = 24.0 * (vp_h / 1080.0)
+		_score_chip.offset_top = roundf(24.0 * (vp_h / 1080.0))
 		_score_chip.offset_bottom = _score_chip.offset_top + scaled_sz.y
 		_score_chip.custom_minimum_size = scaled_sz
 		_score_chip.size = scaled_sz
