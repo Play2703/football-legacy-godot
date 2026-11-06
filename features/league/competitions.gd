@@ -465,9 +465,14 @@ static func scoreboard_theme_of(fixture: Dictionary) -> String:
 			pais = Teams.country_of(String(fixture["opp"]))
 	var st: Dictionary = COMP_STYLE.get(c_id, COMP_STYLE["liga"])
 	var base_theme: String = String(st.get("scoreboard_theme", ""))
+	var resolved: String = ""
 	if base_theme == "dynamic_league" or base_theme == "dynamic_cup" or base_theme.is_empty():
-		return ScoreboardResolver.resolve_layout_id(c_id, pais)
-	return base_theme
+		resolved = ScoreboardResolver.resolve_layout_id(c_id, pais)
+	else:
+		resolved = base_theme
+	if resolved == "neutro" or resolved.is_empty():
+		push_warning("Competitions: Layout não encontrado para comp_id='%s', pais='%s'. Usando fallback neutro." % [c_id, pais])
+	return resolved
 
 
 
