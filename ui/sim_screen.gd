@@ -986,8 +986,6 @@ func nuevo_partido() -> void:
 	_pulso_ilado = PackedByteArray()
 	_pulso_irank = PackedByteArray()
 	_pinta_marcas()
-	if USE_TEAM_COLOR_HEADER:
-		_update_team_color_header()
 
 
 
@@ -1111,8 +1109,6 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 
 
 	_pinta_marcas()
-	if USE_TEAM_COLOR_HEADER:
-		_update_team_color_header()
 
 
 
@@ -1202,22 +1198,22 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 		UiKit.style_button(tb, tab_pal)
 
 
-	_you_name.add_theme_color_override("font_color", _tinta(_you_accent))
+	if not USE_TEAM_COLOR_HEADER:
+		_you_name.add_theme_color_override("font_color", _tinta(_you_accent))
+		_rival_name.add_theme_color_override("font_color", _tinta(_rival_accent))
 
 	_glow_you_grad.colors = PackedColorArray([
 		Color(_you_accent.r, _you_accent.g, _you_accent.b, 0.0),
 		Color(_you_accent.r, _you_accent.g, _you_accent.b, 0.9)])
 
-	_rival_name.add_theme_color_override("font_color", _tinta(_rival_accent))
-
-
 	_pinta_dom_cifra()
-
 
 	_repinta_fichas()
 
-
 	_apply_sub_lock()
+
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 
 
 
@@ -3590,7 +3586,15 @@ func _team_column(crest: CrestView, medal_sb: StyleBoxFlat, name_label: Label,
 func _make_form() -> Label:
 	var l: Label = Label.new()
 	l.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	l.add_theme_color_override("font_color", UiKit.INK_BODY)
+	if USE_TEAM_COLOR_HEADER:
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
+		l.add_theme_constant_override("outline_size", 2)
+		l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+		l.add_theme_constant_override("shadow_offset_x", 0)
+		l.add_theme_constant_override("shadow_offset_y", 1)
+	else:
+		l.add_theme_color_override("font_color", UiKit.INK_BODY)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
@@ -3762,10 +3766,10 @@ func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, _bg_col: Color
 	name_lbl.add_theme_constant_override("shadow_offset_y", 2)
 	
 	if sub_lbl != null and is_instance_valid(sub_lbl):
-		sub_lbl.add_theme_color_override("font_color", Color("#E2E6ED"))
-		sub_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.90))
+		sub_lbl.add_theme_color_override("font_color", Color.WHITE)
+		sub_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
 		sub_lbl.add_theme_constant_override("outline_size", 2)
-		sub_lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.50))
+		sub_lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
 		sub_lbl.add_theme_constant_override("shadow_offset_x", 0)
 		sub_lbl.add_theme_constant_override("shadow_offset_y", 1)
 
@@ -3903,15 +3907,18 @@ func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float
 
 func _make_name(color: Color) -> Label:
 	var l: Label = Label.new()
-
-
-
-
-
 	l.add_theme_font_size_override("font_size", CareerTheme.T_HEAD)
-	l.add_theme_color_override("font_color", color)
-	l.add_theme_color_override("font_outline_color", UiKit.OUTLINE)
-	l.add_theme_constant_override("outline_size", 5)
+	if USE_TEAM_COLOR_HEADER:
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
+		l.add_theme_constant_override("outline_size", 3)
+		l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+		l.add_theme_constant_override("shadow_offset_x", 0)
+		l.add_theme_constant_override("shadow_offset_y", 2)
+	else:
+		l.add_theme_color_override("font_color", color)
+		l.add_theme_color_override("font_outline_color", UiKit.OUTLINE)
+		l.add_theme_constant_override("outline_size", 5)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.custom_minimum_size = Vector2(240, 0)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -4681,8 +4688,6 @@ func _rehace_pulso() -> void:
 	caja.add_child(_pulso_fila)
 	caja.move_child(_pulso_fila, pos_fila)
 	_pinta_marcas()
-	if USE_TEAM_COLOR_HEADER:
-		_update_team_color_header()
 	_pulso_eje = _eje_minutos()
 	caja.add_child(_pulso_eje)
 	caja.move_child(_pulso_eje, pos_eje)
@@ -4771,8 +4776,6 @@ func _marca_evento(kind: String, minuto: int, tuyo: bool = true) -> void:
 
 	if cambia_marca:
 		_pinta_marcas()
-	if USE_TEAM_COLOR_HEADER:
-		_update_team_color_header()
 
 
 

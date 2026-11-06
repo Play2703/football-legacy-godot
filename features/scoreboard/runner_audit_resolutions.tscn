@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://runnerauditresolutions"]
+
+[ext_resource type="Script" path="res://features/scoreboard/runner_audit_resolutions.gd" id="1_audit"]
+
+[node name="RunnerAuditResolutions" type="Node"]
+script = ExtResource("1_audit")
