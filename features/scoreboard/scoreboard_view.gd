@@ -21,7 +21,7 @@ const MIN_FONT_SIZE: int = 10
 const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
 const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
 const CLOCK_FONT_SCALE: float = 1.2
-const LA_LIGA_SCALE: float = 1.25
+const LA_LIGA_SCALE: float = 1.0 # FIX11b: padrão 1.0x (testes in-game cobrem 0.8x, 1.0x e 1.25x)
 const LA_LIGA_BAR_W_RATIO: float = 0.12 # fração da coluna marinho (~0.12, aprox o dobro do anterior)
 const LA_LIGA_BASE_BAR_THICKNESS: float = 3.0 # espessura anterior medida em 1.0x (px)
 const LA_LIGA_BAR_MIN_DE: float = 40.0 # limite de contraste ΔE contra o marinho #10193A (FIX9g)
@@ -475,9 +475,9 @@ func _draw_brasileirao() -> void:
 	style_wr.corner_radius_bottom_right = int(50.0 * scale)
 	draw_style_box(style_wr, Rect2(right_bar_x, 0.0, right_bar_w, H))
 	
-	# 5. Escudo e Sigla Mandante (FIX9d: escudo ajustado ao mockup real, diam ~80px e margem ~4.5px na curva)
-	var diam = min(H * 0.93, bar_w * 0.46)
-	var base_margin = max(4.5, bar_w * 0.026)
+	# 5. Escudo e Sigla Mandante (FIX11b: margem e diâmetro ajustados para conter 100% o escudo dentro da curva de raio 50 da faixa branca)
+	var diam = min(H * 0.84, bar_w * 0.40)
+	var base_margin = max(20.0, bar_w * 0.08)
 	var crest_x = base_margin
 	var crest_y = (H - diam) * 0.5
 	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
@@ -543,10 +543,10 @@ func _draw_brasileirao() -> void:
 		time_str = match_state
 	else:
 		var prefix = "1T"
-		if match_state == "2T" or minute > 45:
+		if not match_state.is_empty():
+			prefix = match_state
+		elif minute > 45:
 			prefix = "2T"
-		elif match_state == "1T" or minute <= 45:
-			prefix = "1T"
 		time_str = "%s %02d:%02d" % [prefix, minute, second]
 			
 	# Tamanho de fonte único para tempo e acréscimo em todos os pares e estados (Bebas Neue 1.2x padrão ativo):

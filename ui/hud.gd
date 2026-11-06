@@ -368,7 +368,10 @@ var _goal_tween: Tween
 
 @onready var _score_chip: PanelContainer = % ScoreChip
 const USE_NEW_SCOREBOARD: bool = true
+const INGAME_BOARD_SCALE: float = 1.0
+const INGAME_LA_LIGA_SCALE: float = 1.0
 var _new_scoreboard: ScoreboardView = null
+var _match_state: String = ""
 
 
 
@@ -700,18 +703,33 @@ func _build_pause_button() -> void:
 func set_minute(minute: int) -> void:
 	_match_minute = minute
 
-
 	if _practice:
 		return
 
+	var en_extra: bool = _stoppage_base > 0 and minute > _stoppage_base
+	var ref: int = _stoppage_base if en_extra else minute
+
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		_new_scoreboard.minute = minute
-		_new_scoreboard.match_state = "1T" if minute <= 45 else ("2T" if minute <= 90 else "PR")
+		if _match_state.is_empty() or _match_state == "1T" or _match_state == "2T" or _match_state == "PR":
+			_match_state = "1T" if ref <= 45 else ("2T" if ref <= 90 else "PR")
+		_new_scoreboard.match_state = _match_state
+		if en_extra and _stoppage_added > 0:
+			_new_scoreboard.stoppage = _stoppage_added
 		_new_scoreboard.queue_redraw()
-		return
+	else:
+		_pinta_reloj()
+		_breathe_clock(minute)
 
-	_pinta_reloj()
-	_breathe_clock(minute)
+	var tenso: bool = minute >= RELOJ_TENSO
+	var late: bool = tenso and _tic != null and not Settings.reduce_motion
+	if late and _tic.is_stopped() and _tic.is_inside_tree():
+		_tic_on = true
+		_tic.start()
+	elif not late:
+		if _tic != null and not _tic.is_stopped():
+			_tic.stop()
+		_tic_on = true
 
 
 
@@ -877,7 +895,13 @@ func set_stoppage(base: int, added: int) -> void:
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		_new_scoreboard.stoppage = added
 		_new_scoreboard.queue_redraw()
-		return
+	else:
+		_pinta_reloj()
+
+func set_match_state(p_state: String) -> void:
+	_match_state = p_state
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		_new_scoreboard.set_match_state(p_state)
 
 
 
@@ -2339,7 +2363,9 @@ func _msg_techo_h() -> float:
 	var techo: float = 0.0
 	if _score_chip != null and is_instance_valid(_score_chip) and _score_chip.visible:
 		if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
-			techo = _score_chip.offset_top + _new_scoreboard.get_real_size().y
+			var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
+			var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
+			techo = _score_chip.offset_top + (_new_scoreboard.get_real_size().y * scale_factor)
 		else:
 			techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
 	if _dianas_box != null and is_instance_valid(_dianas_box) and _dianas_box.visible:
@@ -2549,7 +2575,9 @@ func _build_scorebug() -> void:
 		_score_chip.add_theme_stylebox_override("panel", _transparent_sb())
 		_new_scoreboard = ScoreboardView.new()
 		_new_scoreboard.name = "ScoreboardView"
+		_new_scoreboard.la_liga_scale_override = INGAME_LA_LIGA_SCALE
 		_score_chip.add_child(_new_scoreboard)
+		_build_gol_bug(_score_chip)
 		_new_scoreboard.resized.connect(_centra_marcador)
 		_score_chip.resized.connect(_centra_marcador)
 		return
@@ -2808,11 +2836,15 @@ func _capsule_rect() -> Rect2:
 
 func _centra_marcador() -> void:
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
-		var b_sz: Vector2 = _new_scoreboard.get_real_size()
-		_score_chip.custom_minimum_size = b_sz
-		_score_chip.size = b_sz
+		var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
+		var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
+		_new_scoreboard.scale = Vector2.ONE * scale_factor
+		var base_sz: Vector2 = _new_scoreboard.get_real_size()
+		var scaled_sz: Vector2 = base_sz * scale_factor
+		_score_chip.custom_minimum_size = scaled_sz
+		_score_chip.size = scaled_sz
 		var parent_w: float = _score_chip.get_parent_area_size().x
-		var x: float = roundf((parent_w - b_sz.x) * 0.5)
+		var x: float = roundf((parent_w - scaled_sz.x) * 0.5)
 		if not is_equal_approx(_score_chip.position.x, x):
 			_score_chip.position.x = x
 		return
@@ -3121,30 +3153,27 @@ func show_card_bug(roja: bool, quien: String = "", mia: bool = false) -> void:
 
 
 func _bug_show(tipo: String) -> void:
-
-
-
-
-
-
-
-	if _gol_bug == null or _score_bar == null or not _score_bar.is_inside_tree() \
-			or not _score_bar.visible:
+	if _gol_bug == null:
 		return
-	if _capsule_rect().size.x <= 1.0:
-		return
+	if not USE_NEW_SCOREBOARD:
+		if _score_bar == null or not _score_bar.is_inside_tree() or not _score_bar.visible:
+			return
+		if _capsule_rect().size.x <= 1.0:
+			return
+	else:
+		if _new_scoreboard == null or not _new_scoreboard.is_inside_tree() or not _new_scoreboard.visible:
+			return
 	_bug_tipo = tipo
-
-
 
 	var base: Color = _kit_readable(_kit_a)
 	var equipo: Dictionary = _you_team_data
-	var abbr: String = _you_abbr.text
+	var abbr: String = _you_abbr.text if _you_abbr != null else String(_you_team_data.get("abbrev", "MI"))
 	var grito: String = CareerTheme.caps(I18n.t("gol"))
 	if tipo != "gol":
 		base = RefCard.ROJA if tipo == "roja" else RefCard.AMARILLA
 		equipo = _you_team_data if _bug_card_mia else _rival_team_data
-		abbr = _you_abbr.text if _bug_card_mia else _rival_abbr.text
+		abbr = (_you_abbr.text if _you_abbr != null else String(_you_team_data.get("abbrev", "MI"))) if _bug_card_mia \
+				else (_rival_abbr.text if _rival_abbr != null else String(_rival_team_data.get("abbrev", "RIV")))
 
 
 		grito = CareerTheme.caps(_bug_card_quien)
@@ -3229,7 +3258,29 @@ func _bug_desliza(f: float) -> void:
 
 
 func _bug_coloca() -> void:
-	if _gol_bug == null or _score_bar == null:
+	if _gol_bug == null:
+		return
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
+		var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
+		var b_sz: Vector2 = _new_scoreboard.get_real_size() * scale_factor
+		_gol_bug.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_gol_bug.position = Vector2.ZERO
+		_gol_bug.size = b_sz
+		_gol_bug_in.size = b_sz
+		_gol_bug_bg.size = b_sz
+		_gol_bug_patch.size = b_sz
+		_gol_bug_label.position = Vector2.ZERO
+		_gol_bug_label.size = b_sz
+		_gol_bug_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_gol_bug_side.position = Vector2(16.0 * scale_factor, 0.0)
+		_gol_bug_side.size = Vector2(b_sz.x * 0.5, b_sz.y)
+		var mascara: StyleBoxFlat = _gol_bug.get_theme_stylebox("panel") as StyleBoxFlat
+		if mascara != null:
+			mascara.set_corner_radius_all(int(minf(b_sz.x, b_sz.y) * 0.5))
+		return
+
+	if _score_bar == null:
 		return
 
 
@@ -3509,41 +3560,45 @@ func _style_scorebar() -> void:
 
 
 func set_competition(fixture: Dictionary) -> void:
-	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
-		var theme_id = Competitions.scoreboard_theme_of(fixture)
-		var theme = ScoreboardLoader.load_theme(theme_id)
-		if theme != null:
-			_new_scoreboard.board_theme = theme
-			_new_scoreboard._recalculate_dimensions()
-			_centra_marcador()
-		return
-
 	_accent = Competitions.accent_of(fixture)
-
-
-
 	_comp_key = String(fixture.get("comp", "league"))
 	_comp_style = Competitions.style_of(fixture)
-
-	_apply_plate_shape()
-	if _comp_logo != null:
-		_comp_logo.set_type(Competitions.logo_type_of(fixture))
-
-
-		_fit_medallion_logo()
 
 	var stage: String = Competitions.stage_of(fixture)
 	if _stage_chip != null:
 		_stage_chip.visible = not stage.is_empty()
 		_stage_label.text = I18n.t(stage)
+
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var theme_id = Competitions.scoreboard_theme_of(fixture)
+		var theme = ScoreboardLoader.load_theme(theme_id)
+		if theme != null:
+			_new_scoreboard.board_theme = theme
+			if theme_id == "la_liga" or theme_id == "laliga":
+				_new_scoreboard.la_liga_scale_override = INGAME_LA_LIGA_SCALE
+			_new_scoreboard._recalculate_dimensions()
+			_centra_marcador()
+		return
+
+	_apply_plate_shape()
+	if _comp_logo != null:
+		_comp_logo.set_type(Competitions.logo_type_of(fixture))
+		_fit_medallion_logo()
 	_style_scorebar()
-
-
 
 
 func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 	_you_team_data = you_team
 	_rival_team_data = rival_team
+
+	if not you_team.is_empty():
+		var ka: Variant = you_team.get("kit", null)
+		var kb: Variant = you_team.get("kit2", null)
+		if ka is Color:
+			_kit_a = ka
+		if kb is Color:
+			_kit_b = kb
+		_style_player_chip()
 
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		var is_home = GameState.current_fixture().get("home", true) if (GameState and GameState.has_method("current_fixture")) else true
@@ -3559,26 +3614,8 @@ func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 		_centra_marcador()
 		return
 
-
-
-
-
-
-
-
-	if not you_team.is_empty():
-		var ka: Variant = you_team.get("kit", null)
-		var kb: Variant = you_team.get("kit2", null)
-		if ka is Color:
-			_kit_a = ka
-		if kb is Color:
-			_kit_b = kb
-		_style_player_chip()
-
-
 	_you_abbr.text = String(you_team.get("abbrev", "MI"))
 	_rival_abbr.text = String(rival_team.get("abbrev", "RIV"))
-
 
 	if _you_crest != null:
 		_you_crest.visible = not you_team.is_empty()
@@ -3588,7 +3625,6 @@ func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 		_rival_crest.visible = not rival_team.is_empty()
 		if not rival_team.is_empty():
 			_rival_crest.set_team(rival_team)
-
 
 	_style_scorebar()
 
@@ -5255,6 +5291,7 @@ func maybe_show_rule(id: String) -> Control:
 
 
 func show_end(title: String, stats_text: String) -> void:
+	set_match_state("FIM")
 	_pause_button.visible = false
 	_end_title.text = CareerTheme.caps(title)
 	_end_stats.text = CareerTheme.caps(stats_text)
@@ -5275,6 +5312,7 @@ func show_end(title: String, stats_text: String) -> void:
 
 
 func show_summary(data: Dictionary) -> void:
+	set_match_state("FIM")
 	_pause_button.visible = false
 
 
