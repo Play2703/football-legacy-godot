@@ -115,6 +115,188 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"text_color": Color("#101015"),
 		"stripe_color": Color("#FFFFFF"),
 		"pattern": "solid"
+	},
+	"atm": {
+		"name": "Atlético de Madrid",
+		"primary_color": Color("#CB3524"),
+		"secondary_color": Color("#1B2A55"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#CB3524"), Color("#FFFFFF")]
+	},
+	"ath": {
+		"name": "Athletic Club",
+		"primary_color": Color("#D11F2D"),
+		"secondary_color": Color("#14161A"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#D11F2D"), Color("#FFFFFF")]
+	},
+	"rso": {
+		"name": "Real Sociedad",
+		"primary_color": Color("#0A3F8C"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#0A3F8C"), Color("#FFFFFF")]
+	},
+	"bet": {
+		"name": "Real Betis",
+		"primary_color": Color("#008040"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#008040"), Color("#FFFFFF")]
+	},
+	"mil": {
+		"name": "Milan",
+		"primary_color": Color("#FB090B"),
+		"secondary_color": Color("#000000"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#000000"),
+		"pattern": "stripes_v",
+		"colors": [Color("#FB090B"), Color("#000000")]
+	},
+	"int": {
+		"name": "Inter",
+		"primary_color": Color("#001CA8"),
+		"secondary_color": Color("#000000"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#000000"),
+		"pattern": "stripes_v",
+		"colors": [Color("#001CA8"), Color("#000000")]
+	},
+	"juv": {
+		"name": "Juventus",
+		"primary_color": Color("#101015"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#C89B3C"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#101015"), Color("#FFFFFF")]
+	},
+	"ben": {
+		"name": "Benfica",
+		"primary_color": Color("#E11B22"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#000000"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
+	},
+	"por": {
+		"name": "Porto",
+		"primary_color": Color("#003882"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#D29B38"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_v",
+		"colors": [Color("#003882"), Color("#FFFFFF")]
+	},
+	"spo": {
+		"name": "Sporting CP",
+		"primary_color": Color("#008050"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#E8B124"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "stripes_h",
+		"colors": [Color("#008050"), Color("#FFFFFF")]
+	},
+	"tot": {
+		"name": "Tottenham",
+		"primary_color": Color("#FFFFFF"),
+		"secondary_color": Color("#132257"),
+		"accent_color": Color("#132257"),
+		"text_color": Color("#101015"),
+		"stripe_color": Color("#132257"),
+		"pattern": "solid"
+	},
+	"utd": {
+		"name": "Manchester United",
+		"primary_color": Color("#DA291C"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#FFE500"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
+	},
+	"cor": {
+		"name": "Corinthians",
+		"primary_color": Color("#FFFFFF"),
+		"secondary_color": Color("#101015"),
+		"accent_color": Color("#C8102E"),
+		"text_color": Color("#101015"),
+		"stripe_color": Color("#101015"),
+		"pattern": "solid"
+	},
+	"sao": {
+		"name": "São Paulo",
+		"primary_color": Color("#FFFFFF"),
+		"secondary_color": Color("#C8102E"),
+		"accent_color": Color("#101015"),
+		"text_color": Color("#101015"),
+		"stripe_color": Color("#C8102E"),
+		"pattern": "solid"
+	},
+	"san": {
+		"name": "Santos",
+		"primary_color": Color("#FFFFFF"),
+		"secondary_color": Color("#101015"),
+		"accent_color": Color("#C89B3C"),
+		"text_color": Color("#101015"),
+		"stripe_color": Color("#101015"),
+		"pattern": "solid"
+	},
+	"grem": {
+		"name": "Grêmio",
+		"primary_color": Color("#0D80BF"),
+		"secondary_color": Color("#101015"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#101015"),
+		"pattern": "stripes_v",
+		"colors": [Color("#0D80BF"), Color("#101015")]
+	},
+	"int_rs": {
+		"name": "Internacional",
+		"primary_color": Color("#E50000"),
+		"secondary_color": Color("#FFFFFF"),
+		"accent_color": Color("#FFFFFF"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
+	},
+	"boca": {
+		"name": "Boca Juniors",
+		"primary_color": Color("#003087"),
+		"secondary_color": Color("#FEDD00"),
+		"accent_color": Color("#FEDD00"),
+		"text_color": Color("#FFFFFF"),
+		"stripe_color": Color("#FEDD00"),
+		"pattern": "stripes_h",
+		"colors": [Color("#003087"), Color("#FEDD00")]
+	},
+	"rive": {
+		"name": "River Plate",
+		"primary_color": Color("#FFFFFF"),
+		"secondary_color": Color("#EB1923"),
+		"accent_color": Color("#101015"),
+		"text_color": Color("#101015"),
+		"stripe_color": Color("#EB1923"),
+		"pattern": "solid"
 	}
 }
 
@@ -127,19 +309,35 @@ const ALIASES: Dictionary = {
 	"bayern": "bay",
 	"dortmund": "dor",
 	"city": "mci",
-	"arsenal": "ars"
+	"arsenal": "ars",
+	"river": "rive"
 }
 
 ## Cache de identidades adicionadas dinamicamente
 static var _dynamic_palettes: Dictionary = {}
 
-## Calcula automaticamente a cor do texto com base na luminância WCAG:
-## Fundo claro (L > 0.50): texto escuro (#101015).
-## Fundo escuro (L <= 0.50): texto branco (#FFFFFF).
+## Calcula a luminância relativa sRGB (padrão WCAG 2.1)
+static func get_relative_luminance(c: Color) -> float:
+	var r_lin: float = c.r / 12.92 if c.r <= 0.04045 else pow((c.r + 0.055) / 1.055, 2.4)
+	var g_lin: float = c.g / 12.92 if c.g <= 0.04045 else pow((c.g + 0.055) / 1.055, 2.4)
+	var b_lin: float = c.b / 12.92 if c.b <= 0.04045 else pow((c.b + 0.055) / 1.055, 2.4)
+	return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
+
+## Calcula a taxa de contraste exata entre duas cores (WCAG 2.1)
+static func get_contrast_ratio(c1: Color, c2: Color) -> float:
+	var l1: float = get_relative_luminance(c1)
+	var l2: float = get_relative_luminance(c2)
+	var lighter: float = maxf(l1, l2)
+	var darker: float = minf(l1, l2)
+	return (lighter + 0.05) / (darker + 0.05)
+
+## Calcula automaticamente a melhor cor de texto (#101015 ou #FFFFFF) para maximizar o contraste WCAG
 static func calculate_contrast_text_color(bg: Color) -> Color:
-	if bg.get_luminance() > 0.50:
-		return Color("#101015")
-	return Color("#FFFFFF")
+	var cr_white: float = get_contrast_ratio(Color.WHITE, bg)
+	var cr_dark: float = get_contrast_ratio(Color("#101015"), bg)
+	if cr_white >= cr_dark:
+		return Color.WHITE
+	return Color("#101015")
 
 ## Retorna a paleta completa de identidade cromática para um determinado team_id.
 ## Se o clube não constar na lista oficial, extrai com segurança os dados de team_data/Teams.gd,
@@ -153,12 +351,20 @@ static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}
 	if PALETAS_OFICIAIS.has(tid):
 		var base: Dictionary = (PALETAS_OFICIAIS[tid] as Dictionary).duplicate()
 		base["team_id"] = tid
+		if not base.has("colors"):
+			base["colors"] = [base["primary_color"]]
+		if not base.has("pattern"):
+			base["pattern"] = "solid"
 		return base
 		
 	# 2. Consulta ao cache de paletas dinâmicas
 	if _dynamic_palettes.has(tid):
 		var dyn: Dictionary = (_dynamic_palettes[tid] as Dictionary).duplicate()
 		dyn["team_id"] = tid
+		if not dyn.has("colors"):
+			dyn["colors"] = [dyn["primary_color"]]
+		if not dyn.has("pattern"):
+			dyn["pattern"] = "solid"
 		return dyn
 
 	# 3. Fallback gracioso: extração a partir de team_data ou da base de dados de Teams
@@ -195,6 +401,33 @@ static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}
 	else:
 		acc = sec
 
+	var raw_pat: String = String(t.get("pattern", "solid")).to_lower()
+	var pattern: String = "solid"
+	var stripe_col: Color = sec
+
+	if raw_pat in ["stripes", "pinstripes", "band_v", "vstripes", "tri_stripes"]:
+		pattern = "stripes_v"
+		stripe_col = acc if (acc != pri and acc.a > 0.0) else sec
+	elif raw_pat in ["hoops", "band_h"]:
+		pattern = "stripes_h"
+		stripe_col = acc if (acc != pri and acc.a > 0.0) else sec
+	elif raw_pat in ["sash", "sash_r", "diagonal"]:
+		pattern = "sash"
+		stripe_col = acc if (acc != pri and acc.a > 0.0) else sec
+	elif raw_pat in ["half", "halves"]:
+		pattern = "half"
+		stripe_col = acc if (acc != pri and acc.a > 0.0) else sec
+	else:
+		pattern = "solid"
+		stripe_col = sec
+
+	var colors: Array = [pri]
+	if pattern in ["stripes_v", "stripes_h"] and not stripe_col.is_equal_approx(pri):
+		colors = [pri, stripe_col]
+	else:
+		if pattern in ["stripes_v", "stripes_h"]:
+			pattern = "solid"
+
 	var txt = calculate_contrast_text_color(pri)
 
 	return {
@@ -204,14 +437,17 @@ static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}
 		"secondary_color": sec,
 		"accent_color": acc,
 		"text_color": txt,
-		"stripe_color": sec
+		"stripe_color": stripe_col,
+		"pattern": pattern,
+		"colors": colors
 	}
 
 ## Permite registrar dinamicamente novos clubes na base em tempo de execução
-static func register_team_identity(team_id: String, primary: Color, secondary: Color, accent: Color, text_col: Color = Color(0, 0, 0, 0), stripe: Color = Color(0, 0, 0, 0), team_name: String = "") -> void:
+static func register_team_identity(team_id: String, primary: Color, secondary: Color, accent: Color, text_col: Color = Color(0, 0, 0, 0), stripe: Color = Color(0, 0, 0, 0), team_name: String = "", pattern: String = "solid", colors: Array = []) -> void:
 	var tid: String = team_id.to_lower().strip_edges()
 	var final_txt: Color = text_col if text_col.a > 0.0 else calculate_contrast_text_color(primary)
 	var final_stripe: Color = stripe if stripe.a > 0.0 else secondary
+	var final_colors: Array = colors if not colors.is_empty() else [primary]
 	_dynamic_palettes[tid] = {
 		"team_id": tid,
 		"name": team_name if not team_name.is_empty() else tid.to_upper(),
@@ -219,7 +455,9 @@ static func register_team_identity(team_id: String, primary: Color, secondary: C
 		"secondary_color": secondary,
 		"accent_color": accent,
 		"text_color": final_txt,
-		"stripe_color": final_stripe
+		"stripe_color": final_stripe,
+		"pattern": pattern,
+		"colors": final_colors
 	}
 
 static func is_team_registered(team_id: String) -> bool:
@@ -244,6 +482,7 @@ static func get_team_header_style(team_id: String, team_data: Dictionary = {}) -
 		"secondary": sec,
 		"accent": pal.get("accent_color", sec),
 		"text": pal.get("text_color", Color.WHITE),
+		"stripe": pal.get("stripe_color", sec),
 		"source": "TeamIdentityColors"
 	}
 
