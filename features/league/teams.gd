@@ -7710,3 +7710,11 @@ static func _sin_choque(cands: Array, contra: Color) -> Color:
 		if c is Color and not kits_clash(c, contra):
 			return c
 	return _contrast_accent(contra)
+
+
+## ETAPA 4e.3 — Delegação para o sistema centralizado de identidade cromática oficial
+static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}) -> Dictionary:
+	var id_script = load("res://features/scoreboard/team_identity_colors.gd")
+	if id_script != null:
+		return id_script.get_team_identity_colors(team_id, team_data)
+	return {}

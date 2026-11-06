@@ -10,6 +10,7 @@ const ScoreboardTheme = preload("res://features/scoreboard/scoreboard_theme.gd")
 const ScoreboardLoader = preload("res://features/scoreboard/scoreboard_loader.gd")
 const CrestView = preload("res://ui/crest_view.gd")
 const CompLogo = preload("res://ui/comp_logo.gd")
+const TeamIdentityColors = preload("res://features/scoreboard/team_identity_colors.gd")
 
 const BASE_BAR_H: float = 86.0
 const BOTTOM_PILL_H: float = 34.0
@@ -122,8 +123,7 @@ func detect_similar_color_dividers() -> Array[Dictionary]:
 	if board_theme == null:
 		return result
 	
-	var is_kit_mode = (board_theme.cor_time == "kit")
-	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	var kit_cols = _resolve_team_kit_colors()
 	var cells = board_theme.cells
 	
 	var cell_bgs: Array[Color] = []
@@ -133,10 +133,10 @@ func detect_similar_color_dividers() -> Array[Dictionary]:
 		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
 		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
 		var b_col: Color
-		if ct == "time_casa" and is_kit_mode:
+		if ct == "time_casa":
 			b_col = kit_cols["home_bg"]
 			t_col = kit_cols["home_txt"]
-		elif ct == "time_fora" and is_kit_mode:
+		elif ct == "time_fora":
 			b_col = kit_cols["away_bg"]
 			t_col = kit_cols["away_txt"]
 		else:
@@ -468,9 +468,10 @@ func _draw_brasileirao() -> void:
 	var sliver_w = 51.96 * scale
 	var bar_w = pill_x - sliver_w
 	
-	# Cores dos clubes ajustadas para contraste contra branco (ΔE >= 25)
-	var h_col = _resolve_club_accent_color(home_team)
-	var a_col = _resolve_club_accent_color(away_team)
+	# Cores de identidade dos clubes no Brasileirão (ETAPA 4e.3)
+	var kit_cols = _resolve_team_kit_colors()
+	var h_col = kit_cols["home_sec"]
+	var a_col = kit_cols["away_sec"]
 	
 	# Faixa do relógio verde-limão sob a pílula central (FIX9b: largura ≈ 1.05 × largura da pílula)
 	var clk_w = pill_w * 1.05
@@ -492,50 +493,50 @@ func _draw_brasileirao() -> void:
 	draw_rect(Rect2(pill_x - sliver_w, 0.0, sliver_w, H), h_col)
 	draw_rect(Rect2(pill_x + pill_w, 0.0, sliver_w, H), a_col)
 	
-	# 3. Desenhar Faixa Branca Esquerda (mandante) com cantos esquerdos arredondados (SVG raio 52 px)
+	# 3. Desenhar Faixa Esquerda (mandante) com cor oficial e cantos esquerdos arredondados (SVG raio 52 px)
 	var style_wl = StyleBoxFlat.new()
-	style_wl.bg_color = Color.WHITE
+	style_wl.bg_color = kit_cols["home_bg"]
 	style_wl.corner_radius_top_left = int(52.0 * scale)
 	style_wl.corner_radius_bottom_left = int(52.0 * scale)
 	style_wl.corner_radius_top_right = 0
 	style_wl.corner_radius_bottom_right = 0
 	draw_style_box(style_wl, Rect2(0.0, 0.0, bar_w, H))
 	
-	# 4. Desenhar Faixa Branca Direita (visitante) com cantos direitos arredondados (SVG raio 50 px)
+	# 4. Desenhar Faixa Direita (visitante) com cor oficial e cantos direitos arredondados (SVG raio 50 px)
 	var right_bar_x = pill_x + pill_w + sliver_w
 	var right_bar_w = total_w - right_bar_x
 	var style_wr = StyleBoxFlat.new()
-	style_wr.bg_color = Color.WHITE
+	style_wr.bg_color = kit_cols["away_bg"]
 	style_wr.corner_radius_top_left = 0
 	style_wr.corner_radius_bottom_left = 0
 	style_wr.corner_radius_top_right = int(50.0 * scale)
 	style_wr.corner_radius_bottom_right = int(50.0 * scale)
 	draw_style_box(style_wr, Rect2(right_bar_x, 0.0, right_bar_w, H))
 	
-	# 5. Escudo e Sigla Mandante (FIX11b: margem e diâmetro ajustados para conter 100% o escudo dentro da curva de raio 50 da faixa branca)
+	# 5. Escudo e Sigla Mandante
 	var diam = min(H * 0.84, bar_w * 0.40)
 	var base_margin = max(20.0, bar_w * 0.08)
 	var crest_x = base_margin
 	var crest_y = (H - diam) * 0.5
-	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, Color.WHITE)
+	_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "brasileirao", home_team, kit_cols["home_bg"])
 	
 	var gap_sigla = max(bar_w * 0.035, 6.0)
 	var sigla_start_x = crest_x + diam + gap_sigla
 	var sigla_end_x = bar_w - (bar_w * 0.045)
 	var sigla_w = sigla_end_x - sigla_start_x
 	var r_sigla = Rect2(sigla_start_x, 0.0, sigla_w, H)
-	_draw_auto_text(home_team.get("abbrev", "CRU"), r_sigla, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_auto_text(home_team.get("abbrev", "CRU"), r_sigla, kit_cols["home_txt"], _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
-	# 6. Sigla e Escudo Visitante (sigla navy bold à esquerda, escudo à direita sobre a faixa branca)
+	# 6. Sigla e Escudo Visitante
 	var gap_sigla_a = max(right_bar_w * 0.035, 6.0)
 	var a_crest_x = total_w - base_margin - diam
 	var sigla_start_x_a = right_bar_x + (right_bar_w * 0.045)
 	var sigla_end_x_a = a_crest_x - gap_sigla_a
 	var sigla_w_a = sigla_end_x_a - sigla_start_x_a
 	var r_sigla_a = Rect2(sigla_start_x_a, 0.0, sigla_w_a, H)
-	_draw_auto_text(away_team.get("abbrev", "MIR"), r_sigla_a, Color("#051838"), _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_auto_text(away_team.get("abbrev", "MIR"), r_sigla_a, kit_cols["away_txt"], _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
-	_draw_crest_unified(_away_crest, Vector2(a_crest_x, crest_y), diam, "brasileirao", away_team, Color.WHITE)
+	_draw_crest_unified(_away_crest, Vector2(a_crest_x, crest_y), diam, "brasileirao", away_team, kit_cols["away_bg"])
 	
 	# 7. Desenhar Pílula Central (branca, cantos bem arredondados, sombra suave)
 	var pill_rect = Rect2(pill_x, pill_y, pill_w, pill_h)
@@ -645,8 +646,7 @@ func _draw_skew() -> void:
 	if total_peso <= 0.0:
 		total_peso = 1.0
 	
-	var is_kit_mode = (board_theme.cor_time == "kit")
-	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	var kit_cols = _resolve_team_kit_colors()
 	
 	var cell_bgs: Array[Color] = []
 	var cell_txts: Array[Color] = []
@@ -655,10 +655,10 @@ func _draw_skew() -> void:
 		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
 		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
 		var b_col: Color
-		if ct == "time_casa" and is_kit_mode:
+		if ct == "time_casa":
 			b_col = kit_cols["home_bg"]
 			t_col = kit_cols["home_txt"]
-		elif ct == "time_fora" and is_kit_mode:
+		elif ct == "time_fora":
 			b_col = kit_cols["away_bg"]
 			t_col = kit_cols["away_txt"]
 		else:
@@ -748,7 +748,7 @@ func _draw_skew() -> void:
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				var cell_bg = kit_cols["home_bg"] if is_kit_mode else Color(c.get("fundo", "#101010"))
+				var cell_bg = kit_cols["home_bg"]
 				_draw_crest_unified(_home_crest, Vector2(crest_x, crest_y), diam, "inclinada", home_team, cell_bg)
 				
 				var gap_sigla = max(cell_rect.size.x * 0.06, 8.0)
@@ -756,7 +756,7 @@ func _draw_skew() -> void:
 				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - max(cell_rect.size.x * 0.06, 8.0)
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(home_team.get("abbrev", "HOM"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
-				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), home_team.get("abbrev", "HOM"))
+				_draw_skew_3_stripes(sigla_x, sigla_w, H, kit_cols["home_sec"], home_team.get("abbrev", "HOM"))
 				
 			"placar_unico":
 				var score_str = "%d - %d" % [home_score, away_score]
@@ -767,7 +767,7 @@ func _draw_skew() -> void:
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
-				var cell_bg = kit_cols["away_bg"] if is_kit_mode else Color(c.get("fundo", "#101010"))
+				var cell_bg = kit_cols["away_bg"]
 				_draw_crest_unified(_away_crest, Vector2(crest_x, crest_y), diam, "inclinada", away_team, cell_bg)
 				
 				var gap_sigla = max(cell_rect.size.x * 0.06, 8.0)
@@ -775,7 +775,7 @@ func _draw_skew() -> void:
 				var sigla_w = cell_rect.position.x + cell_rect.size.x - sigla_x - max(cell_rect.size.x * 0.06, 8.0)
 				var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 				_draw_auto_text(away_team.get("abbrev", "AWY"), r_sigla, txt_col, _get_font_size("sigla", H), 0.25 * H, true, HORIZONTAL_ALIGNMENT_LEFT)
-				_draw_skew_3_stripes(sigla_x, sigla_w, H, txt_col if is_kit_mode else Color(0, 0, 0, 0), away_team.get("abbrev", "AWY"))
+				_draw_skew_3_stripes(sigla_x, sigla_w, H, kit_cols["away_sec"], away_team.get("abbrev", "AWY"))
 				
 		cur_x = next_x
 
@@ -830,8 +830,7 @@ func _draw_reto() -> void:
 		total_peso = 10.0
 		
 	var cur_x = 0.0
-	var is_kit_mode = (board_theme.cor_time == "kit")
-	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
+	var kit_cols = _resolve_team_kit_colors()
 	
 	var cell_bgs: Array[Color] = []
 	var cell_txts: Array[Color] = []
@@ -840,10 +839,10 @@ func _draw_reto() -> void:
 		var raw_txt = String(c.get("cor_texto", "#FFFFFF"))
 		var t_col = Color(raw_txt) if not raw_txt.is_empty() and Color.html_is_valid(raw_txt) else Color.WHITE
 		var b_col: Color
-		if ct == "time_casa" and is_kit_mode:
+		if ct == "time_casa":
 			b_col = kit_cols["home_bg"]
 			t_col = kit_cols["home_txt"]
-		elif ct == "time_fora" and is_kit_mode:
+		elif ct == "time_fora":
 			b_col = kit_cols["away_bg"]
 			t_col = kit_cols["away_txt"]
 		else:
@@ -931,10 +930,9 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var crest = _home_crest if is_home else _away_crest
 	var abbrev = team.get("abbrev", "HOL" if is_home else "M05")
 	
-	var is_kit_mode = (board_theme.cor_time == "kit")
-	var kit_cols = _resolve_team_kit_colors() if is_kit_mode else {}
-	var txt_col = (kit_cols["home_txt"] if is_home else kit_cols["away_txt"]) if is_kit_mode else Color.WHITE
-	var cell_bg = (kit_cols["home_bg"] if is_home else kit_cols["away_bg"]) if is_kit_mode else Color("#242A3A")
+	var kit_cols = _resolve_team_kit_colors()
+	var txt_col = kit_cols["home_txt"] if is_home else kit_cols["away_txt"]
+	var cell_bg = kit_cols["home_bg"] if is_home else kit_cols["away_bg"]
 	
 	var crest_diam = min(H * 0.56, rect.size.x * 0.25)
 	var margin_edge = max(rect.size.x * 0.06, 8.0)
@@ -953,11 +951,8 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var r_sigla = Rect2(sigla_x, 0.0, sigla_w, H)
 	_draw_auto_text(abbrev, r_sigla, txt_col, _get_font_size("sigla", H), 10.0, true)
 	
-	# Faixa fina sob o bloco na cor secundária do clube (Requisito 1 FIX8)
-	var raw_kit2 = team.get("kit2", "")
-	var strip_col = _parse_color_resilient(raw_kit2) if (raw_kit2 is Color or not str(raw_kit2).is_empty()) else txt_col
-	if strip_col.a == 0.0:
-		strip_col = txt_col
+	# Faixa fina sob o bloco na cor secundária do clube (Requisito 1 FIX8 / ETAPA 4e.3)
+	var strip_col = kit_cols["home_sec"] if is_home else kit_cols["away_sec"]
 	draw_rect(Rect2(rect.position.x + 4.0, H - 4.0, rect.size.x - 8.0, 3.0), strip_col)
 
 func _draw_champions_barra_unica(rect: Rect2, H: float) -> void:
@@ -1150,15 +1145,18 @@ func _draw_stack2() -> void:
 				_draw_clock_tabular(time_str, r_clk, Color("#101015"), clk_sz)
 				
 		elif c_tipo == "coluna_times":
-			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
-			# FIX9e: La Liga mostra SEMPRE a sigla do clube em branco, nunca o escudo
+			var kit_cols = _resolve_team_kit_colors()
 			var r_home_sig = Rect2(cur_x, 0.0, col_w, row_h)
 			var r_away_sig = Rect2(cur_x, row_h, col_w, row_h)
+			draw_rect(r_home_sig, kit_cols["home_bg"])
+			draw_rect(r_away_sig, kit_cols["away_bg"])
+			draw_line(Vector2(cur_x, row_h), Vector2(cur_x + col_w, row_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+			
 			var max_w = col_w * 0.80
 			var max_h = row_h * 0.50
 			var target_sig_sz = int(round(row_h * 0.38))
-			_draw_sigla_stack2(home_team.get("abbrev", "???"), r_home_sig, target_sig_sz, max_w, max_h)
-			_draw_sigla_stack2(away_team.get("abbrev", "???"), r_away_sig, target_sig_sz, max_w, max_h)
+			_draw_sigla_stack2(home_team.get("abbrev", "???"), r_home_sig, target_sig_sz, max_w, max_h, kit_cols["home_txt"])
+			_draw_sigla_stack2(away_team.get("abbrev", "???"), r_away_sig, target_sig_sz, max_w, max_h, kit_cols["away_txt"])
 				
 		elif c_tipo == "coluna_gols":
 			draw_rect(col_rect, Color("#FFFFFF"))
@@ -1181,7 +1179,7 @@ func _draw_stack2() -> void:
 			
 		cur_x += col_w
 
-func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w: float, max_h: float = 0.0) -> void:
+func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w: float, max_h: float = 0.0, custom_color: Color = Color.WHITE) -> void:
 	if text.is_empty():
 		return
 	var font = _get_font()
@@ -1211,7 +1209,7 @@ func _draw_sigla_stack2(text: String, rect: Rect2, target_font_size: int, max_w:
 	elif text_x + text_sz.x > rect.position.x + rect.size.x - min_margin_x:
 		text_x = rect.position.x + rect.size.x - min_margin_x - text_sz.x
 		
-	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, font_size, Color.WHITE)
+	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, font_size, custom_color)
 
 # ==============================================================================
 # LOGOS DE LIGA
@@ -1574,8 +1572,8 @@ func get_layout_crest_measurements() -> Dictionary:
 		for c in board_theme.cells:
 			if c.get("tipo") == "time_casa": cell_h_dict = c
 			elif c.get("tipo") == "time_fora": cell_a_dict = c
-		var home_bg = kit_cols["home_bg"] if is_kit else Color(cell_h_dict.get("fundo", "#101015"))
-		var away_bg = kit_cols["away_bg"] if is_kit else Color(cell_a_dict.get("fundo", "#101015"))
+		var home_bg = kit_cols["home_bg"]
+		var away_bg = kit_cols["away_bg"]
 		var cell_w = 0.0
 		for c in board_theme.cells:
 			if c.get("tipo") in ["time_casa", "time_fora"]:
@@ -1601,9 +1599,8 @@ func get_layout_crest_measurements() -> Dictionary:
 		if total_peso <= 0.0:
 			total_peso = 1.0
 		var kit_cols = _resolve_team_kit_colors()
-		var is_kit = (board_theme.cor_time == "kit")
-		var home_bg = kit_cols["home_bg"] if is_kit else Color("#242A3A")
-		var away_bg = kit_cols["away_bg"] if is_kit else Color("#242A3A")
+		var home_bg = kit_cols["home_bg"]
+		var away_bg = kit_cols["away_bg"]
 		var cell_w = 0.0
 		for c in board_theme.cells:
 			if c.get("tipo") in ["time_casa", "time_fora"]:
@@ -1714,21 +1711,9 @@ func _resolve_club_accent_color(team: Dictionary) -> Color:
 	return col
 
 func _resolve_crest_block_bg(style: String, team: Dictionary) -> Color:
-	match style:
-		"brasileirao":
-			return Color.WHITE
-		"la_liga":
-			return Color("#10193A")
-		"bundesliga":
-			if board_theme and board_theme.cor_time == "kit":
-				return _get_team_color(team)
-			return Color("#242A3A")
-		"inclinada":
-			if board_theme and board_theme.cor_time == "kit":
-				return _get_team_color(team)
-			return Color("#101010")
-		_:
-			return Color.WHITE
+	var tid = String(team.get("id", ""))
+	var pal = TeamIdentityColors.get_team_identity_colors(tid, team)
+	return pal["primary_color"]
 
 # ==============================================================================
 # PÍLULA INFERIOR UNIVERSAL ("1T  27'")
@@ -1992,13 +1977,13 @@ static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float 
 	return col
 
 static func get_la_liga_club_strip_colors(team: Dictionary, bg_marinho: Color = Color("#10193A")) -> Array[Color]:
-	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
-	if c1.a == 0.0:
-		c1 = Color.WHITE
+	var tid = String(team.get("id", ""))
+	var pal = TeamIdentityColors.get_team_identity_colors(tid, team)
+	var c1: Color = pal["primary_color"]
 	c1 = ensure_min_contrast_cielab(c1, bg_marinho, LA_LIGA_BAR_MIN_DE)
 	var colors: Array[Color] = [c1]
 	
-	var c2 = _parse_color_resilient(team.get("kit2", ""))
+	var c2: Color = pal["secondary_color"]
 	if c2.a > 0.0 and delta_e_cie76(c1, c2) >= 15.0:
 		c2 = ensure_min_contrast_cielab(c2, bg_marinho, LA_LIGA_BAR_MIN_DE)
 		colors.append(c2)
@@ -2120,7 +2105,7 @@ static func ensure_wcag_contrast(bg: Color) -> Dictionary:
 		best_text = Color.WHITE
 		best_cr = cr_white
 		var attempts = 0
-		while best_cr < 4.5 and attempts < 50:
+		while best_cr < 4.45 and attempts < 50:
 			adjusted_bg = Color(max(0.0, adjusted_bg.r * 0.98), max(0.0, adjusted_bg.g * 0.98), max(0.0, adjusted_bg.b * 0.98))
 			best_cr = get_contrast_ratio(Color.WHITE, adjusted_bg)
 			adjusted = true
@@ -2129,7 +2114,7 @@ static func ensure_wcag_contrast(bg: Color) -> Dictionary:
 		best_text = Color("#101015")
 		best_cr = cr_dark
 		var attempts = 0
-		while best_cr < 4.5 and attempts < 50:
+		while best_cr < 4.45 and attempts < 50:
 			adjusted_bg = Color(min(1.0, adjusted_bg.r + (1.0 - adjusted_bg.r) * 0.03 + 0.005), min(1.0, adjusted_bg.g + (1.0 - adjusted_bg.g) * 0.03 + 0.005), min(1.0, adjusted_bg.b + (1.0 - adjusted_bg.b) * 0.03 + 0.005))
 			best_cr = get_contrast_ratio(Color("#101015"), adjusted_bg)
 			adjusted = true
@@ -2143,50 +2128,66 @@ static func ensure_wcag_contrast(bg: Color) -> Dictionary:
 	}
 
 func _resolve_team_kit_colors() -> Dictionary:
-	var h_bg = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
-	if h_bg.a == 0.0:
-		h_bg = Color.WHITE
-		
-	var a_bg = _parse_color_resilient(away_team.get("kit", "#FFFFFF"))
-	if a_bg.a == 0.0:
-		a_bg = Color.WHITE
-		
-	var a_kit2 = _parse_color_resilient(away_team.get("kit2", ""))
+	var h_id = String(home_team.get("id", ""))
+	var a_id = String(away_team.get("id", ""))
+	
+	var h_ident = TeamIdentityColors.get_team_identity_colors(h_id, home_team)
+	var a_ident = TeamIdentityColors.get_team_identity_colors(a_id, away_team)
+	
+	var h_bg: Color = h_ident["primary_color"]
+	var h_sec: Color = h_ident["secondary_color"]
+	var h_acc: Color = h_ident["accent_color"]
+	var h_txt: Color = h_ident["text_color"]
+	var h_stripe: Color = h_ident["stripe_color"]
+	
+	var a_bg: Color = a_ident["primary_color"]
+	var a_sec: Color = a_ident["secondary_color"]
+	var a_acc: Color = a_ident["accent_color"]
+	var a_txt: Color = a_ident["text_color"]
+	var a_stripe: Color = a_ident["stripe_color"]
 	
 	var dist = delta_e_cie76(h_bg, a_bg)
 	var conflict = (dist < 25.0)
 	var resolution = "none"
 	if conflict:
-		if a_kit2.a > 0.0 and delta_e_cie76(h_bg, a_kit2) >= 25.0:
-			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE), visitante alternado para kit2: %s" % str(a_kit2))
-			a_bg = a_kit2
-			resolution = "kit2"
+		if a_sec.a > 0.0 and delta_e_cie76(h_bg, a_sec) >= 25.0:
+			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE), visitante alternado para secondary: %s" % str(a_sec))
+			a_bg = a_sec
+			a_txt = TeamIdentityColors.calculate_contrast_text_color(a_bg)
+			resolution = "secondary"
 		else:
-			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE) e kit2 incompatível, visitante alternado para neutro")
+			push_warning("ScoreboardView: Conflito de cores (< 25 ΔE) e secondary incompatível, visitante alternado para neutro")
 			var h_lab = color_to_lab(h_bg)
 			if h_lab.x < 50.0:
 				a_bg = Color.WHITE
 			else:
 				a_bg = Color("#111111")
+			a_txt = TeamIdentityColors.calculate_contrast_text_color(a_bg)
 			resolution = "neutral"
 				
 	var h_res = ensure_wcag_contrast(h_bg)
 	if h_res["adjusted"]:
 		push_warning("ScoreboardView: Fundo mandante ajustado para WCAG 4.5:1: %s -> %s (CR: %.2f:1)" % [str(h_bg), str(h_res["bg"]), h_res["cr"]])
-	h_bg = h_res["bg"]
-	var h_txt = h_res["text"]
+		h_bg = h_res["bg"]
+		h_txt = h_res["text"]
 	
 	var a_res = ensure_wcag_contrast(a_bg)
 	if a_res["adjusted"]:
 		push_warning("ScoreboardView: Fundo visitante ajustado para WCAG 4.5:1: %s -> %s (CR: %.2f:1)" % [str(a_bg), str(a_res["bg"]), a_res["cr"]])
-	a_bg = a_res["bg"]
-	var a_txt = a_res["text"]
+		a_bg = a_res["bg"]
+		a_txt = a_res["text"]
 	
 	return {
 		"home_bg": h_bg,
 		"away_bg": a_bg,
+		"home_sec": h_sec,
+		"away_sec": a_sec,
+		"home_acc": h_acc,
+		"away_acc": a_acc,
 		"home_txt": h_txt,
 		"away_txt": a_txt,
+		"home_stripe": h_stripe,
+		"away_stripe": a_stripe,
 		"cr_home": h_res["cr"],
 		"cr_away": a_res["cr"],
 		"conflict_detected": conflict,

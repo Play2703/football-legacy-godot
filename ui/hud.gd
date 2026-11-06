@@ -1,6 +1,8 @@
 class_name MatchHud
 extends CanvasLayer
 
+const TeamIdentityColors = preload("res://features/scoreboard/team_identity_colors.gd")
+
 
 
 signal restart_requested
@@ -3478,9 +3480,9 @@ func _club_tag(sb: StyleBoxFlat) -> Panel:
 
 
 func _tag_color(team: Dictionary) -> Color:
-	var k: Variant = team.get("kit", null)
-	return CareerTheme.fill_on_dark(k as Color, 0.0) if k is Color \
-			else CareerTheme.fill_on_dark(_accent, 0.0)
+	var tid = String(team.get("id", ""))
+	var pal = TeamIdentityColors.get_team_identity_colors(tid, team)
+	return pal["primary_color"]
 
 
 
@@ -3550,8 +3552,8 @@ func _style_scorebar() -> void:
 
 	_you_tag_sb.bg_color = _tag_color(_you_team_data)
 	_rival_tag_sb.bg_color = _tag_color(_rival_team_data)
-	_you_abbr.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
-	_rival_abbr.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
+	_you_abbr.add_theme_color_override("font_color", TeamIdentityColors.calculate_contrast_text_color(_you_tag_sb.bg_color))
+	_rival_abbr.add_theme_color_override("font_color", TeamIdentityColors.calculate_contrast_text_color(_rival_tag_sb.bg_color))
 	_score_label.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
 
 
