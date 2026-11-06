@@ -185,11 +185,11 @@ func _init() -> void:
 	_home_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_away_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_comp_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_comp_logo.visible = false
 	_home_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_away_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	add_child(_home_crest)
 	add_child(_away_crest)
-	add_child(_comp_logo)
 
 func _ready() -> void:
 	if board_theme == null:
@@ -734,7 +734,7 @@ func _draw_skew() -> void:
 					_draw_clock_tabular(time_str, r_clock, txt_col, clk_target_sz)
 					
 			"time_casa":
-				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
+				var diam = min(H * 0.58, cell_rect.size.x * 0.28)
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
@@ -753,7 +753,7 @@ func _draw_skew() -> void:
 				_draw_auto_text(score_str, cell_rect, txt_col, _get_font_size("gol", H), 0.30 * H, true)
 				
 			"time_fora":
-				var diam = min(H * 0.55, cell_rect.size.x * 0.28)
+				var diam = min(H * 0.58, cell_rect.size.x * 0.28)
 				var margin_div = max(cell_rect.size.x * 0.06, 8.0)
 				var crest_x = cell_rect.position.x + margin_div
 				var crest_y = (H - diam) * 0.5
@@ -926,7 +926,7 @@ func _draw_bundesliga_team_cell(rect: Rect2, H: float, is_home: bool) -> void:
 	var txt_col = (kit_cols["home_txt"] if is_home else kit_cols["away_txt"]) if is_kit_mode else Color.WHITE
 	var cell_bg = (kit_cols["home_bg"] if is_home else kit_cols["away_bg"]) if is_kit_mode else Color("#242A3A")
 	
-	var crest_diam = min(H * 0.54, rect.size.x * 0.24)
+	var crest_diam = min(H * 0.56, rect.size.x * 0.25)
 	var margin_edge = max(rect.size.x * 0.06, 8.0)
 	var crest_x = rect.position.x + margin_edge
 	var crest_y = (H - crest_diam) * 0.5
@@ -1637,9 +1637,9 @@ func _draw_crest_unified(crest: CrestView, pos: Vector2, diam: float, style: Str
 		var ts = tex.get_size()
 		var max_side = diam * 0.92
 		var k = max_side / max(ts.x, ts.y)
-		var rw = ts.x * k
-		var rh = ts.y * k
-		var crest_rect = Rect2(center.x - rw * 0.5, center.y - rh * 0.5, rw, rh)
+		var rw = roundf(ts.x * k)
+		var rh = roundf(ts.y * k)
+		var crest_rect = Rect2(roundf(center.x - rw * 0.5), roundf(center.y - rh * 0.5), rw, rh)
 		
 		# 1. Regra FIX9c: Círculo é só gabarito. Com escudo real, NENHUM anel,
 		# círculo colorido ou contorno atrás dele em TODOS os 7 layouts.
