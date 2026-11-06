@@ -12,7 +12,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FEBE10"),
 		"accent_color": Color("#00529F"),
 		"text_color": Color("#101015"),
-		"stripe_color": Color("#FEBE10")
+		"stripe_color": Color("#FEBE10"),
+		"pattern": "solid"
 	},
 	"bar": {
 		"name": "Barcelona",
@@ -20,7 +21,9 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#004D98"),
 		"accent_color": Color("#EDBB00"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#004D98")
+		"stripe_color": Color("#004D98"),
+		"pattern": "stripes_v",
+		"colors": [Color("#004D98"), Color("#A50044")]
 	},
 	"fla": {
 		"name": "Flamengo",
@@ -28,7 +31,9 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#111111"),
 		"accent_color": Color("#FFFFFF"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#111111")
+		"stripe_color": Color("#111111"),
+		"pattern": "stripes_h",
+		"colors": [Color("#C8102E"), Color("#111111")]
 	},
 	"palm": {
 		"name": "Palmeiras",
@@ -36,7 +41,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#007A33"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"bay": {
 		"name": "Bayern Munich",
@@ -44,7 +50,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#0066B2"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"dor": {
 		"name": "Borussia Dortmund",
@@ -52,7 +59,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#111111"),
 		"accent_color": Color("#FFFFFF"),
 		"text_color": Color("#101015"),
-		"stripe_color": Color("#111111")
+		"stripe_color": Color("#111111"),
+		"pattern": "solid"
 	},
 	"mci": {
 		"name": "Manchester City",
@@ -60,7 +68,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#1C2C5B"),
 		"text_color": Color("#101015"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"ars": {
 		"name": "Arsenal",
@@ -68,7 +77,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#063672"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"liv": {
 		"name": "Liverpool",
@@ -76,7 +86,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#00B2A9"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"che": {
 		"name": "Chelsea",
@@ -84,7 +95,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#DBA111"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	},
 	"pari": {
 		"name": "Paris Saint-Germain",
@@ -92,7 +104,8 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#DA291C"),
 		"accent_color": Color("#FFFFFF"),
 		"text_color": Color("#FFFFFF"),
-		"stripe_color": Color("#DA291C")
+		"stripe_color": Color("#DA291C"),
+		"pattern": "solid"
 	},
 	"mars": {
 		"name": "Olympique de Marseille",
@@ -100,8 +113,21 @@ const PALETAS_OFICIAIS: Dictionary = {
 		"secondary_color": Color("#FFFFFF"),
 		"accent_color": Color("#0095C8"),
 		"text_color": Color("#101015"),
-		"stripe_color": Color("#FFFFFF")
+		"stripe_color": Color("#FFFFFF"),
+		"pattern": "solid"
 	}
+}
+
+const ALIASES: Dictionary = {
+	"pal": "palm",
+	"psg": "pari",
+	"om": "mars",
+	"bvb": "dor",
+	"fcb": "bar",
+	"bayern": "bay",
+	"dortmund": "dor",
+	"city": "mci",
+	"arsenal": "ars"
 }
 
 ## Cache de identidades adicionadas dinamicamente
@@ -120,6 +146,8 @@ static func calculate_contrast_text_color(bg: Color) -> Color:
 ## garantindo que as cores do torneio/liga NUNCA substituam a identidade do clube.
 static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}) -> Dictionary:
 	var tid: String = team_id.to_lower().strip_edges()
+	if ALIASES.has(tid):
+		tid = ALIASES[tid]
 	
 	# 1. Consulta ao cadastro de paletas oficiais
 	if PALETAS_OFICIAIS.has(tid):
@@ -196,7 +224,28 @@ static func register_team_identity(team_id: String, primary: Color, secondary: C
 
 static func is_team_registered(team_id: String) -> bool:
 	var tid: String = team_id.to_lower().strip_edges()
+	if ALIASES.has(tid):
+		tid = ALIASES[tid]
 	return PALETAS_OFICIAIS.has(tid) or _dynamic_palettes.has(tid)
+
+## ETAPA 4e.4 — Retorna a configuração de estilo e padrão geométrico para cabeçalhos e telas de apresentação
+static func get_team_header_style(team_id: String, team_data: Dictionary = {}) -> Dictionary:
+	var pal: Dictionary = get_team_identity_colors(team_id, team_data)
+	var pattern: String = String(pal.get("pattern", "solid"))
+	var pri: Color = pal["primary_color"]
+	var sec: Color = pal["secondary_color"]
+	var colors: Array = pal.get("colors", [pri])
+	if colors.is_empty():
+		colors = [pri]
+	return {
+		"colors": colors,
+		"pattern": pattern,
+		"primary": pri,
+		"secondary": sec,
+		"accent": pal.get("accent_color", sec),
+		"text": pal.get("text_color", Color.WHITE),
+		"source": "TeamIdentityColors"
+	}
 
 static func get_all_registered_teams() -> Array[String]:
 	var arr: Array[String] = []

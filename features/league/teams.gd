@@ -7718,3 +7718,11 @@ static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}
 	if id_script != null:
 		return id_script.get_team_identity_colors(team_id, team_data)
 	return {}
+
+
+## ETAPA 4e.4 — Delegação para configuração de estilo de cabeçalho e telas externas
+static func get_team_header_style(team_id: String, team_data: Dictionary = {}) -> Dictionary:
+	var id_script = load("res://features/scoreboard/team_identity_colors.gd")
+	if id_script != null:
+		return id_script.get_team_header_style(team_id, team_data)
+	return {}

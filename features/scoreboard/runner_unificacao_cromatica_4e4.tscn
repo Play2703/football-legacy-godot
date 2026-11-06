@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ci1u8n4i4f4e4"]
+
+[ext_resource type="Script" path="res://features/scoreboard/runner_unificacao_cromatica_4e4.gd" id="1_4e4"]
+
+[node name="RunnerUnificacaoCromatica4e4" type="Node"]
+script = ExtResource("1_4e4")

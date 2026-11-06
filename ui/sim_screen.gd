@@ -1,6 +1,8 @@
 class_name SimScreen
 extends CanvasLayer
 
+const TeamIdentityColors = preload("res://features/scoreboard/team_identity_colors.gd")
+
 
 
 
@@ -1069,43 +1071,33 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 
 
 
-	_you_accent = _side_tint(you_team, UiKit.CYAN)
-	_rival_accent = _side_tint(rival_team, accent)
-
-
-
 	var yid: String = String(you_team.get("id", ""))
 	var rid: String = String(rival_team.get("id", ""))
+	var you_pal: Dictionary = TeamIdentityColors.get_team_identity_colors(yid, you_team)
+	var rival_pal: Dictionary = TeamIdentityColors.get_team_identity_colors(rid, rival_team)
+
+	_you_accent = you_pal["accent_color"] if you_pal["primary_color"].get_luminance() > 0.85 else you_pal["primary_color"]
+	_rival_accent = rival_pal["accent_color"] if rival_pal["primary_color"].get_luminance() > 0.85 else rival_pal["primary_color"]
+
 	if _riv_sub != null:
 		_riv_sub.text = ScenarioStore.formation_of(rid)
 	if _you_sub != null:
 		_you_sub.text = ScenarioStore.formation_of(yid)
 	_reencaja.call_deferred()
 
-
-
-
 	if Teams.kits_clash(_you_accent, _rival_accent):
-
-
-		var kit2: Color = rival_team.get("kit2", Color.WHITE)
-		_rival_accent = _vivid(kit2)
+		_rival_accent = rival_pal["secondary_color"]
 		if Teams.kits_clash(_you_accent, _rival_accent):
-			_rival_accent = _vivid(accent)
+			_rival_accent = rival_pal["accent_color"]
 		if Teams.kits_clash(_you_accent, _rival_accent):
 			_rival_accent = UiKit.GOLD
 
-
-
-
-
-
-
-
 	_soy_local = bool(fx.get("home", true))
 	if _rot_local != null:
-		_rot_local.color = _you_accent if _soy_local else _rival_accent
-		_rot_visita.color = _rival_accent if _soy_local else _you_accent
+		var home_pal = you_pal if _soy_local else rival_pal
+		var away_pal = rival_pal if _soy_local else you_pal
+		_rot_local.color = home_pal["primary_color"]
+		_rot_visita.color = away_pal["primary_color"]
 
 
 	_pinta_marcas()
@@ -3627,110 +3619,10 @@ func _viste_bug(accent: Color) -> void:
 	if USE_TEAM_COLOR_HEADER:
 		_update_team_color_header()
 
-const TEAM_COLOR_HEADER_OVERRIDES: Dictionary = {
-	"fla": {
-		"colors": [Color("#C3281E"), Color("#111111")], # Flamengo: rubro-negro
-		"pattern": "stripes_h",
-		"source": "Paleta oficial CR Flamengo (rubro-negro)"
-	},
-	"palm": {
-		"colors": [Color("#006437")], # Palmeiras: verde
-		"pattern": "solid",
-		"source": "Paleta oficial SE Palmeiras (verde)"
-	},
-	"pal": {
-		"colors": [Color("#006437")], # Palmeiras: verde
-		"pattern": "solid",
-		"source": "Paleta oficial SE Palmeiras (verde)"
-	},
-	"rma": {
-		"colors": [Color("#FFFFFF")], # Real Madrid: branco
-		"pattern": "solid",
-		"source": "Paleta oficial Real Madrid CF (blanco)"
-	},
-	"bar": {
-		"colors": [Color("#004D98"), Color("#A50044")], # Barcelona: blaugrana
-		"pattern": "stripes_v",
-		"source": "Paleta oficial FC Barcelona (blaugrana #004D98 e #A50044)"
-	},
-	"mci": {
-		"colors": [Color("#6CABDD")], # Man City: azul celeste
-		"pattern": "solid",
-		"source": "Paleta oficial Manchester City (sky blue)"
-	},
-	"mun": {
-		"colors": [Color("#DA291C"), Color("#111111")], # Man United: vermelho e preto
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Manchester United (red & black)"
-	},
-	"bay": {
-		"colors": [Color("#DC052D"), Color("#FFFFFF")], # Bayern: vermelho e branco
-		"pattern": "stripes_v",
-		"source": "Paleta oficial FC Bayern München (rot & weiß)"
-	},
-	"dor": {
-		"colors": [Color("#FDE100"), Color("#111111")], # Dortmund: amarelo e preto
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Borussia Dortmund (schwarzgelb)"
-	},
-	"liv": {
-		"colors": [Color("#C8102E")], # Liverpool: vermelho oficial
-		"pattern": "solid",
-		"source": "Paleta oficial Liverpool FC (red)"
-	},
-	"che": {
-		"colors": [Color("#034694")], # Chelsea: azul royal oficial
-		"pattern": "solid",
-		"source": "Paleta oficial Chelsea FC (royal blue)"
-	},
-	"lei": {
-		"colors": [Color("#F5F5F5"), Color("#DD0741")], # RB Leipzig: branco e vermelho
-		"pattern": "stripes_v",
-		"source": "Paleta oficial RB Leipzig (weiß & rot)"
-	},
-	"lev": {
-		"colors": [Color("#E32219"), Color("#14161A")], # Bayer Leverkusen: vermelho e preto
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Bayer 04 Leverkusen (werkself)"
-	},
-	"ars": {
-		"colors": [Color("#EF0107"), Color("#FFFFFF")], # Arsenal: vermelho e branco
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Arsenal FC (red & white)"
-	},
-	"pari": {
-		"colors": [Color("#0A2340"), Color("#C8102E")], # PSG: azul marinho e vermelho
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Paris Saint-Germain (rouge et bleu)"
-	},
-	"psg": {
-		"colors": [Color("#0A2340"), Color("#C8102E")],
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Paris Saint-Germain"
-	},
-	"mars": {
-		"colors": [Color("#00A3E0"), Color("#FFFFFF")], # Marseille: azul celeste e branco
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Olympique de Marseille (bleu ciel et blanc)"
-	},
-	"om": {
-		"colors": [Color("#00A3E0"), Color("#FFFFFF")],
-		"pattern": "stripes_v",
-		"source": "Paleta oficial Olympique de Marseille"
-	}
-}
-
+## ETAPA 4e.4 — Obtenção centralizada da identidade cromática e estilo geométrico
 func _get_team_header_style(team_data: Dictionary) -> Dictionary:
-	var tid = String(team_data.get("id", "")).to_lower()
-	if TEAM_COLOR_HEADER_OVERRIDES.has(tid):
-		return TEAM_COLOR_HEADER_OVERRIDES[tid]
-	var c1 = team_data.get("kit", null)
-	var c2 = team_data.get("kit2", null)
-	if c1 is Color and c2 is Color and c1 != c2:
-		return {"colors": [c1, c2], "pattern": "stripes_v", "source": "Kit oficial do banco"}
-	elif c1 is Color:
-		return {"colors": [c1], "pattern": "solid", "source": "Kit primário do banco"}
-	return {"colors": [Color("#1b202c")], "pattern": "solid", "source": "Fallback"}
+	var tid = String(team_data.get("id", "")).to_lower().strip_edges()
+	return TeamIdentityColors.get_team_header_style(tid, team_data)
 
 func _update_team_color_header() -> void:
 	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:

@@ -945,6 +945,15 @@ static func accent() -> Color:
 
 
 static func accent_of(team: Dictionary) -> Color:
+	var tid: String = String(team.get("id", "")).to_lower().strip_edges()
+	if not tid.is_empty():
+		var id_script = load("res://features/scoreboard/team_identity_colors.gd")
+		if id_script != null and id_script.is_team_registered(tid):
+			var pal: Dictionary = id_script.get_team_identity_colors(tid, team)
+			if pal["primary_color"].get_luminance() > 0.85:
+				return pal["accent_color"]
+			return pal["primary_color"]
+
 	var best: Color = MONEY
 	var best_sat: float = -1.0
 	for key in ["kit", "kit2"]:
