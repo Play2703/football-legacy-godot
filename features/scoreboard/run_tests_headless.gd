@@ -874,8 +874,8 @@ func _init() -> void:
 			pass_fix9e_laliga = false
 			all_ok = false
 			
-		# FIX9f: Teste de contraste e espessura da barra dos clubes na La Liga
-		# Cores resolvidas devem ter ΔE >= 25 contra #10193A
+		# FIX9g: Teste de contraste e espessura da barra dos clubes na La Liga
+		# Cores resolvidas devem ter ΔE >= 40 (LA_LIGA_BAR_MIN_DE) contra #10193A
 		var h_colors = ScoreboardView.get_la_liga_club_strip_colors(pair["h"], bg_marinho)
 		var a_colors = ScoreboardView.get_la_liga_club_strip_colors(pair["a"], bg_marinho)
 		var min_de_bar = 999.0
@@ -883,20 +883,20 @@ func _init() -> void:
 			var de = ScoreboardView.delta_e_cie76(c, bg_marinho)
 			if de < min_de_bar:
 				min_de_bar = de
-			if de < 25.0:
-				printerr("ERRO LA LIGA FIX9f: Barra mandante (%s) com ΔE=%.1f < 25 contra marinho!" % [pair["h"]["name"], de])
+			if de < ScoreboardView.LA_LIGA_BAR_MIN_DE:
+				printerr("ERRO LA LIGA FIX9g: Barra mandante (%s) com ΔE=%.1f < 40 contra marinho!" % [pair["h"]["name"], de])
 				pass_fix9e_laliga = false
 				all_ok = false
 		for c in a_colors:
 			var de = ScoreboardView.delta_e_cie76(c, bg_marinho)
 			if de < min_de_bar:
 				min_de_bar = de
-			if de < 25.0:
-				printerr("ERRO LA LIGA FIX9f: Barra visitante (%s) com ΔE=%.1f < 25 contra marinho!" % [pair["a"]["name"], de])
+			if de < ScoreboardView.LA_LIGA_BAR_MIN_DE:
+				printerr("ERRO LA LIGA FIX9g: Barra visitante (%s) com ΔE=%.1f < 40 contra marinho!" % [pair["a"]["name"], de])
 				pass_fix9e_laliga = false
 				all_ok = false
 				
-		print("[PASS] La Liga Par %d (%s × %s): Siglas '%s' e '%s' em branco sobre #10193A | WCAG = %.1f:1 | Barras ΔE_min = %.1f (>=25) | Captura %dx%d íntegra" % [
+		print("[PASS] La Liga Par %d (%s × %s): Siglas '%s' e '%s' em branco sobre #10193A | WCAG = %.1f:1 | Barras ΔE_min = %.1f (>=40) | Captura %dx%d íntegra" % [
 			p_num, pair["h"]["name"], pair["a"]["name"], h_abbrev, a_abbrev, wcag_ratio, min_de_bar, w, h
 		])
 	

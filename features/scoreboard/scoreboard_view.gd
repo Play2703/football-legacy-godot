@@ -17,13 +17,14 @@ const TOTAL_HUD_H: float = BASE_BAR_H + BOTTOM_PILL_H # 120.0 px (esperado por _
 const MAX_COMPACT_W: float = 648.0 # 90% de 720 px em retrato
 const MIN_FONT_SIZE: int = 10
 
-# FIX9c/d/f: Constantes nomeadas de contraste, relógio e La Liga
+# FIX9c/d/f/g: Constantes nomeadas de contraste, relógio e La Liga
 const CONTRAST_THRESHOLD_SUPPORT_DISK: float = 40.0
 const CONTRAST_EXCEPTION_BODY_THRESHOLD: float = 55.0
 const CLOCK_FONT_SCALE: float = 1.2
 const LA_LIGA_SCALE: float = 1.25
 const LA_LIGA_BAR_W_RATIO: float = 0.12 # fração da coluna marinho (~0.12, aprox o dobro do anterior)
 const LA_LIGA_BASE_BAR_THICKNESS: float = 3.0 # espessura anterior medida em 1.0x (px)
+const LA_LIGA_BAR_MIN_DE: float = 40.0 # limite de contraste ΔE contra o marinho #10193A (FIX9g)
 
 var board_theme: ScoreboardTheme = null
 var home_team: Dictionary = {}
@@ -1924,30 +1925,31 @@ static func _parse_color_resilient(raw_val: Variant) -> Color:
 		return Color(s)
 	return Color(0, 0, 0, 0)
 
-static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float = 25.0) -> Color:
+static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float = LA_LIGA_BAR_MIN_DE) -> Color:
 	if delta_e_cie76(col, bg_col) >= min_de:
 		return col
 	var lab = color_to_lab(col)
 	var cur_L = lab.x
 	# Se a cor for muito escura ou conflitante contra o fundo, clarear mantendo matiz até atingir min_de
-	while cur_L < 92.0 and delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de:
-		cur_L += 1.5
+	while cur_L < 96.0 and delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de:
+		cur_L += 0.5
 	return lab_to_color(Vector3(cur_L, lab.y, lab.z))
 
 static func get_la_liga_club_strip_colors(team: Dictionary, bg_marinho: Color = Color("#10193A")) -> Array[Color]:
 	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
 	if c1.a == 0.0:
 		c1 = Color.WHITE
-	c1 = ensure_min_contrast_cielab(c1, bg_marinho, 25.0)
+	c1 = ensure_min_contrast_cielab(c1, bg_marinho, LA_LIGA_BAR_MIN_DE)
 	var colors: Array[Color] = [c1]
 	
 	var c2 = _parse_color_resilient(team.get("kit2", ""))
 	if c2.a > 0.0 and delta_e_cie76(c1, c2) >= 15.0:
-		c2 = ensure_min_contrast_cielab(c2, bg_marinho, 25.0)
+		c2 = ensure_min_contrast_cielab(c2, bg_marinho, LA_LIGA_BAR_MIN_DE)
 		colors.append(c2)
 		
 	return colors
 
+# FIX9g: Barra de duas cores empilha as cores (metade superior e inferior), cada uma com largura total
 func _draw_la_liga_club_bar(rect: Rect2, colors: Array[Color]) -> void:
 	if colors.is_empty():
 		return
@@ -1955,11 +1957,11 @@ func _draw_la_liga_club_bar(rect: Rect2, colors: Array[Color]) -> void:
 	if n == 1:
 		draw_rect(rect, colors[0])
 		return
-	var sub_w = rect.size.x / float(n)
+	var sub_h = rect.size.y / float(n)
 	for i in range(n):
-		var sub_x = rect.position.x + i * sub_w
-		var sub_width = sub_w if i < n - 1 else (rect.position.x + rect.size.x - sub_x)
-		draw_rect(Rect2(sub_x, rect.position.y, sub_width, rect.size.y), colors[i])
+		var sub_y = rect.position.y + i * sub_h
+		var sub_height = sub_h if i < n - 1 else (rect.position.y + rect.size.y - sub_y)
+		draw_rect(Rect2(rect.position.x, sub_y, rect.size.x, sub_height), colors[i])
 
 func get_resolved_club_strip_colors() -> Dictionary:
 	var h_c1 = _parse_color_resilient(home_team.get("kit", "#FFFFFF"))
