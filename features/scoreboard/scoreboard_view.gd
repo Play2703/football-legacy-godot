@@ -33,7 +33,7 @@ var away_team: Dictionary = {}
 var home_score: int = 0
 var away_score: int = 0
 var minute: int = 85
-var stoppage: int = 6
+var stoppage: int = 0
 var is_compact: bool = false
 var use_local_textures: bool = true
 
@@ -273,10 +273,30 @@ func get_la_liga_bar_ratio() -> float:
 		return la_liga_bar_ratio_override
 	return LA_LIGA_BAR_W_RATIO
 
+func is_stoppage_visible() -> bool:
+	if stoppage <= 0:
+		return false
+	if match_state == "INT" or match_state == "FIM":
+		return false
+	if match_state == "1T":
+		return minute >= 45
+	if match_state == "2T":
+		return minute >= 90
+	if match_state == "PR":
+		return minute >= 105
+	return (minute >= 45 and minute < 46) or minute >= 90
+
 func get_real_size() -> Vector2:
 	var is_ll = (board_theme and board_theme.familia == "stack2")
 	var ll_scale = get_la_liga_scale() if is_ll else 1.0
-	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) * ll_scale if is_ll else TOTAL_HUD_H
+	var is_br = (board_theme and (board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a"))
+	var h_base: float
+	if is_ll:
+		h_base = BASE_BAR_H * 1.8 * ll_scale
+	elif is_br:
+		h_base = TOTAL_HUD_H
+	else:
+		h_base = BASE_BAR_H
 	return Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 
 func _recalculate_dimensions() -> void:
@@ -303,7 +323,14 @@ func _recalculate_dimensions() -> void:
 	else:
 		_current_scale = 1.0
 	
-	var h_base = (BASE_BAR_H * 1.8 + BOTTOM_PILL_H + 8.0) * ll_scale if is_ll else TOTAL_HUD_H
+	var is_br = (board_theme and (board_theme.theme_id == "brasileirao" or board_theme.theme_id == "brasileirao_serie_a"))
+	var h_base: float
+	if is_ll:
+		h_base = BASE_BAR_H * 1.8 * ll_scale
+	elif is_br:
+		h_base = TOTAL_HUD_H
+	else:
+		h_base = BASE_BAR_H
 	var final_size = Vector2(_unscaled_size.x * _current_scale, h_base * _current_scale)
 	custom_minimum_size = final_size
 	size = final_size
@@ -555,7 +582,7 @@ func _draw_brasileirao() -> void:
 	var base_clk_sz = 26
 	var clk_font_target = int(round(float(base_clk_sz) * clock_scale))
 	
-	if stoppage > 0 and time_str != "INT" and time_str != "FIM":
+	if is_stoppage_visible():
 		var stop_str = "+%d" % stoppage
 		# Divisor posicionado para equilibrar tempo à esquerda e acréscimo à direita
 		var cdiv_x = clk_x + clk_w * 0.74
@@ -697,7 +724,7 @@ func _draw_skew() -> void:
 				var time_str = "%02d:%02d" % [minute, 0]
 				var tag_w = clamp(cell_rect.size.x * 0.28, 26.0, 36.0)
 				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
-				if stoppage > 0:
+				if is_stoppage_visible():
 					var r_clock = Rect2(cell_rect.position.x + 4.0, 0.0, cell_rect.size.x - tag_w - 8.0, H)
 					_draw_clock_tabular(time_str, r_clock, txt_col, clk_target_sz)
 					var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
@@ -873,7 +900,7 @@ func _draw_reto() -> void:
 			var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
 			# Requisito 3: "+6" SEM invadir o bloco vizinho
 			var tag_w = clamp(rect.size.x * 0.25, 24.0, 34.0)
-			if stoppage > 0:
+			if is_stoppage_visible():
 				var r_c = Rect2(rect.position.x + 4.0, 0.0, rect.size.x - tag_w - 6.0, H)
 				_draw_clock_tabular(time_str, r_c, Color(c.get("cor_texto", "#FFFFFF")), clk_target_sz)
 				var stop_col = Color(board_theme.etiqueta_acrescimo.get("cor", "#E13432"))
@@ -1041,7 +1068,7 @@ func _draw_modulos_separados() -> void:
 				var tag_w = cell_w * 0.30
 				var tag_h = H * 0.30
 				var clk_target_sz = int(round(_get_font_size("relogio", H) * CLOCK_FONT_SCALE))
-				if stoppage > 0:
+				if is_stoppage_visible():
 					var r_clk = Rect2(rect.position.x + cell_w * 0.08, 0.0, cell_w - tag_w - cell_w * 0.10, H)
 					_draw_clock_tabular(time_str, r_clk, clk_txt_col, clk_target_sz)
 					var stop_rect = Rect2(rect.position.x + cell_w - tag_w - 4.0, 3.0, tag_w, tag_h)
@@ -1097,7 +1124,7 @@ func _draw_stack2() -> void:
 			var time_str = "%02d:%02d" % [minute, 0]
 			var clk_sz = int(round(_get_font_size("relogio", BASE_BAR_H * 1.8) * CLOCK_FONT_SCALE * ll_scale))
 			
-			if stoppage > 0:
+			if is_stoppage_visible():
 				var stop_w = col_w * 0.45
 				var stop_h = total_h * 0.12
 				var stop_x = cur_x + (col_w - stop_w) * 0.5
