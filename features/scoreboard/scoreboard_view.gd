@@ -1931,11 +1931,21 @@ static func ensure_min_contrast_cielab(col: Color, bg_col: Color, min_de: float 
 	var bg_lab = color_to_lab(bg_col)
 	if delta_e_cie76(col, bg_col) >= min_de and abs(lab.x - bg_lab.x) >= min_dl:
 		return col
-	var cur_L = lab.x
-	# Se a cor for muito escura ou conflitante contra o fundo, clarear mantendo matiz até atingir min_de e min_dl
-	while cur_L < 96.0 and (delta_e_cie76(lab_to_color(Vector3(cur_L, lab.y, lab.z)), bg_col) < min_de or abs(cur_L - bg_lab.x) < min_dl):
-		cur_L += 0.5
-	return lab_to_color(Vector3(cur_L, lab.y, lab.z))
+	# FIX9h: Preservar matiz rigorosamente (variação <= 15°, Chicago Fire permanece azul e não violeta)
+	var orig_h = col.h
+	var orig_s = col.s
+	var cur_v = col.v
+	var cur_s = orig_s
+	while cur_v < 1.0 or cur_s > 0.2:
+		if cur_v < 0.98:
+			cur_v += 0.02
+		else:
+			cur_s -= 0.02
+		var cur_col = Color.from_hsv(orig_h, clampf(cur_s, 0.0, 1.0), clampf(cur_v, 0.0, 1.0))
+		var c_lab = color_to_lab(cur_col)
+		if delta_e_cie76(cur_col, bg_col) >= min_de and abs(c_lab.x - bg_lab.x) >= min_dl:
+			return cur_col
+	return col
 
 static func get_la_liga_club_strip_colors(team: Dictionary, bg_marinho: Color = Color("#10193A")) -> Array[Color]:
 	var c1 = _parse_color_resilient(team.get("kit", "#FFFFFF"))
