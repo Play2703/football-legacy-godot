@@ -1,10 +1,10 @@
 {
   "total_svgs": 234,
-  "successfully_mapped": 222,
+  "successfully_mapped": 221,
   "pending_validation_count": 1,
   "unmatched_count": 11,
-  "total_clubs_in_game": 2462,
-  "clubs_without_svg_badge": 2244,
+  "total_clubs_in_game": 2463,
+  "clubs_without_svg_badge": 2242,
   "mapping_by_club_id": {
     "athl": {
       "club_id": "athl",
@@ -43,12 +43,12 @@
       "club_id": "bot",
       "club_name": "Botafogo",
       "country": "Brasil",
-      "pack_name": "brasileirao-serie-c-2026",
-      "svg_filename": "botafogo-pb-logo-footylogos.svg",
-      "svg_path": "res://assets/logos/svg/botafogo-pb-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "pack_name": "brasileirao-serie-a-2026",
+      "svg_filename": "botafogo-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/botafogo-logo-footylogos.svg",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'botafogo'}"
+      "rationale": "Verified official match: Botafogo (botafogo) -> Botafogo (bot)"
     },
     "chap": {
       "club_id": "chap",
@@ -226,16 +226,16 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: Vitória (vitoria) -> Vitória (vito)"
     },
-    "ame": {
-      "club_id": "ame",
-      "club_name": "América",
-      "country": "México",
+    "amer": {
+      "club_id": "amer",
+      "club_name": "América Mineiro",
+      "country": "Brasil",
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "america-mineiro-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/america-mineiro-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: America Mineiro (Coelho) (america-mineiro) -> América (ame)"
+      "rationale": "Verified official match: America Mineiro (Coelho) (america-mineiro) -> América Mineiro (amer)"
     },
     "atc": {
       "club_id": "atc",
@@ -266,9 +266,9 @@
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "botafogo-sp-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/botafogo-sp-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: botafogo sp bfc == botafogo sp"
+      "rationale": "Verified official match: Botafogo-SP (BFC) (botafogo-sp) -> Botafogo-SP (bota)"
     },
     "cea": {
       "club_id": "cea",
@@ -358,16 +358,16 @@
       "confidence_score": 1.0,
       "rationale": "Exact normalized name match: operario ferroviario == operario ferroviario"
     },
-    "spo": {
-      "club_id": "spo",
-      "club_name": "Sporting",
-      "country": "Portugal",
-      "pack_name": "liga-portugal-2026-27",
-      "svg_filename": "sporting-cp-logo-footylogos.svg",
-      "svg_path": "res://assets/logos/svg/sporting-cp-logo-footylogos.svg",
+    "spor": {
+      "club_id": "spor",
+      "club_name": "Sport Recife",
+      "country": "Brasil",
+      "pack_name": "brasileirao-serie-b-2026",
+      "svg_filename": "sport-recife-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/sport-recife-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Sporting CP (Lisbon) (sporting-cp) -> Sporting (spo)"
+      "rationale": "Verified official match: Sport Recife (sport-recife) -> Sport Recife (spor)"
     },
     "vno": {
       "club_id": "vno",
@@ -376,9 +376,9 @@
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "vila-nova-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/vila-nova-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: vila nova == vila nova"
+      "rationale": "Verified official match: Vila Nova (vila-nova) -> Vila Nova (vno)"
     },
     "lon": {
       "club_id": "lon",
@@ -456,6 +456,17 @@
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
       "rationale": "Verified official match: Volta Redonda (VRFC) (volta-redonda) -> Volta Redonda (vre)"
+    },
+    "bot_pb": {
+      "club_id": "bot_pb",
+      "club_name": "Botafogo-PB",
+      "country": "Brasil",
+      "pack_name": "brasileirao-serie-c-2026",
+      "svg_filename": "botafogo-pb-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/botafogo-pb-logo-footylogos.svg",
+      "confidence": "VERIFIED_ALIAS",
+      "confidence_score": 1.0,
+      "rationale": "Verified official match: Botafogo PB (botafogo-pb) -> Botafogo-PB (bot_pb)"
     },
     "bruq": {
       "club_id": "bruq",
@@ -549,12 +560,12 @@
       "club_id": "lev",
       "club_name": "Leverkusen",
       "country": "Alemania",
-      "pack_name": "laliga-2026-27",
-      "svg_filename": "levante-ud-logo-footylogos.svg",
-      "svg_path": "res://assets/logos/svg/levante-ud-logo-footylogos.svg",
+      "pack_name": "bundesliga-2026-27",
+      "svg_filename": "bayer-leverkusen-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/bayer-leverkusen-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Levante UD (levante-ud) -> Leverkusen (lev)"
+      "rationale": "Verified official match: Bayer Leverkusen (bayer-leverkusen) -> Leverkusen (lev)"
     },
     "bay": {
       "club_id": "bay",
@@ -765,16 +776,16 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: Celta Vigo (celta-vigo) -> Celta (cel)"
     },
-    "ala": {
-      "club_id": "ala",
-      "club_name": "Al-Ahli",
-      "country": "Arabia Saudí",
+    "alv": {
+      "club_id": "alv",
+      "club_name": "Alavés",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "deportivo-alaves-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-alaves-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Deportivo Alaves (deportivo-alaves) -> Al-Ahli (ala)"
+      "rationale": "Verified official match: Deportivo Alaves (deportivo-alaves) -> Alavés (alv)"
     },
     "elc": {
       "club_id": "elc",
@@ -808,6 +819,17 @@
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
       "rationale": "Verified official match: Getafe C.F (getafe-cf) -> Getafe (get)"
+    },
+    "lvt": {
+      "club_id": "lvt",
+      "club_name": "Levante",
+      "country": "España",
+      "pack_name": "laliga-2026-27",
+      "svg_filename": "levante-ud-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/levante-ud-logo-footylogos.svg",
+      "confidence": "VERIFIED_ALIAS",
+      "confidence_score": 1.0,
+      "rationale": "Verified official match: Levante UD (levante-ud) -> Levante (lvt)"
     },
     "osa": {
       "club_id": "osa",
@@ -919,27 +941,27 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: Villarreal CF (villarreal-cf) -> Villarreal (vil)"
     },
-    "dep": {
-      "club_id": "dep",
-      "club_name": "Deportivo Morón",
-      "country": "Argentina",
+    "dpc": {
+      "club_id": "dpc",
+      "club_name": "Deportivo",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "deportivo-la-coruna-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-la-coruna-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Deportivo La Coruña (deportivo-la-coruna) -> Deportivo Morón (dep)"
+      "rationale": "Verified official match: Deportivo La Coruña (deportivo-la-coruna) -> Deportivo (dpc)"
     },
-    "mal": {
-      "club_id": "mal",
-      "club_name": "Malinas",
-      "country": "Bélgica",
+    "mag": {
+      "club_id": "mag",
+      "club_name": "Málaga",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "malaga-cf-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/malaga-cf-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Málaga CF (malaga-cf) -> Malinas (mal)"
+      "rationale": "Verified official match: Málaga CF (malaga-cf) -> Málaga (mag)"
     },
     "cpa": {
       "club_id": "cpa",
@@ -1007,16 +1029,16 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: Gil Vicente (gil-vicente) -> Gil Vicente (gil)"
     },
-    "mor": {
-      "club_id": "mor",
-      "club_name": "Morelia",
-      "country": "México",
+    "mre": {
+      "club_id": "mre",
+      "club_name": "Moreirense",
+      "country": "Portugal",
       "pack_name": "liga-portugal-2026-27",
       "svg_filename": "moreirense-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/moreirense-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Moreirense (moreirense) -> Morelia (mor)"
+      "rationale": "Verified official match: Moreirense (moreirense) -> Moreirense (mre)"
     },
     "riv": {
       "club_id": "riv",
@@ -1051,6 +1073,17 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: SL Benfica (sl-benfica) -> Benfica (ben)"
     },
+    "spo": {
+      "club_id": "spo",
+      "club_name": "Sporting",
+      "country": "Portugal",
+      "pack_name": "liga-portugal-2026-27",
+      "svg_filename": "sporting-cp-logo-footylogos.svg",
+      "svg_path": "res://assets/logos/svg/sporting-cp-logo-footylogos.svg",
+      "confidence": "VERIFIED_ALIAS",
+      "confidence_score": 1.0,
+      "rationale": "Verified official match: Sporting CP (Lisbon) (sporting-cp) -> Sporting (spo)"
+    },
     "vit": {
       "club_id": "vit",
       "club_name": "Vitória",
@@ -1069,9 +1102,9 @@
       "pack_name": "liga-portugal-2026-27",
       "svg_filename": "cd-santa-clara-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/cd-santa-clara-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'clara', 'santa'}"
+      "rationale": "Verified official match: CD Santa Clara (cd-santa-clara) -> Santa Clara (stc)"
     },
     "alvp": {
       "club_id": "alvp",
@@ -1124,9 +1157,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "atletico-platense-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/atletico-platense-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'platense'}"
+      "rationale": "Verified official match: Club Atlético Platense (atletico-platense) -> Platense (arg_pla)"
     },
     "def": {
       "club_id": "def",
@@ -1146,9 +1179,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "central-cordoba-se-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/central-cordoba-se-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'cordoba', 'central'}"
+      "rationale": "Verified official match: Central Córdoba (SE) (central-cordoba-se) -> Central Córdoba (arg_ccb)"
     },
     "lan": {
       "club_id": "lan",
@@ -1168,9 +1201,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "deportivo-riestra-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-riestra-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: deportivo riestra == deportivo riestra"
+      "rationale": "Verified official match: Deportivo Riestra (deportivo-riestra) -> Deportivo Riestra (arg_rie)"
     },
     "tal": {
       "club_id": "tal",
@@ -1311,9 +1344,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "atletico-tucuman-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/atletico-tucuman-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: atletico tucuman == atletico tucuman"
+      "rationale": "Verified official match: Atlético Tucumán (atletico-tucuman) -> Atlético Tucumán (arg_atu)"
     },
     "ban": {
       "club_id": "ban",
@@ -1333,9 +1366,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "barracas-central-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/barracas-central-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: barracas central == barracas central"
+      "rationale": "Verified official match: Barracas Central (barracas-central) -> Barracas Central (arg_bar)"
     },
     "arg_bel": {
       "club_id": "arg_bel",
@@ -1344,9 +1377,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "belgrano-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/belgrano-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: belgrano == belgrano"
+      "rationale": "Verified official match: Belgrano (belgrano) -> Belgrano (arg_bel)"
     },
     "rive": {
       "club_id": "rive",
@@ -1377,9 +1410,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "independiente-rivadavia-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/independiente-rivadavia-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: independiente rivadavia == independiente rivadavia"
+      "rationale": "Verified official match: Independiente Rivadavia (independiente-rivadavia) -> Independiente Rivadavia (arg_ivr)"
     },
     "hur": {
       "club_id": "hur",
@@ -1421,20 +1454,20 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "sarmiento-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/sarmiento-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: sarmiento == sarmiento"
+      "rationale": "Verified official match: Sarmiento (sarmiento) -> Sarmiento (arg_sar)"
     },
-    "tig": {
-      "club_id": "tig",
-      "club_name": "Tigres",
-      "country": "México",
+    "arg_tig": {
+      "club_id": "arg_tig",
+      "club_name": "Tigre",
+      "country": "Argentina",
       "pack_name": "liga-profesional-2026",
       "svg_filename": "tigre-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/tigre-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Tigre (tigre) -> Tigres (tig)"
+      "rationale": "Verified official match: Tigre (tigre) -> Tigre (arg_tig)"
     },
     "aux": {
       "club_id": "aux",
@@ -1511,7 +1544,7 @@
       "svg_path": "res://assets/logos/svg/le-mans-fc-logo-footylogos.svg",
       "confidence": "EXACT",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'le', 'mans'}"
+      "rationale": "Exact token set match: {'mans', 'le'}"
     },
     "niz": {
       "club_id": "niz",
@@ -1566,7 +1599,7 @@
       "svg_path": "res://assets/logos/svg/paris-saint-germain-psg-logo-footylogos.svg",
       "confidence": "HIGH",
       "confidence_score": 0.95,
-      "rationale": "Strong multi-token subset match: {'saint', 'paris', 'germain'} in {'paris', 'saint', 'psg', 'germain'}"
+      "rationale": "Strong multi-token subset match: {'germain', 'saint', 'paris'} in {'germain', 'paris', 'psg', 'saint'}"
     },
     "len": {
       "club_id": "len",
@@ -1652,9 +1685,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "charlotte-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/charlotte-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: charlotte fc == charlotte fc"
+      "rationale": "Verified official match: Charlotte FC (charlotte-fc) -> Charlotte FC (usa_clt)"
     },
     "usa_chi": {
       "club_id": "usa_chi",
@@ -1663,9 +1696,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "chicago-fire-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/chicago-fire-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: chicago fire == chicago fire"
+      "rationale": "Verified official match: Chicago Fire (chicago-fire) -> Chicago Fire (usa_chi)"
     },
     "fcc": {
       "club_id": "fcc",
@@ -1696,9 +1729,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "dc-united-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/dc-united-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: d c united == d c united"
+      "rationale": "Verified official match: D.C. United (dc-united) -> D.C. United (usa_dcu)"
     },
     "ntr": {
       "club_id": "ntr",
@@ -1718,9 +1751,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "cf-montreal-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/cf-montreal-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: cf montreal == cf montreal"
+      "rationale": "Verified official match: CF Montréal (cf-montreal) -> CF Montréal (usa_mtl)"
     },
     "nas": {
       "club_id": "nas",
@@ -1740,9 +1773,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "new-england-revolution-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/new-england-revolution-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: new england revolution == new england revolution"
+      "rationale": "Verified official match: New England Revolution (new-england-revolution) -> New England Revolution (usa_nwe)"
     },
     "newy": {
       "club_id": "newy",
@@ -1755,16 +1788,16 @@
       "confidence_score": 1.0,
       "rationale": "Verified official match: New York City FC (new-york-city-fc) -> New York City FC (newy)"
     },
-    "orl": {
-      "club_id": "orl",
-      "club_name": "Orléans",
-      "country": "Francia",
+    "orla": {
+      "club_id": "orla",
+      "club_name": "Orlando City",
+      "country": "Estados Unidos",
       "pack_name": "mls-2026",
       "svg_filename": "orlando-city-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/orlando-city-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Orlando City (orlando-city) -> Orléans (orl)"
+      "rationale": "Verified official match: Orlando City (orlando-city) -> Orlando City (orla)"
     },
     "phi": {
       "club_id": "phi",
@@ -1795,9 +1828,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "toronto-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/toronto-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: toronto fc == toronto fc"
+      "rationale": "Verified official match: Toronto FC (toronto-fc) -> Toronto FC (usa_tor)"
     },
     "aust": {
       "club_id": "aust",
@@ -1817,9 +1850,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "colorado-rapids-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/colorado-rapids-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: colorado rapids == colorado rapids"
+      "rationale": "Verified official match: Colorado Rapids (colorado-rapids) -> Colorado Rapids (clr)"
     },
     "usa_dal": {
       "club_id": "usa_dal",
@@ -1828,9 +1861,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "fc-dallas-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/fc-dallas-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: fc dallas == fc dallas"
+      "rationale": "Verified official match: FC Dallas (fc-dallas) -> FC Dallas (usa_dal)"
     },
     "usa_hou": {
       "club_id": "usa_hou",
@@ -1839,9 +1872,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "houston-dynamo-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/houston-dynamo-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: houston dynamo == houston dynamo"
+      "rationale": "Verified official match: Houston Dynamo (houston-dynamo) -> Houston Dynamo (usa_hou)"
     },
     "losa": {
       "club_id": "losa",
@@ -1905,9 +1938,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "st-louis-city-sc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/st-louis-city-sc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'louis', 'st', 'city'}"
+      "rationale": "Verified official match: St. Louis City SC (st-louis-city-sc) -> St. Louis City (usa_stl)"
     },
     "usa_sdg": {
       "club_id": "usa_sdg",
@@ -1916,9 +1949,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "san-diego-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/san-diego-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: san diego fc == san diego fc"
+      "rationale": "Verified official match: San Diego FC (san-diego-fc) -> San Diego FC (usa_sdg)"
     },
     "usa_sje": {
       "club_id": "usa_sje",
@@ -1927,9 +1960,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "san-jose-earthquakes-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/san-jose-earthquakes-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: san jose earthquakes == san jose earthquakes"
+      "rationale": "Verified official match: San Jose Earthquakes (san-jose-earthquakes) -> San Jose Earthquakes (usa_sje)"
     },
     "sea": {
       "club_id": "sea",
@@ -1960,9 +1993,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "vancouver-whitecaps-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/vancouver-whitecaps-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: vancouver whitecaps == vancouver whitecaps"
+      "rationale": "Verified official match: Vancouver Whitecaps (vancouver-whitecaps) -> Vancouver Whitecaps (usa_van)"
     },
     "bou": {
       "club_id": "bou",
@@ -2627,15 +2660,15 @@
       "rationale": "Verified official match: Vitória (vitoria) -> Vitória (vito)"
     },
     "america-mineiro-logo-footylogos.svg": {
-      "club_id": "ame",
-      "club_name": "América",
-      "country": "México",
+      "club_id": "amer",
+      "club_name": "América Mineiro",
+      "country": "Brasil",
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "america-mineiro-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/america-mineiro-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: America Mineiro (Coelho) (america-mineiro) -> América (ame)"
+      "rationale": "Verified official match: America Mineiro (Coelho) (america-mineiro) -> América Mineiro (amer)"
     },
     "athletic-logo-footylogos.svg": {
       "club_id": "atc",
@@ -2666,9 +2699,9 @@
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "botafogo-sp-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/botafogo-sp-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: botafogo sp bfc == botafogo sp"
+      "rationale": "Verified official match: Botafogo-SP (BFC) (botafogo-sp) -> Botafogo-SP (bota)"
     },
     "ceara-sc-logo-footylogos.svg": {
       "club_id": "cea",
@@ -2759,15 +2792,15 @@
       "rationale": "Exact normalized name match: operario ferroviario == operario ferroviario"
     },
     "sport-recife-logo-footylogos.svg": {
-      "club_id": "spo",
-      "club_name": "Sporting",
-      "country": "Portugal",
+      "club_id": "spor",
+      "club_name": "Sport Recife",
+      "country": "Brasil",
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "sport-recife-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/sport-recife-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Sport Recife (sport-recife) -> Sporting (spo)"
+      "rationale": "Verified official match: Sport Recife (sport-recife) -> Sport Recife (spor)"
     },
     "vila-nova-logo-footylogos.svg": {
       "club_id": "vno",
@@ -2776,9 +2809,9 @@
       "pack_name": "brasileirao-serie-b-2026",
       "svg_filename": "vila-nova-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/vila-nova-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: vila nova == vila nova"
+      "rationale": "Verified official match: Vila Nova (vila-nova) -> Vila Nova (vno)"
     },
     "londrina-logo-footylogos.svg": {
       "club_id": "lon",
@@ -2858,15 +2891,15 @@
       "rationale": "Verified official match: Volta Redonda (VRFC) (volta-redonda) -> Volta Redonda (vre)"
     },
     "botafogo-pb-logo-footylogos.svg": {
-      "club_id": "bot",
-      "club_name": "Botafogo",
+      "club_id": "bot_pb",
+      "club_name": "Botafogo-PB",
       "country": "Brasil",
       "pack_name": "brasileirao-serie-c-2026",
       "svg_filename": "botafogo-pb-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/botafogo-pb-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'botafogo'}"
+      "rationale": "Verified official match: Botafogo PB (botafogo-pb) -> Botafogo-PB (bot_pb)"
     },
     "brusque-logo-footylogos.svg": {
       "club_id": "bruq",
@@ -3177,15 +3210,15 @@
       "rationale": "Verified official match: Celta Vigo (celta-vigo) -> Celta (cel)"
     },
     "deportivo-alaves-logo-footylogos.svg": {
-      "club_id": "ala",
-      "club_name": "Al-Ahli",
-      "country": "Arabia Saudí",
+      "club_id": "alv",
+      "club_name": "Alavés",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "deportivo-alaves-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-alaves-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Deportivo Alaves (deportivo-alaves) -> Al-Ahli (ala)"
+      "rationale": "Verified official match: Deportivo Alaves (deportivo-alaves) -> Alavés (alv)"
     },
     "elche-cf-logo-footylogos.svg": {
       "club_id": "elc",
@@ -3221,15 +3254,15 @@
       "rationale": "Verified official match: Getafe C.F (getafe-cf) -> Getafe (get)"
     },
     "levante-ud-logo-footylogos.svg": {
-      "club_id": "lev",
-      "club_name": "Leverkusen",
-      "country": "Alemania",
+      "club_id": "lvt",
+      "club_name": "Levante",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "levante-ud-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/levante-ud-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Levante UD (levante-ud) -> Leverkusen (lev)"
+      "rationale": "Verified official match: Levante UD (levante-ud) -> Levante (lvt)"
     },
     "osasuna-logo-footylogos.svg": {
       "club_id": "osa",
@@ -3342,26 +3375,26 @@
       "rationale": "Verified official match: Villarreal CF (villarreal-cf) -> Villarreal (vil)"
     },
     "deportivo-la-coruna-logo-footylogos.svg": {
-      "club_id": "dep",
-      "club_name": "Deportivo Morón",
-      "country": "Argentina",
+      "club_id": "dpc",
+      "club_name": "Deportivo",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "deportivo-la-coruna-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-la-coruna-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Deportivo La Coruña (deportivo-la-coruna) -> Deportivo Morón (dep)"
+      "rationale": "Verified official match: Deportivo La Coruña (deportivo-la-coruna) -> Deportivo (dpc)"
     },
     "malaga-cf-logo-footylogos.svg": {
-      "club_id": "mal",
-      "club_name": "Malinas",
-      "country": "Bélgica",
+      "club_id": "mag",
+      "club_name": "Málaga",
+      "country": "España",
       "pack_name": "laliga-2026-27",
       "svg_filename": "malaga-cf-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/malaga-cf-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Málaga CF (malaga-cf) -> Malinas (mal)"
+      "rationale": "Verified official match: Málaga CF (malaga-cf) -> Málaga (mag)"
     },
     "casa-pia-logo-footylogos.svg": {
       "club_id": "cpa",
@@ -3430,15 +3463,15 @@
       "rationale": "Verified official match: Gil Vicente (gil-vicente) -> Gil Vicente (gil)"
     },
     "moreirense-logo-footylogos.svg": {
-      "club_id": "mor",
-      "club_name": "Morelia",
-      "country": "México",
+      "club_id": "mre",
+      "club_name": "Moreirense",
+      "country": "Portugal",
       "pack_name": "liga-portugal-2026-27",
       "svg_filename": "moreirense-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/moreirense-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Moreirense (moreirense) -> Morelia (mor)"
+      "rationale": "Verified official match: Moreirense (moreirense) -> Moreirense (mre)"
     },
     "rio-ave-logo-footylogos.svg": {
       "club_id": "riv",
@@ -3502,9 +3535,9 @@
       "pack_name": "liga-portugal-2026-27",
       "svg_filename": "cd-santa-clara-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/cd-santa-clara-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'clara', 'santa'}"
+      "rationale": "Verified official match: CD Santa Clara (cd-santa-clara) -> Santa Clara (stc)"
     },
     "fc-alverca-logo-footylogos.svg": {
       "club_id": "alvp",
@@ -3557,9 +3590,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "atletico-platense-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/atletico-platense-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'platense'}"
+      "rationale": "Verified official match: Club Atlético Platense (atletico-platense) -> Platense (arg_pla)"
     },
     "defensa-y-justicia-logo-footylogos.svg": {
       "club_id": "def",
@@ -3579,9 +3612,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "central-cordoba-se-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/central-cordoba-se-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'cordoba', 'central'}"
+      "rationale": "Verified official match: Central Córdoba (SE) (central-cordoba-se) -> Central Córdoba (arg_ccb)"
     },
     "lanus-logo-footylogos.svg": {
       "club_id": "lan",
@@ -3601,9 +3634,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "deportivo-riestra-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/deportivo-riestra-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: deportivo riestra == deportivo riestra"
+      "rationale": "Verified official match: Deportivo Riestra (deportivo-riestra) -> Deportivo Riestra (arg_rie)"
     },
     "talleres-logo-footylogos.svg": {
       "club_id": "tal",
@@ -3744,9 +3777,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "atletico-tucuman-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/atletico-tucuman-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: atletico tucuman == atletico tucuman"
+      "rationale": "Verified official match: Atlético Tucumán (atletico-tucuman) -> Atlético Tucumán (arg_atu)"
     },
     "banfield-logo-footylogos.svg": {
       "club_id": "ban",
@@ -3766,9 +3799,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "barracas-central-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/barracas-central-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: barracas central == barracas central"
+      "rationale": "Verified official match: Barracas Central (barracas-central) -> Barracas Central (arg_bar)"
     },
     "belgrano-logo-footylogos.svg": {
       "club_id": "arg_bel",
@@ -3777,9 +3810,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "belgrano-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/belgrano-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: belgrano == belgrano"
+      "rationale": "Verified official match: Belgrano (belgrano) -> Belgrano (arg_bel)"
     },
     "river-plate-logo-footylogos.svg": {
       "club_id": "rive",
@@ -3821,9 +3854,9 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "independiente-rivadavia-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/independiente-rivadavia-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: independiente rivadavia == independiente rivadavia"
+      "rationale": "Verified official match: Independiente Rivadavia (independiente-rivadavia) -> Independiente Rivadavia (arg_ivr)"
     },
     "huracan-logo-footylogos.svg": {
       "club_id": "hur",
@@ -3865,20 +3898,20 @@
       "pack_name": "liga-profesional-2026",
       "svg_filename": "sarmiento-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/sarmiento-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: sarmiento == sarmiento"
+      "rationale": "Verified official match: Sarmiento (sarmiento) -> Sarmiento (arg_sar)"
     },
     "tigre-logo-footylogos.svg": {
-      "club_id": "tig",
-      "club_name": "Tigres",
-      "country": "México",
+      "club_id": "arg_tig",
+      "club_name": "Tigre",
+      "country": "Argentina",
       "pack_name": "liga-profesional-2026",
       "svg_filename": "tigre-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/tigre-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Tigre (tigre) -> Tigres (tig)"
+      "rationale": "Verified official match: Tigre (tigre) -> Tigre (arg_tig)"
     },
     "aj-auxerre-logo-footylogos.svg": {
       "club_id": "aux",
@@ -3955,7 +3988,7 @@
       "svg_path": "res://assets/logos/svg/le-mans-fc-logo-footylogos.svg",
       "confidence": "EXACT",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'le', 'mans'}"
+      "rationale": "Exact token set match: {'mans', 'le'}"
     },
     "ogc-nice-logo-footylogos.svg": {
       "club_id": "niz",
@@ -4010,7 +4043,7 @@
       "svg_path": "res://assets/logos/svg/paris-saint-germain-psg-logo-footylogos.svg",
       "confidence": "HIGH",
       "confidence_score": 0.95,
-      "rationale": "Strong multi-token subset match: {'saint', 'paris', 'germain'} in {'paris', 'saint', 'psg', 'germain'}"
+      "rationale": "Strong multi-token subset match: {'germain', 'saint', 'paris'} in {'germain', 'paris', 'psg', 'saint'}"
     },
     "rc-lens-logo-footylogos.svg": {
       "club_id": "len",
@@ -4096,9 +4129,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "charlotte-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/charlotte-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: charlotte fc == charlotte fc"
+      "rationale": "Verified official match: Charlotte FC (charlotte-fc) -> Charlotte FC (usa_clt)"
     },
     "chicago-fire-logo-footylogos.svg": {
       "club_id": "usa_chi",
@@ -4107,9 +4140,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "chicago-fire-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/chicago-fire-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: chicago fire == chicago fire"
+      "rationale": "Verified official match: Chicago Fire (chicago-fire) -> Chicago Fire (usa_chi)"
     },
     "fc-cincinnati-logo-footylogos.svg": {
       "club_id": "fcc",
@@ -4140,9 +4173,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "dc-united-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/dc-united-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: d c united == d c united"
+      "rationale": "Verified official match: D.C. United (dc-united) -> D.C. United (usa_dcu)"
     },
     "inter-miami-logo-footylogos.svg": {
       "club_id": "ntr",
@@ -4162,9 +4195,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "cf-montreal-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/cf-montreal-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: cf montreal == cf montreal"
+      "rationale": "Verified official match: CF Montréal (cf-montreal) -> CF Montréal (usa_mtl)"
     },
     "nashville-sc-logo-footylogos.svg": {
       "club_id": "nas",
@@ -4184,9 +4217,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "new-england-revolution-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/new-england-revolution-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: new england revolution == new england revolution"
+      "rationale": "Verified official match: New England Revolution (new-england-revolution) -> New England Revolution (usa_nwe)"
     },
     "new-york-city-fc-logo-footylogos.svg": {
       "club_id": "newy",
@@ -4200,15 +4233,15 @@
       "rationale": "Verified official match: New York City FC (new-york-city-fc) -> New York City FC (newy)"
     },
     "orlando-city-logo-footylogos.svg": {
-      "club_id": "orl",
-      "club_name": "Orléans",
-      "country": "Francia",
+      "club_id": "orla",
+      "club_name": "Orlando City",
+      "country": "Estados Unidos",
       "pack_name": "mls-2026",
       "svg_filename": "orlando-city-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/orlando-city-logo-footylogos.svg",
       "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Verified official match: Orlando City (orlando-city) -> Orléans (orl)"
+      "rationale": "Verified official match: Orlando City (orlando-city) -> Orlando City (orla)"
     },
     "philadelphia-union-logo-footylogos.svg": {
       "club_id": "phi",
@@ -4239,9 +4272,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "toronto-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/toronto-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: toronto fc == toronto fc"
+      "rationale": "Verified official match: Toronto FC (toronto-fc) -> Toronto FC (usa_tor)"
     },
     "austin-fc-logo-footylogos.svg": {
       "club_id": "aust",
@@ -4261,9 +4294,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "colorado-rapids-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/colorado-rapids-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: colorado rapids == colorado rapids"
+      "rationale": "Verified official match: Colorado Rapids (colorado-rapids) -> Colorado Rapids (clr)"
     },
     "fc-dallas-logo-footylogos.svg": {
       "club_id": "usa_dal",
@@ -4272,9 +4305,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "fc-dallas-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/fc-dallas-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: fc dallas == fc dallas"
+      "rationale": "Verified official match: FC Dallas (fc-dallas) -> FC Dallas (usa_dal)"
     },
     "houston-dynamo-logo-footylogos.svg": {
       "club_id": "usa_hou",
@@ -4283,9 +4316,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "houston-dynamo-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/houston-dynamo-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: houston dynamo == houston dynamo"
+      "rationale": "Verified official match: Houston Dynamo (houston-dynamo) -> Houston Dynamo (usa_hou)"
     },
     "los-angeles-fc-logo-footylogos.svg": {
       "club_id": "losa",
@@ -4349,9 +4382,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "st-louis-city-sc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/st-louis-city-sc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact token set match: {'louis', 'st', 'city'}"
+      "rationale": "Verified official match: St. Louis City SC (st-louis-city-sc) -> St. Louis City (usa_stl)"
     },
     "san-diego-fc-logo-footylogos.svg": {
       "club_id": "usa_sdg",
@@ -4360,9 +4393,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "san-diego-fc-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/san-diego-fc-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: san diego fc == san diego fc"
+      "rationale": "Verified official match: San Diego FC (san-diego-fc) -> San Diego FC (usa_sdg)"
     },
     "san-jose-earthquakes-logo-footylogos.svg": {
       "club_id": "usa_sje",
@@ -4371,9 +4404,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "san-jose-earthquakes-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/san-jose-earthquakes-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: san jose earthquakes == san jose earthquakes"
+      "rationale": "Verified official match: San Jose Earthquakes (san-jose-earthquakes) -> San Jose Earthquakes (usa_sje)"
     },
     "seattle-sounders-logo-footylogos.svg": {
       "club_id": "sea",
@@ -4404,9 +4437,9 @@
       "pack_name": "mls-2026",
       "svg_filename": "vancouver-whitecaps-logo-footylogos.svg",
       "svg_path": "res://assets/logos/svg/vancouver-whitecaps-logo-footylogos.svg",
-      "confidence": "EXACT",
+      "confidence": "VERIFIED_ALIAS",
       "confidence_score": 1.0,
-      "rationale": "Exact normalized name match: vancouver whitecaps == vancouver whitecaps"
+      "rationale": "Verified official match: Vancouver Whitecaps (vancouver-whitecaps) -> Vancouver Whitecaps (usa_van)"
     },
     "afc-bournemouth-logo-footylogos.svg": {
       "club_id": "bou",

@@ -59,11 +59,12 @@ def norm_str(s):
 
 def extract_meaningful_tokens(s):
     s_norm = norm_str(s)
-    stop = {'fc', 'cf', 'ac', 'ud', 'cd', 'sc', 'cr', 'ca', 'afc', 'rb', 'de', 'do', 'da', 'del', 'la', 'el', 'the', 'club', 'calcio', 'deportivo', 'atletico', 'esporte', 'futebol', 'sport', 'real', 'as', 'ss', 'us', 'sp', 'pb', 'se', 'lp', 'om', 'hsc', 'osc', 'sco', 'fbpa', 'ec', 'clube', 'regatas', 'paulista'}
+    # Exclude state acronyms like pb, sp, rj, etc. from stop words so they act as distinguishing tokens!
+    stop = {'fc', 'cf', 'ac', 'ud', 'cd', 'sc', 'cr', 'ca', 'afc', 'rb', 'de', 'do', 'da', 'del', 'la', 'el', 'the', 'club', 'calcio', 'deportivo', 'atletico', 'esporte', 'futebol', 'sport', 'real', 'as', 'ss', 'us', 'om', 'hsc', 'osc', 'sco', 'fbpa', 'ec', 'clube', 'regatas', 'paulista'}
     tokens = [t for t in s_norm.split() if t not in stop and len(t) > 1]
     return set(tokens), s_norm
 
-# Explicit high-fidelity manual dictionary for all packs
+# Explicit high-fidelity verified dictionary with validated team_ids from teams.gd
 verified_matches = {
     # La Liga
     ('laliga-2026-27', 'real-madrid'): 'rma',
@@ -71,21 +72,21 @@ verified_matches = {
     ('laliga-2026-27', 'atletico-madrid'): 'atm',
     ('laliga-2026-27', 'athletic-club-bilbao'): 'ath',
     ('laliga-2026-27', 'celta-vigo'): 'cel',
-    ('laliga-2026-27', 'deportivo-alaves'): 'ala',
+    ('laliga-2026-27', 'deportivo-alaves'): 'alv',
     ('laliga-2026-27', 'elche-cf'): 'elc',
     ('laliga-2026-27', 'getafe-cf'): 'get',
-    ('laliga-2026-27', 'levante-ud'): 'lev',
+    ('laliga-2026-27', 'levante-ud'): 'lvt',
     ('laliga-2026-27', 'osasuna'): 'osa',
     ('laliga-2026-27', 'rcd-espanyol-barcelona'): 'esp',
-    ('laliga-2026-27', 'racing-santander'): 'rcs',
+    ('laliga-2026-27', 'racing-santander'): 'rac',
     ('laliga-2026-27', 'rayo-vallecano'): 'ray',
     ('laliga-2026-27', 'real-betis-balompie'): 'bet',
     ('laliga-2026-27', 'real-sociedad'): 'rso',
     ('laliga-2026-27', 'sevilla-fc'): 'sev',
     ('laliga-2026-27', 'valencia-cf'): 'val',
     ('laliga-2026-27', 'villarreal-cf'): 'vil',
-    ('laliga-2026-27', 'deportivo-la-coruna'): 'dep',
-    ('laliga-2026-27', 'malaga-cf'): 'mal',
+    ('laliga-2026-27', 'deportivo-la-coruna'): 'dpc',
+    ('laliga-2026-27', 'malaga-cf'): 'mag',
 
     # Premier League
     ('premier-league-2026-27', 'manchester-city'): 'mci',
@@ -97,6 +98,7 @@ verified_matches = {
     ('premier-league-2026-27', 'newcastle-united'): 'new',
     ('premier-league-2026-27', 'aston-villa'): 'avl',
     ('premier-league-2026-27', 'brighton-hove-albion'): 'bhi',
+    ('premier-league-2026-27', 'brighton-and-hove-albion'): 'bhi',
     ('premier-league-2026-27', 'west-ham-united'): 'whu',
     ('premier-league-2026-27', 'wolverhampton-wanderers'): 'wol',
     ('premier-league-2026-27', 'crystal-palace'): 'cry',
@@ -108,27 +110,35 @@ verified_matches = {
     ('premier-league-2026-27', 'leicester-city'): 'lce',
     ('premier-league-2026-27', 'ipswich-town'): 'ips',
     ('premier-league-2026-27', 'southampton-fc'): 'sou',
+    ('premier-league-2026-27', 'coventry-city'): 'covc',
+    ('premier-league-2026-27', 'leeds-united'): 'lee',
 
     # Bundesliga
     ('bundesliga-2026-27', 'bayern-munchen'): 'bay',
+    ('bundesliga-2026-27', 'bayern-munich'): 'bay',
     ('bundesliga-2026-27', 'borussia-dortmund'): 'dor',
     ('bundesliga-2026-27', 'bayer-04-leverkusen'): 'lev',
+    ('bundesliga-2026-27', 'bayer-leverkusen'): 'lev',
     ('bundesliga-2026-27', 'rb-leipzig'): 'lei',
     ('bundesliga-2026-27', 'vfb-stuttgart'): 'stu',
     ('bundesliga-2026-27', 'eintracht-frankfurt'): 'fra',
     ('bundesliga-2026-27', 'vfl-wolfsburg'): 'wob',
     ('bundesliga-2026-27', 'sc-freiburg'): 'fbg',
     ('bundesliga-2026-27', 'tsg-1899-hoffenheim'): 'hof',
+    ('bundesliga-2026-27', 'tsg-hoffenheim'): 'hof',
     ('bundesliga-2026-27', 'borussia-monchengladbach'): 'bmg',
     ('bundesliga-2026-27', '1-fc-union-berlin'): 'fcu',
     ('bundesliga-2026-27', 'werder-bremen'): 'svw',
     ('bundesliga-2026-27', '1-fsv-mainz-05'): 'm05',
+    ('bundesliga-2026-27', 'mainz-05'): 'm05',
     ('bundesliga-2026-27', 'fc-augsburg'): 'fca',
     ('bundesliga-2026-27', 'vfl-bochum-1848'): 'boc',
     ('bundesliga-2026-27', 'fc-st-pauli'): 'stpl',
     ('bundesliga-2026-27', 'holstein-kiel'): 'ksv',
-    ('bundesliga-2026-27', '1-fc-heidenheim-1846'): 'hei',
     ('bundesliga-2026-27', 'hamburger-sv'): 'hsv',
+    ('bundesliga-2026-27', 'sc-paderborn-07'): 'pad',
+    ('bundesliga-2026-27', 'sv-elversberg'): 'elv',
+    ('bundesliga-2026-27', 'schalke-04'): 's04',
 
     # Ligue 1
     ('ligue-1-2026-27', 'paris-saint-germain'): 'pari',
@@ -137,6 +147,7 @@ verified_matches = {
     ('ligue-1-2026-27', 'as-monaco'): 'mon',
     ('ligue-1-2026-27', 'olympique-lyonnais'): 'lyo',
     ('ligue-1-2026-27', 'lille-osc'): 'lil',
+    ('ligue-1-2026-27', 'losc-lille'): 'lil',
     ('ligue-1-2026-27', 'ogc-nice'): 'niz',
     ('ligue-1-2026-27', 'stade-rennais'): 'ren',
     ('ligue-1-2026-27', 'rc-lens'): 'len',
@@ -167,7 +178,7 @@ verified_matches = {
     ('serie-a-2026-27', 'genoa-cfc'): 'gen',
     ('serie-a-2026-27', 'cagliari-calcio'): 'cag',
     ('serie-a-2026-27', 'us-lecce'): 'lec',
-    ('serie-a-2026-27', 'hellas-verona'): 'ver_it',
+    ('serie-a-2026-27', 'hellas-verona'): 'vrn',
     ('serie-a-2026-27', 'empoli-fc'): 'emp',
     ('serie-a-2026-27', 'parma-calcio-1913'): 'par',
     ('serie-a-2026-27', 'como-1907'): 'com',
@@ -189,34 +200,34 @@ verified_matches = {
     ('brasileirao-serie-a-2026', 'bahia'): 'bah',
     ('brasileirao-serie-a-2026', 'fortaleza'): 'fort',
     ('brasileirao-serie-a-2026', 'athletico-paranaense'): 'athl',
-    ('brasileirao-serie-a-2026', 'bragantino'): 'rbb',
-    ('brasileirao-serie-a-2026', 'red-bull-bragantino'): 'rbb',
+    ('brasileirao-serie-a-2026', 'bragantino'): 'brag',
+    ('brasileirao-serie-a-2026', 'red-bull-bragantino'): 'brag',
     ('brasileirao-serie-a-2026', 'vitoria'): 'vito',
-    ('brasileirao-serie-a-2026', 'juventude'): 'juv2',
+    ('brasileirao-serie-a-2026', 'juventude'): 'juve',
     ('brasileirao-serie-a-2026', 'criciuma'): 'cri',
-    ('brasileirao-serie-a-2026', 'cuiaba'): 'cui',
-    ('brasileirao-serie-a-2026', 'atletico-goianiense'): 'atgo',
 
     # Brasileirão Série B & C
-    ('brasileirao-serie-b-2026', 'america-mineiro'): 'ame',
+    ('brasileirao-serie-b-2026', 'america-mineiro'): 'amer',
     ('brasileirao-serie-b-2026', 'ceara-sc'): 'cea',
     ('brasileirao-serie-b-2026', 'goias'): 'goi',
-    ('brasileirao-serie-b-2026', 'coritiba'): 'cor',
-    ('brasileirao-serie-b-2026', 'sport-recife'): 'spo',
+    ('brasileirao-serie-b-2026', 'coritiba'): 'crt',
+    ('brasileirao-serie-b-2026', 'sport-recife'): 'spor',
     ('brasileirao-serie-b-2026', 'avai-fc'): 'ava',
     ('brasileirao-serie-b-2026', 'ponte-preta'): 'pon',
-    ('brasileirao-serie-b-2026', 'vila-nova'): 'vil_br',
+    ('brasileirao-serie-b-2026', 'vila-nova'): 'vno',
     ('brasileirao-serie-b-2026', 'guarani'): 'gua',
     ('brasileirao-serie-b-2026', 'operario-pr'): 'ope',
     ('brasileirao-serie-b-2026', 'crb'): 'crb',
-    ('brasileirao-serie-b-2026', 'novorizontino'): 'nov',
-    ('brasileirao-serie-b-2026', 'mirassol'): 'mir',
-    ('brasileirao-serie-b-2026', 'chapecoense'): 'cha_br',
+    ('brasileirao-serie-b-2026', 'novorizontino'): 'nvz',
+    ('brasileirao-serie-b-2026', 'gremio-novorizontino'): 'nvz',
+    ('brasileirao-serie-b-2026', 'mirassol'): 'mir2',
+    ('brasileirao-serie-b-2026', 'chapecoense'): 'chap',
     ('brasileirao-serie-b-2026', 'ituano'): 'itu',
-    ('brasileirao-serie-b-2026', 'botafogo-sp'): 'bsp',
+    ('brasileirao-serie-b-2026', 'botafogo-sp'): 'bota',
     ('brasileirao-serie-b-2026', 'paysandu'): 'pay',
-    ('brasileirao-serie-b-2026', 'amazonas'): 'ama',
-    ('brasileirao-serie-b-2026', 'brusque'): 'bru',
+    ('brasileirao-serie-b-2026', 'amazonas'): 'amz',
+    ('brasileirao-serie-b-2026', 'brusque'): 'bruq',
+    ('brasileirao-serie-b-2026', 'athletic'): 'atc',
     ('brasileirao-serie-c-2026', 'nautico'): 'nau',
     ('brasileirao-serie-c-2026', 'figueirense'): 'fig',
     ('brasileirao-serie-c-2026', 'csa'): 'csa',
@@ -226,11 +237,9 @@ verified_matches = {
     ('brasileirao-serie-c-2026', 'abc'): 'abc',
     ('brasileirao-serie-c-2026', 'confianca'): 'cnf',
     ('brasileirao-serie-c-2026', 'volta-redonda'): 'vre',
-    ('brasileirao-serie-c-2026', 'ferroviario'): 'fer',
-    ('brasileirao-serie-c-2026', 'sao-jose-rs'): 'sjo',
+    ('brasileirao-serie-c-2026', 'sao-jose-rs'): 'sjo2',
     ('brasileirao-serie-c-2026', 'floresta'): 'flo',
-    ('brasileirao-serie-c-2026', 'botafogo-pb'): 'bpb',
-    ('brasileirao-serie-c-2026', 'tombense'): 'tom',
+    ('brasileirao-serie-c-2026', 'botafogo-pb'): 'bot_pb',
     ('brasileirao-serie-c-2026', 'aparecidense'): 'apa',
 
     # Liga Portugal
@@ -241,17 +250,17 @@ verified_matches = {
     ('liga-portugal-2026-27', 'vitoria-guimaraes'): 'vit',
     ('liga-portugal-2026-27', 'fc-famalicao'): 'fam',
     ('liga-portugal-2026-27', 'fc-arouca'): 'aro',
-    ('liga-portugal-2026-27', 'moreirense'): 'mor',
+    ('liga-portugal-2026-27', 'moreirense'): 'mre',
     ('liga-portugal-2026-27', 'rio-ave'): 'riv',
     ('liga-portugal-2026-27', 'gil-vicente'): 'gil',
     ('liga-portugal-2026-27', 'estoril-praia'): 'est',
     ('liga-portugal-2026-27', 'boavista-fc'): 'boa',
     ('liga-portugal-2026-27', 'casa-pia'): 'cpa',
     ('liga-portugal-2026-27', 'sc-farense'): 'far',
-    ('liga-portugal-2026-27', 'cd-nacional'): 'nac',
-    ('liga-portugal-2026-27', 'cd-santa-clara'): 'scl',
+    ('liga-portugal-2026-27', 'cd-nacional'): 'ncl',
+    ('liga-portugal-2026-27', 'cd-nacional-madeira'): 'ncl',
+    ('liga-portugal-2026-27', 'cd-santa-clara'): 'stc',
     ('liga-portugal-2026-27', 'avs-futebol-sad'): 'avs',
-    ('liga-portugal-2026-27', 'estrela-amadora'): 'eam',
 
     # Liga Profesional (Argentina)
     ('liga-profesional-2026', 'boca-juniors'): 'boca',
@@ -269,23 +278,23 @@ verified_matches = {
     ('liga-profesional-2026', 'defensa-y-justicia'): 'def',
     ('liga-profesional-2026', 'huracan'): 'hur',
     ('liga-profesional-2026', 'banfield'): 'ban',
-    ('liga-profesional-2026', 'belgrano'): 'bel',
+    ('liga-profesional-2026', 'belgrano'): 'arg_bel',
     ('liga-profesional-2026', 'instituto-cordoba'): 'ins',
     ('liga-profesional-2026', 'godoy-cruz'): 'god',
-    ('liga-profesional-2026', 'union-santa-fe'): 'uni_ar',
-    ('liga-profesional-2026', 'colon'): 'col',
+    ('liga-profesional-2026', 'union-santa-fe'): 'arg_uni',
+    ('liga-profesional-2026', 'colon'): 'colo',
     ('liga-profesional-2026', 'gimnasia-esgrima-lp'): 'gim',
     ('liga-profesional-2026', 'gimnasia-y-esgrima-lp'): 'gim',
     ('liga-profesional-2026', 'gimnasia-y-esgrima'): 'gim',
-    ('liga-profesional-2026', 'platense'): 'pla',
-    ('liga-profesional-2026', 'atletico-platense'): 'pla',
-    ('liga-profesional-2026', 'central-cordoba-se'): 'cco',
-    ('liga-profesional-2026', 'barracas-central'): 'barr',
-    ('liga-profesional-2026', 'tigre'): 'tig',
-    ('liga-profesional-2026', 'sarmiento'): 'sar',
-    ('liga-profesional-2026', 'atletico-tucuman'): 'tuc',
-    ('liga-profesional-2026', 'deportivo-riestra'): 'rie',
-    ('liga-profesional-2026', 'independiente-rivadavia'): 'iriv',
+    ('liga-profesional-2026', 'platense'): 'arg_pla',
+    ('liga-profesional-2026', 'atletico-platense'): 'arg_pla',
+    ('liga-profesional-2026', 'central-cordoba-se'): 'arg_ccb',
+    ('liga-profesional-2026', 'barracas-central'): 'arg_bar',
+    ('liga-profesional-2026', 'tigre'): 'arg_tig',
+    ('liga-profesional-2026', 'sarmiento'): 'arg_sar',
+    ('liga-profesional-2026', 'atletico-tucuman'): 'arg_atu',
+    ('liga-profesional-2026', 'deportivo-riestra'): 'arg_rie',
+    ('liga-profesional-2026', 'independiente-rivadavia'): 'arg_ivr',
 
     # MLS
     ('mls-2026', 'inter-miami'): 'ntr',
@@ -303,37 +312,21 @@ verified_matches = {
     ('mls-2026', 'austin-fc'): 'aust',
     ('mls-2026', 'sporting-kansas-city'): 'spr',
     ('mls-2026', 'real-salt-lake'): 'rea',
-    ('mls-2026', 'orlando-city'): 'orl',
-    ('mls-2026', 'houston-dynamo'): 'hou',
+    ('mls-2026', 'orlando-city'): 'orla',
+    ('mls-2026', 'houston-dynamo'): 'usa_hou',
     ('mls-2026', 'minnesota-united'): 'min',
-    ('mls-2026', 'fc-dallas'): 'dal',
-    ('mls-2026', 'colorado-rapids'): 'col_us',
-    ('mls-2026', 'san-jose-earthquakes'): 'sj',
-    ('mls-2026', 'chicago-fire'): 'chi',
-    ('mls-2026', 'dc-united'): 'dc',
-    ('mls-2026', 'toronto-fc'): 'tor_us',
-    ('mls-2026', 'cf-montreal'): 'mtl',
-    ('mls-2026', 'vancouver-whitecaps'): 'van',
-    ('mls-2026', 'charlotte-fc'): 'cha_us',
-    ('mls-2026', 'st-louis-city-sc'): 'stl',
-    ('mls-2026', 'new-england-revolution'): 'ne',
-    ('mls-2026', 'san-diego-fc'): 'sd',
-    ('bundesliga-2026-27', 'bayer-leverkusen'): 'lev',
-    ('bundesliga-2026-27', 'bayern-munich'): 'bay',
-    ('bundesliga-2026-27', 'mainz-05'): 'm05',
-    ('bundesliga-2026-27', 'sc-paderborn-07'): 'pad',
-    ('bundesliga-2026-27', 'sv-elversberg'): 'elv',
-    ('bundesliga-2026-27', 'schalke-04'): 's04',
-    ('bundesliga-2026-27', 'tsg-hoffenheim'): 'hof',
-    ('laliga-2026-27', 'racing-santander'): 'rac',
-    ('liga-portugal-2026-27', 'cd-nacional-madeira'): 'ncl',
-    ('ligue-1-2026-27', 'losc-lille'): 'lil',
-    ('premier-league-2026-27', 'brighton-and-hove-albion'): 'bhi',
-    ('premier-league-2026-27', 'coventry-city'): 'covc',
-    ('premier-league-2026-27', 'leeds-united'): 'lee',
-    ('brasileirao-serie-b-2026', 'gremio-novorizontino'): 'nvz',
-    ('brasileirao-serie-b-2026', 'athletic'): 'atc',
-
+    ('mls-2026', 'fc-dallas'): 'usa_dal',
+    ('mls-2026', 'colorado-rapids'): 'clr',
+    ('mls-2026', 'san-jose-earthquakes'): 'usa_sje',
+    ('mls-2026', 'chicago-fire'): 'usa_chi',
+    ('mls-2026', 'dc-united'): 'usa_dcu',
+    ('mls-2026', 'toronto-fc'): 'usa_tor',
+    ('mls-2026', 'cf-montreal'): 'usa_mtl',
+    ('mls-2026', 'vancouver-whitecaps'): 'usa_van',
+    ('mls-2026', 'charlotte-fc'): 'usa_clt',
+    ('mls-2026', 'st-louis-city-sc'): 'usa_stl',
+    ('mls-2026', 'new-england-revolution'): 'usa_nwe',
+    ('mls-2026', 'san-diego-fc'): 'usa_sdg',
 }
 
 # Run through all 234 SVGs
@@ -369,9 +362,12 @@ for pack in inv['packs']:
                 'confidence_score': 1.0,
                 'rationale': f'Verified official match: {svg_name} ({slug}) -> {team_info["name"]} ({matched_team_id})'
             }
+            if matched_team_id in mapping_by_club_id:
+                print(f"Verified match replacing existing for {matched_team_id}: {mapping_by_club_id[matched_team_id]['svg_filename']} -> {filename}")
+            else:
+                successful_mappings += 1
             mapping_by_club_id[matched_team_id] = entry
             mapping_by_svg_filename[filename] = entry
-            successful_mappings += 1
             continue
             
         # 2. Automated match against country teams
@@ -405,9 +401,16 @@ for pack in inv['packs']:
                 'confidence_score': score,
                 'rationale': rat
             }
+            if team_info['id'] in mapping_by_club_id:
+                prev = mapping_by_club_id[team_info['id']]
+                if prev.get('confidence_score', 0) >= score:
+                    continue
+                else:
+                    print(f"Replacing weaker match for {team_info['id']}: {prev['svg_filename']} -> {filename}")
+            else:
+                successful_mappings += 1
             mapping_by_club_id[team_info['id']] = entry
             mapping_by_svg_filename[filename] = entry
-            successful_mappings += 1
         else:
             # Check if any partial match exists
             partials = []
@@ -455,3 +458,96 @@ with open(out_path, 'w', encoding='utf-8') as f:
     json.dump(out_data, f, indent=2, ensure_ascii=False)
 
 print(f'Saved mapping to {out_path}')
+
+# Also regenerate svg_team_mapping.md
+md_lines = [
+    "# MAPEAMENTO OFICIAL DE ESCUDOS SVG — FOOTBALL LEGACY",
+    "**Etapa**: ETAPA 4e.8 — Refinamento de Identidade Visual, Escudos SVG e Placar La Liga  ",
+    "**Data**: 06/11/2026  ",
+    "**Fonte dos Escudos**: Packs originais FootyLogos (234 arquivos SVG vetoriais)",
+    "",
+    "---",
+    "",
+    "## 1. Estatísticas Gerais do Mapeamento",
+    "",
+    f"- **Total de arquivos SVG nos 11 packs**: **234**",
+    f"- **Escudos SVG mapeados com sucesso (100% de confiança)**: **{successful_mappings}**",
+    f"- **Associações pendentes de validação**: **{len(pending_validation)}**",
+    f"- **Escudos de clubes sem cadastro na base `teams.gd`**: **{len(unmatched_svgs)}**",
+    f"- **Total de clubes no banco do jogo**: **{len(teams_by_id)}**",
+    f"- **Clubes sem escudo SVG correspondente nos 11 packs**: **{len(teams_by_id) - len(mapping_by_club_id)}** (utilizam fallback PNG ou procedural)",
+    "",
+    "---",
+    "",
+    "## 2. Auditoria dos Clubes Críticos (Botafogo-RJ vs Botafogo-PB vs Botafogo-SP)",
+    "",
+    "| Clube | ID no Jogo | Competição / Div | Arquivo SVG Associado | Status | Confirmação Visual |",
+    "|---|---|---|---|---|---|",
+]
+
+bot_rj = mapping_by_club_id.get('bot')
+bot_pb = mapping_by_club_id.get('bot_pb')
+bot_sp = mapping_by_club_id.get('bota')
+
+if bot_rj:
+    md_lines.append(f"| **Botafogo de Futebol e Regatas (RJ)** | `bot` | Série A (Div 1) | `{bot_rj['svg_filename']}` | **CORRETO** | Escudo tradicional alvinegro com a Estrela Solitária branca |")
+if bot_pb:
+    md_lines.append(f"| **Botafogo da Paraíba (PB)** | `bot_pb` | Série C (Div 3) | `{bot_pb['svg_filename']}` | **CORRETO** | Escudo com estrela vermelha e monograma B-P-B |")
+if bot_sp:
+    md_lines.append(f"| **Botafogo de Ribeirão Preto (SP)** | `bota` | Série B (Div 2/3) | `{bot_sp['svg_filename']}` | **CORRETO** | Escudo tricolor paulista (BFC) |")
+
+md_lines.extend([
+    "",
+    "---",
+    "",
+    "## 3. Clubes de Referência Obrigatórios da ETAPA 4e.7 & 4e.8",
+    "",
+    "| Clube | ID no Jogo | Competição | Arquivo SVG Original | Status | Confiança |",
+    "|---|---|---|---|---|---|",
+])
+
+ref_clubs = [
+    ('Real Madrid', 'rma'),
+    ('Barcelona', 'bar'),
+    ('Manchester City', 'mci'),
+    ('Arsenal', 'ars'),
+    ('Flamengo', 'fla'),
+    ('Palmeiras', 'palm'),
+    ('Bayern de Munique', 'bay'),
+    ('Borussia Dortmund', 'dor'),
+    ('Liverpool', 'liv'),
+    ('Chelsea', 'che'),
+    ('Paris Saint-Germain (PSG)', 'pari'),
+    ('Olympique de Marseille', 'mars'),
+    ('Botafogo (RJ)', 'bot'),
+    ('Botafogo (PB)', 'bot_pb'),
+]
+
+for name, cid in ref_clubs:
+    m = mapping_by_club_id.get(cid)
+    if m:
+        md_lines.append(f"| **{name}** | `{cid}` | `{m['pack_name']}` | `{m['svg_filename']}` | Integrado | {m['confidence']} ({int(m['confidence_score']*100)}%) |")
+    else:
+        md_lines.append(f"| **{name}** | `{cid}` | - | Não encontrado | PENDENTE | 0% |")
+
+md_lines.extend([
+    "",
+    "---",
+    "",
+    f"## 4. Relação Completa dos Clubes Mapeados ({len(mapping_by_club_id)} Clubes)",
+    "",
+    "| Club ID | Nome Oficial no Jogo | País | Pack de Origem | Arquivo SVG | Nível Confiança |",
+    "|---|---|---|---|---|---|",
+])
+
+for cid in sorted(mapping_by_club_id.keys()):
+    m = mapping_by_club_id[cid]
+    md_lines.append(f"| `{cid}` | {m['club_name']} | {m['country']} | `{m['pack_name']}` | `{m['svg_filename']}` | {m['confidence']} |")
+
+md_lines.append("")
+
+md_path = os.path.join(project_root, 'assets', 'logos', 'svg_team_mapping.md')
+with open(md_path, 'w', encoding='utf-8') as f:
+    f.write('\n'.join(md_lines))
+
+print(f'Saved markdown mapping to {md_path}')

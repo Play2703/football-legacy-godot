@@ -63,7 +63,7 @@ static func key_of(team: Dictionary) -> String:
 
 
 
-const MAX_PX: int = 256
+const MAX_PX: int = 512
 const MAX_BYTES: int = 96 * 1024
 
 
@@ -131,19 +131,16 @@ static func get_svg_path(team_id: String) -> String:
 
 
 
-static func texture(team_id: String, retro: bool = false) -> Texture2D:
+static func texture(team_id: String, retro: bool = false, target_px: int = 512) -> Texture2D:
 	if not has(team_id):
 		return null
 	if retro:
-		return _retro(team_id)
-	if _cache.has(team_id):
-
-
-
-
-		_orden.erase(team_id)
-		_orden.append(team_id)
-		return _cache[team_id]
+		return _retro(team_id, target_px)
+	var cache_key: String = "%s|%d" % [team_id, target_px]
+	if _cache.has(cache_key):
+		_orden.erase(cache_key)
+		_orden.append(cache_key)
+		return _cache[cache_key]
 
 	var img: Image = null
 
@@ -167,7 +164,8 @@ static func texture(team_id: String, retro: bool = false) -> Texture2D:
 				var probe: Image = Image.new()
 				if probe.load_svg_from_string(svg_text, 1.0) == OK and not probe.is_empty():
 					var max_dim: float = maxf(float(probe.get_width()), float(probe_img_h(probe)))
-					var scale_factor: float = float(MAX_PX) / max_dim if max_dim > 0.0 else 1.0
+					var desired_px: float = float(target_px if target_px > 0 else MAX_PX)
+					var scale_factor: float = desired_px / max_dim if max_dim > 0.0 else 1.0
 					var scaled_img: Image = Image.new()
 					if scaled_img.load_svg_from_string(svg_text, scale_factor) == OK and not scaled_img.is_empty():
 						img = scaled_img
@@ -188,8 +186,8 @@ static func texture(team_id: String, retro: bool = false) -> Texture2D:
 	if not img.has_mipmaps():
 		img.generate_mipmaps()
 	var tex: ImageTexture = ImageTexture.create_from_image(img)
-	_cache[team_id] = tex
-	_orden.append(team_id)
+	_cache[cache_key] = tex
+	_orden.append(cache_key)
 	while _orden.size() > _CACHE_MAX:
 		_cache.erase(_orden.pop_front())
 	return tex
@@ -221,13 +219,13 @@ const ORO_PISO: float = 0.42
 
 
 
-static func _retro(team_id: String) -> Texture2D:
-	var ck: String = team_id + "|retro"
+static func _retro(team_id: String, target_px: int = 512) -> Texture2D:
+	var ck: String = "%s|%d|retro" % [team_id, target_px]
 	if _cache.has(ck):
 		_orden.erase(ck)
 		_orden.append(ck)
 		return _cache[ck]
-	var base_tex: Texture2D = texture(team_id, false)
+	var base_tex: Texture2D = texture(team_id, false, target_px)
 	if base_tex == null:
 		return null
 	var img: Image = base_tex.get_image()
@@ -325,14 +323,15 @@ static func _path(team_id: String) -> String:
 
 
 static func _forget(team_id: String) -> void:
-	_cache.erase(team_id)
-	_orden.erase(team_id)
-
-
-
-	var ck: String = team_id + "|retro"
-	_cache.erase(ck)
-	_orden.erase(ck)
+	var prefix: String = team_id + "|"
+	var to_erase: Array[String] = []
+	for k in _cache.keys():
+		var ks: String = String(k)
+		if ks == team_id or ks.begins_with(prefix):
+			to_erase.append(ks)
+	for k in to_erase:
+		_cache.erase(k)
+		_orden.erase(k)
 
 
 static func _ensure_indexed() -> void:

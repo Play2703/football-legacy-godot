@@ -2896,16 +2896,23 @@ func _centra_marcador() -> void:
 		var base_sz: Vector2 = _new_scoreboard.get_real_size()
 		
 		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
+		var is_la_liga: bool = _new_scoreboard.board_theme != null and (_new_scoreboard.board_theme.theme_id == "la_liga" or _new_scoreboard.board_theme.familia == "la_liga_horizontal")
 		var scale_factor: float
-		var max_h: float = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
+		var max_h: float = vp_h * (0.13 if is_la_liga else INGAME_BOARD_HEIGHT_MAX_FRAC)
+		
 		if custom_board_width_frac > 0.0:
 			var target_w = vp_w * custom_board_width_frac
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		elif is_portrait:
-			var target_w = vp_w * INGAME_BOARD_WIDTH_FRAC
+			var target_w = vp_w * (0.88 if is_la_liga else INGAME_BOARD_WIDTH_FRAC)
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		else:
-			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
+			var base_mult = 1.30 if is_la_liga else 1.0
+			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE * base_mult
+			if is_la_liga:
+				# Em telas widescreen compactas (ex: 844x390), garante proporção legível
+				var responsive_min = minf(vp_w * 0.44 / maxf(base_sz.x, 1.0), (vp_h * 0.11) / maxf(base_sz.y, 1.0))
+				s_h = maxf(s_h, responsive_min)
 			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
 			
 		_new_scoreboard.scale = Vector2.ONE * scale_factor
