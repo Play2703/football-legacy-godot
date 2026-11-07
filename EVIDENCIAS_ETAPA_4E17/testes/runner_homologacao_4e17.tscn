@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8runnerhomologacao4e17"]
+
+[ext_resource type="Script" path="res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd" id="1_test"]
+
+[node name="RunnerHomologacao4e17" type="Node"]
+script = ExtResource("1_test")

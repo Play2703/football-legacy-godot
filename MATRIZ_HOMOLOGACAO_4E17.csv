@@ -1,0 +1,74 @@
+ID,Area,Componente,Teste,Resultado,Observacoes
+HOM-01,4e.15 Envelhecimento,Career.skill_en_declive,Idade 32: Físico livre de declínio,APROVADO,velocidad=false aceleracion=false fisico=false
+HOM-02,4e.15 Envelhecimento,Career.skill_en_declive,Idade 33: Declínio físico ativado (velocidad),APROVADO,Atributo físico bloqueado conforme regra
+HOM-03,4e.15 Envelhecimento,Career.skill_en_declive,Idade 33: Declínio físico ativado (aceleracion),APROVADO,Atributo físico bloqueado conforme regra
+HOM-04,4e.15 Envelhecimento,Career.skill_en_declive,Idade 33: Declínio físico ativado (fisico),APROVADO,Atributo físico bloqueado conforme regra
+HOM-05,4e.15 Envelhecimento,Career.skill_en_declive,Idade 33: Técnico livre de declínio (potencia),APROVADO,Técnico liberado até os 35 anos
+HOM-06,4e.15 Envelhecimento,Career.skill_en_declive,Idade 34: Técnico livre de declínio (potencia),APROVADO,Técnico liberado até os 35 anos
+HOM-07,4e.15 Envelhecimento,Career.skill_en_declive,Idade 35: Declínio técnico ativado (potencia),APROVADO,Declínio técnico ativo aos 35
+HOM-08,4e.15 Envelhecimento,Career.skill_en_declive,Idade 35: Declínio técnico ativado (precision),APROVADO,Declínio técnico ativo aos 35
+HOM-09,4e.15 Envelhecimento,Career.skill_en_declive,Idade 35: Declínio técnico ativado (efecto),APROVADO,Declínio técnico ativo aos 35
+HOM-10,4e.15 Envelhecimento,Career.skill_en_declive,Idade 35: Declínio técnico ativado (regate),APROVADO,Declínio técnico ativo aos 35
+HOM-11,4e.15 Envelhecimento,Career.skill_en_declive,Idade 39: Maturidade livre (vision),APROVADO,SIGUEN_SUBIENDO preservado aos 39
+HOM-12,4e.15 Envelhecimento,Career.skill_en_declive,Idade 39: Maturidade livre (penal),APROVADO,SIGUEN_SUBIENDO preservado aos 39
+HOM-13,4e.15 Envelhecimento,Career.skill_en_declive,Idade 39: Maturidade livre (parado),APROVADO,SIGUEN_SUBIENDO preservado aos 39
+HOM-14,4e.15 Envelhecimento,Career._aplica_mod,Bônus externo bloqueado em velocidade aos 39 anos,APROVADO,Blindagem contra exploits externos confirmada
+HOM-15,4e.15 Envelhecimento,Career._aplica_mod,Bônus externo concedido em visão aos 39 anos,APROVADO,Evolução legítima de maturidade preservada
+HOM-16,4e.16 Cortes de Cabelo,KitRecolor,Total de cortes de cabelo é exatamente 36,APROVADO,4 base + 32 extra = 36 total
+HOM-17,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'afro' presente no catálogo,APROVADO,C09 homologado
+HOM-18,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'trenzas' presente no catálogo,APROVADO,C09 homologado
+HOM-19,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'largo' presente no catálogo,APROVADO,C09 homologado
+HOM-20,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'edgar' presente no catálogo,APROVADO,C09 homologado
+HOM-21,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'tupe' presente no catálogo,APROVADO,C09 homologado
+HOM-22,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'hongo' presente no catálogo,APROVADO,C09 homologado
+HOM-23,4e.16 Cortes de Cabelo,KitRecolor.EXTRA_HAIR_STYLES,Estilo 'rastas' presente no catálogo,APROVADO,C09 homologado
+HOM-24,4e.16 Cortes de Cabelo,KitRecolor._apply_hair_style,Renderização procedural dos 7 estilos em 3 peles e 3 cores de cabelo,APROVADO,Shading e textura sem artefatos
+HOM-25,4e.16 Cortes de Cabelo,GameState.team_custom,Atribuição de estilo em team_custom é persistida,APROVADO,Persistência correta no save
+HOM-26,4e.16 Cortes de Cabelo,LookMigracion.pelo,Migração de save antigo 'afro' para 'p_afro_redondo',APROVADO,Retrocompatibilidade 100% garantida
+HOM-27,4e.16 Cortes de Cabelo,LookMigracion.pelo,Migração de save antigo 'edgar' para 'p_edgar',APROVADO,Retrocompatibilidade 100% garantida
+HOM-28,4e.16 Cortes de Cabelo,LookMigracion.HAIR,Mapeamento dos 36 estilos para IDs modulares,APROVADO,Nenhum estilo órfão
+HOM-29,4e.16 Óculos Comemoração,Celebs.usa_gafas,Filtro comemoração robot usa óculos,APROVADO,Gesto configurado com óculos
+HOM-30,4e.16 Óculos Comemoração,Celebs.usa_gafas,Filtro comemoração surf usa óculos,APROVADO,Gesto configurado com óculos
+HOM-31,4e.16 Óculos Comemoração,Celebs.usa_gafas,Filtro comemoração pinguinazo usa óculos,APROVADO,Gesto configurado com óculos
+HOM-32,4e.16 Óculos Comemoração,Celebs.usa_gafas,Filtro comemoração cumbia NÃO usa óculos,APROVADO,Sem falso positivo
+HOM-33,4e.16 Óculos Comemoração,Celebs.usa_gafas,Filtro comemoração pasillo NÃO usa óculos,APROVADO,Sem falso positivo
+HOM-34,4e.16 Óculos Comemoração,GafasCeleb.pon,GafasCeleb anexado com sucesso ao ator,APROVADO,Nó Sprite3D instanciado e vinculado
+HOM-35,4e.16 Óculos Comemoração,GafasCeleb,GafasCeleb billboard sincronizado com ator,APROVADO,BILLBOARD_ENABLED ativado
+HOM-36,4e.16 Óculos Comemoração,GafasCeleb._atualiza,Orientação South: óculos visíveis com textura frontal,APROVADO,Textura gafas.png carregada
+HOM-37,4e.16 Óculos Comemoração,GafasCeleb._atualiza,Orientação East: textura leste ativada,APROVADO,Textura gafas_east.png carregada
+HOM-38,4e.16 Óculos Comemoração,GafasCeleb._atualiza,Orientação West: textura oeste ativada,APROVADO,Textura gafas_west.png carregada
+HOM-39,4e.16 Óculos Comemoração,GafasCeleb._atualiza,Orientação North (costas): óculos ocultos,APROVADO,visible=false na visão traseira
+HOM-40,4e.16 Óculos Comemoração,GafasCeleb.quita,Remoção limpa via quita(): ator sem metadado residual,APROVADO,queue_free() e limpeza de metadados
+HOM-41,4e.16 Efeito Sépia,Keepsake.crea_sepia_material,Instanciação de material sépia com uniform intensity 0.88,APROVADO,ShaderMaterial gerado
+HOM-42,4e.16 Efeito Sépia,Keepsake.aplica_sepia_image,Imagem clara: canais clamped sem aberrações (R=1, G=1, B≈0.937),APROVADO,Matriz de convolução exata
+HOM-43,4e.16 Efeito Sépia,Keepsake.aplica_sepia_image,Imagem escura: tom sépia escuro preservado com proporção correta,APROVADO,Proporção cromática mantida
+HOM-44,4e.16 Efeito Sépia,Keepsake.aplica_sepia,Material atribuído ao viewport_box em item de recordação,APROVADO,Apenas tela de Keepsake afetada
+HOM-45,Fluxos Gerais,Engine,1. Inicialização: Engine ativa e estável,APROVADO,Godot 4.7.2 headless e gráfico
+HOM-46,Fluxos Gerais,UI,2. Menu Principal: Cena res://ui/main_menu.tscn carrega com sucesso,APROVADO,PackedScene válida
+HOM-47,Fluxos Gerais,Career,3. Criação de nova carreira: Nome e clube inicializados,APROVADO,Career.new_career() executada
+HOM-48,Fluxos Gerais,Career,4. Carregamento de carreira: Estrutura de dados ativa,APROVADO,Dicionário de skills presente
+HOM-49,Fluxos Gerais,Customization,5. Personalização do atleta: Estilo 'p_edgar' atribuído,APROVADO,team_custom configurado
+HOM-50,Fluxos Gerais,GameState,6. Seleção de clube: Alteração de clube refletida,APROVADO,player_team_id atualizado
+HOM-51,Fluxos Gerais,Match,7. Entrada em partida: Cena de partida res://features/match/match.tscn existe,APROVADO,PackedScene válida
+HOM-52,Fluxos Gerais,Match,8. Execução de partidas: Módulos de match e física intactos,APROVADO,Scripts e recursos íntegros
+HOM-53,Fluxos Gerais,Celebs,9. Comemorações: Módulo Celebs e gestos ativos,APROVADO,Gestos e props operacionais
+HOM-54,Fluxos Gerais,Career,10. Treinamento: Pontos de habilidade disponíveis,APROVADO,skill_points alocados
+HOM-55,Fluxos Gerais,Career,11. Evolução de habilidades: spend_point evolui atributo em jogador jovem,APROVADO,70 para 71 com gasto de 1 pt
+HOM-56,Fluxos Gerais,GameState,12. Passagem de temporada: Incremento de temporada,APROVADO,season_num incrementado
+HOM-57,Fluxos Gerais,Career,13. Envelhecimento: Jogador atinge idade de declínio técnico (35),APROVADO,Declínio ativado aos 35 anos
+HOM-58,Fluxos Gerais,Career,14. Premiações: grant_title_now executa e concede título,APROVADO,awards registrado com sucesso
+HOM-59,Fluxos Gerais,Keepsake,15. Recordações históricas: Estrutura de keepsake válida,APROVADO,Registro histórico estruturado
+HOM-60,Fluxos Gerais,FileAccess,16. Salvamento: Gravação de save de teste em disco,APROVADO,JSON válido gravado
+HOM-61,Fluxos Gerais,Career,17. Fechamento de sessão: Limpeza de memória sem falhas,APROVADO,Estado limpo sem vazamento
+HOM-62,Fluxos Gerais,FileAccess,18. Reinicialização e carregamento: Dados restaurados com integridade total,APROVADO,100% dos dados recuperados
+HOM-63,Compatibilidade,SaveSlots,Save legado: 'afro' migrado para 'p_afro_redondo',APROVADO,Migração transparente
+HOM-64,Compatibilidade,SaveSlots,Save legado: 'beard' migrado para 'p_barba_recortada',APROVADO,Migração transparente
+HOM-65,Compatibilidade,SaveSlots,Save legado: Atributos intactos sem perdas,APROVADO,Dados numéricos preservados
+HOM-66,Estabilidade,ResourceLoader,Recurso gafas.png presente,APROVADO,res://assets/sprites/acc/gafas.png
+HOM-67,Estabilidade,ResourceLoader,Recurso gafas_east.png presente,APROVADO,res://assets/sprites/acc/gafas_east.png
+HOM-68,Estabilidade,ResourceLoader,Recurso gafas_west.png presente,APROVADO,res://assets/sprites/acc/gafas_west.png
+HOM-69,Estabilidade,Keepsake,Shader de sépia compila sem erros,APROVADO,Sem erros de compilação GLSL/CanvasItem
+HOM-70,Plataformas,Linux,Execução no ambiente Linux (x86_64),VALIDADO,Godot 4.7.2.stable.arch_linux.ed1daf0bf
+HOM-71,Plataformas,Android,Exportação e execução no Android,NÃO VALIDADO,Sem export templates instalados no ambiente local
+HOM-72,Plataformas,Windows,Exportação e execução no Windows,NÃO VALIDADO,Sem export templates instalados no ambiente local
+HOM-73,Plataformas,iOS,Exportação e execução no iOS,NÃO VALIDADO,Sem export templates instalados no ambiente local
