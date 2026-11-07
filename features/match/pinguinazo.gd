@@ -84,6 +84,8 @@ static func disfraza(actor: AnimatedSprite3D, rival: bool, foco: bool = false) -
 	actor.modulate = Color(actor.modulate.r, actor.modulate.g, actor.modulate.b, 0.0)
 	p._antes = actor.global_position
 	p._pose(false)
+	if foco and not rival and Celebs.usa_gafas("pinguinazo") and p._bicho is AnimatedSprite3D:
+		GafasCeleb.pon(p._bicho as AnimatedSprite3D)
 	return p
 
 

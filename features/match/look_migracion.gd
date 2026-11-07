@@ -39,6 +39,8 @@ const HAIR: Dictionary = {
 	"fade_alto": "p_taper_texturizado", "fade_bajo": "p_degradado_alto", "crop": "p_crop_frances",
 
 	"liga_coleta": "p_colita", "banda_pelo": "p_crew_cut_clasico",
+	"afro": "p_afro_redondo", "trenzas": "p_trenzas_de_caja", "largo": "p_melena_surfera",
+	"edgar": "p_edgar", "tupe": "p_tupe_ladeado", "hongo": "p_tazon_con_rapado", "rastas": "p_rastas_finas",
 }
 
 

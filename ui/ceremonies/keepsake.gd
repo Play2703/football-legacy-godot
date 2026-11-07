@@ -284,11 +284,70 @@ func _rival_team() -> Dictionary:
 	return club if not club.is_empty() else Nations.as_team(id)
 
 
+const SEPIA_SHADER_CODE: String = """
+shader_type canvas_item;
+
+uniform float sepia_intensity : hint_range(0.0, 1.0) = 0.88;
+
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	vec3 sepia = vec3(
+		dot(c.rgb, vec3(0.393, 0.769, 0.189)),
+		dot(c.rgb, vec3(0.349, 0.686, 0.168)),
+		dot(c.rgb, vec3(0.272, 0.534, 0.131))
+	);
+	COLOR = vec4(clamp(mix(c.rgb, sepia, sepia_intensity), 0.0, 1.0), c.a);
+}
+"""
+
+static func crea_sepia_shader() -> Shader:
+	var s: Shader = Shader.new()
+	s.code = SEPIA_SHADER_CODE
+	return s
+
+static func crea_sepia_material(intensity: float = 0.88) -> ShaderMaterial:
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = crea_sepia_shader()
+	mat.set_shader_parameter("sepia_intensity", intensity)
+	return mat
+
+static func aplica_sepia(item: CanvasItem, intensity: float = 0.88) -> void:
+	if item != null and is_instance_valid(item):
+		var target: CanvasItem = item
+		if item.has_node("viewport_box"):
+			var vb: CanvasItem = item.get_node("viewport_box") as CanvasItem
+			if vb != null:
+				target = vb
+		target.material = crea_sepia_material(intensity)
+
+static func aplica_sepia_image(img: Image, intensity: float = 0.88) -> Image:
+	if img == null:
+		return null
+	var out: Image = img.duplicate()
+	if out.is_compressed():
+		out.decompress()
+	for y in out.get_height():
+		for x in out.get_width():
+			var c: Color = out.get_pixel(x, y)
+			var r: float = clampf(c.r * 0.393 + c.g * 0.769 + c.b * 0.189, 0.0, 1.0)
+			var g: float = clampf(c.r * 0.349 + c.g * 0.686 + c.b * 0.168, 0.0, 1.0)
+			var b: float = clampf(c.r * 0.272 + c.g * 0.534 + c.b * 0.131, 0.0, 1.0)
+			var sepia: Color = Color(
+				lerpf(c.r, r, intensity),
+				lerpf(c.g, g, intensity),
+				lerpf(c.b, b, intensity),
+				c.a
+			)
+			out.set_pixel(x, y, sepia)
+	return out
+
 func _accent_for() -> Color:
 	return CareerTheme.accent_of(team())
 
 
 func _build() -> void:
+	if viewport_box != null:
+		viewport_box.material = crea_sepia_material()
 	var kit: Dictionary = GameState.kit_variant(team(), 0)
 
 

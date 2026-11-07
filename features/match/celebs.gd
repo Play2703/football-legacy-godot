@@ -88,6 +88,11 @@ const ATADOS: Array[String] = ["s_medio", "s_tecnico", "s_portero", "s_prensa", 
 	"g_perdon", "g_anillo", "g_cantico", "g_pinguinazo"]
 const SOLO_VISITA: Array[String] = ["s_visitante", "s_provocacion", "s_area", "g_playera",
 	"g_callar"]
+const CON_GAFAS: Array[String] = ["robot", "surf", "pinguinazo"]
+
+static func usa_gafas(celeb_id: String) -> bool:
+	var c: String = celeb_id.trim_prefix("g_").trim_prefix("s_")
+	return CON_GAFAS.has(c) or CON_GAFAS.has(celeb_id)
 
 
 
