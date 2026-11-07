@@ -1,0 +1,9 @@
+Godot Engine v4.7.2.stable.arch_linux.ed1daf0bf (2026-08-17 01:18:38 UTC) - https://godotengine.org
+ERROR: X11 Display is not available
+   at: DisplayServerX11 (platform/linuxbsd/x11/display_server_x11.cpp:6163)
+WARNING: Display driver x11 failed, falling back to wayland.
+   at: setup2 (main/main.cpp:2499)
+ERROR: Can't connect to a Wayland display.
+   at: DisplayServerWayland (platform/linuxbsd/wayland/display_server_wayland.cpp:1152)
+ERROR: Unable to create DisplayServer, all display drivers failed. Use "--headless" if you're running without a display.
+   at: setup2 (main/main.cpp:2504)

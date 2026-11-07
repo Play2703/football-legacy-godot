@@ -1,0 +1,53 @@
+Godot Engine v4.7.2.stable.arch_linux.ed1daf0bf (2026-08-17 01:18:38 UTC) - https://godotengine.org
+
+WARNING: save: user://slot1/career.json ilegible, recuperado del .bak
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] read_json_dict (res://autoload/save_slots.gd:576)
+         [1] _load (res://autoload/game_state.gd:14441)
+         [2] _ready (res://autoload/game_state.gd:13988)
+WARNING: save: user://slot1/career_meta.cfg ilegible (7), recuperado del .bak
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] load_cfg (res://autoload/save_slots.gd:607)
+         [1] _load (res://autoload/career.gd:64397)
+         [2] _ready (res://autoload/career.gd:5444)
+=================================================================
+INICIANDO INVESTIGAÇÃO PROFUNDA DE NÓS ÓRFÃOS E MEMÓRIA (10 CICLOS)
+=================================================================
+Estado Inicial Baseline: Órfãos=0 | Memória=216.25 MB
+
+--- Executando 10 Ciclos Controlados de Interface (Customization + Keepsake) ---
+Ciclo 01: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=301.18 MB, Fim=304.78 MB (Delta: +65.05 MB)
+Ciclo 02: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=492.22 MB, Fim=497.66 MB (Delta: +192.84 MB)
+Ciclo 03: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=665.57 MB, Fim=661.04 MB (Delta: +162.40 MB)
+Ciclo 04: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=749.44 MB, Fim=733.62 MB (Delta: +71.88 MB)
+Ciclo 05: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=831.53 MB, Fim=804.73 MB (Delta: +71.09 MB)
+Ciclo 06: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=873.84 MB, Fim=866.00 MB (Delta: +62.14 MB)
+Ciclo 07: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=962.42 MB, Fim=939.20 MB (Delta: +72.80 MB)
+Ciclo 08: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=1002.87 MB, Fim=971.99 MB (Delta: +32.78 MB)
+Ciclo 09: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=1013.96 MB, Fim=980.40 MB (Delta: +8.06 MB)
+Ciclo 10: Órfãos Antes=0, Depois=0 (Delta: +0) | Memória: Pico=1075.06 MB, Fim=1053.16 MB (Delta: +72.75 MB)
+
+=================================================================
+RESULTADO FINAL DOS 10 CICLOS DE ESTABILIDADE:
+=================================================================
+Órfãos Baseline: 0 | Órfãos Final: 0 (Delta Total Acumulado: +0)
+Memória Baseline: 216.25 MB | Memória Final: 1054.35 MB (Delta Total Acumulado: +838.10 MB)
+[OK] Relatório de 10 ciclos salvo em EVIDENCIAS_ETAPA_4E18_R1/estabilidade/10_ciclos_estabilidade.md
+SCRIPT ERROR: Parse Error: Could not preload resource file "res://ui/menu_background.tscn".
+   at: GDScript::reload (res://ui/season_end.gd:24)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://ui/career_page.gd:0)
+SCRIPT ERROR: Parse Error: Could not resolve external class member "KEEPER_TEX".
+   at: GDScript::reload (res://ui/alineaciones_view.gd:659)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://ui/career_hub.gd:0)
+ERROR: Failed to load script "res://ui/career_hub.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: Parse Error: Failed. [Resource file res://ui/career_hub.tscn:12]
+   at: _parse_node_tag (scene/resources/resource_format_text.cpp:293)
+ERROR: Failed loading resource: res://ui/career_hub.tscn.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

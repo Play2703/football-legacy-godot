@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3 uid="uid://testrunnerestabilidade"]
+[ext_resource type="Script" path="res://EVIDENCIAS_ETAPA_4E18_R1/testes/test_estabilidade_10_ciclos.gd" id="1_re"]
+[node name="RunnerEstabilidade" type="Node"]
+script = ExtResource("1_re")
