@@ -2907,15 +2907,17 @@ func _centra_marcador() -> void:
 			var target_w = vp_w * (0.88 if is_la_liga else INGAME_BOARD_WIDTH_FRAC)
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		else:
-			var base_mult = 1.30 if is_la_liga else 1.0
-			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE * base_mult
 			if is_la_liga:
-				# Em telas widescreen compactas (ex: 844x390), garante proporção legível
-				var responsive_min = minf(vp_w * 0.44 / maxf(base_sz.x, 1.0), (vp_h * 0.11) / maxf(base_sz.y, 1.0))
-				s_h = maxf(s_h, responsive_min)
-			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
+				# Em transmissões de TV (La Liga oficial), o placar ocupa ~44% da largura horizontal
+				var target_broadcast_w = vp_w * 0.44
+				var s_w = target_broadcast_w / maxf(base_sz.x, 1.0)
+				scale_factor = minf(s_w, max_h / maxf(base_sz.y, 1.0))
+			else:
+				var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
+				scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
 			
 		_new_scoreboard.scale = Vector2.ONE * scale_factor
+		_new_scoreboard.custom_minimum_size = Vector2.ZERO
 		var scaled_sz: Vector2 = Vector2(roundf(base_sz.x * scale_factor), roundf(base_sz.y * scale_factor))
 		
 		_score_chip.anchor_left = 0.5

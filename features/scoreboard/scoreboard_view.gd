@@ -187,6 +187,8 @@ func _init() -> void:
 	_home_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_away_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_comp_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_crest.visible = false
+	_away_crest.visible = false
 	_comp_logo.visible = false
 	_home_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_away_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -1060,8 +1062,9 @@ func _draw_modulos_separados() -> void:
 				_draw_logo_in_rect(rect, txt_col)
 				
 			"time_casa":
+				var cell_txt_col = TeamIdentityColors.calculate_contrast_text_color(bg_color)
 				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
-				_draw_auto_text(home_team.get("abbrev", "INT"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
+				_draw_auto_text(home_team.get("abbrev", "INT"), r_team, cell_txt_col, _get_font_size("sigla", H), 0.25 * H, true)
 				# Requisito FIX8f: sublinhado com altura ~0.07*H e margem lateral de 0.05*W da célula
 				var under_h = max(4.0, round(H * 0.07))
 				var under_margin_x = cell_w * 0.05
@@ -1075,8 +1078,9 @@ func _draw_modulos_separados() -> void:
 				_draw_auto_text(score_str, rect, Color.WHITE, _get_font_size("gol", H), 0.30 * H, true)
 				
 			"time_fora":
+				var cell_txt_col = TeamIdentityColors.calculate_contrast_text_color(bg_color)
 				var r_team = Rect2(rect.position.x + cell_w * 0.05, 0.0, cell_w * 0.90, H)
-				_draw_auto_text(away_team.get("abbrev", "FLU"), r_team, txt_col, _get_font_size("sigla", H), 0.25 * H, true)
+				_draw_auto_text(away_team.get("abbrev", "FLU"), r_team, cell_txt_col, _get_font_size("sigla", H), 0.25 * H, true)
 				# Requisito FIX8f: sublinhado com altura ~0.07*H e margem lateral de 0.05*W da célula
 				var under_h = max(4.0, round(H * 0.07))
 				var under_margin_x = cell_w * 0.05
@@ -1184,9 +1188,9 @@ func _draw_la_liga_horizontal() -> void:
 	var rect_home = Rect2(x_home, 0.0, w_home, total_h)
 	drawn_cells_info.append({"idx": 1, "tipo": "time_casa", "rect": rect_home})
 	
-	var crest_diam: float = minf(32.0, total_h * 0.65)
+	var crest_diam: float = roundf(total_h * 0.68)
 	var crest_h_x: float = x_home + 8.0
-	var crest_h_y: float = (total_h - crest_diam) * 0.5 - 2.0
+	var crest_h_y: float = (total_h - crest_diam) * 0.5 - 1.0
 	_draw_crest_unified(_home_crest, Vector2(crest_h_x, crest_h_y), crest_diam, "la_liga_horizontal", home_team, Color(0.06, 0.09, 0.18, 0.88))
 	
 	var sigla_h_x: float = crest_h_x + crest_diam + 6.0
@@ -1238,7 +1242,7 @@ func _draw_la_liga_horizontal() -> void:
 	drawn_cells_info.append({"idx": 5, "tipo": "time_fora", "rect": rect_away})
 	
 	var crest_a_x: float = (x_away + w_away) - crest_diam - 8.0
-	var crest_a_y: float = (total_h - crest_diam) * 0.5 - 2.0
+	var crest_a_y: float = (total_h - crest_diam) * 0.5 - 1.0
 	_draw_crest_unified(_away_crest, Vector2(crest_a_x, crest_a_y), crest_diam, "la_liga_horizontal", away_team, Color(0.06, 0.09, 0.18, 0.88))
 	
 	var sigla_a_w: float = maxf(10.0, crest_a_x - x_away - 10.0)
@@ -1454,45 +1458,50 @@ static func get_team_crest_texture(team: Dictionary) -> Texture2D:
 		return null
 	if _crest_tex_cache.has(tid):
 		return _crest_tex_cache[tid]
+		
+	# Prioridade 1: CrestLogos oficial (custom_crests > SVG oficial 512px > fallback)
+	if CrestLogos.has(tid):
+		var ctex = CrestLogos.texture(tid, false, 512)
+		if ctex != null:
+			_crest_tex_cache[tid] = ctex
+			return ctex
+			
+	# Prioridade 2: caminhos explícitos no time ou legado
 	var path = "user://logos/%s.png" % tid
 	if team.has("crest_path"):
 		path = String(team["crest_path"])
 	elif team.has("logo_path"):
 		path = String(team["logo_path"])
 		
-	if not FileAccess.file_exists(path):
-		if CrestLogos.has(tid):
-			var ctex = CrestLogos.texture(tid)
-			if ctex != null:
-				_crest_tex_cache[tid] = ctex
-				return ctex
-		return null
-	var img = Image.load_from_file(path)
-	if img == null or img.is_empty():
-		return null
-	if not img.has_mipmaps():
-		img.generate_mipmaps()
-	var tex = ImageTexture.create_from_image(img)
-	_crest_tex_cache[tid] = tex
-	return tex
+	if FileAccess.file_exists(path):
+		var img = Image.load_from_file(path)
+		if img != null and not img.is_empty():
+			if not img.has_mipmaps():
+				img.generate_mipmaps()
+			var tex = ImageTexture.create_from_image(img)
+			_crest_tex_cache[tid] = tex
+			return tex
+	return null
 
 static func get_team_crest_mean_color(team: Dictionary) -> Color:
 	var tid = String(team.get("id", ""))
 	if _crest_mean_color_cache.has(tid):
 		return _crest_mean_color_cache[tid]
-	var path = "user://logos/%s.png" % tid
-	if team.has("crest_path"):
-		path = String(team["crest_path"])
-	elif team.has("logo_path"):
-		path = String(team["logo_path"])
 		
 	var img: Image = null
-	if FileAccess.file_exists(path):
-		img = Image.load_from_file(path)
-	elif CrestLogos.has(tid):
-		var ctex = CrestLogos.texture(tid)
+	if CrestLogos.has(tid):
+		var ctex = CrestLogos.texture(tid, false, 512)
 		if ctex != null:
 			img = ctex.get_image()
+			
+	if img == null or img.is_empty():
+		var path = "user://logos/%s.png" % tid
+		if team.has("crest_path"):
+			path = String(team["crest_path"])
+		elif team.has("logo_path"):
+			path = String(team["logo_path"])
+		if FileAccess.file_exists(path):
+			img = Image.load_from_file(path)
 			
 	if img == null or img.is_empty():
 		var fallback_col = _parse_color_resilient(team.get("kit", "#FFFFFF"))
@@ -1521,19 +1530,21 @@ static func get_team_crest_edge_mean_color(team: Dictionary) -> Color:
 	var tid = String(team.get("id", ""))
 	if _crest_edge_color_cache.has(tid):
 		return _crest_edge_color_cache[tid]
-	var path = "user://logos/%s.png" % tid
-	if team.has("crest_path"):
-		path = String(team["crest_path"])
-	elif team.has("logo_path"):
-		path = String(team["logo_path"])
 		
 	var img: Image = null
-	if FileAccess.file_exists(path):
-		img = Image.load_from_file(path)
-	elif CrestLogos.has(tid):
-		var ctex = CrestLogos.texture(tid)
+	if CrestLogos.has(tid):
+		var ctex = CrestLogos.texture(tid, false, 512)
 		if ctex != null:
 			img = ctex.get_image()
+			
+	if img == null or img.is_empty():
+		var path = "user://logos/%s.png" % tid
+		if team.has("crest_path"):
+			path = String(team["crest_path"])
+		elif team.has("logo_path"):
+			path = String(team["logo_path"])
+		if FileAccess.file_exists(path):
+			img = Image.load_from_file(path)
 			
 	if img == null or img.is_empty():
 		return get_team_crest_mean_color(team)
@@ -2338,33 +2349,19 @@ static func ensure_wcag_contrast(bg: Color) -> Dictionary:
 	var cr_dark = get_contrast_ratio(Color("#101015"), bg)
 	var best_text: Color
 	var best_cr: float
-	var adjusted_bg = bg
-	var adjusted = false
 	
-	if cr_white >= cr_dark:
-		best_text = Color.WHITE
-		best_cr = cr_white
-		var attempts = 0
-		while best_cr < 4.45 and attempts < 50:
-			adjusted_bg = Color(max(0.0, adjusted_bg.r * 0.98), max(0.0, adjusted_bg.g * 0.98), max(0.0, adjusted_bg.b * 0.98))
-			best_cr = get_contrast_ratio(Color.WHITE, adjusted_bg)
-			adjusted = true
-			attempts += 1
-	else:
+	if cr_dark >= cr_white:
 		best_text = Color("#101015")
 		best_cr = cr_dark
-		var attempts = 0
-		while best_cr < 4.45 and attempts < 50:
-			adjusted_bg = Color(min(1.0, adjusted_bg.r + (1.0 - adjusted_bg.r) * 0.03 + 0.005), min(1.0, adjusted_bg.g + (1.0 - adjusted_bg.g) * 0.03 + 0.005), min(1.0, adjusted_bg.b + (1.0 - adjusted_bg.b) * 0.03 + 0.005))
-			best_cr = get_contrast_ratio(Color("#101015"), adjusted_bg)
-			adjusted = true
-			attempts += 1
-			
+	else:
+		best_text = Color.WHITE
+		best_cr = cr_white
+		
 	return {
-		"bg": adjusted_bg,
+		"bg": bg,
 		"text": best_text,
 		"cr": best_cr,
-		"adjusted": adjusted
+		"adjusted": false
 	}
 
 func _resolve_team_kit_colors() -> Dictionary:

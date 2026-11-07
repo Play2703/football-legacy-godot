@@ -3646,22 +3646,26 @@ func _update_team_color_header() -> void:
 	_apply_header_text_contrast(home_lbl, home_sub, home_col)
 	_apply_header_text_contrast(away_lbl, away_sub, away_col)
 
-func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, _bg_col: Color) -> void:
+func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, bg_col: Color) -> void:
 	if name_lbl == null or not is_instance_valid(name_lbl):
 		return
-	# Nome do clube em branco puro com contorno escuro discreto e sombra sutil diretamente na fonte (sem caixas de fundo)
-	name_lbl.add_theme_color_override("font_color", Color.WHITE)
-	name_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
-	name_lbl.add_theme_constant_override("outline_size", 3)
-	name_lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+	var text_col: Color = TeamIdentityColors.calculate_contrast_text_color(bg_col)
+	var is_dark_txt: bool = (text_col == Color("#101015") or bg_col.get_luminance() > 0.50)
+	var outline_col: Color = Color(1.0, 1.0, 1.0, 0.70) if is_dark_txt else Color(0.04, 0.05, 0.08, 0.95)
+	var shadow_col: Color = Color(0.0, 0.0, 0.0, 0.15) if is_dark_txt else Color(0.0, 0.0, 0.0, 0.60)
+	
+	name_lbl.add_theme_color_override("font_color", text_col)
+	name_lbl.add_theme_color_override("font_outline_color", outline_col)
+	name_lbl.add_theme_constant_override("outline_size", 2 if is_dark_txt else 3)
+	name_lbl.add_theme_color_override("font_shadow_color", shadow_col)
 	name_lbl.add_theme_constant_override("shadow_offset_x", 0)
-	name_lbl.add_theme_constant_override("shadow_offset_y", 2)
+	name_lbl.add_theme_constant_override("shadow_offset_y", 1 if is_dark_txt else 2)
 	
 	if sub_lbl != null and is_instance_valid(sub_lbl):
-		sub_lbl.add_theme_color_override("font_color", Color.WHITE)
-		sub_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
-		sub_lbl.add_theme_constant_override("outline_size", 2)
-		sub_lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+		sub_lbl.add_theme_color_override("font_color", text_col)
+		sub_lbl.add_theme_color_override("font_outline_color", outline_col)
+		sub_lbl.add_theme_constant_override("outline_size", 1 if is_dark_txt else 2)
+		sub_lbl.add_theme_color_override("font_shadow_color", shadow_col)
 		sub_lbl.add_theme_constant_override("shadow_offset_x", 0)
 		sub_lbl.add_theme_constant_override("shadow_offset_y", 1)
 

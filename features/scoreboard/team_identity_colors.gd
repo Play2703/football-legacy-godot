@@ -310,7 +310,9 @@ const ALIASES: Dictionary = {
 	"dortmund": "dor",
 	"city": "mci",
 	"arsenal": "ars",
-	"river": "rive"
+	"river": "rive",
+	"sant": "san",
+	"cori": "cor"
 }
 
 ## Cache de identidades adicionadas dinamicamente
