@@ -1,0 +1,65 @@
+Godot Engine v4.7.2.stable.arch_linux.ed1daf0bf (2026-08-17 01:18:38 UTC) - https://godotengine.org
+
+=================================================================
+INICIANDO SUÍTE DE TESTES — ETAPA 4e.15: BLINDAGEM DO DECLÍNIO
+=================================================================
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus físico em velocidade
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus físico em aceleração
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus físico em físico
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus técnico em potência
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus técnico em precisão
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus técnico em efeito
+[PASS] CENÁRIO A: Jogador 22 anos recebe bônus técnico em regate
+[PASS] CENÁRIO B: Regra de declínio ativa para físico aos 33 anos
+[PASS] CENÁRIO B: Regra de declínio inativa para técnico aos 33 anos
+[PASS] CENÁRIO B: Bloqueio de bônus de velocidade aos 33 anos
+[PASS] CENÁRIO B: Bloqueio de bônus de aceleração aos 33 anos
+[PASS] CENÁRIO B: Bloqueio de bônus de físico aos 33 anos
+[PASS] CENÁRIO B: Aplicação normal de bônus de potência aos 33 anos
+[PASS] CENÁRIO B: Aplicação normal de bônus de precisão aos 33 anos
+[PASS] CENÁRIO C: Regra de declínio física ativa aos 35 anos
+[PASS] CENÁRIO C: Regra de declínio técnica ativa aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de velocidade aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de aceleração aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de físico aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de potência aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de precisão aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de efeito aos 35 anos
+[PASS] CENÁRIO C: Bloqueio de regate aos 35 anos
+[PASS] CENÁRIO D: Visión não está em declínio aos 38 anos
+[PASS] CENÁRIO D: Penal não está em declínio aos 38 anos
+[PASS] CENÁRIO D: Parado não está em declínio aos 38 anos
+[PASS] CENÁRIO D: Bônus de visão aplicado a jogador de 38 anos
+[PASS] CENÁRIO D: Bônus de penal aplicado a jogador de 38 anos
+[PASS] CENÁRIO D: Bônus de parado aplicado a jogador de 38 anos
+[PASS] CENÁRIO D: Bônus de potência bloqueado no mesmo jogador
+[PASS] CENÁRIO E: Kit Cantera existe no catálogo de Herencia
+[PASS] CENÁRIO E: Kit Cantera aos 36 anos: velocidade bloqueada
+[PASS] CENÁRIO E: Kit Cantera aos 36 anos: potência bloqueada
+[PASS] CENÁRIO E: Kit Cantera aos 36 anos: precisão bloqueada
+[PASS] CENÁRIO E: Kit Cantera aos 36 anos: visão evolui (+5)
+[PASS] CENÁRIO E: Rebirth pie_educado (+3 precisão) bloqueado aos 37 anos
+[PASS] CENÁRIO E: Rebirth mano_fria (+5 penal) aplicado aos 37 anos
+[PASS] CENÁRIO F: Teto de 90 respeitado ao exceder bônus (88 + 7 = 90)
+[PASS] CENÁRIO F: Modificador negativo aplicado em jogador jovem (70 - 5 = 65)
+[PASS] CENÁRIO F: Modificador negativo aplicado em jogador em declínio (75 - 4 = 71)
+[PASS] CENÁRIO F: Modificador sem skill_bonus aplica dinheiro corretamente
+[PASS] CENÁRIO F: Modificador sem skill_bonus preserva skills intactas
+[PASS] CENÁRIO F: Tratamento seguro de skill_bonus == null sem crash
+[PASS] CENÁRIO F: Tratamento seguro de skill_bonus == Array sem crash
+[PASS] CENÁRIO F: Atributos inválidos ou inexistentes são ignorados sem poluir o dicionário
+[PASS] REGRESSÃO: spend_point bloqueia velocidade aos 36 anos
+[PASS] REGRESSÃO: spend_point bloqueia potência aos 36 anos
+[PASS] REGRESSÃO: spend_point permite visão aos 36 anos
+[PASS] REGRESSÃO: skill_tope retorna valor atual para velocidade em declínio
+[PASS] REGRESSÃO: skill_tope retorna valor atual para potência em declínio
+[PASS] REGRESSÃO: skill_tope retorna SKILL_CAP (99) para visão aos 36 anos
+=================================================================
+RESUMO DOS TESTES — ETAPA 4e.15
+Total de testes: 51
+Testes APROVADOS: 51
+Testes REPROVADOS: 0
+Taxa de Conformidade: 100.0%
+=================================================================
+WARNING: 1 ObjectDB instance was leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
