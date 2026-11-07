@@ -1,0 +1,1779 @@
+{
+  "total_packs": 11,
+  "total_svgs": 234,
+  "unique_svg_filenames": 234,
+  "duplicate_svg_filenames_count": 0,
+  "duplicates": {},
+  "packs": [
+    {
+      "pack_name": "brasileirao-serie-a-2026",
+      "archive_filename": "brasileirao-serie-a-2026-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/brasileirao-serie-a-2026-svg-footylogos.zip",
+      "file_size_bytes": 167835,
+      "sha256": "fc38ee28208f7e693208cdb9cd33af5d6085cab58fdb2ade004fd0f476c6ff87",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "athletico-paranaense",
+          "name": "Athletico Paranaense",
+          "filename": "athletico-paranaense-logo-footylogos.svg",
+          "sha256": "c7256bfc6a51476bdfea20d021a988b61e878ad2be67de31402c24cfba290152"
+        },
+        {
+          "slug": "atletico-mineiro",
+          "name": "Atlético Mineiro",
+          "filename": "atletico-mineiro-logo-footylogos.svg",
+          "sha256": "2bc3ff3699fc58fc83d052f81d9279c53ec4d84149f48f2f942de1e2fd4a6072"
+        },
+        {
+          "slug": "bahia",
+          "name": "Bahia",
+          "filename": "bahia-logo-footylogos.svg",
+          "sha256": "3a82238b046c36a636930fb331427ed2531a16853872de8f3f832393b389cf41"
+        },
+        {
+          "slug": "botafogo",
+          "name": "Botafogo",
+          "filename": "botafogo-logo-footylogos.svg",
+          "sha256": "c45e06e5713015d6330b48e23520144f10e6cec5b751c1c8f80a069b6e3ef1e4"
+        },
+        {
+          "slug": "chapecoense",
+          "name": "Chapecoense",
+          "filename": "chapecoense-logo-footylogos.svg",
+          "sha256": "6c51645c53a16acb1e895274cca28d805e49630346b8f2bef710a1745dfd8fec"
+        },
+        {
+          "slug": "club-de-remo",
+          "name": "Clube de Remo",
+          "filename": "club-de-remo-logo-footylogos.svg",
+          "sha256": "64cf47432ff769519172fc624792f3d615210cbce5c34982c59a1c42312044bd"
+        },
+        {
+          "slug": "corinthians",
+          "name": "Corinthians",
+          "filename": "corinthians-logo-footylogos.svg",
+          "sha256": "31316768bcadc2cd0f859a5f1d8442996f4002d583ddd50d5ec668639ffe2f17"
+        },
+        {
+          "slug": "coritiba",
+          "name": "Coritiba",
+          "filename": "coritiba-logo-footylogos.svg",
+          "sha256": "c321e97f46c58db7a4a6f0c9d9823a383697a82cdb5ee1443982e3da7955bded"
+        },
+        {
+          "slug": "cruzeiro",
+          "name": "Cruzeiro",
+          "filename": "cruzeiro-logo-footylogos.svg",
+          "sha256": "c352d214929404322cc4aa5b139aaac807764f6b8ef0af4037f96dc659e363ea"
+        },
+        {
+          "slug": "flamengo",
+          "name": "Flamengo (CRF)",
+          "filename": "flamengo-logo-footylogos.svg",
+          "sha256": "abcfa8bfeec2ab9a0245cec7d25b0412051703d265ae0ad31d27ab2c4030bcaa"
+        },
+        {
+          "slug": "fluminense",
+          "name": "Fluminense",
+          "filename": "fluminense-logo-footylogos.svg",
+          "sha256": "fe19722c9196037aaaec5e8b00edb7dd4deb462bd9d27510fe99fb220c1940ee"
+        },
+        {
+          "slug": "gremio",
+          "name": "Grêmio",
+          "filename": "gremio-logo-footylogos.svg",
+          "sha256": "96f83d181a556ab4841a4e61b11fc4d25093e09bd3893ded54515acbd779f22d"
+        },
+        {
+          "slug": "mirassol-fc",
+          "name": "Mirassol FC",
+          "filename": "mirassol-fc-logo-footylogos.svg",
+          "sha256": "377d06b6db85ced6c20170e2e1fe3af283280dc180bdb0ac474e3f2052153db8"
+        },
+        {
+          "slug": "palmeiras",
+          "name": "Palmeiras",
+          "filename": "palmeiras-logo-footylogos.svg",
+          "sha256": "d93cb361fa837c16b89035d122cf951b757ecc7b9cdf3276882e6528332cabae"
+        },
+        {
+          "slug": "rb-bragantino",
+          "name": "RB Bragantino",
+          "filename": "rb-bragantino-logo-footylogos.svg",
+          "sha256": "de377d24c09973713a0b1a0e664d4cdc60ac79fe308ea882abf6449555218efb"
+        },
+        {
+          "slug": "sc-internacional",
+          "name": "SC Internacional",
+          "filename": "sc-internacional-logo-footylogos.svg",
+          "sha256": "610eb2654771bcf85eb2eca3007af7c55538c450950c5e8c89cac95d0776b152"
+        },
+        {
+          "slug": "santos-fc",
+          "name": "Santos FC",
+          "filename": "santos-fc-logo-footylogos.svg",
+          "sha256": "dae6e320d9a9072dc853445bac4c8b0171d2fe54b14871ae47accd611617aa6d"
+        },
+        {
+          "slug": "sao-paulo",
+          "name": "São Paulo (SPFC)",
+          "filename": "sao-paulo-logo-footylogos.svg",
+          "sha256": "09d9e6cdc79af0ab9d3d106482194aec12bf7f7721443f111a265319b08ca99b"
+        },
+        {
+          "slug": "vasco-da-gama",
+          "name": "Vasco da Gama",
+          "filename": "vasco-da-gama-logo-footylogos.svg",
+          "sha256": "b382240faab4fd785d1809cb2806f13605475668860bf524bed25f50ca80d4aa"
+        },
+        {
+          "slug": "vitoria",
+          "name": "Vitória",
+          "filename": "vitoria-logo-footylogos.svg",
+          "sha256": "6696d7b7de0806f522f621460e98751959ab7cf768df07fa99f9f029c3c989e7"
+        }
+      ],
+      "svg_files": [
+        "athletico-paranaense-logo-footylogos.svg",
+        "atletico-mineiro-logo-footylogos.svg",
+        "bahia-logo-footylogos.svg",
+        "botafogo-logo-footylogos.svg",
+        "chapecoense-logo-footylogos.svg",
+        "club-de-remo-logo-footylogos.svg",
+        "corinthians-logo-footylogos.svg",
+        "coritiba-logo-footylogos.svg",
+        "cruzeiro-logo-footylogos.svg",
+        "flamengo-logo-footylogos.svg",
+        "fluminense-logo-footylogos.svg",
+        "gremio-logo-footylogos.svg",
+        "mirassol-fc-logo-footylogos.svg",
+        "palmeiras-logo-footylogos.svg",
+        "rb-bragantino-logo-footylogos.svg",
+        "santos-fc-logo-footylogos.svg",
+        "sao-paulo-logo-footylogos.svg",
+        "sc-internacional-logo-footylogos.svg",
+        "vasco-da-gama-logo-footylogos.svg",
+        "vitoria-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "brasileirao-serie-b-2026",
+      "archive_filename": "brasileirao-serie-b-2026-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/brasileirao-serie-b-2026-svg-footylogos.zip",
+      "file_size_bytes": 131434,
+      "sha256": "7285e5b4e7c669c1fcef99cabec911a34e23a0a6f6a7112c30995cc5a5425759",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "america-mineiro",
+          "name": "America Mineiro (Coelho)",
+          "filename": "america-mineiro-logo-footylogos.svg",
+          "sha256": "0180e989e2c215a279fd90bfec14e856f08c8aba9a3081af7b3af570592e0bba"
+        },
+        {
+          "slug": "athletic",
+          "name": "Athletic (Esquadrão de Aço)",
+          "filename": "athletic-logo-footylogos.svg",
+          "sha256": "ee3fa8546206fa9c733b48d179c66474a29522750f289e2bc3619e590a00fd0e"
+        },
+        {
+          "slug": "atletico-goianiense",
+          "name": "Atletico Goianiense",
+          "filename": "atletico-goianiense-logo-footylogos.svg",
+          "sha256": "4f4288d81efc4fccd7eb9227decb52eb67b03656f842385f95e82024fba865f2"
+        },
+        {
+          "slug": "avai-fc",
+          "name": "Avai FC",
+          "filename": "avai-fc-logo-footylogos.svg",
+          "sha256": "aa07a213f51b7e625f274bfed6edd51dd5a4639bb1b734a79dcc61c38c014119"
+        },
+        {
+          "slug": "botafogo-sp",
+          "name": "Botafogo-SP (BFC)",
+          "filename": "botafogo-sp-logo-footylogos.svg",
+          "sha256": "a5d07349b70c0ead40315736ce8129f6b543d4d4b57bfd29e89cc9862e0e8a60"
+        },
+        {
+          "slug": "ceara-sc",
+          "name": "Ceara SC",
+          "filename": "ceara-sc-logo-footylogos.svg",
+          "sha256": "38babf13e080d8bf13049a60016cf7ede140a9d6dc7a52b812059ec6fec8c31c"
+        },
+        {
+          "slug": "crb",
+          "name": "Clube de Regatas Brasil (CRB)",
+          "filename": "crb-logo-footylogos.svg",
+          "sha256": "d384e438531b9f086ea4430b888e7fb0e15ce782d63c7319a2273e44c66c0926"
+        },
+        {
+          "slug": "criciuma",
+          "name": "Criciuma",
+          "filename": "criciuma-logo-footylogos.svg",
+          "sha256": "7f3201a3cd0185fa6e0d459fce24c46a355317b0bf46e25e910155f0e611845e"
+        },
+        {
+          "slug": "cuiaba",
+          "name": "Cuiabá",
+          "filename": "cuiaba-logo-footylogos.svg",
+          "sha256": "2e543119a75d556ffdde23bcd014a78fddc23b7445d3b0a7ef90ba606c692302"
+        },
+        {
+          "slug": "fortaleza",
+          "name": "Fortaleza",
+          "filename": "fortaleza-logo-footylogos.svg",
+          "sha256": "2fb4103f90e358f30863298e5c7db5c92bf3cc8b95eb848122388f369160ef42"
+        },
+        {
+          "slug": "goias",
+          "name": "Goiás",
+          "filename": "goias-logo-footylogos.svg",
+          "sha256": "f35e9891d883293b9962888d5660537e7c4f55782963c02019ff20f925f514ab"
+        },
+        {
+          "slug": "gremio-novorizontino",
+          "name": "Gremio Novorizontino",
+          "filename": "gremio-novorizontino-logo-footylogos.svg",
+          "sha256": "b8c6ebdc5d6decf5c8303aa042f2eceb94d3b5b07792eecdcffeb2df4e79056c"
+        },
+        {
+          "slug": "juventude",
+          "name": "Juventude",
+          "filename": "juventude-logo-footylogos.svg",
+          "sha256": "a931fef9076e7cf9d0f76fef073823cbcf0887aa9e2fbe6acfc71be0aef51d3c"
+        },
+        {
+          "slug": "operario-ferroviario",
+          "name": "Operario Ferroviario",
+          "filename": "operario-ferroviario-logo-footylogos.svg",
+          "sha256": "80ed9a62af6a8a8f6522f79f4682d8014f1de9a1624e0b46fd9eb75604892f9c"
+        },
+        {
+          "slug": "sport-recife",
+          "name": "Sport Recife",
+          "filename": "sport-recife-logo-footylogos.svg",
+          "sha256": "fafe41a94dfc81d37c326ed33e4ca3d0f1ccbbc9c6eae993f268fbf1ffafe282"
+        },
+        {
+          "slug": "vila-nova",
+          "name": "Vila Nova",
+          "filename": "vila-nova-logo-footylogos.svg",
+          "sha256": "1ca22156a8792e41c1b53dc5b10ecfb19303d7747231481ae4a24a6693cf6b58"
+        },
+        {
+          "slug": "londrina",
+          "name": "Londrina",
+          "filename": "londrina-logo-footylogos.svg",
+          "sha256": "a6e4342ee6285985db07b9a78c0193c1c756f72e8b7763db8327dd9f7bb4d012"
+        },
+        {
+          "slug": "ponte-preta",
+          "name": "Ponte Preta",
+          "filename": "ponte-preta-logo-footylogos.svg",
+          "sha256": "ca3afed89174106fb7add419581a5d5a2cb768cf1db35fd0e0c507c8ca72d98e"
+        },
+        {
+          "slug": "nautico",
+          "name": "Náutico",
+          "filename": "nautico-logo-footylogos.svg",
+          "sha256": "df7dcf787e80feadf4bb848a4cafe92adb5fe3e4a57b2ef3eb22fc4e6ee35d79"
+        },
+        {
+          "slug": "sao-bernardo",
+          "name": "São Bernardo",
+          "filename": "sao-bernardo-logo-footylogos.svg",
+          "sha256": "996b2363a70c3b1ea611de34b0a8584ec424169047c6d98be397a3138e0dec4c"
+        }
+      ],
+      "svg_files": [
+        "america-mineiro-logo-footylogos.svg",
+        "athletic-logo-footylogos.svg",
+        "atletico-goianiense-logo-footylogos.svg",
+        "avai-fc-logo-footylogos.svg",
+        "botafogo-sp-logo-footylogos.svg",
+        "ceara-sc-logo-footylogos.svg",
+        "crb-logo-footylogos.svg",
+        "criciuma-logo-footylogos.svg",
+        "cuiaba-logo-footylogos.svg",
+        "fortaleza-logo-footylogos.svg",
+        "goias-logo-footylogos.svg",
+        "gremio-novorizontino-logo-footylogos.svg",
+        "juventude-logo-footylogos.svg",
+        "londrina-logo-footylogos.svg",
+        "nautico-logo-footylogos.svg",
+        "operario-ferroviario-logo-footylogos.svg",
+        "ponte-preta-logo-footylogos.svg",
+        "sao-bernardo-logo-footylogos.svg",
+        "sport-recife-logo-footylogos.svg",
+        "vila-nova-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "brasileirao-serie-c-2026",
+      "archive_filename": "brasileirao-serie-c-2026-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/brasileirao-serie-c-2026-svg-footylogos.zip",
+      "file_size_bytes": 155907,
+      "sha256": "a41c90a3fc8713a232e25571bf9997816ff23904c01ba38a748f664d887b8e56",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "amazonas",
+          "name": "Amazonas",
+          "filename": "amazonas-logo-footylogos.svg",
+          "sha256": "a32c7568e3e1a0d7d9e908cc25ca2b9e2670c649a4e96853e22b5092b4a4db88"
+        },
+        {
+          "slug": "ferroviaria",
+          "name": "Ferroviaria (AFE)",
+          "filename": "ferroviaria-logo-footylogos.svg",
+          "sha256": "0637de80fdfba58e9eca048979611cab2f31a6767b8d5474d32b4b685bc2700b"
+        },
+        {
+          "slug": "paysandu",
+          "name": "Paysandu",
+          "filename": "paysandu-logo-footylogos.svg",
+          "sha256": "e3a0fa401ea30680a11d270c51e5c2de88063fca39895c7ff007aa61a336b07c"
+        },
+        {
+          "slug": "volta-redonda",
+          "name": "Volta Redonda (VRFC)",
+          "filename": "volta-redonda-logo-footylogos.svg",
+          "sha256": "382e7a83d3e1d1484c940997c38ac22f70c12254a09a91033084648d24845e8a"
+        },
+        {
+          "slug": "itabaiana",
+          "name": "Itabaiana",
+          "filename": "itabaiana-logo-footylogos.svg",
+          "sha256": "a8221a78b5fe7c7494577ac5c150e23ba53e17e96264087bf74387ed84836a1a"
+        },
+        {
+          "slug": "anapolis",
+          "name": "Anápolis",
+          "filename": "anapolis-logo-footylogos.svg",
+          "sha256": "2519183fc056ac8b2732506ab481eca6dd3bf3284b86e9482e5cfe0d81a65991"
+        },
+        {
+          "slug": "barra",
+          "name": "Barra",
+          "filename": "barra-logo-footylogos.svg",
+          "sha256": "34a4d62a10c6381ab8872cb1747f2416da525b7a05ce8ee9c87dce18066e561c"
+        },
+        {
+          "slug": "botafogo-pb",
+          "name": "Botafogo PB",
+          "filename": "botafogo-pb-logo-footylogos.svg",
+          "sha256": "c4dd00f59eabd9a5d298a3a76014d06b93a6856726ef78228cf1041aa666f78b"
+        },
+        {
+          "slug": "brusque",
+          "name": "Brusque",
+          "filename": "brusque-logo-footylogos.svg",
+          "sha256": "c835f07c8e26e1599a2ba199f831efbf70dc024e97a66a84084ffa1b196b6bbd"
+        },
+        {
+          "slug": "caxias",
+          "name": "Caxias",
+          "filename": "caxias-logo-footylogos.svg",
+          "sha256": "a716019fca99882b3ecadc9b09abaa4c772f3e8c613b5ac5c4210f6b0cccc0fa"
+        },
+        {
+          "slug": "figueirense",
+          "name": "Figueirense",
+          "filename": "figueirense-logo-footylogos.svg",
+          "sha256": "ddac206f78b9c9e61f422c553374988f92ffe2808ffa187d12ac5f7eba769db1"
+        },
+        {
+          "slug": "confianca",
+          "name": "Confiança",
+          "filename": "confianca-logo-footylogos.svg",
+          "sha256": "a33fb495e1d6e07e5f65004e7ab861c21302f7b622e003acc4e4eeaca4b118c4"
+        },
+        {
+          "slug": "floresta",
+          "name": "Floresta",
+          "filename": "floresta-logo-footylogos.svg",
+          "sha256": "bcead2347fe2429f79db46d5570c4e8ae0efc69f86fe983fb81e11805f262faf"
+        },
+        {
+          "slug": "inter-de-limeira",
+          "name": "Inter de Limeira",
+          "filename": "inter-de-limeira-logo-footylogos.svg",
+          "sha256": "6a1b39aef67108d1061a1fc33a5f9ad677aa6ebd9b2d10f47d944bd011dbdb1e"
+        },
+        {
+          "slug": "ituano",
+          "name": "Ituano",
+          "filename": "ituano-logo-footylogos.svg",
+          "sha256": "c020a22cf5f1f57117542c114b1d1461be1c1de2768781899461608148ec47b1"
+        },
+        {
+          "slug": "maranhao",
+          "name": "Maranhão",
+          "filename": "maranhao-logo-footylogos.svg",
+          "sha256": "de15f3efbbacc05f9f5d03fe4f89d87833f2c3eb5a61c26eea1ca6e7a58212a1"
+        },
+        {
+          "slug": "maringa",
+          "name": "Maringá",
+          "filename": "maringa-logo-footylogos.svg",
+          "sha256": "bdd590843dbb7caa4d8647d7e7c42ba61d08b4d202c1089d0f20ceacbce7edcf"
+        },
+        {
+          "slug": "ypiranga",
+          "name": "Ypiranga",
+          "filename": "ypiranga-logo-footylogos.svg",
+          "sha256": "6c142a22aded22cdbf5d2bca3424a3aff02af6b4a4d31057fd75d25a1350388c"
+        },
+        {
+          "slug": "santa-cruz",
+          "name": "Santa Cruz",
+          "filename": "santa-cruz-logo-footylogos.svg",
+          "sha256": "566822ee6a21e159d9b82924b3dc91866cfd782c4b88a53ecbe32d7b1fef5333"
+        },
+        {
+          "slug": "guarani",
+          "name": "Guarani",
+          "filename": "guarani-logo-footylogos.svg",
+          "sha256": "75d538ee22e77c7ac73fa4a9ce2fd2cdf798cfc30ca3130e243505db5a1a4e72"
+        }
+      ],
+      "svg_files": [
+        "amazonas-logo-footylogos.svg",
+        "anapolis-logo-footylogos.svg",
+        "barra-logo-footylogos.svg",
+        "botafogo-pb-logo-footylogos.svg",
+        "brusque-logo-footylogos.svg",
+        "caxias-logo-footylogos.svg",
+        "confianca-logo-footylogos.svg",
+        "ferroviaria-logo-footylogos.svg",
+        "figueirense-logo-footylogos.svg",
+        "floresta-logo-footylogos.svg",
+        "guarani-logo-footylogos.svg",
+        "inter-de-limeira-logo-footylogos.svg",
+        "itabaiana-logo-footylogos.svg",
+        "ituano-logo-footylogos.svg",
+        "maranhao-logo-footylogos.svg",
+        "maringa-logo-footylogos.svg",
+        "paysandu-logo-footylogos.svg",
+        "santa-cruz-logo-footylogos.svg",
+        "volta-redonda-logo-footylogos.svg",
+        "ypiranga-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "bundesliga-2026-27",
+      "archive_filename": "bundesliga-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/bundesliga-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 62530,
+      "sha256": "de410e624568fbb0e98dcf9b24365b5d5053e893bd2a911038ef2444d11a48aa",
+      "svg_count": 18,
+      "logos_meta": [
+        {
+          "slug": "1-fc-koln",
+          "name": "1. FC Köln",
+          "filename": "1-fc-koln-logo-footylogos.svg",
+          "sha256": "9791e87f2216ec36fbc14abb3853f4ee655ba7beacd1bd272bd0489931ee7cd2"
+        },
+        {
+          "slug": "bayer-leverkusen",
+          "name": "Bayer Leverkusen",
+          "filename": "bayer-leverkusen-logo-footylogos.svg",
+          "sha256": "7d613d959844228f1a60a1edeedc425cdad4b806ebd6340e9fba8cdaf633c3fa"
+        },
+        {
+          "slug": "bayern-munich",
+          "name": "Bayern Munich",
+          "filename": "bayern-munich-logo-footylogos.svg",
+          "sha256": "3cb916f8d984991a9f2a5cfb1068687b4cf709eba63f4147b5009243d26275ae"
+        },
+        {
+          "slug": "borussia-dortmund",
+          "name": "Borussia Dortmund",
+          "filename": "borussia-dortmund-logo-footylogos.svg",
+          "sha256": "a96826341bd29089c047a54f79b6e74d845dc4e61f9e57f96b625892b97d584f"
+        },
+        {
+          "slug": "borussia-monchengladbach",
+          "name": "Borussia Mönchengladbach",
+          "filename": "borussia-monchengladbach-logo-footylogos.svg",
+          "sha256": "3c2fba1c4b7e8ff6f6807a64282cbcf8fcbd5a0eef93236597e5f8e3d21e4ba7"
+        },
+        {
+          "slug": "eintracht-frankfurt",
+          "name": "Eintracht Frankfurt",
+          "filename": "eintracht-frankfurt-logo-footylogos.svg",
+          "sha256": "52c7eaefc1376cbf7a5f02a2c5175eed74fa3a795638509353fc2cbeee204d64"
+        },
+        {
+          "slug": "fc-augsburg",
+          "name": "FC Augsburg",
+          "filename": "fc-augsburg-logo-footylogos.svg",
+          "sha256": "a6116a52965044b2f301c97b24c18c190893aecf503e3f3edc34819440468eff"
+        },
+        {
+          "slug": "hamburger-sv",
+          "name": "Hamburger SV (HSV)",
+          "filename": "hamburger-sv-logo-footylogos.svg",
+          "sha256": "137ab2897436e34eb4b5d0cbe196a8d455f17e082895a48780c5698561f44f37"
+        },
+        {
+          "slug": "mainz-05",
+          "name": "Mainz 05",
+          "filename": "mainz-05-logo-footylogos.svg",
+          "sha256": "b732d958b9828886de56347dfff1f0b2ddb884bb00c7f4ba9489f18aad735271"
+        },
+        {
+          "slug": "rb-leipzig",
+          "name": "RB Leipzig",
+          "filename": "rb-leipzig-logo-footylogos.svg",
+          "sha256": "e94b6cdf8c71de6480d222858e1fdc086c9efe36958995e52fbc12bb8da024fb"
+        },
+        {
+          "slug": "sc-freiburg",
+          "name": "SC Freiburg",
+          "filename": "sc-freiburg-logo-footylogos.svg",
+          "sha256": "6308f0c06bf2d56f12a279f961d8912af20a9874a5a5bc4adc45f80e9141ec3a"
+        },
+        {
+          "slug": "sc-paderborn-07",
+          "name": "SC Paderborn 07",
+          "filename": "sc-paderborn-07-logo-footylogos.svg",
+          "sha256": "20bd1328506e1c19bf082ee84b5c97ba277ba019a1924fe701e01119ae220404"
+        },
+        {
+          "slug": "sv-elversberg",
+          "name": "SV Elversberg",
+          "filename": "sv-elversberg-logo-footylogos.svg",
+          "sha256": "3b41bc623ebe09c2debaede02effb3e122f1e41265161e796fecd40fa7e90ff4"
+        },
+        {
+          "slug": "schalke-04",
+          "name": "Schalke 04",
+          "filename": "schalke-04-logo-footylogos.svg",
+          "sha256": "87d1e9072075fb8e34e05bdd4956e92e6d7ac4bc3cbaaee393853576529080bc"
+        },
+        {
+          "slug": "tsg-hoffenheim",
+          "name": "TSG Hoffenheim",
+          "filename": "tsg-hoffenheim-logo-footylogos.svg",
+          "sha256": "b4eab1866cf0f27247df5c85cd812fefa022ac7f2dc41cd6c8d7a0649b2412f7"
+        },
+        {
+          "slug": "union-berlin",
+          "name": "Union Berlin",
+          "filename": "union-berlin-logo-footylogos.svg",
+          "sha256": "fe0d3aaf8b66d25e8c2613df238722f6837b06a8faa7948aed72ae8b07f029e6"
+        },
+        {
+          "slug": "vfb-stuttgart",
+          "name": "VfB Stuttgart",
+          "filename": "vfb-stuttgart-logo-footylogos.svg",
+          "sha256": "fe3a24911c65807f6ea463eea834efcf3f0453648fd4d93958bc7b5381cb5724"
+        },
+        {
+          "slug": "werder-bremen",
+          "name": "Werder Bremen",
+          "filename": "werder-bremen-logo-footylogos.svg",
+          "sha256": "03dffebe1431787308b5e6a791c1061bba609902125beedd6acd4e32fc382191"
+        }
+      ],
+      "svg_files": [
+        "1-fc-koln-logo-footylogos.svg",
+        "bayer-leverkusen-logo-footylogos.svg",
+        "bayern-munich-logo-footylogos.svg",
+        "borussia-dortmund-logo-footylogos.svg",
+        "borussia-monchengladbach-logo-footylogos.svg",
+        "eintracht-frankfurt-logo-footylogos.svg",
+        "fc-augsburg-logo-footylogos.svg",
+        "hamburger-sv-logo-footylogos.svg",
+        "mainz-05-logo-footylogos.svg",
+        "rb-leipzig-logo-footylogos.svg",
+        "sc-freiburg-logo-footylogos.svg",
+        "sc-paderborn-07-logo-footylogos.svg",
+        "schalke-04-logo-footylogos.svg",
+        "sv-elversberg-logo-footylogos.svg",
+        "tsg-hoffenheim-logo-footylogos.svg",
+        "union-berlin-logo-footylogos.svg",
+        "vfb-stuttgart-logo-footylogos.svg",
+        "werder-bremen-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "laliga-2026-27",
+      "archive_filename": "laliga-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/laliga-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 525981,
+      "sha256": "c587c2bfbfa280f51149f839c13c5931b2c0782251b81c8187172b2af3a27d18",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "athletic-club-bilbao",
+          "name": "Athletic Club Bilbao",
+          "filename": "athletic-club-bilbao-logo-footylogos.svg",
+          "sha256": "e0063c7b4c9b55a8223f19b7b6f152482f53cd33b858c8c1f093c2971ba9426f"
+        },
+        {
+          "slug": "atletico-madrid",
+          "name": "Atletico Madrid",
+          "filename": "atletico-madrid-logo-footylogos.svg",
+          "sha256": "05c1312a7950f1718344301a68c85a64ad5be60dce20aaf0352b9bb8a4c73310"
+        },
+        {
+          "slug": "celta-vigo",
+          "name": "Celta Vigo",
+          "filename": "celta-vigo-logo-footylogos.svg",
+          "sha256": "5966d2a5e63bd91b2bdf6a790068b8d2577dbdafa85ad19e7f2bf501b3bf27d0"
+        },
+        {
+          "slug": "deportivo-alaves",
+          "name": "Deportivo Alaves",
+          "filename": "deportivo-alaves-logo-footylogos.svg",
+          "sha256": "73ecbbfc73d1fff4b016a7aa7ec486d0c2f508580eb00fef1875f8cfa306df4b"
+        },
+        {
+          "slug": "elche-cf",
+          "name": "Elche CF",
+          "filename": "elche-cf-logo-footylogos.svg",
+          "sha256": "2cb77bf1d5fa75c97e2961c68fea7b537ec32d6c77e4e6b81aed8948fcccb67e"
+        },
+        {
+          "slug": "fc-barcelona",
+          "name": "FC Barcelona",
+          "filename": "fc-barcelona-logo-footylogos.svg",
+          "sha256": "7dc11550446e5145f767a8bb229a77bf2c5fd03ca4ef399204010e49d000c0ca"
+        },
+        {
+          "slug": "getafe-cf",
+          "name": "Getafe C.F",
+          "filename": "getafe-cf-logo-footylogos.svg",
+          "sha256": "f4d3cc2f4fa18863d00c1a0f2c2c17076896fef769b06a9473f71a3a7481ac6e"
+        },
+        {
+          "slug": "levante-ud",
+          "name": "Levante UD",
+          "filename": "levante-ud-logo-footylogos.svg",
+          "sha256": "336f1590c5457d5bbeaf8c6e5553e98535a4142f4e4229e6739d5002470c897e"
+        },
+        {
+          "slug": "osasuna",
+          "name": "Osasuna",
+          "filename": "osasuna-logo-footylogos.svg",
+          "sha256": "19fd1918093adff3922148d3bd8c8d81cb5e31bae11a76f1e753c7339acb19db"
+        },
+        {
+          "slug": "rcd-espanyol-barcelona",
+          "name": "RCD Espanyol Barcelona",
+          "filename": "rcd-espanyol-barcelona-logo-footylogos.svg",
+          "sha256": "086fb5b869b0eed41c2f50db28e3f49d4b7b4055a2b702131c63216ad1851fc2"
+        },
+        {
+          "slug": "racing-santander",
+          "name": "Racing Santander",
+          "filename": "racing-santander-logo-footylogos.svg",
+          "sha256": "868c951f269aa4fd49758d25ae380fd9ebaf57b9d83807e0d0f3d8bc239649a5"
+        },
+        {
+          "slug": "rayo-vallecano",
+          "name": "Rayo Vallecano",
+          "filename": "rayo-vallecano-logo-footylogos.svg",
+          "sha256": "0c0e0b1cc6664a91f9ba82c6120365a2fe153797177d648e6b04ee4a34a01444"
+        },
+        {
+          "slug": "real-betis-balompie",
+          "name": "Real Betis Balompié",
+          "filename": "real-betis-balompie-logo-footylogos.svg",
+          "sha256": "a8c44205ec0591c26cfb15ae2ecc02acd1ca38833913c8527b14ce70432305cb"
+        },
+        {
+          "slug": "real-madrid",
+          "name": "Real Madrid",
+          "filename": "real-madrid-logo-footylogos.svg",
+          "sha256": "1d315ced3de9e8f33d384481e4d02196fcd751ef115d898add1d43d711f89d54"
+        },
+        {
+          "slug": "real-sociedad",
+          "name": "Real Sociedad",
+          "filename": "real-sociedad-logo-footylogos.svg",
+          "sha256": "fba08489af491d9acead6906fccf4ced1b83070dbbc80dbaf3f0a149c5dc7509"
+        },
+        {
+          "slug": "sevilla-fc",
+          "name": "Sevilla FC",
+          "filename": "sevilla-fc-logo-footylogos.svg",
+          "sha256": "a8c46a38b889fa04c7fb1d11787b2be659083a76269ceaf550c7cbf09888c905"
+        },
+        {
+          "slug": "valencia-cf",
+          "name": "Valencia CF",
+          "filename": "valencia-cf-logo-footylogos.svg",
+          "sha256": "eaee5e4b044659a3c641c2ebd823a08001efd4686f123eeb771bc9751558312e"
+        },
+        {
+          "slug": "villarreal-cf",
+          "name": "Villarreal CF",
+          "filename": "villarreal-cf-logo-footylogos.svg",
+          "sha256": "b19edc4a5c4071e73c89bfb016c5977a7e3e84734e229cc6d90f554655a115df"
+        },
+        {
+          "slug": "deportivo-la-coruna",
+          "name": "Deportivo La Coruña",
+          "filename": "deportivo-la-coruna-logo-footylogos.svg",
+          "sha256": "d03781b86f5baf66494268cabb999964803882a1ec6c59e6b322263cb9701a30"
+        },
+        {
+          "slug": "malaga-cf",
+          "name": "Málaga CF",
+          "filename": "malaga-cf-logo-footylogos.svg",
+          "sha256": "c1aafa49096d0e8bf82af4fd4f439d09479239a288672b85f23523b72086c28c"
+        }
+      ],
+      "svg_files": [
+        "athletic-club-bilbao-logo-footylogos.svg",
+        "atletico-madrid-logo-footylogos.svg",
+        "celta-vigo-logo-footylogos.svg",
+        "deportivo-alaves-logo-footylogos.svg",
+        "deportivo-la-coruna-logo-footylogos.svg",
+        "elche-cf-logo-footylogos.svg",
+        "fc-barcelona-logo-footylogos.svg",
+        "getafe-cf-logo-footylogos.svg",
+        "levante-ud-logo-footylogos.svg",
+        "malaga-cf-logo-footylogos.svg",
+        "osasuna-logo-footylogos.svg",
+        "racing-santander-logo-footylogos.svg",
+        "rayo-vallecano-logo-footylogos.svg",
+        "rcd-espanyol-barcelona-logo-footylogos.svg",
+        "real-betis-balompie-logo-footylogos.svg",
+        "real-madrid-logo-footylogos.svg",
+        "real-sociedad-logo-footylogos.svg",
+        "sevilla-fc-logo-footylogos.svg",
+        "valencia-cf-logo-footylogos.svg",
+        "villarreal-cf-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "liga-portugal-2026-27",
+      "archive_filename": "liga-portugal-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/liga-portugal-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 355460,
+      "sha256": "bae7f99ca0646b9327682afda99e863aa7f6236de7ae9d70c9cf07d0925b300a",
+      "svg_count": 18,
+      "logos_meta": [
+        {
+          "slug": "casa-pia",
+          "name": "Casa Pia",
+          "filename": "casa-pia-logo-footylogos.svg",
+          "sha256": "9a3f14cc764c0e4b8e8b85ea053ce884cff181796f760ae185c031302907d36e"
+        },
+        {
+          "slug": "estoril-praia",
+          "name": "Estoril Praia",
+          "filename": "estoril-praia-logo-footylogos.svg",
+          "sha256": "087ede40efa775d4b34c477752781d2fba984c0c696ad9b0578827ef5fdc0091"
+        },
+        {
+          "slug": "estrela-amadora",
+          "name": "Estrela Amadora",
+          "filename": "estrela-amadora-logo-footylogos.svg",
+          "sha256": "ef723ff977fbe1d5ef4a7005b28327b3f1727bfdf006019a5298963725bca6b8"
+        },
+        {
+          "slug": "fc-arouca",
+          "name": "FC Arouca",
+          "filename": "fc-arouca-logo-footylogos.svg",
+          "sha256": "11176573ef86c52394e30b3d81c79c81b60923b95d963f45360d85b58aafcaba"
+        },
+        {
+          "slug": "fc-famalicao",
+          "name": "FC Famalicão",
+          "filename": "fc-famalicao-logo-footylogos.svg",
+          "sha256": "7c4bf07d0581815022002200222ae8d44bf365090e76787b6a8e2ef958ff339d"
+        },
+        {
+          "slug": "fc-porto",
+          "name": "FC Porto",
+          "filename": "fc-porto-logo-footylogos.svg",
+          "sha256": "4be7d26d6934cd133808695f26db94bd9c8331b22e839cc243bbb3e7f4abc207"
+        },
+        {
+          "slug": "gil-vicente",
+          "name": "Gil Vicente",
+          "filename": "gil-vicente-logo-footylogos.svg",
+          "sha256": "b32dac65722400cf02f43ee1391ffb06910ea423eeeef1400376a49851365212"
+        },
+        {
+          "slug": "moreirense",
+          "name": "Moreirense",
+          "filename": "moreirense-logo-footylogos.svg",
+          "sha256": "0a89195ad2e8ecb08a8f59082646c41ed44ad28da97241becde74cd77b469e11"
+        },
+        {
+          "slug": "rio-ave",
+          "name": "Rio Ave",
+          "filename": "rio-ave-logo-footylogos.svg",
+          "sha256": "e023d8f09907135893c2b08e5602acb68b3f4ea34a4cfc572091ea35a29a5eb6"
+        },
+        {
+          "slug": "sc-braga",
+          "name": "SC Braga",
+          "filename": "sc-braga-logo-footylogos.svg",
+          "sha256": "97dcecf75c79c671220d2dd1a8c5d2a416b9e0e67de758843701c44635acbc12"
+        },
+        {
+          "slug": "sl-benfica",
+          "name": "SL Benfica",
+          "filename": "sl-benfica-logo-footylogos.svg",
+          "sha256": "b2ba7f11d6c2283992fd08f1b7cdc23e247b2cda0fadddbed3c5a057c518d6e5"
+        },
+        {
+          "slug": "sporting-cp",
+          "name": "Sporting CP (Lisbon)",
+          "filename": "sporting-cp-logo-footylogos.svg",
+          "sha256": "8e02403d230323eb83ebab5214141a9bcab80b24bea2e0af016e4af30ee77e1b"
+        },
+        {
+          "slug": "vitoria-sc",
+          "name": "Vitória SC",
+          "filename": "vitoria-sc-logo-footylogos.svg",
+          "sha256": "24d4ad11cbb05886da740bd11446db080c09074faa63eb6fdcf57e54e2c18b0f"
+        },
+        {
+          "slug": "cd-santa-clara",
+          "name": "CD Santa Clara",
+          "filename": "cd-santa-clara-logo-footylogos.svg",
+          "sha256": "8110d0c2708388efb5bee926e2eedec661747c9130a21e0b679045fed0d5a87c"
+        },
+        {
+          "slug": "fc-alverca",
+          "name": "FC Alverca",
+          "filename": "fc-alverca-logo-footylogos.svg",
+          "sha256": "30ed80083081edaa2dca53319073cbc40d27f5a1fc2a07f20d6b12cc761e4c60"
+        },
+        {
+          "slug": "cd-nacional-madeira",
+          "name": "CD Nacional da Madeira",
+          "filename": "cd-nacional-madeira-logo-footylogos.svg",
+          "sha256": "edb916c0329cc9975cea3218943f9b6127776b7aa109ad0155f8688f1084fce1"
+        },
+        {
+          "slug": "academico-de-viseu",
+          "name": "Académico de Viseu",
+          "filename": "academico-de-viseu-logo-footylogos.svg",
+          "sha256": "138e006eb4a699a60156ca869d9fcd1a5d28ef208272572aab0766b03c36f852"
+        },
+        {
+          "slug": "maritimo",
+          "name": "Marítimo",
+          "filename": "maritimo-logo-footylogos.svg",
+          "sha256": "73b8abd4f8da41c50e5a7408c3e6794301240a1bad69688d7b6bec3dd51369a6"
+        }
+      ],
+      "svg_files": [
+        "academico-de-viseu-logo-footylogos.svg",
+        "casa-pia-logo-footylogos.svg",
+        "cd-nacional-madeira-logo-footylogos.svg",
+        "cd-santa-clara-logo-footylogos.svg",
+        "estoril-praia-logo-footylogos.svg",
+        "estrela-amadora-logo-footylogos.svg",
+        "fc-alverca-logo-footylogos.svg",
+        "fc-arouca-logo-footylogos.svg",
+        "fc-famalicao-logo-footylogos.svg",
+        "fc-porto-logo-footylogos.svg",
+        "gil-vicente-logo-footylogos.svg",
+        "maritimo-logo-footylogos.svg",
+        "moreirense-logo-footylogos.svg",
+        "rio-ave-logo-footylogos.svg",
+        "sc-braga-logo-footylogos.svg",
+        "sl-benfica-logo-footylogos.svg",
+        "sporting-cp-logo-footylogos.svg",
+        "vitoria-sc-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "liga-profesional-2026",
+      "archive_filename": "liga-profesional-2026-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/liga-profesional-2026-svg-footylogos.zip",
+      "file_size_bytes": 131003,
+      "sha256": "6684623bd19bd34e14b592be1141063630e9446daa35256308a490676de5dfd2",
+      "svg_count": 30,
+      "logos_meta": [
+        {
+          "slug": "atletico-platense",
+          "name": "Club Atlético Platense",
+          "filename": "atletico-platense-logo-footylogos.svg",
+          "sha256": "301d61ff0bb01f78b1a7ba42f4f3b7628b6183aa6a80aedb5ebee35014a0a9d8"
+        },
+        {
+          "slug": "defensa-y-justicia",
+          "name": "Defensa y Justicia",
+          "filename": "defensa-y-justicia-logo-footylogos.svg",
+          "sha256": "8d4a44830c16863617f71f561f11c23ae30fbb1bb6c81cf8ae107ed3bd41aac1"
+        },
+        {
+          "slug": "central-cordoba-se",
+          "name": "Central Córdoba (SE)",
+          "filename": "central-cordoba-se-logo-footylogos.svg",
+          "sha256": "5e2490cdbc844192a28c50bdb5525e219c9acba1e12340a782e6e566bdadc7c2"
+        },
+        {
+          "slug": "lanus",
+          "name": "Lanús",
+          "filename": "lanus-logo-footylogos.svg",
+          "sha256": "b9e5632e2f48d12ff371252e4060eac2e77b301b83bdaf46cc1bb512a12f3393"
+        },
+        {
+          "slug": "deportivo-riestra",
+          "name": "Deportivo Riestra",
+          "filename": "deportivo-riestra-logo-footylogos.svg",
+          "sha256": "4a2eec6806be127d680c7299838f45d7334d47811841a7fa4f9f82e4ce8bf2b5"
+        },
+        {
+          "slug": "talleres",
+          "name": "Talleres",
+          "filename": "talleres-logo-footylogos.svg",
+          "sha256": "3f84087919894cf3f58641a90f0594a9a2eb5ae342b53d60d03749a0aaa46033"
+        },
+        {
+          "slug": "boca-juniors",
+          "name": "Boca Juniors",
+          "filename": "boca-juniors-logo-footylogos.svg",
+          "sha256": "7feb139d3ccd87ad75c943dc00c79b2ffdb722d31aace24a297a619d65eefe7c"
+        },
+        {
+          "slug": "estudiantes-de-la-plata",
+          "name": "Estudiantes de La Plata",
+          "filename": "estudiantes-de-la-plata-logo-footylogos.svg",
+          "sha256": "6d0d56cf0670b0a95e8426c5c25fb94c45789c6041e98efd2e4db83da146f577"
+        },
+        {
+          "slug": "instituto-cordoba",
+          "name": "Instituto Córdoba",
+          "filename": "instituto-cordoba-logo-footylogos.svg",
+          "sha256": "1e7b3396ccda5fe1fb2e4383a2e91e272bc17cec6f9084849bf942783f217069"
+        },
+        {
+          "slug": "gimnasia-y-esgrima",
+          "name": "Gimnasia y Esgrima",
+          "filename": "gimnasia-y-esgrima-logo-footylogos.svg",
+          "sha256": "92e97ad6e68f41e3b1cc1d30d3eb93167f37340024be5ce3edbcfdcefa058a97"
+        },
+        {
+          "slug": "san-lorenzo",
+          "name": "San Lorenzo",
+          "filename": "san-lorenzo-logo-footylogos.svg",
+          "sha256": "7aee54737bb33d774c59c1dbe48f979d25fd1691d4222852d837bf44d828bdcb"
+        },
+        {
+          "slug": "independiente",
+          "name": "Independiente",
+          "filename": "independiente-logo-footylogos.svg",
+          "sha256": "e2997f6dde1788d107440b97c376e4300511824cbcdaee51550f00bb6dc656de"
+        },
+        {
+          "slug": "newells-old-boys",
+          "name": "Newell's Old Boys",
+          "filename": "newells-old-boys-logo-footylogos.svg",
+          "sha256": "83227e36ae972cb1d2fce155b7f4a868e9b14cb54baf163e583e7c1bcafe32f7"
+        },
+        {
+          "slug": "union",
+          "name": "Unión",
+          "filename": "union-logo-footylogos.svg",
+          "sha256": "17eed4e17895eb69bde7bdfd87dfa3ba03587b3341a0feb147b37e51a9d3d921"
+        },
+        {
+          "slug": "velez-sarsfield",
+          "name": "Vélez Sarsfield",
+          "filename": "velez-sarsfield-logo-footylogos.svg",
+          "sha256": "c289e71ec899e1b9e9c5a07fd2a2c7d678818f3afa63ec660e0c06df68472c9f"
+        },
+        {
+          "slug": "argentinos-juniors",
+          "name": "Argentinos Juniors",
+          "filename": "argentinos-juniors-logo-footylogos.svg",
+          "sha256": "f74392fb4042e8180c609b3e5f8009943f481038630b59022e49cf26113a59f0"
+        },
+        {
+          "slug": "aldosivi",
+          "name": "Aldosivi",
+          "filename": "aldosivi-logo-footylogos.svg",
+          "sha256": "903de50e5c2b64a24a64df1e05c890d681e6c5ae651ce840be144cbef06d7b78"
+        },
+        {
+          "slug": "atletico-tucuman",
+          "name": "Atlético Tucumán",
+          "filename": "atletico-tucuman-logo-footylogos.svg",
+          "sha256": "7545f93e2ba34a7aa0fed6f642013b5e6b72e96dc4504ad0fee8ea11cc553fd0"
+        },
+        {
+          "slug": "banfield",
+          "name": "Banfield",
+          "filename": "banfield-logo-footylogos.svg",
+          "sha256": "60f8b8331ca394252700b548d2baeef4d1f317043a4718148411a036664b9a3a"
+        },
+        {
+          "slug": "barracas-central",
+          "name": "Barracas Central",
+          "filename": "barracas-central-logo-footylogos.svg",
+          "sha256": "0475fcb2c4b4a5519768bb73e0b42aa9afccfebde9ccb6ccf6c8da8a4cf56a14"
+        },
+        {
+          "slug": "belgrano",
+          "name": "Belgrano",
+          "filename": "belgrano-logo-footylogos.svg",
+          "sha256": "8effdaf86dbab49553d0f00aa066c3136f7dec3065abe2025a111a4228fd2619"
+        },
+        {
+          "slug": "river-plate",
+          "name": "River Plate",
+          "filename": "river-plate-logo-footylogos.svg",
+          "sha256": "c57f9251a5ff5c93fde4991b66edd9b3c737d3eb6a92b86af28813c535f43a6d"
+        },
+        {
+          "slug": "gimnasia-y-esgrima-lp",
+          "name": "Gimnasia y Esgrima (LP)",
+          "filename": "gimnasia-y-esgrima-lp-logo-footylogos.svg",
+          "sha256": "ace44300691726d6ed474b1aa59cf34ccb189356605ac14aa33346baf58aee07"
+        },
+        {
+          "slug": "estudiantes-de-rio-cuarto",
+          "name": "Estudiantes de Rio Cuarto",
+          "filename": "estudiantes-de-rio-cuarto-logo-footylogos.svg",
+          "sha256": "5a54db2c84556033ef75cc07f49f10082363a18d5d500761b610425a2f38c0e4"
+        },
+        {
+          "slug": "independiente-rivadavia",
+          "name": "Independiente Rivadavia",
+          "filename": "independiente-rivadavia-logo-footylogos.svg",
+          "sha256": "86a3423a6be670f8692c21df669b7dbf9c2f82189cbf7845eaed164c1cd7cc62"
+        },
+        {
+          "slug": "huracan",
+          "name": "Huracán",
+          "filename": "huracan-logo-footylogos.svg",
+          "sha256": "7d3949f8ca2900d9a65cd8acfe682ed52fc22bdf03bb8100b01b1bf12aaf50d9"
+        },
+        {
+          "slug": "racing-club",
+          "name": "Racing Club",
+          "filename": "racing-club-logo-footylogos.svg",
+          "sha256": "e1f714b42c9deb8217f25c89017fdd961f996c1ca6f7ebcb604b3fbe22bea327"
+        },
+        {
+          "slug": "rosario-central",
+          "name": "Rosario Central",
+          "filename": "rosario-central-logo-footylogos.svg",
+          "sha256": "9b99925fd8496531ae3afec898ffbeebe0f7c1b79171478c85f2f3325036043a"
+        },
+        {
+          "slug": "sarmiento",
+          "name": "Sarmiento",
+          "filename": "sarmiento-logo-footylogos.svg",
+          "sha256": "52fe8db08e018d92fdf71298d6595efca36751e50f8ef8c43c4e01603a49b7ef"
+        },
+        {
+          "slug": "tigre",
+          "name": "Tigre",
+          "filename": "tigre-logo-footylogos.svg",
+          "sha256": "b4e3d7003b760986fe8c76db06968a62872629f07fc2d97cd2e48989ea49e2dd"
+        }
+      ],
+      "svg_files": [
+        "aldosivi-logo-footylogos.svg",
+        "argentinos-juniors-logo-footylogos.svg",
+        "atletico-platense-logo-footylogos.svg",
+        "atletico-tucuman-logo-footylogos.svg",
+        "banfield-logo-footylogos.svg",
+        "barracas-central-logo-footylogos.svg",
+        "belgrano-logo-footylogos.svg",
+        "boca-juniors-logo-footylogos.svg",
+        "central-cordoba-se-logo-footylogos.svg",
+        "defensa-y-justicia-logo-footylogos.svg",
+        "deportivo-riestra-logo-footylogos.svg",
+        "estudiantes-de-la-plata-logo-footylogos.svg",
+        "estudiantes-de-rio-cuarto-logo-footylogos.svg",
+        "gimnasia-y-esgrima-logo-footylogos.svg",
+        "gimnasia-y-esgrima-lp-logo-footylogos.svg",
+        "huracan-logo-footylogos.svg",
+        "independiente-logo-footylogos.svg",
+        "independiente-rivadavia-logo-footylogos.svg",
+        "instituto-cordoba-logo-footylogos.svg",
+        "lanus-logo-footylogos.svg",
+        "newells-old-boys-logo-footylogos.svg",
+        "racing-club-logo-footylogos.svg",
+        "river-plate-logo-footylogos.svg",
+        "rosario-central-logo-footylogos.svg",
+        "san-lorenzo-logo-footylogos.svg",
+        "sarmiento-logo-footylogos.svg",
+        "talleres-logo-footylogos.svg",
+        "tigre-logo-footylogos.svg",
+        "union-logo-footylogos.svg",
+        "velez-sarsfield-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "ligue-1-2026-27",
+      "archive_filename": "ligue-1-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/ligue-1-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 1738138,
+      "sha256": "77b1c58520eb61341fbcf3b3e953f32bcadd72d10a10c8991427ac91db39ce03",
+      "svg_count": 18,
+      "logos_meta": [
+        {
+          "slug": "aj-auxerre",
+          "name": "AJ Auxerre",
+          "filename": "aj-auxerre-logo-footylogos.svg",
+          "sha256": "bc43d5cd74396f3e25996218da9d1baaaa4a2509c135e96f9330e919bfafba31"
+        },
+        {
+          "slug": "as-monaco",
+          "name": "AS Monaco",
+          "filename": "as-monaco-logo-footylogos.svg",
+          "sha256": "047731fa65d515253733aa1034b8b58fdd50160eb089c55efacac95326be4bf7"
+        },
+        {
+          "slug": "angers-sco",
+          "name": "Angers SCO",
+          "filename": "angers-sco-logo-footylogos.svg",
+          "sha256": "cdd957df633ae4eae5f38794aefc068a6e1c30dd1daba657ef09c0392de93bce"
+        },
+        {
+          "slug": "fc-lorient",
+          "name": "FC Lorient",
+          "filename": "fc-lorient-logo-footylogos.svg",
+          "sha256": "345e0909781623cf4d821cedb780fc58ae28c4be4903c93c978ef79215733b5f"
+        },
+        {
+          "slug": "losc-lille",
+          "name": "LOSC Lille",
+          "filename": "losc-lille-logo-footylogos.svg",
+          "sha256": "9ac80feaf9d0c1f8778b0fb7b2695fd1fbc4f430a508998db6131eebdc3c7a35"
+        },
+        {
+          "slug": "le-havre-ac",
+          "name": "Le Havre AC",
+          "filename": "le-havre-ac-logo-footylogos.svg",
+          "sha256": "73491dc1b72d22c8a76ddc5d406c673fc4d1c1e6e72bca6d1b6640fa9a222bab"
+        },
+        {
+          "slug": "le-mans-fc",
+          "name": "Le Mans FC",
+          "filename": "le-mans-fc-logo-footylogos.svg",
+          "sha256": "05035409a76bb5418c35dfb75b7dfbb5506f9c3755c5a83a0c40b11d6c270d53"
+        },
+        {
+          "slug": "ogc-nice",
+          "name": "OGC Nice",
+          "filename": "ogc-nice-logo-footylogos.svg",
+          "sha256": "80a72275d30764341a8e359e4d02fd5e3b509ce2ea175422d915a2f1151af582"
+        },
+        {
+          "slug": "olympique-lyonnais",
+          "name": "Olympique Lyonnais (Lyon)",
+          "filename": "olympique-lyonnais-logo-footylogos.svg",
+          "sha256": "3e18898582de7a20844e4dc28376f7050b3a23f82a5ee2ea5dfb398eb3d0e112"
+        },
+        {
+          "slug": "olympique-de-marseille-om",
+          "name": "Olympique de Marseille (OM)",
+          "filename": "olympique-de-marseille-om-logo-footylogos.svg",
+          "sha256": "6ca6ba0df2736cabac2830603b8bfbb34bae5cc7097068cf4fe79785cab74df5"
+        },
+        {
+          "slug": "paris-fc",
+          "name": "Paris FC",
+          "filename": "paris-fc-logo-footylogos.svg",
+          "sha256": "44af6600b15045fb5d9335b1efc93b25f6d38d6332ad7ea738c64d27cc8428f5"
+        },
+        {
+          "slug": "paris-saint-germain-psg",
+          "name": "Paris Saint-Germain (PSG)",
+          "filename": "paris-saint-germain-psg-logo-footylogos.svg",
+          "sha256": "10ede3762e3db355f6cf18c2e8db4607aace1a652a4aadabfcd1d2b255a56311"
+        },
+        {
+          "slug": "rc-lens",
+          "name": "RC Lens",
+          "filename": "rc-lens-logo-footylogos.svg",
+          "sha256": "63fbf2694d53a08bd47eed55ec588a47eda82ca2516a1083fc39ee2cc72481ab"
+        },
+        {
+          "slug": "rc-strasbourg-alsace",
+          "name": "RC Strasbourg Alsace",
+          "filename": "rc-strasbourg-alsace-logo-footylogos.svg",
+          "sha256": "3453a77af34cf788bb3cefa0a59715a3694c2b05ff488e9077ae20e4cf0a7015"
+        },
+        {
+          "slug": "stade-brestois-29",
+          "name": "Stade Brestois 29 (Brest)",
+          "filename": "stade-brestois-29-logo-footylogos.svg",
+          "sha256": "ec2d51d09e63b56a776d7a012e5bd242d00ff310eb70f55eb0f0e344eb104e5e"
+        },
+        {
+          "slug": "stade-rennais",
+          "name": "Stade Rennais (Rennes)",
+          "filename": "stade-rennais-logo-footylogos.svg",
+          "sha256": "341e7c2567505d2231bd0a01ec3b5cc7dabc942a3e961761c739a70a5c14156b"
+        },
+        {
+          "slug": "toulouse-fc",
+          "name": "Toulouse FC",
+          "filename": "toulouse-fc-logo-footylogos.svg",
+          "sha256": "b590b8153df9a245f30b8e7fd081cfd8f90e2fa39862fc26bcab6dc3c4a5d76d"
+        },
+        {
+          "slug": "troyes",
+          "name": "Troyes (ESTAC)",
+          "filename": "troyes-logo-footylogos.svg",
+          "sha256": "236e9d0ef77996ae64d7e1382023c7619c06885f74d82a9131def38a4fa4e237"
+        }
+      ],
+      "svg_files": [
+        "aj-auxerre-logo-footylogos.svg",
+        "angers-sco-logo-footylogos.svg",
+        "as-monaco-logo-footylogos.svg",
+        "fc-lorient-logo-footylogos.svg",
+        "le-havre-ac-logo-footylogos.svg",
+        "le-mans-fc-logo-footylogos.svg",
+        "losc-lille-logo-footylogos.svg",
+        "ogc-nice-logo-footylogos.svg",
+        "olympique-de-marseille-om-logo-footylogos.svg",
+        "olympique-lyonnais-logo-footylogos.svg",
+        "paris-fc-logo-footylogos.svg",
+        "paris-saint-germain-psg-logo-footylogos.svg",
+        "rc-lens-logo-footylogos.svg",
+        "rc-strasbourg-alsace-logo-footylogos.svg",
+        "stade-brestois-29-logo-footylogos.svg",
+        "stade-rennais-logo-footylogos.svg",
+        "toulouse-fc-logo-footylogos.svg",
+        "troyes-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "mls-2026",
+      "archive_filename": "mls-2026-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/mls-2026-svg-footylogos.zip",
+      "file_size_bytes": 119845,
+      "sha256": "31de82654044d8e57a950c9e222519b630f32d7a6db82ea6c61d51a1fb4dde82",
+      "svg_count": 30,
+      "logos_meta": [
+        {
+          "slug": "atlanta-united",
+          "name": "Atlanta United",
+          "filename": "atlanta-united-logo-footylogos.svg",
+          "sha256": "a435d4b9dc7d605b7297009e8f16f7e73158ccb7aa5abec26fd8bf7820a62758"
+        },
+        {
+          "slug": "charlotte-fc",
+          "name": "Charlotte FC",
+          "filename": "charlotte-fc-logo-footylogos.svg",
+          "sha256": "a866631ebe46e6fd85247c1b2a827df3ca237765b65f52acb21707bbe434fc52"
+        },
+        {
+          "slug": "chicago-fire",
+          "name": "Chicago Fire",
+          "filename": "chicago-fire-logo-footylogos.svg",
+          "sha256": "9e2d638321678712109cc01840085223d281f5f658ec74cc3e7866937f35adac"
+        },
+        {
+          "slug": "fc-cincinnati",
+          "name": "FC Cincinnati",
+          "filename": "fc-cincinnati-logo-footylogos.svg",
+          "sha256": "7fb68ed3b2350c7077d88c3f7d0e895e63ada9aa85131eb0acf1dbf815a65396"
+        },
+        {
+          "slug": "columbus-crew",
+          "name": "Columbus Crew",
+          "filename": "columbus-crew-logo-footylogos.svg",
+          "sha256": "5eb79120c59b6bff1c229a4a648710c8b98f5576a9a0649ba15a8db2247b06a4"
+        },
+        {
+          "slug": "dc-united",
+          "name": "D.C. United",
+          "filename": "dc-united-logo-footylogos.svg",
+          "sha256": "f225c79d825ce29731dd5eb69bef15a478022b8eef4457468677888a17ab9ddb"
+        },
+        {
+          "slug": "inter-miami",
+          "name": "Inter Miami",
+          "filename": "inter-miami-logo-footylogos.svg",
+          "sha256": "d9fae53d8ee404d0d4d05e8b653e6a951ea71cb804e06f8d54b727ac9c4d0d61"
+        },
+        {
+          "slug": "cf-montreal",
+          "name": "CF Montréal",
+          "filename": "cf-montreal-logo-footylogos.svg",
+          "sha256": "eadb1f2e0a514121db6d9655886af8f67e3e83fb47f24590279d013cd731b6e3"
+        },
+        {
+          "slug": "nashville-sc",
+          "name": "Nashville SC",
+          "filename": "nashville-sc-logo-footylogos.svg",
+          "sha256": "74af3a826d4f9241f8c1c481db7df4e161e667090b392013bc019868d4624416"
+        },
+        {
+          "slug": "new-england-revolution",
+          "name": "New England Revolution",
+          "filename": "new-england-revolution-logo-footylogos.svg",
+          "sha256": "1823861bfdaeeea1fa247caf1cb799d902a4becd270bf807b738fc1193235fb2"
+        },
+        {
+          "slug": "new-york-city-fc",
+          "name": "New York City FC",
+          "filename": "new-york-city-fc-logo-footylogos.svg",
+          "sha256": "6d5b3692586c6ea1195fe797e82466f74e9562dcaa1550414e651b90790e7548"
+        },
+        {
+          "slug": "orlando-city",
+          "name": "Orlando City",
+          "filename": "orlando-city-logo-footylogos.svg",
+          "sha256": "f62464f384f4abaf24a4f1a3737b785d5c0f75644d62535060e38b2c8bd125f8"
+        },
+        {
+          "slug": "philadelphia-union",
+          "name": "Philadelphia Union",
+          "filename": "philadelphia-union-logo-footylogos.svg",
+          "sha256": "b10ea42ec1218543681b3692c4b855281e21d114a3a0d091cbe1869aa82b4c39"
+        },
+        {
+          "slug": "new-york-red-bulls",
+          "name": "New York Red Bulls",
+          "filename": "new-york-red-bulls-logo-footylogos.svg",
+          "sha256": "ab76c44a684ce53abb0f9d16da3dad203d21f01e793479e5459e11a83a592d52"
+        },
+        {
+          "slug": "toronto-fc",
+          "name": "Toronto FC",
+          "filename": "toronto-fc-logo-footylogos.svg",
+          "sha256": "0df0309754d41057399ecb2efa1fe09992797251d90f4cf1d89ee0779c80fbfc"
+        },
+        {
+          "slug": "austin-fc",
+          "name": "Austin FC",
+          "filename": "austin-fc-logo-footylogos.svg",
+          "sha256": "c98011422d7754489f59b8ebf8903467795f97dab697fa7dcc246ddde409de80"
+        },
+        {
+          "slug": "colorado-rapids",
+          "name": "Colorado Rapids",
+          "filename": "colorado-rapids-logo-footylogos.svg",
+          "sha256": "8a6246d9eaa526b05fb6e3904e8e553905d1979b03a2de08889c91f4dabf989c"
+        },
+        {
+          "slug": "fc-dallas",
+          "name": "FC Dallas",
+          "filename": "fc-dallas-logo-footylogos.svg",
+          "sha256": "74b4bb4255884235ec005725cbf21141722a414c0a1b7405c300995c4f0dc013"
+        },
+        {
+          "slug": "houston-dynamo",
+          "name": "Houston Dynamo",
+          "filename": "houston-dynamo-logo-footylogos.svg",
+          "sha256": "8262f35a510370ba23349a9c518fb5c40fa63bc2743f32e1661ea4ab605d8009"
+        },
+        {
+          "slug": "los-angeles-fc",
+          "name": "Los Angeles FC",
+          "filename": "los-angeles-fc-logo-footylogos.svg",
+          "sha256": "436ff8821daf7ef7b88a733d351c549ef85c7d3942aef4c128b54593601f0d0f"
+        },
+        {
+          "slug": "la-galaxy",
+          "name": "LA Galaxy",
+          "filename": "la-galaxy-logo-footylogos.svg",
+          "sha256": "cd37887394e4342d18f5faccf9166a0ef7dc7e8384e09a3a1b6045dc39f00586"
+        },
+        {
+          "slug": "minnesota-united",
+          "name": "Minnesota United",
+          "filename": "minnesota-united-logo-footylogos.svg",
+          "sha256": "749c1a8c040f04353017ca3230d1f74bf6c446b3349db372e05eed34363d4a0b"
+        },
+        {
+          "slug": "portland-timbers",
+          "name": "Portland Timbers",
+          "filename": "portland-timbers-logo-footylogos.svg",
+          "sha256": "0f71c904655ee99ab53ed3a6124aa9f7f71758a71fa12674832b3e1e0b0b9031"
+        },
+        {
+          "slug": "real-salt-lake",
+          "name": "Real Salt Lake",
+          "filename": "real-salt-lake-logo-footylogos.svg",
+          "sha256": "75f9421deacdb2c949d66d5b9eaf280ea313e6a23da8a2c559f000bef2e22097"
+        },
+        {
+          "slug": "st-louis-city-sc",
+          "name": "St. Louis City SC",
+          "filename": "st-louis-city-sc-logo-footylogos.svg",
+          "sha256": "5719e635685f55e332f9b86517659d5a1baf85773ffc761744aba73812ce73e5"
+        },
+        {
+          "slug": "san-diego-fc",
+          "name": "San Diego FC",
+          "filename": "san-diego-fc-logo-footylogos.svg",
+          "sha256": "e921f3cf74194194fcad516f686211c40e854e5d848942480feb52b578dbf216"
+        },
+        {
+          "slug": "san-jose-earthquakes",
+          "name": "San Jose Earthquakes",
+          "filename": "san-jose-earthquakes-logo-footylogos.svg",
+          "sha256": "af70a7358b8c5a88140a806e09a55fcbd02a3d75944e16fc58ef339cfdad11ce"
+        },
+        {
+          "slug": "seattle-sounders",
+          "name": "Seattle Sounders",
+          "filename": "seattle-sounders-logo-footylogos.svg",
+          "sha256": "4bf8903ae8eed54ac240fe3186c60d3764b00bdfb3511a20abf4af2cd7e2b8ca"
+        },
+        {
+          "slug": "sporting-kansas-city",
+          "name": "Sporting Kansas City",
+          "filename": "sporting-kansas-city-logo-footylogos.svg",
+          "sha256": "f2f62287aa5f913667109d7de3e367709e50d90ddd3cc8f864bc3e08c4b90587"
+        },
+        {
+          "slug": "vancouver-whitecaps",
+          "name": "Vancouver Whitecaps",
+          "filename": "vancouver-whitecaps-logo-footylogos.svg",
+          "sha256": "91a7a1fcbafdca20a10404be2bca29073761426cde3f93c3f8c5dacd6cb49237"
+        }
+      ],
+      "svg_files": [
+        "atlanta-united-logo-footylogos.svg",
+        "austin-fc-logo-footylogos.svg",
+        "cf-montreal-logo-footylogos.svg",
+        "charlotte-fc-logo-footylogos.svg",
+        "chicago-fire-logo-footylogos.svg",
+        "colorado-rapids-logo-footylogos.svg",
+        "columbus-crew-logo-footylogos.svg",
+        "dc-united-logo-footylogos.svg",
+        "fc-cincinnati-logo-footylogos.svg",
+        "fc-dallas-logo-footylogos.svg",
+        "houston-dynamo-logo-footylogos.svg",
+        "inter-miami-logo-footylogos.svg",
+        "la-galaxy-logo-footylogos.svg",
+        "los-angeles-fc-logo-footylogos.svg",
+        "minnesota-united-logo-footylogos.svg",
+        "nashville-sc-logo-footylogos.svg",
+        "new-england-revolution-logo-footylogos.svg",
+        "new-york-city-fc-logo-footylogos.svg",
+        "new-york-red-bulls-logo-footylogos.svg",
+        "orlando-city-logo-footylogos.svg",
+        "philadelphia-union-logo-footylogos.svg",
+        "portland-timbers-logo-footylogos.svg",
+        "real-salt-lake-logo-footylogos.svg",
+        "san-diego-fc-logo-footylogos.svg",
+        "san-jose-earthquakes-logo-footylogos.svg",
+        "seattle-sounders-logo-footylogos.svg",
+        "sporting-kansas-city-logo-footylogos.svg",
+        "st-louis-city-sc-logo-footylogos.svg",
+        "toronto-fc-logo-footylogos.svg",
+        "vancouver-whitecaps-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "premier-league-2026-27",
+      "archive_filename": "premier-league-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/premier-league-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 390132,
+      "sha256": "7cfac598a2f89aa5c8dc85b2ce892234007e3b20dc93cda33b493bef104158cc",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "afc-bournemouth",
+          "name": "AFC Bournemouth",
+          "filename": "afc-bournemouth-logo-footylogos.svg",
+          "sha256": "1202282d248765fe29bb49888bf50ef709f3711a63f6253eda3b16e1ff3730c3"
+        },
+        {
+          "slug": "arsenal",
+          "name": "Arsenal",
+          "filename": "arsenal-logo-footylogos.svg",
+          "sha256": "4528330d3dae5001e270aff593a3388cc1763d471273b5844c2fab571bcf2c04"
+        },
+        {
+          "slug": "aston-villa",
+          "name": "Aston Villa",
+          "filename": "aston-villa-logo-footylogos.svg",
+          "sha256": "0aabf95c6bd3086725b674fcbd7805e050b60248e74d9a7f09e81ed29d504a59"
+        },
+        {
+          "slug": "brentford",
+          "name": "Brentford",
+          "filename": "brentford-logo-footylogos.svg",
+          "sha256": "91cfb73abd5a8e693eaa71ad388bb7d18b4ba57fc7896730edf7809a003ef6d6"
+        },
+        {
+          "slug": "brighton-and-hove-albion",
+          "name": "Brighton & Hove Albion",
+          "filename": "brighton-and-hove-albion-logo-footylogos.svg",
+          "sha256": "af40c1e9208a0a0340c95abce8befb0a5f8d4abff0786c870c4d9b2fae1bc037"
+        },
+        {
+          "slug": "chelsea",
+          "name": "Chelsea",
+          "filename": "chelsea-logo-footylogos.svg",
+          "sha256": "77da8fb4cb74216354f568a9fd9ed04cc0ce362de62a6fc6daf3d32c7b85f88e"
+        },
+        {
+          "slug": "coventry-city",
+          "name": "Coventry City",
+          "filename": "coventry-city-logo-footylogos.svg",
+          "sha256": "1406f0bafc14f66dcbd477ffc47d24a829ca28167864ac13852fe6a1011139df"
+        },
+        {
+          "slug": "crystal-palace",
+          "name": "Crystal Palace",
+          "filename": "crystal-palace-logo-footylogos.svg",
+          "sha256": "4045f28c2ddce178181bb34efe4a8373b13431007ace53f071cc7ecf27237595"
+        },
+        {
+          "slug": "everton",
+          "name": "Everton",
+          "filename": "everton-logo-footylogos.svg",
+          "sha256": "cf5cfa0007e30609be140f8b95fae65128f2188314e3a10737833a6803862318"
+        },
+        {
+          "slug": "fulham",
+          "name": "Fulham",
+          "filename": "fulham-logo-footylogos.svg",
+          "sha256": "35e328889103925fd6773bf3e18b7ec0da1667ac331701465fa35d59421c32fd"
+        },
+        {
+          "slug": "hull-city",
+          "name": "Hull City",
+          "filename": "hull-city-logo-footylogos.svg",
+          "sha256": "d3da3a0316c3e6e524e060dda38478d8f548aea33cba43e5960e0f4c0b5d8004"
+        },
+        {
+          "slug": "ipswich-town",
+          "name": "Ipswich Town",
+          "filename": "ipswich-town-logo-footylogos.svg",
+          "sha256": "78a3e3ce80aae2f9630e88c03a5c3116fa001509b0f2849bed24032aae60548d"
+        },
+        {
+          "slug": "leeds-united",
+          "name": "Leeds United",
+          "filename": "leeds-united-logo-footylogos.svg",
+          "sha256": "249b34f2328334e468438d8ca9cae170c765252fb9b05997c5cdc276b0919b1e"
+        },
+        {
+          "slug": "liverpool-fc",
+          "name": "Liverpool FC",
+          "filename": "liverpool-fc-logo-footylogos.svg",
+          "sha256": "1e074ceae314ac9244d1dabdb19ec2039afb12351225a2040595b7feabd2376f"
+        },
+        {
+          "slug": "manchester-city",
+          "name": "Manchester City",
+          "filename": "manchester-city-logo-footylogos.svg",
+          "sha256": "c2d3f988ac3aaeb72e6c1db249c78df460ebda15c1cb2b6a45c40d7e599f5d35"
+        },
+        {
+          "slug": "manchester-united",
+          "name": "Manchester United",
+          "filename": "manchester-united-logo-footylogos.svg",
+          "sha256": "dc9b872bfdd7b240f67cd55c92d1f38dbedf59f681a53827207456412ecb653c"
+        },
+        {
+          "slug": "newcastle-united",
+          "name": "Newcastle United",
+          "filename": "newcastle-united-logo-footylogos.svg",
+          "sha256": "fc1c16b57a8aef7b7999b82841be917368fd873591f02b7aabbf5462b0139c3e"
+        },
+        {
+          "slug": "nottingham-forest",
+          "name": "Nottingham Forest",
+          "filename": "nottingham-forest-logo-footylogos.svg",
+          "sha256": "c03e2b3ea8c137fa403c9d0ff13b97acce6e3562442a4c0124679a0bfea78fb7"
+        },
+        {
+          "slug": "sunderland",
+          "name": "Sunderland",
+          "filename": "sunderland-logo-footylogos.svg",
+          "sha256": "285f696bbff1a89134b1277140470ab10ec535e0e2015d0a2ba83df8b4ee4811"
+        },
+        {
+          "slug": "tottenham-hotspur",
+          "name": "Tottenham Hotspur",
+          "filename": "tottenham-hotspur-logo-footylogos.svg",
+          "sha256": "924c1cc7fffef09387933ef882ada64304d980ee0bc82988eb70fe48efd0f774"
+        }
+      ],
+      "svg_files": [
+        "afc-bournemouth-logo-footylogos.svg",
+        "arsenal-logo-footylogos.svg",
+        "aston-villa-logo-footylogos.svg",
+        "brentford-logo-footylogos.svg",
+        "brighton-and-hove-albion-logo-footylogos.svg",
+        "chelsea-logo-footylogos.svg",
+        "coventry-city-logo-footylogos.svg",
+        "crystal-palace-logo-footylogos.svg",
+        "everton-logo-footylogos.svg",
+        "fulham-logo-footylogos.svg",
+        "hull-city-logo-footylogos.svg",
+        "ipswich-town-logo-footylogos.svg",
+        "leeds-united-logo-footylogos.svg",
+        "liverpool-fc-logo-footylogos.svg",
+        "manchester-city-logo-footylogos.svg",
+        "manchester-united-logo-footylogos.svg",
+        "newcastle-united-logo-footylogos.svg",
+        "nottingham-forest-logo-footylogos.svg",
+        "sunderland-logo-footylogos.svg",
+        "tottenham-hotspur-logo-footylogos.svg"
+      ]
+    },
+    {
+      "pack_name": "serie-a-2026-27",
+      "archive_filename": "serie-a-2026-27-svg-footylogos.zip",
+      "absolute_path": "/home/pedro/Downloads/serie-a-2026-27-svg-footylogos.zip",
+      "file_size_bytes": 213930,
+      "sha256": "591e3d257c53853200dd74120a910629849b1ce8d0f6cb2841d929258fcae7f5",
+      "svg_count": 20,
+      "logos_meta": [
+        {
+          "slug": "ac-milan",
+          "name": "AC Milan",
+          "filename": "ac-milan-logo-footylogos.svg",
+          "sha256": "218a57649cdb168ce78d64665bb61f021016e6a5d01038c6b12cc3a2be090fc4"
+        },
+        {
+          "slug": "ac-monza",
+          "name": "AC Monza",
+          "filename": "ac-monza-logo-footylogos.svg",
+          "sha256": "12b9176bb1ecaa467c6535944f26c3fe26faac66267ab5a6a7fcf03311401be0"
+        },
+        {
+          "slug": "roma",
+          "name": "AS Roma",
+          "filename": "roma-logo-footylogos.svg",
+          "sha256": "990cd558461243e3d58dd7e4333fc46b70c444ba55dc4e8c69f676ce27c5326d"
+        },
+        {
+          "slug": "atalanta",
+          "name": "Atalanta",
+          "filename": "atalanta-logo-footylogos.svg",
+          "sha256": "00d5df9ab04fc584e2cf248a7bcd28cf36a221209edfc6e463dde16edcf30158"
+        },
+        {
+          "slug": "bologna",
+          "name": "Bologna",
+          "filename": "bologna-logo-footylogos.svg",
+          "sha256": "ee47fc17189b25622d8dd71ad53982f6a6f89477d83e37a26bcc0f2a1a1a5ce2"
+        },
+        {
+          "slug": "cagliari",
+          "name": "Cagliari",
+          "filename": "cagliari-logo-footylogos.svg",
+          "sha256": "5af460ba386bf409be43c51cca0d7d1b2d63113290a332e3f751f21d800e4d7d"
+        },
+        {
+          "slug": "como-1907",
+          "name": "Como 1907",
+          "filename": "como-1907-logo-footylogos.svg",
+          "sha256": "bf441ddf03a7d83eb5ef3b9e67faee07bbdf7e71b32aa924c20098247b6da330"
+        },
+        {
+          "slug": "fiorentina",
+          "name": "Fiorentina",
+          "filename": "fiorentina-logo-footylogos.svg",
+          "sha256": "1d79fcbf9ebfb87e10888775bf3df59f5ac00f1473e7abe63b50312e61c4b577"
+        },
+        {
+          "slug": "frosinone-calcio",
+          "name": "Frosinone Calcio",
+          "filename": "frosinone-calcio-logo-footylogos.svg",
+          "sha256": "3e3f7c8235ee50af1b0fa4bce4b6ece5fbdd41976a487f67609f9900aaf2e9d3"
+        },
+        {
+          "slug": "genoa",
+          "name": "Genoa",
+          "filename": "genoa-logo-footylogos.svg",
+          "sha256": "210334796611b69e8d4cecdf385aecccfa99209f3bf4899d41808ad500f07d67"
+        },
+        {
+          "slug": "inter-milan",
+          "name": "Inter Milan",
+          "filename": "inter-milan-logo-footylogos.svg",
+          "sha256": "9193b18803f064c1b8bc5faf1a9804b41ebf3646e59225b2315a9d75a7c33c74"
+        },
+        {
+          "slug": "juventus",
+          "name": "Juventus",
+          "filename": "juventus-logo-footylogos.svg",
+          "sha256": "f06d911a8b8b51dcaedbc6dd4c705ab714f4ae9b22a34554354a7e27884d36e1"
+        },
+        {
+          "slug": "lazio",
+          "name": "Lazio",
+          "filename": "lazio-logo-footylogos.svg",
+          "sha256": "3e24bea98846639e0b8e82d4e4f6f8b0c6323df3f83ec1fd7224b8abcb40b7b3"
+        },
+        {
+          "slug": "lecce",
+          "name": "Lecce",
+          "filename": "lecce-logo-footylogos.svg",
+          "sha256": "6528e35c4c4d4189425942002b9a8268494be43dcda5fac832362071236a59a6"
+        },
+        {
+          "slug": "napoli",
+          "name": "Napoli",
+          "filename": "napoli-logo-footylogos.svg",
+          "sha256": "f4adf246a15570be9b98a0c1f8a61ac1b8831daeabd62e4f77ab8aa1bb0f68c8"
+        },
+        {
+          "slug": "parma",
+          "name": "Parma",
+          "filename": "parma-logo-footylogos.svg",
+          "sha256": "bcb017aa67c7fd8af3240453a3b440575945760acc5ed2b00a54873b501c1376"
+        },
+        {
+          "slug": "sassuolo",
+          "name": "Sassuolo",
+          "filename": "sassuolo-logo-footylogos.svg",
+          "sha256": "40dbf90ec98685e1dc3d1d71a0ffbbbfcd74534f9bb0a2b5b7b058d76b53738b"
+        },
+        {
+          "slug": "torino",
+          "name": "Torino",
+          "filename": "torino-logo-footylogos.svg",
+          "sha256": "3c7f3d7b62dc07700bf6be40849c1a475364add87e7ca11ac1df59038ce9b611"
+        },
+        {
+          "slug": "udinese",
+          "name": "Udinese",
+          "filename": "udinese-logo-footylogos.svg",
+          "sha256": "f27839c176ebd037909800f4ec1992939ea2fb4eb742280cf67b550e0f5ad11b"
+        },
+        {
+          "slug": "venezia-fc",
+          "name": "Venezia FC",
+          "filename": "venezia-fc-logo-footylogos.svg",
+          "sha256": "284279306f2799fd3c9360d14eb6563771fa88b4b62b1325036dd8acce673722"
+        }
+      ],
+      "svg_files": [
+        "ac-milan-logo-footylogos.svg",
+        "ac-monza-logo-footylogos.svg",
+        "atalanta-logo-footylogos.svg",
+        "bologna-logo-footylogos.svg",
+        "cagliari-logo-footylogos.svg",
+        "como-1907-logo-footylogos.svg",
+        "fiorentina-logo-footylogos.svg",
+        "frosinone-calcio-logo-footylogos.svg",
+        "genoa-logo-footylogos.svg",
+        "inter-milan-logo-footylogos.svg",
+        "juventus-logo-footylogos.svg",
+        "lazio-logo-footylogos.svg",
+        "lecce-logo-footylogos.svg",
+        "napoli-logo-footylogos.svg",
+        "parma-logo-footylogos.svg",
+        "roma-logo-footylogos.svg",
+        "sassuolo-logo-footylogos.svg",
+        "torino-logo-footylogos.svg",
+        "udinese-logo-footylogos.svg",
+        "venezia-fc-logo-footylogos.svg"
+      ]
+    }
+  ]
+}

@@ -2911,48 +2911,27 @@ func _centra_marcador() -> void:
 		_new_scoreboard.scale = Vector2.ONE * scale_factor
 		var scaled_sz: Vector2 = Vector2(roundf(base_sz.x * scale_factor), roundf(base_sz.y * scale_factor))
 		
-		var is_la_liga = (_new_scoreboard.board_theme != null and (_new_scoreboard.board_theme.theme_id == "la_liga" or _new_scoreboard.board_theme.familia == "la_liga_horizontal"))
-		if is_la_liga:
-			_score_chip.anchor_left = 0.0
-			_score_chip.anchor_right = 0.0
-			_score_chip.anchor_top = 0.0
-			_score_chip.anchor_bottom = 0.0
-			_score_chip.grow_horizontal = Control.GROW_DIRECTION_END
-			_score_chip.grow_vertical = Control.GROW_DIRECTION_END
-			
-			var margin_l = roundf(48.0 * (vp_w / 1920.0))
-			if is_portrait:
-				margin_l = roundf(20.0 * (vp_w / 1080.0))
-			var margin_t = roundf(24.0 * (vp_h / 1080.0))
-			_score_chip.offset_left = margin_l
-			_score_chip.offset_right = margin_l + scaled_sz.x
-			_score_chip.offset_top = margin_t
-			_score_chip.offset_bottom = margin_t + scaled_sz.y
-			_score_chip.custom_minimum_size = scaled_sz
-			_score_chip.size = scaled_sz
-			_new_scoreboard.position = Vector2.ZERO
-			if _cuelga_box != null and is_instance_valid(_cuelga_box):
-				_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
-				_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
-		else:
-			_score_chip.anchor_left = 0.5
-			_score_chip.anchor_right = 0.5
-			_score_chip.anchor_top = 0.0
-			_score_chip.anchor_bottom = 0.0
-			_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
-			_score_chip.grow_vertical = Control.GROW_DIRECTION_END
-			
-			var half_w = scaled_sz.x * 0.5
-			_score_chip.offset_left = -half_w
-			_score_chip.offset_right = half_w
-			_score_chip.offset_top = roundf(24.0 * (vp_h / 1080.0))
-			_score_chip.offset_bottom = _score_chip.offset_top + scaled_sz.y
-			_score_chip.custom_minimum_size = scaled_sz
-			_score_chip.size = scaled_sz
-			_new_scoreboard.position = Vector2.ZERO
-			if _cuelga_box != null and is_instance_valid(_cuelga_box):
-				_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
-				_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
+		_score_chip.anchor_left = 0.5
+		_score_chip.anchor_right = 0.5
+		_score_chip.anchor_top = 0.0
+		_score_chip.anchor_bottom = 0.0
+		_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_score_chip.grow_vertical = Control.GROW_DIRECTION_END
+		
+		var half_w = scaled_sz.x * 0.5
+		_score_chip.offset_left = -half_w
+		_score_chip.offset_right = half_w
+		var top_margin = roundf(24.0 * (vp_h / 1080.0))
+		if is_portrait:
+			top_margin = roundf(16.0 * (vp_h / 1920.0))
+		_score_chip.offset_top = top_margin
+		_score_chip.offset_bottom = top_margin + scaled_sz.y
+		_score_chip.custom_minimum_size = scaled_sz
+		_score_chip.size = scaled_sz
+		_new_scoreboard.position = Vector2.ZERO
+		if _cuelga_box != null and is_instance_valid(_cuelga_box):
+			_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
+			_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
 		return
 
 	if _cola_holder == null or _score_box == null or _score_bar == null:

@@ -1461,6 +1461,11 @@ static func get_team_crest_texture(team: Dictionary) -> Texture2D:
 		path = String(team["logo_path"])
 		
 	if not FileAccess.file_exists(path):
+		if CrestLogos.has(tid):
+			var ctex = CrestLogos.texture(tid)
+			if ctex != null:
+				_crest_tex_cache[tid] = ctex
+				return ctex
 		return null
 	var img = Image.load_from_file(path)
 	if img == null or img.is_empty():
@@ -1481,12 +1486,14 @@ static func get_team_crest_mean_color(team: Dictionary) -> Color:
 	elif team.has("logo_path"):
 		path = String(team["logo_path"])
 		
-	if not FileAccess.file_exists(path):
-		var fallback_col = _parse_color_resilient(team.get("kit", "#FFFFFF"))
-		_crest_mean_color_cache[tid] = fallback_col
-		return fallback_col
-		
-	var img = Image.load_from_file(path)
+	var img: Image = null
+	if FileAccess.file_exists(path):
+		img = Image.load_from_file(path)
+	elif CrestLogos.has(tid):
+		var ctex = CrestLogos.texture(tid)
+		if ctex != null:
+			img = ctex.get_image()
+			
 	if img == null or img.is_empty():
 		var fallback_col = _parse_color_resilient(team.get("kit", "#FFFFFF"))
 		_crest_mean_color_cache[tid] = fallback_col
@@ -1520,10 +1527,14 @@ static func get_team_crest_edge_mean_color(team: Dictionary) -> Color:
 	elif team.has("logo_path"):
 		path = String(team["logo_path"])
 		
-	if not FileAccess.file_exists(path):
-		return get_team_crest_mean_color(team)
-		
-	var img = Image.load_from_file(path)
+	var img: Image = null
+	if FileAccess.file_exists(path):
+		img = Image.load_from_file(path)
+	elif CrestLogos.has(tid):
+		var ctex = CrestLogos.texture(tid)
+		if ctex != null:
+			img = ctex.get_image()
+			
 	if img == null or img.is_empty():
 		return get_team_crest_mean_color(team)
 		
