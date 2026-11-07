@@ -2893,28 +2893,76 @@ func _centra_marcador() -> void:
 		var vp_rect = vp.get_visible_rect() if vp != null else Rect2(0, 0, 1920, 1080)
 		var vp_w = vp_rect.size.x
 		var vp_h = vp_rect.size.y
-		var base_sz: Vector2 = _new_scoreboard.get_real_size()
-		
-		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
 		var is_la_liga: bool = _new_scoreboard.board_theme != null and (_new_scoreboard.board_theme.theme_id == "la_liga" or _new_scoreboard.board_theme.familia == "la_liga_horizontal")
+		
+		if is_la_liga:
+			var layout = ScoreboardView.calculate_la_liga_layout(Vector2(vp_w, vp_h), custom_board_width_frac)
+			var scale_factor: float = layout["scale_factor"]
+			var scaled_sz: Vector2 = layout["scaled_size"]
+			var top_margin: float = layout["top_margin"]
+			var half_w: float = layout["half_w"]
+			
+			_new_scoreboard.scale = Vector2.ONE * scale_factor
+			_new_scoreboard.custom_minimum_size = Vector2.ZERO
+			
+			_score_chip.anchor_left = 0.5
+			_score_chip.anchor_right = 0.5
+			_score_chip.anchor_top = 0.0
+			_score_chip.anchor_bottom = 0.0
+			_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+			_score_chip.grow_vertical = Control.GROW_DIRECTION_END
+			
+			_score_chip.offset_left = -half_w
+			_score_chip.offset_right = half_w
+			_score_chip.offset_top = top_margin
+			_score_chip.offset_bottom = top_margin + scaled_sz.y
+			_score_chip.custom_minimum_size = scaled_sz
+			_score_chip.size = scaled_sz
+			_new_scoreboard.position = Vector2.ZERO
+			
+			if _cuelga_box != null and is_instance_valid(_cuelga_box):
+				_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
+				_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
+				
+			# Ajuste inteligente do botão de pausa para evitar qualquer sobreposição
+			if _pause_button != null and is_instance_valid(_pause_button):
+				var sb_right = (vp_w * 0.5) + half_w
+				var pb_orig_left = vp_w - 144.0
+				if sb_right > (pb_orig_left - 16.0):
+					# Em telas estreitas onde o placar ocupa ~88%, posiciona o botão de pausa logo abaixo do placar à direita
+					var btn_w = clampf(roundf(56.0 * (vp_w / 720.0)), 44.0, 84.0)
+					var btn_h = clampf(roundf(44.0 * (vp_w / 720.0)), 36.0, 60.0)
+					_pause_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+					_pause_button.offset_top = _score_chip.offset_bottom + 8.0
+					_pause_button.offset_bottom = _pause_button.offset_top + btn_h
+					_pause_button.offset_right = -16.0
+					_pause_button.offset_left = -16.0 - btn_w
+				else:
+					# Em desktop e telas largas onde há margem suficiente, posiciona no canto superior direito
+					var btn_w = clampf(roundf(96.0 * (vp_w / 1920.0)), 64.0, 120.0)
+					var btn_h = clampf(roundf(64.0 * (vp_h / 1080.0)), 40.0, 80.0)
+					_pause_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+					_pause_button.offset_top = top_margin
+					_pause_button.offset_bottom = top_margin + btn_h
+					_pause_button.offset_right = -24.0
+					_pause_button.offset_left = -24.0 - btn_w
+			return
+		
+		# Outras competições (Brasileirão, Premier League, Bundesliga, etc.)
+		var base_sz: Vector2 = _new_scoreboard.get_real_size()
+		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
 		var scale_factor: float
-		var max_h: float = vp_h * (0.13 if is_la_liga else INGAME_BOARD_HEIGHT_MAX_FRAC)
+		var max_h: float = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
 		
 		if custom_board_width_frac > 0.0:
 			var target_w = vp_w * custom_board_width_frac
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		elif is_portrait:
-			var target_w = vp_w * (0.88 if is_la_liga else INGAME_BOARD_WIDTH_FRAC)
+			var target_w = vp_w * INGAME_BOARD_WIDTH_FRAC
 			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
 		else:
-			if is_la_liga:
-				# Em transmissões de TV (La Liga oficial), o placar ocupa ~44% da largura horizontal
-				var target_broadcast_w = vp_w * 0.44
-				var s_w = target_broadcast_w / maxf(base_sz.x, 1.0)
-				scale_factor = minf(s_w, max_h / maxf(base_sz.y, 1.0))
-			else:
-				var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
-				scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
+			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
+			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
 			
 		_new_scoreboard.scale = Vector2.ONE * scale_factor
 		_new_scoreboard.custom_minimum_size = Vector2.ZERO

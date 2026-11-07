@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4e10runner001"]
+
+[ext_resource type="Script" path="res://features/scoreboard/runner_etapa_4e10.gd" id="1_4e10"]
+
+[node name="RunnerEtapa4e10" type="Node"]
+script = ExtResource("1_4e10")

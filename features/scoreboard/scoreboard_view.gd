@@ -277,6 +277,63 @@ func set_use_local_textures(enabled: bool) -> void:
 		_recalculate_dimensions()
 		queue_redraw()
 
+## ETAPA 4e.10: Função centralizada única de dimensionamento responsivo para o placar La Liga
+static func calculate_la_liga_layout(vp_size: Vector2, custom_width_frac: float = 0.0) -> Dictionary:
+	var base_w: float = 530.0
+	var base_h: float = 56.0
+	var vp_w: float = maxf(vp_size.x, 100.0)
+	var vp_h: float = maxf(vp_size.y, 100.0)
+	var aspect: float = vp_w / vp_h
+	
+	var target_w_frac: float
+	if custom_width_frac > 0.0:
+		target_w_frac = custom_width_frac
+	elif aspect <= 0.70:
+		# Mobile portrait (telas altas, ex: 9:16 ou mais estreitas)
+		target_w_frac = 0.88
+	elif aspect >= 1.50:
+		# Desktop widescreen / Mobile landscape (ex: 16:9, ultrawide)
+		target_w_frac = 0.44
+	else:
+		# Janela local / quase quadrada: interpolação contínua e suave sem saltos
+		var t: float = (aspect - 0.70) / (1.50 - 0.70)
+		target_w_frac = lerpf(0.88, 0.44, t)
+	
+	var raw_w: float = vp_w * target_w_frac
+	var max_allowed_w: float = minf(1100.0, vp_w - 24.0)
+	var min_allowed_w: float = minf(340.0, max_allowed_w)
+	var target_w: float = clampf(raw_w, min_allowed_w, max_allowed_w)
+	
+	var scale_factor: float = target_w / base_w
+	var target_h: float = roundf(base_h * scale_factor)
+	var scaled_sz: Vector2 = Vector2(roundf(target_w), target_h)
+	
+	var top_margin: float
+	if aspect <= 0.70:
+		top_margin = roundf(clampf(vp_h * 0.012, 10.0, 24.0))
+	elif vp_h <= 500.0:
+		top_margin = roundf(clampf(vp_h * 0.025, 8.0, 16.0))
+	else:
+		top_margin = roundf(clampf(24.0 * (vp_h / 1080.0), 12.0, 32.0))
+		
+	var half_w: float = scaled_sz.x * 0.5
+	var center_x: float = vp_w * 0.5
+	
+	return {
+		"base_size": Vector2(base_w, base_h),
+		"scale_factor": scale_factor,
+		"scaled_size": scaled_sz,
+		"target_w_frac": target_w_frac,
+		"actual_w_frac": scaled_sz.x / vp_w,
+		"top_margin": top_margin,
+		"center_x": center_x,
+		"half_w": half_w,
+		"offset_left": -half_w,
+		"offset_right": half_w,
+		"offset_top": top_margin,
+		"offset_bottom": top_margin + scaled_sz.y
+	}
+
 func get_la_liga_scale() -> float:
 	if la_liga_scale_override > 0.0:
 		return la_liga_scale_override
