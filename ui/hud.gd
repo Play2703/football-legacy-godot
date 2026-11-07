@@ -2399,9 +2399,7 @@ func _msg_techo_h() -> float:
 	var techo: float = 0.0
 	if _score_chip != null and is_instance_valid(_score_chip) and _score_chip.visible:
 		if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
-			var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
-			var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
-			techo = _score_chip.offset_top + (_new_scoreboard.get_real_size().y * scale_factor)
+			techo = _score_chip.offset_bottom
 		else:
 			techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
 	if _dianas_box != null and is_instance_valid(_dianas_box) and _dianas_box.visible:
@@ -2887,7 +2885,16 @@ func _capsule_rect() -> Rect2:
 
 
 
+var _is_centering_marcador: bool = false
+
 func _centra_marcador() -> void:
+	if _is_centering_marcador:
+		return
+	_is_centering_marcador = true
+	_do_centra_marcador()
+	_is_centering_marcador = false
+
+func _do_centra_marcador() -> void:
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
 		var vp = get_viewport()
 		var vp_rect = vp.get_visible_rect() if vp != null else Rect2(0, 0, 1920, 1080)
@@ -2902,8 +2909,11 @@ func _centra_marcador() -> void:
 			var top_margin: float = layout["top_margin"]
 			var half_w: float = layout["half_w"]
 			
-			_new_scoreboard.scale = Vector2.ONE * scale_factor
-			_new_scoreboard.custom_minimum_size = Vector2.ZERO
+			_new_scoreboard.scale = Vector2.ONE
+			_new_scoreboard.la_liga_scale_override = scale_factor
+			_new_scoreboard._recalculate_dimensions()
+			_new_scoreboard.custom_minimum_size = scaled_sz
+			_new_scoreboard.size = scaled_sz
 			
 			_score_chip.anchor_left = 0.5
 			_score_chip.anchor_right = 0.5
@@ -3405,7 +3415,7 @@ func _bug_coloca() -> void:
 	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
 		var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
 		var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
-		var b_sz: Vector2 = _new_scoreboard.get_real_size() * scale_factor
+		var b_sz: Vector2 = _score_chip.size if (_score_chip != null and _score_chip.size.x > 0.0) else (_new_scoreboard.get_real_size() * scale_factor)
 		_gol_bug.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		_gol_bug.position = Vector2.ZERO
 		_gol_bug.size = b_sz

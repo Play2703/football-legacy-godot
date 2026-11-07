@@ -160,13 +160,18 @@ static func resolve_scoreboard_font(font_type: String) -> Font:
 		if ResourceLoader.exists(p):
 			base_font = load(p) as Font
 			if base_font:
+				if base_font is FontFile:
+					var ff = base_font as FontFile
+					ff.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+					ff.hinting = TextServer.HINTING_LIGHT
+					ff.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
 				break
 		elif FileAccess.file_exists(p):
 			var ff = FontFile.new()
 			var err = ff.load_dynamic_font(p)
 			if err == OK:
 				ff.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-				ff.hinting = TextServer.HINTING_NONE
+				ff.hinting = TextServer.HINTING_LIGHT
 				ff.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
 				base_font = ff
 				break

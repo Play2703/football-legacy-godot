@@ -1176,6 +1176,7 @@ func _draw_modulos_separados() -> void:
 func _draw_la_liga_horizontal() -> void:
 	var total_w = _unscaled_size.x
 	var total_h = _unscaled_size.y
+	var scale_k: float = total_h / 56.0
 	
 	var w_clock = roundf(total_w * (95.0 / 530.0))
 	var w_home = roundf(total_w * (125.0 / 530.0))
@@ -1185,19 +1186,19 @@ func _draw_la_liga_horizontal() -> void:
 	var w_away = roundf(total_w * (125.0 / 530.0))
 	var w_logo = total_w - (w_clock + w_home + w_hscore + w_div + w_ascore + w_away)
 	
-	var r_radius = 6
+	var r_radius = maxi(3, int(round(6.0 * scale_k)))
 	
 	# 1. Fundo geral escuro translúcido com cantos arredondados e sombra suave
 	var bg_box = StyleBoxFlat.new()
 	bg_box.bg_color = Color(0.06, 0.09, 0.18, 0.88)
 	bg_box.set_corner_radius_all(r_radius)
 	bg_box.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
-	bg_box.shadow_size = 4
-	bg_box.shadow_offset = Vector2(0.0, 3.0)
+	bg_box.shadow_size = int(round(4.0 * scale_k))
+	bg_box.shadow_offset = Vector2(0.0, roundf(3.0 * scale_k))
 	draw_style_box(bg_box, Rect2(0.0, 0.0, total_w, total_h))
 	
 	# Borda sutil no container geral
-	draw_rect(Rect2(0.0, 0.0, total_w, total_h), Color(1.0, 1.0, 1.0, 0.08), false, 1.0)
+	draw_rect(Rect2(0.0, 0.0, total_w, total_h), Color(1.0, 1.0, 1.0, 0.08), false, maxf(1.0, roundf(scale_k)))
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 1: Relógio à esquerda (coral #EF4435, cantos esquerdos arredondados)
@@ -1215,28 +1216,28 @@ func _draw_la_liga_horizontal() -> void:
 	
 	var time_str = "%02d:%02d" % [minute, second]
 	if match_state == "INT":
-		_draw_auto_text("INT", rect_clock, clk_col, clk_font_sz, 14.0, true)
+		_draw_auto_text("INT", rect_clock, clk_col, clk_font_sz, 14.0 * scale_k, true)
 	elif match_state == "FIM":
-		_draw_auto_text("FIM", rect_clock, clk_col, clk_font_sz, 14.0, true)
+		_draw_auto_text("FIM", rect_clock, clk_col, clk_font_sz, 14.0 * scale_k, true)
 	else:
 		if is_stoppage_visible():
 			var w_badge = roundf(w_clock * 0.32)
 			var h_badge = roundf(total_h * 0.42)
-			var r_time = Rect2(2.0, 0.0, w_clock - w_badge - 4.0, total_h)
-			_draw_auto_text(time_str, r_time, clk_col, int(round(total_h * 0.38)), 12.0, true)
+			var r_time = Rect2(roundf(2.0 * scale_k), 0.0, w_clock - w_badge - roundf(4.0 * scale_k), total_h)
+			_draw_auto_text(time_str, r_time, clk_col, int(round(total_h * 0.38)), 12.0 * scale_k, true)
 			
-			var badge_x = w_clock - w_badge - 4.0
-			var badge_y = (total_h - h_badge) * 0.5
+			var badge_x = w_clock - w_badge - roundf(4.0 * scale_k)
+			var badge_y = roundf((total_h - h_badge) * 0.5)
 			var r_badge = Rect2(badge_x, badge_y, w_badge, h_badge)
 			
 			var badge_box = StyleBoxFlat.new()
 			badge_box.bg_color = Color(0.06, 0.09, 0.18, 0.92)
-			badge_box.set_corner_radius_all(3)
+			badge_box.set_corner_radius_all(maxi(2, int(round(3.0 * scale_k))))
 			draw_style_box(badge_box, r_badge)
 			
-			_draw_auto_text("+%d" % stoppage, r_badge, Color.WHITE, int(round(h_badge * 0.82)), 10.0, true)
+			_draw_auto_text("+%d" % stoppage, r_badge, Color.WHITE, int(round(h_badge * 0.82)), 10.0 * scale_k, true)
 		else:
-			_draw_auto_text(time_str, rect_clock, clk_col, clk_font_sz, 14.0, true)
+			_draw_auto_text(time_str, rect_clock, clk_col, clk_font_sz, 14.0 * scale_k, true)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 2: Mandante (Escudo 32x32 nítido + Sigla branca + Filete inferior)
@@ -1246,22 +1247,24 @@ func _draw_la_liga_horizontal() -> void:
 	drawn_cells_info.append({"idx": 1, "tipo": "time_casa", "rect": rect_home})
 	
 	var crest_diam: float = roundf(total_h * 0.68)
-	var crest_h_x: float = x_home + 8.0
-	var crest_h_y: float = (total_h - crest_diam) * 0.5 - 1.0
+	var crest_h_x: float = x_home + roundf(8.0 * scale_k)
+	var crest_h_y: float = roundf((total_h - crest_diam) * 0.5)
 	_draw_crest_unified(_home_crest, Vector2(crest_h_x, crest_h_y), crest_diam, "la_liga_horizontal", home_team, Color(0.06, 0.09, 0.18, 0.88))
 	
-	var sigla_h_x: float = crest_h_x + crest_diam + 6.0
-	var sigla_h_w: float = maxf(10.0, (x_home + w_home) - sigla_h_x - 4.0)
-	var rect_sigla_h = Rect2(sigla_h_x, 0.0, sigla_h_w, total_h - 4.0)
+	var sigla_h_x: float = crest_h_x + crest_diam + roundf(6.0 * scale_k)
+	var sigla_h_w: float = maxf(10.0, (x_home + w_home) - sigla_h_x - roundf(4.0 * scale_k))
+	var filete_h: float = maxf(3.0, roundf(4.0 * scale_k))
+	var rect_sigla_h = Rect2(sigla_h_x, 0.0, sigla_h_w, total_h - filete_h)
 	var abbrev_h = String(home_team.get("abbrev", "HOM"))
-	_draw_auto_text(abbrev_h, rect_sigla_h, Color.WHITE, int(round(total_h * 0.40)), 12.0, true, HORIZONTAL_ALIGNMENT_LEFT)
+	_draw_auto_text(abbrev_h, rect_sigla_h, Color.WHITE, int(round(total_h * 0.40)), 12.0 * scale_k, true, HORIZONTAL_ALIGNMENT_LEFT)
 	
 	# Filete inferior de identidade do mandante
 	var h_strip = get_la_liga_club_strip_colors(home_team, Color(0.06, 0.09, 0.18))
-	_draw_horizontal_filete(Rect2(x_home, total_h - 4.0, w_home, 4.0), h_strip)
+	_draw_horizontal_filete(Rect2(x_home, total_h - filete_h, w_home, filete_h), h_strip)
 	
 	# Divisor sutil
-	draw_line(Vector2(x_home + w_home, 10.0), Vector2(x_home + w_home, total_h - 10.0), Color(1.0, 1.0, 1.0, 0.12), 1.0)
+	var div_line_w: float = maxf(1.0, roundf(scale_k))
+	draw_line(Vector2(x_home + w_home, roundf(10.0 * scale_k)), Vector2(x_home + w_home, total_h - roundf(10.0 * scale_k)), Color(1.0, 1.0, 1.0, 0.12), div_line_w)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 3: Placar Mandante (Número grande, legível, centralizado)
@@ -1270,7 +1273,7 @@ func _draw_la_liga_horizontal() -> void:
 	var rect_hscore = Rect2(x_hscore, 0.0, w_hscore, total_h)
 	drawn_cells_info.append({"idx": 2, "tipo": "gol_casa", "rect": rect_hscore})
 	var gol_font_sz = int(round(total_h * 0.56))
-	_draw_auto_text(str(home_score), rect_hscore, Color.WHITE, gol_font_sz, 16.0, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_auto_text(str(home_score), rect_hscore, Color.WHITE, gol_font_sz, 16.0 * scale_k, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 4: Separador Central (-)
@@ -1278,7 +1281,7 @@ func _draw_la_liga_horizontal() -> void:
 	var x_div = x_hscore + w_hscore
 	var rect_div = Rect2(x_div, 0.0, w_div, total_h)
 	drawn_cells_info.append({"idx": 3, "tipo": "divisor_placar", "rect": rect_div})
-	_draw_auto_text("-", rect_div, Color(1.0, 1.0, 1.0, 0.60), int(round(total_h * 0.44)), 14.0, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_auto_text("-", rect_div, Color(1.0, 1.0, 1.0, 0.60), int(round(total_h * 0.44)), 14.0 * scale_k, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 5: Placar Visitante (Número grande, legível, centralizado)
@@ -1286,10 +1289,10 @@ func _draw_la_liga_horizontal() -> void:
 	var x_ascore = x_div + w_div
 	var rect_ascore = Rect2(x_ascore, 0.0, w_ascore, total_h)
 	drawn_cells_info.append({"idx": 4, "tipo": "gol_fora", "rect": rect_ascore})
-	_draw_auto_text(str(away_score), rect_ascore, Color.WHITE, gol_font_sz, 16.0, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_auto_text(str(away_score), rect_ascore, Color.WHITE, gol_font_sz, 16.0 * scale_k, true, HORIZONTAL_ALIGNMENT_CENTER)
 	
 	# Divisor sutil
-	draw_line(Vector2(x_ascore + w_ascore, 10.0), Vector2(x_ascore + w_ascore, total_h - 10.0), Color(1.0, 1.0, 1.0, 0.12), 1.0)
+	draw_line(Vector2(x_ascore + w_ascore, roundf(10.0 * scale_k)), Vector2(x_ascore + w_ascore, total_h - roundf(10.0 * scale_k)), Color(1.0, 1.0, 1.0, 0.12), div_line_w)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 6: Visitante (Sigla branca + Escudo 32x32 nítido + Filete inferior)
@@ -1298,21 +1301,21 @@ func _draw_la_liga_horizontal() -> void:
 	var rect_away = Rect2(x_away, 0.0, w_away, total_h)
 	drawn_cells_info.append({"idx": 5, "tipo": "time_fora", "rect": rect_away})
 	
-	var crest_a_x: float = (x_away + w_away) - crest_diam - 8.0
-	var crest_a_y: float = (total_h - crest_diam) * 0.5 - 1.0
+	var crest_a_x: float = (x_away + w_away) - crest_diam - roundf(8.0 * scale_k)
+	var crest_a_y: float = roundf((total_h - crest_diam) * 0.5)
 	_draw_crest_unified(_away_crest, Vector2(crest_a_x, crest_a_y), crest_diam, "la_liga_horizontal", away_team, Color(0.06, 0.09, 0.18, 0.88))
 	
-	var sigla_a_w: float = maxf(10.0, crest_a_x - x_away - 10.0)
-	var rect_sigla_a = Rect2(x_away + 4.0, 0.0, sigla_a_w, total_h - 4.0)
+	var sigla_a_w: float = maxf(10.0, crest_a_x - x_away - roundf(10.0 * scale_k))
+	var rect_sigla_a = Rect2(x_away + roundf(4.0 * scale_k), 0.0, sigla_a_w, total_h - filete_h)
 	var abbrev_a = String(away_team.get("abbrev", "AWY"))
-	_draw_auto_text(abbrev_a, rect_sigla_a, Color.WHITE, int(round(total_h * 0.40)), 12.0, true, HORIZONTAL_ALIGNMENT_RIGHT)
+	_draw_auto_text(abbrev_a, rect_sigla_a, Color.WHITE, int(round(total_h * 0.40)), 12.0 * scale_k, true, HORIZONTAL_ALIGNMENT_RIGHT)
 	
 	# Filete inferior de identidade do visitante
 	var a_strip = get_la_liga_club_strip_colors(away_team, Color(0.06, 0.09, 0.18))
-	_draw_horizontal_filete(Rect2(x_away, total_h - 4.0, w_away, 4.0), a_strip)
+	_draw_horizontal_filete(Rect2(x_away, total_h - filete_h, w_away, filete_h), a_strip)
 	
 	# Divisor sutil antes da marca La Liga
-	draw_line(Vector2(x_away + w_away, 8.0), Vector2(x_away + w_away, total_h - 8.0), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+	draw_line(Vector2(x_away + w_away, roundf(8.0 * scale_k)), Vector2(x_away + w_away, total_h - roundf(8.0 * scale_k)), Color(1.0, 1.0, 1.0, 0.15), div_line_w)
 	
 	# --------------------------------------------------------------------------
 	# BLOCO 7: Logo La Liga (HD oficial, transparente, cantos direitos arredondados)
@@ -1913,22 +1916,24 @@ func get_layout_crest_measurements() -> Dictionary:
 		res["home"] = measure_crest_render(home_team, pos, diam, "bundesliga", home_bg, cell_w, H, true, text_box_left_h)
 		res["away"] = measure_crest_render(away_team, pos, diam, "bundesliga", away_bg, cell_w, H, false, text_box_left_a)
 	elif fam == "la_liga_horizontal" or board_theme.theme_id == "la_liga":
-		var diam = minf(32.0, H * 0.65)
+		var diam = roundf(H * 0.68)
+		var scale_k: float = H / 56.0
 		var w_clock = roundf(W * (95.0 / 530.0))
 		var w_home = roundf(W * (125.0 / 530.0))
-		var crest_h_x = w_clock + 8.0
-		var crest_h_y = (H - diam) * 0.5 - 2.0
+		var crest_h_x = w_clock + roundf(8.0 * scale_k)
+		var crest_h_y = roundf((H - diam) * 0.5)
 		var pos_h = Vector2(crest_h_x, crest_h_y)
-		var sigla_h_x = crest_h_x + diam + 6.0
+		var sigla_h_x = crest_h_x + diam + roundf(6.0 * scale_k)
 		
 		var w_hscore = roundf(W * (45.0 / 530.0))
 		var w_div = roundf(W * (20.0 / 530.0))
 		var w_ascore = roundf(W * (45.0 / 530.0))
 		var w_away = roundf(W * (125.0 / 530.0))
 		var x_away = w_clock + w_home + w_hscore + w_div + w_ascore
-		var crest_a_x = (x_away + w_away) - diam - 8.0
-		var pos_a = Vector2(crest_a_x, crest_h_y)
-		var sigla_a_x = x_away + 4.0
+		var crest_a_x = (x_away + w_away) - diam - roundf(8.0 * scale_k)
+		var crest_a_y = roundf((H - diam) * 0.5)
+		var pos_a = Vector2(crest_a_x, crest_a_y)
+		var sigla_a_x = x_away + roundf(4.0 * scale_k)
 		
 		var bg_col = Color(0.06, 0.09, 0.18, 0.88)
 		res["home"] = measure_crest_render(home_team, pos_h, diam, "la_liga_horizontal", bg_col, w_home, H, true, sigla_h_x)
@@ -2126,11 +2131,11 @@ func _draw_clock_tabular(time_str: String, rect: Rect2, color: Color, target_fon
 		if ch >= "0" and ch <= "9":
 			var dw = font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 			var dx = cur_x + (max_digit_w - dw) * 0.5
-			draw_string(font, Vector2(dx, text_y), ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+			draw_string(font, Vector2(roundf(dx), roundf(text_y)), ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
 			cur_x += max_digit_w
 		else:
 			var cw = font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-			draw_string(font, Vector2(cur_x, text_y), ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+			draw_string(font, Vector2(roundf(cur_x), roundf(text_y)), ch, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
 			cur_x += cw
 
 # ==============================================================================
@@ -2186,8 +2191,9 @@ func _draw_auto_text(text: String, rect: Rect2, color: Color, target_font_size: 
 	
 	var lum = color.get_luminance()
 	var outline_col = Color(0.02, 0.03, 0.05, 0.85) if lum > 0.4 else Color(0.98, 0.98, 1.0, 0.50)
-	draw_string_outline(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, 2, outline_col)
-	draw_string(font, Vector2(text_x, text_y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+	var outline_sz = maxi(1, int(round(2.0 * maxf(1.0, float(font_size) / 24.0))))
+	draw_string_outline(font, Vector2(roundf(text_x), roundf(text_y)), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, outline_sz, outline_col)
+	draw_string(font, Vector2(roundf(text_x), roundf(text_y)), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
 
 func _resolve_color(fundo: String, is_away: bool) -> Color:
 	if fundo == "cor_clube":
