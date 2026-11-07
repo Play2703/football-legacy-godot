@@ -1,53 +1,95 @@
 {
   "id": "la_liga",
   "nome": "LaLiga EA Sports",
-  "familia": "stack2",
+  "familia": "la_liga_horizontal",
   "confianca": "medido",
   "fonte": "condensada",
-  "proporcao_barra": 1.87,
+  "proporcao_barra": 9.464,
+  "altura_ref": 56.0,
   "skew_deg": 0.0,
-  "raio_canto": 0.0,
+  "raio_canto": 6.0,
   "gap": 0.0,
   "celulas": [
     {
-      "tipo": "coluna_identidade",
-      "peso": 0.45,
+      "tipo": "relogio",
+      "peso": 95,
       "forma": "retangulo",
       "fundo": "#EF4435",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "logo_topo",
-        "relogio_base"
+        "minuto",
+        "acrescimo_etiqueta"
       ]
     },
     {
-      "tipo": "coluna_times",
-      "peso": 0.25,
+      "tipo": "time_casa",
+      "peso": 125,
       "forma": "retangulo",
       "fundo": "#10193A",
       "cor_texto": "#FFFFFF",
       "conteudo": [
-        "escudo_casa",
-        "escudo_fora"
+        "escudo",
+        "sigla",
+        "filete_clube"
       ]
     },
     {
-      "tipo": "coluna_gols",
-      "peso": 0.3,
+      "tipo": "gol_casa",
+      "peso": 45,
       "forma": "retangulo",
-      "fundo": "#FFFFFF",
-      "cor_texto": "#101015",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
       "conteudo": [
-        "gol_casa_topo",
-        "gol_fora_base",
-        "faixa_clube"
+        "gol"
+      ]
+    },
+    {
+      "tipo": "divisor_placar",
+      "peso": 20,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "hifen"
+      ]
+    },
+    {
+      "tipo": "gol_fora",
+      "peso": 45,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 125,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "escudo",
+        "filete_clube"
+      ]
+    },
+    {
+      "tipo": "logo_liga",
+      "peso": 75,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "logo"
       ]
     }
   ],
   "etiqueta_acrescimo": {
-    "cor": "#EF4435",
+    "cor": "#10193A",
     "texto_cor": "#FFFFFF",
-    "canto": "inferior_direito_relogio"
+    "canto": "direita_relogio"
   },
   "pilula_periodo": {
     "fundo": "#111A3B",
@@ -56,9 +98,9 @@
   },
   "variante_compacta": {
     "habilitada": true,
-    "escala_fonte": 0.85,
+    "escala_fonte": 0.88,
     "max_largura_retrato": 648
   },
-  "largura_em_86": 161,
-  "largura_em_62": 116
+  "largura_em_86": 530,
+  "largura_em_62": 382
 }

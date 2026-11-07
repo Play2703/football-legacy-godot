@@ -123,6 +123,8 @@ static func texture(team_id: String, retro: bool = false) -> Texture2D:
 
 		_index.erase(team_id)
 		return null
+	if not img.has_mipmaps():
+		img.generate_mipmaps()
 	var tex: ImageTexture = ImageTexture.create_from_image(img)
 	_cache[team_id] = tex
 	_orden.append(team_id)
@@ -171,6 +173,8 @@ static func _retro(team_id: String) -> Texture2D:
 			var k: float = ORO_PISO +(1.0 - ORO_PISO) * px.get_luminance()
 			img.set_pixel(x, y, Color(ORO_EPOCA.r * k, ORO_EPOCA.g * k,
 				ORO_EPOCA.b * k, px.a))
+	if not img.has_mipmaps():
+		img.generate_mipmaps()
 	var tex: ImageTexture = ImageTexture.create_from_image(img)
 	_cache[ck] = tex
 	_orden.append(ck)

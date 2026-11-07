@@ -320,13 +320,16 @@ func _draw_cuerpo() -> void:
 			_logo_tex = CrestLogos.texture(_logo_id)
 			_logo_ver = CrestLogos.version
 		if _logo_tex != null:
+			texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			_draw_logo(_logo_tex)
 			return
 	if not _nation_id.is_empty():
 		var tex: Texture2D = Flags.texture(_nation_id)
 		if tex != null:
+			texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			_draw_nation(tex)
 			return
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var c: Vector2 = size * 0.5
 	var r: float = minf(size.x, size.y) * 0.5
 	var border: Color = _rim_color()

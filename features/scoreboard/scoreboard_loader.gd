@@ -120,6 +120,8 @@ static func _load_texture_resilient(path: String) -> Texture2D:
 	if FileAccess.file_exists(path):
 		var img = Image.load_from_file(path)
 		if img and not img.is_empty():
+			if not img.has_mipmaps():
+				img.generate_mipmaps()
 			return ImageTexture.create_from_image(img)
 	return null
 
