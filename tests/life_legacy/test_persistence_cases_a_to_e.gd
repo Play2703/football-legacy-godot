@@ -230,26 +230,46 @@ func _init() -> void:
 	LifeLegacyPersistence.reset_fault_injection()
 	print("  -> Preservação de staging na falha de promoção do backup comprovada!")
 
-	# E.12: Injeção de falha no rollback e subsequente recuperação via .bak_staging
-	print("[Teste 6.12] Injeção de falha no rollback e recuperação via staging...")
-	var pre_fail_data = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
-	LifeLegacyPersistence.fault_inject_promote = true
-	LifeLegacyPersistence.fault_inject_rollback_fail = true
-	var fail_both = LifeLegacyPersistence.save_slot_data(test_slot, candidate_data)
-	assert(fail_both == false, "Deve falhar")
-	LifeLegacyPersistence.reset_fault_injection()
-	
-	# Simula que o principal ficou ausente ou corrompido, e .bak também ausente:
-	DirAccess.remove_absolute(file_path)
-	if FileAccess.file_exists(bak_path):
-		DirAccess.remove_absolute(bak_path)
-	assert(FileAccess.file_exists(bak_staging), "Staging deve estar presente no disco")
+	# E.12: Prioridade de recuperação do .bak_staging sobre .bak mais antigo
+	print("[Teste 6.12] Prioridade de recuperação do staging sobre .bak e fallback quando staging corrompido...")
+	_cleanup([file_path, bak_path, tmp_path, bak_staging])
 
-	# load_slot_data deve identificar .bak_staging e recuperar com sucesso!
-	var load_rec_staging = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
-	assert(load_rec_staging["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Deve recuperar via backup a partir do staging")
-	assert(load_rec_staging["data"]["save_revision"] == pre_fail_data["save_revision"], "Dados recuperados do staging devem ser os válidos anteriores")
-	print("  -> Recuperação a partir de .bak_staging comprovada com sucesso!")
+	var data_rev1 = LifeLegacyState.get_default_profile(1, 10)
+	data_rev1["save_revision"] = 1
+	var data_rev2 = LifeLegacyState.get_default_profile(1, 10)
+	data_rev2["save_revision"] = 2
+
+	# Grava .bak com revision 1 e .bak_staging com revision 2
+	var f_bak = FileAccess.open(bak_path, FileAccess.WRITE)
+	f_bak.store_string(JSON.stringify(data_rev1))
+	f_bak.close()
+
+	var f_stg = FileAccess.open(bak_staging, FileAccess.WRITE)
+	f_stg.store_string(JSON.stringify(data_rev2))
+	f_stg.close()
+
+	# Garante que arquivo principal e .tmp estão ausentes
+	assert(not FileAccess.file_exists(file_path), "Principal deve estar ausente")
+	assert(not FileAccess.file_exists(tmp_path), "Tmp deve estar ausente")
+
+	# Recuperação deve selecionar .bak_staging (revision 2) prioritariamente
+	var rec_stg = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
+	assert(rec_stg["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação deve suceder via backup")
+	assert(rec_stg["data"]["save_revision"] == 2, "load_slot_data deve priorizar staging com save_revision = 2")
+	assert(FileAccess.file_exists(bak_path), ".bak da revisão 1 NÃO pode ter sido destruído")
+	assert(FileAccess.file_exists(file_path), "Arquivo principal deve ter sido restaurado com a revisão 2")
+
+	# Caso complementar: staging corrompido e .bak permanece válido -> fallback para .bak
+	DirAccess.remove_absolute(file_path)
+	var f_stg_bad = FileAccess.open(bak_staging, FileAccess.WRITE)
+	f_stg_bad.store_string("{corrompido: true,")
+	f_stg_bad.close()
+
+	var rec_fallback = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
+	assert(rec_fallback["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação deve suceder via fallback para .bak")
+	assert(rec_fallback["data"]["save_revision"] == 1, "load_slot_data deve recuperar revisão 1 do .bak íntegro")
+	assert(FileAccess.file_exists(file_path), "Arquivo principal restaurado com revisão 1")
+	print("  -> Prioridade de staging e fallback para .bak comprovados com sucesso absoluto!")
 	
 	# Limpeza final
 	_cleanup([file_path, bak_path, tmp_path, bak_staging])

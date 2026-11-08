@@ -175,20 +175,21 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"is_new_profile": false
 					}
 
-	# CASO B: Principal quebrado ou inexistente, mas .bak ou .bak_staging existe e é válido
+	# CASO B: Principal quebrado ou inexistente, mas .bak_staging ou .bak existe e é válido
+	# Prioridade rigorosa para .bak_staging (versão mais recente em caso de falha de promoção/rollback)
 	var bak_to_use: String = ""
 	var bak_source: String = ""
-	if bak_exists:
+	if FileAccess.file_exists(bak_staging):
+		var res_staging = _read_and_parse_json(bak_staging)
+		if res_staging.get("ok", false) and res_staging.get("data") is Dictionary and LifeLegacyState.validate_schema(res_staging["data"]):
+			bak_to_use = bak_staging
+			bak_source = "staging .bak_staging"
+
+	if bak_to_use.is_empty() and bak_exists:
 		var res_bak = _read_and_parse_json(bak_path)
 		if res_bak.get("ok", false) and res_bak.get("data") is Dictionary and LifeLegacyState.validate_schema(res_bak["data"]):
 			bak_to_use = bak_path
 			bak_source = "backup .bak"
-	if bak_to_use.is_empty():
-		if FileAccess.file_exists(bak_staging):
-			var res_staging = _read_and_parse_json(bak_staging)
-			if res_staging.get("ok", false) and res_staging.get("data") is Dictionary and LifeLegacyState.validate_schema(res_staging["data"]):
-				bak_to_use = bak_staging
-				bak_source = "staging .bak_staging"
 
 	if not bak_to_use.is_empty():
 		var res_rec = _read_and_parse_json(bak_to_use)
