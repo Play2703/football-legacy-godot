@@ -41,3 +41,16 @@ func rand_range(min_val: int, max_val: int) -> int:
 # Gera um ponto flutuante normalizado no intervalo [0.0, 1.0)
 func next_float() -> float:
 	return float(next_u32()) / 4294967296.0
+
+# Gera semente determinística estável e livre de colisões incorporando slot, temporada, dia, versão de catálogo e PRNG
+static func generate_seed(slot: int, season: int, day: int, catalog_ver: int = 1, rng_ver: int = 1) -> int:
+	var s_slot: int = clampi(slot, 0, 15) & 0xF
+	var s_season: int = (season & 0xFFFF)
+	var s_day: int = (day & 0xFFF)
+	var s_cat: int = (catalog_ver & 0xFF)
+	var s_rng: int = (rng_ver & 0xFF)
+	var combined: int = s_slot | (s_season << 4) | (s_day << 20) | (s_cat << 32) | (s_rng << 40)
+	var state_seed: int = (combined * MULTIPLIER + INCREMENT) & 0x7FFFFFFFFFFFFFFF
+	state_seed = (state_seed * MULTIPLIER + INCREMENT) & 0x7FFFFFFFFFFFFFFF
+	return state_seed
+

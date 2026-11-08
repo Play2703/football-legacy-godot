@@ -21,6 +21,7 @@ func _ready() -> void:
 	test_single_and_multi_week_advance()
 	test_fast_forward_circuit_breaker()
 	test_temporal_regression_protection()
+	test_temporal_advance_io_failure_resilience()
 	print("--- TEST MARCO 2: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
 
@@ -134,3 +135,35 @@ func test_temporal_regression_protection() -> void:
 	# Restaura modo seguro para próximos passos
 	ll.set_safe_mode(false)
 	print("  -> OK!")
+
+func test_temporal_advance_io_failure_resilience() -> void:
+	print("[TEST] 7. Resiliência a Falha de I/O no Avanço Temporal (Transacional)...")
+	var ll = LifeLegacy
+	
+	# Prepara estado limpo sincronizado em (1, 10)
+	GameState.season_num = 1
+	GameState.season_day = 10
+	LifeLegacyPersistence.save_slot_data(0, LifeLegacyState.get_default_profile(1, 10))
+	ll.set_safe_mode(false)
+	ll.reload_slot(0)
+	
+	var initial_time = ll.get_last_processed_time()
+	assert(initial_time["season_num"] == 1 and initial_time["season_day"] == 10, "Base em (1, 10)")
+	
+	# Testa _commit_temporal_candidate com candidato que falha validação de schema (simulando falha de I/O)
+	var corrupt_candidate = {"invalid_schema": true}
+	var commit_res = ll._commit_temporal_candidate(corrupt_candidate, 1, 11, [], {}, [])
+	assert(commit_res == false, "Commit deve falhar se gravação retornar false")
+	
+	# Verifica que o marcador temporal em memória NÃO avançou
+	var time_after_fail = ll.get_last_processed_time()
+	assert(time_after_fail["season_num"] == 1 and time_after_fail["season_day"] == 10,
+		"last_processed_time deve permanecer em (1, 10) após falha de I/O")
+	
+	# Agora executa avanço legítimo que persiste com sucesso
+	GameState.season_day = 11
+	GameState.career_updated.emit()
+	var time_after_ok = ll.get_last_processed_time()
+	assert(time_after_ok["season_day"] == 11, "Avanço legítimo deve persistir e atualizar memória para (1, 11)")
+	print("  -> OK!")
+

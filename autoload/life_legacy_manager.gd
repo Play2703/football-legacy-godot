@@ -113,11 +113,49 @@ func save_current_slot() -> bool:
 		push_warning("[LifeLegacyManager] Gravação bloqueada em Modo Seguro.")
 		return false
 	
-	_data["save_revision"] = int(_data.get("save_revision", 0)) + 1
-	var ok: bool = LifeLegacyPersistence.save_slot_data(_current_slot, _data)
+	var candidate: Dictionary = _data.duplicate(true)
+	candidate["save_revision"] = int(candidate.get("save_revision", 0)) + 1
+	var ok: bool = LifeLegacyPersistence.save_slot_data(_current_slot, candidate)
 	if ok:
+		_data = candidate
 		life_legacy_saved.emit(_current_slot)
+	else:
+		push_error("[LifeLegacyManager] Falha ao persistir slot %d." % _current_slot)
 	return ok
+
+func _commit_temporal_candidate(candidate: Dictionary, target_s: int, target_d: int, rollovers_to_emit: Array[int], new_event_to_emit: Dictionary, stat_changes_to_emit: Array[Dictionary]) -> bool:
+	if _is_safe_mode:
+		push_warning("[LifeLegacyManager] Commit temporal bloqueado em Modo Seguro.")
+		return false
+	
+	candidate["last_processed_time"] = {"season_num": target_s, "season_day": target_d}
+	candidate["save_revision"] = int(candidate.get("save_revision", 0)) + 1
+	
+	# Tentativa transacional de persistência
+	var ok: bool = LifeLegacyPersistence.save_slot_data(_current_slot, candidate)
+	if not ok:
+		push_error("[LifeLegacyManager] Falha de I/O ao persistir avanço temporal para (%d, %d). Revertendo candidato." % [target_s, target_d])
+		return false
+	
+	# Confirmação em memória somente após sucesso
+	_data = candidate
+	_last_observed_time = {"season_num": target_s, "season_day": target_d}
+	life_legacy_saved.emit(_current_slot)
+	
+	# Emissão de sinais após durabilidade garantida
+	for c in stat_changes_to_emit:
+		life_legacy_stat_changed.emit(c["stat_id"], c["old_val"], c["new_val"], c["reason"])
+	
+	for s_roll in rollovers_to_emit:
+		annual_rollover_completed.emit(s_roll)
+	
+	week_processed.emit(target_s, target_d)
+	weekly_tick_completed.emit(target_s, target_d, true)
+	
+	if not new_event_to_emit.is_empty():
+		life_event_ready.emit(new_event_to_emit)
+	
+	return true
 
 func _on_active_slot_changed(_prev_slot: int, new_slot: int) -> void:
 	reload_slot(new_slot)
@@ -162,11 +200,14 @@ func _on_career_updated() -> void:
 func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) -> void:
 	if proc_s == cur_s and cur_d == proc_d + 1:
 		# Tick semanal individual padrão
-		_process_single_week(cur_s, cur_d, true)
-		_data["last_processed_time"] = {"season_num": cur_s, "season_day": cur_d}
-		_last_observed_time = {"season_num": cur_s, "season_day": cur_d}
-		save_current_slot()
-		week_processed.emit(cur_s, cur_d)
+		var candidate: Dictionary = _data.duplicate(true)
+		var stat_changes: Array[Dictionary] = []
+		_apply_weekly_drift_on_candidate(candidate, stat_changes)
+		
+		var new_event: Dictionary = {}
+		_maybe_roll_event_on_candidate(candidate, cur_s, cur_d, new_event)
+		
+		_commit_temporal_candidate(candidate, cur_s, cur_d, [], new_event, stat_changes)
 	else:
 		# Recuperação de lacuna / virada de temporada
 		_recover_temporal_gap(proc_s, proc_d, cur_s, cur_d)
@@ -177,106 +218,123 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 		_execute_fast_forward_circuit_breaker(from_s, from_d, to_s, to_d)
 		return
 	
+	var candidate: Dictionary = _data.duplicate(true)
+	var stat_changes: Array[Dictionary] = []
+	var rollovers: Array[int] = []
+	
 	var iter_s: int = from_s
 	var iter_d: int = from_d
 	var calendar_len: int = 38
 	if GameState != null and GameState.calendar is Array and not GameState.calendar.is_empty():
 		calendar_len = GameState.calendar.size()
 	
+	var new_event: Dictionary = {}
+	
 	while iter_s < to_s or (iter_s == to_s and iter_d < to_d):
 		iter_d += 1
 		
 		# Virada de temporada dinâmica
 		if iter_s < to_s and (iter_d >= calendar_len or iter_d > 50):
-			_process_annual_rollover_idempotent(iter_s + 1)
+			_record_annual_rollover_on_candidate(candidate, iter_s + 1)
+			if not rollovers.has(iter_s + 1):
+				rollovers.append(iter_s + 1)
 			iter_s += 1
 			iter_d = 0
 		
 		var is_latest: bool = (iter_s == to_s and iter_d == to_d)
-		_process_single_week(iter_s, iter_d, is_latest)
+		_apply_weekly_drift_on_candidate(candidate, stat_changes)
+		if is_latest:
+			_maybe_roll_event_on_candidate(candidate, iter_s, iter_d, new_event)
 	
-	_data["last_processed_time"] = {"season_num": to_s, "season_day": to_d}
-	_last_observed_time = {"season_num": to_s, "season_day": to_d}
-	save_current_slot()
-	week_processed.emit(to_s, to_d)
+	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, new_event, stat_changes)
 
 func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
-	var gap_log: Array = _data.get("recovery_gap_log", [])
+	var candidate: Dictionary = _data.duplicate(true)
+	var rollovers: Array[int] = []
+	
+	var gap_log: Array = candidate.get("recovery_gap_log", [])
 	gap_log.append({
 		"gap_type": "FAST_FORWARD_CIRCUIT_BREAKER",
 		"from": [from_s, from_d],
 		"to": [to_s, to_d],
 		"reason": "Defasagem superior a 2 temporadas"
 	})
-	_data["recovery_gap_log"] = gap_log
+	candidate["recovery_gap_log"] = gap_log
 	
 	# Processa virada anual de cada temporada omitida
 	for s in range(from_s + 1, to_s + 1):
-		_process_annual_rollover_idempotent(s)
+		_record_annual_rollover_on_candidate(candidate, s)
+		rollovers.append(s)
 	
 	# Amortização analítica dos indicadores pessoais
-	var stats: Dictionary = _data.get("stats", {})
+	var stats: Dictionary = candidate.get("stats", {})
 	var amortized: Dictionary = LifeLegacyEffects.compute_amortized_stats(stats, to_s - from_s)
-	_data["stats"] = amortized
+	candidate["stats"] = amortized
 	
-	_data["last_processed_time"] = {"season_num": to_s, "season_day": to_d}
-	_last_observed_time = {"season_num": to_s, "season_day": to_d}
-	save_current_slot()
-	week_processed.emit(to_s, to_d)
+	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, {}, [])
 
-func _process_annual_rollover_idempotent(season: int) -> void:
-	var processed_seasons: Array = _data.get("processed_annual_rollovers", [])
+func _record_annual_rollover_on_candidate(candidate: Dictionary, season: int) -> void:
+	var processed_seasons: Array = candidate.get("processed_annual_rollovers", [])
 	if processed_seasons.has(season):
 		return
 	processed_seasons.append(season)
-	_data["processed_annual_rollovers"] = processed_seasons
+	candidate["processed_annual_rollovers"] = processed_seasons
 	
-	var annual_hist: Array = _data.get("annual_history", [])
+	var annual_hist: Array = candidate.get("annual_history", [])
 	annual_hist.append({
 		"season_num": season,
-		"stats_snapshot": _data.get("stats", {}).duplicate(),
+		"stats_snapshot": candidate.get("stats", {}).duplicate(),
 		"timestamp": Time.get_datetime_string_from_system()
 	})
-	_data["annual_history"] = annual_hist
-	
-	annual_rollover_completed.emit(season)
+	candidate["annual_history"] = annual_hist
 
-func _process_single_week(s: int, d: int, is_latest: bool) -> void:
-	# 1. Decaimento/Drift natural semanal dos indicadores
-	var stats: Dictionary = _data.get("stats", {})
+func _apply_weekly_drift_on_candidate(candidate: Dictionary, stat_changes: Array[Dictionary]) -> void:
+	var stats: Dictionary = candidate.get("stats", {})
 	var drifts: Dictionary = LifeLegacyEffects.compute_weekly_drift(stats)
 	for stat_id in drifts:
 		var delta: float = float(drifts[stat_id])
 		if absf(delta) > 0.0001:
-			apply_stat_change(stat_id, delta, "weekly_drift")
-	
-	# 2. Sorteio de evento declarativo (apenas na rodada mais recente e se não houver pendente)
-	if is_latest:
-		var act_evt: Dictionary = _data.get("active_event", {})
-		if act_evt.get("status", "") != "PENDING_RESOLUTION":
-			var ctx: Dictionary = {
-				"season_num": s,
-				"season_day": d,
-				"age": Career.age if Career != null else 18,
-				"stats": _data.get("stats", {}),
-				"money": Career.money if Career != null else 5000,
-				"energy": Career.energy if Career != null else 100.0,
-				"is_derby": GameState.is_derby if (GameState != null and "is_derby" in GameState) else false,
-				"has_spouse": not _data.get("family", {}).get("spouse", {}).is_empty(),
-				"has_children": not _data.get("family", {}).get("children", []).is_empty()
-			}
-			var seed_val: int = int(s * 10000 + d * 100 + _current_slot)
-			var rng = LifeLegacyRNG.new(seed_val)
-			var rolled: Dictionary = LifeLegacyEvents.roll_event(ctx, rng)
-			if not rolled.is_empty():
-				_data["active_event"] = rolled
-				# Intent-Log: Salva o evento antes de notificar ou solicitar escolha
-				save_current_slot()
-				life_event_ready.emit(rolled)
+			var old_v: float = float(stats.get(stat_id, LifeLegacyState.STAT_DEFAULTS.get(stat_id, 50.0)))
+			var new_v: float = LifeLegacyState.clamp_stat(stat_id, old_v + delta)
+			stats[stat_id] = new_v
+			stat_changes.append({
+				"stat_id": stat_id,
+				"old_val": old_v,
+				"new_val": new_v,
+				"delta": delta,
+				"reason": "weekly_drift"
+			})
+	candidate["stats"] = stats
 
-	weekly_tick_completed.emit(s, d, is_latest)
+func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_event: Dictionary) -> void:
+	var act_evt: Dictionary = candidate.get("active_event", {})
+	if act_evt.get("status", "") != "PENDING_RESOLUTION":
+		var ctx: Dictionary = {
+			"season_num": s,
+			"season_day": d,
+			"age": Career.age if Career != null else 18,
+			"stats": candidate.get("stats", {}),
+			"money": Career.money if Career != null else 5000,
+			"energy": Career.energy if Career != null else 100.0,
+			"is_derby": GameState.is_derby if (GameState != null and "is_derby" in GameState) else false,
+			"has_spouse": not candidate.get("family", {}).get("spouse", {}).is_empty(),
+			"has_children": not candidate.get("family", {}).get("children", []).is_empty()
+		}
+		var cat_v: int = int(candidate.get("catalog_version", 1))
+		var rng_v: int = int(candidate.get("rng_version", 1))
+		var seed_val: int = LifeLegacyRNG.generate_seed(_current_slot, s, d, cat_v, rng_v)
+		var rng = LifeLegacyRNG.new(seed_val)
+		var rolled: Dictionary = LifeLegacyEvents.roll_event(ctx, rng)
+		if not rolled.is_empty():
+			rolled["seed_val"] = seed_val
+			rolled["catalog_version"] = cat_v
+			rolled["rng_version"] = rng_v
+			candidate["active_event"] = rolled
+			for k in rolled:
+				out_event[k] = rolled[k]
 
 func get_active_event() -> Dictionary:
+	return _data.get("active_event", {}).duplicate()
 	return _data.get("active_event", {}).duplicate()
 
 func resolve_active_event(choice_id: String) -> bool:
