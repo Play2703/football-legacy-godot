@@ -3,12 +3,23 @@ extends Node
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
 const LifeLegacyPersistence = preload("res://features/life_legacy/life_legacy_persistence.gd")
 const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
+const LifeLegacyEffects = preload("res://features/life_legacy/life_legacy_effects.gd")
+
+enum TimeRelation {
+	EQUAL,
+	FORWARD_TICK,
+	SEASON_ROLLOVER,
+	TEMPORAL_REGRESSION
+}
 
 # Autoload registrado como LifeLegacy em project.godot
 signal life_legacy_loaded(slot: int)
 signal life_legacy_saved(slot: int)
 signal life_legacy_stat_changed(stat_id: String, old_val: float, new_val: float, reason: String)
 signal life_legacy_safe_mode_activated(reason: String)
+signal week_processed(season_num: int, season_day: int)
+signal weekly_tick_completed(season_num: int, season_day: int, is_latest: bool)
+signal annual_rollover_completed(season_num: int)
 
 var _current_slot: int = 0
 var _data: Dictionary = {}
@@ -17,20 +28,33 @@ var _is_safe_mode: bool = false
 var _last_observed_time: Dictionary = {"season_num": -1, "season_day": -1}
 
 func _ready() -> void:
-	if SaveSlots.has_signal("active_slot_changed"):
+	if SaveSlots != null and SaveSlots.has_signal("active_slot_changed"):
 		SaveSlots.active_slot_changed.connect(_on_active_slot_changed)
+	if GameState != null and GameState.has_signal("career_updated"):
+		GameState.career_updated.connect(_on_career_updated)
 	
-	_current_slot = SaveSlots.active
+	_current_slot = SaveSlots.active if SaveSlots != null else 0
 	reload_slot(_current_slot)
 
 func is_safe_mode() -> bool:
 	return _is_safe_mode
+
+func set_safe_mode(enabled: bool) -> void:
+	_is_safe_mode = enabled
+	if enabled:
+		life_legacy_safe_mode_activated.emit("Modo seguro definido explicitamente")
 
 func get_current_slot() -> int:
 	return _current_slot
 
 func get_data() -> Dictionary:
 	return _data
+
+func get_last_processed_time() -> Dictionary:
+	return _data.get("last_processed_time", {"season_num": 1, "season_day": 0}).duplicate()
+
+func get_last_observed_time() -> Dictionary:
+	return _last_observed_time.duplicate()
 
 func reload_slot(slot: int) -> void:
 	_current_slot = slot
@@ -43,13 +67,27 @@ func reload_slot(slot: int) -> void:
 	
 	if _is_safe_mode:
 		life_legacy_safe_mode_activated.emit("Corrupção ou bloqueio de schema em slot %d" % slot)
+		return
 	
 	var proc_time: Dictionary = _data.get("last_processed_time", {"season_num": s_num, "season_day": s_day})
+	var proc_s: int = int(proc_time.get("season_num", s_num))
+	var proc_d: int = int(proc_time.get("season_day", s_day))
+	
 	_last_observed_time = {
-		"season_num": int(proc_time.get("season_num", s_num)),
-		"season_day": int(proc_time.get("season_day", s_day))
+		"season_num": proc_s,
+		"season_day": proc_d
 	}
 	_is_initialized = true
+	
+	# Verificação de Crash Recovery / Divergência Temporal no Boot
+	var rel: int = evaluate_time_relation(s_num, s_day, proc_s, proc_d)
+	if rel == TimeRelation.TEMPORAL_REGRESSION:
+		push_error("[LifeLegacy] Divergência temporal no boot: GameState=(%d,%d) < Processed=(%d,%d). Ativando Modo Seguro." % [s_num, s_day, proc_s, proc_d])
+		_is_safe_mode = true
+		life_legacy_safe_mode_activated.emit("Divergência temporal detectada no carregamento")
+	elif rel == TimeRelation.FORWARD_TICK or rel == TimeRelation.SEASON_ROLLOVER:
+		push_warning("[LifeLegacy] Crash recovery no boot: avanço pendente detectado de (%d,%d) para (%d,%d)." % [proc_s, proc_d, s_num, s_day])
+		_handle_temporal_advance(proc_s, proc_d, s_num, s_day)
 	
 	life_legacy_loaded.emit(slot)
 
@@ -67,6 +105,136 @@ func save_current_slot() -> bool:
 func _on_active_slot_changed(_prev_slot: int, new_slot: int) -> void:
 	reload_slot(new_slot)
 
+# Comparação temporal lexicográfica rigorosa
+func evaluate_time_relation(cur_s: int, cur_d: int, proc_s: int, proc_d: int) -> int:
+	if cur_s == proc_s and cur_d == proc_d:
+		return TimeRelation.EQUAL
+	if cur_s > proc_s:
+		return TimeRelation.SEASON_ROLLOVER
+	if cur_s == proc_s and cur_d > proc_d:
+		return TimeRelation.FORWARD_TICK
+	return TimeRelation.TEMPORAL_REGRESSION
+
+func _on_career_updated() -> void:
+	if _is_safe_mode:
+		return
+	if GameState == null:
+		return
+	
+	var cur_s: int = GameState.season_num
+	var cur_d: int = GameState.season_day
+	var proc_s: int = int(_last_observed_time.get("season_num", 1))
+	var proc_d: int = int(_last_observed_time.get("season_day", 0))
+	
+	var rel: int = evaluate_time_relation(cur_s, cur_d, proc_s, proc_d)
+	
+	# 1. Ignorar emissões que não representem avanço temporal (ex: set_customization na linha 13865)
+	if rel == TimeRelation.EQUAL:
+		return
+	
+	# 2. Tratar retrocesso temporal (backup manual restaurado ou incompatibilidade)
+	if rel == TimeRelation.TEMPORAL_REGRESSION:
+		push_error("[LifeLegacy] Divergência temporal: GameState=(%d,%d) é anterior ao Processado=(%d,%d). Ativando Modo Seguro." % [cur_s, cur_d, proc_s, proc_d])
+		_is_safe_mode = true
+		life_legacy_safe_mode_activated.emit("Divergência temporal detectada")
+		return
+	
+	# 3. Avanço temporal legítimo
+	_handle_temporal_advance(proc_s, proc_d, cur_s, cur_d)
+
+func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) -> void:
+	if proc_s == cur_s and cur_d == proc_d + 1:
+		# Tick semanal individual padrão
+		_process_single_week(cur_s, cur_d, true)
+		_data["last_processed_time"] = {"season_num": cur_s, "season_day": cur_d}
+		_last_observed_time = {"season_num": cur_s, "season_day": cur_d}
+		save_current_slot()
+		week_processed.emit(cur_s, cur_d)
+	else:
+		# Recuperação de lacuna / virada de temporada
+		_recover_temporal_gap(proc_s, proc_d, cur_s, cur_d)
+
+func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
+	var total_seasons_gap: int = to_s - from_s
+	if total_seasons_gap > 2:
+		_execute_fast_forward_circuit_breaker(from_s, from_d, to_s, to_d)
+		return
+	
+	var iter_s: int = from_s
+	var iter_d: int = from_d
+	var calendar_len: int = 38
+	if GameState != null and GameState.calendar is Array and not GameState.calendar.is_empty():
+		calendar_len = GameState.calendar.size()
+	
+	while iter_s < to_s or (iter_s == to_s and iter_d < to_d):
+		iter_d += 1
+		
+		# Virada de temporada dinâmica
+		if iter_s < to_s and (iter_d >= calendar_len or iter_d > 50):
+			_process_annual_rollover_idempotent(iter_s + 1)
+			iter_s += 1
+			iter_d = 0
+		
+		var is_latest: bool = (iter_s == to_s and iter_d == to_d)
+		_process_single_week(iter_s, iter_d, is_latest)
+	
+	_data["last_processed_time"] = {"season_num": to_s, "season_day": to_d}
+	_last_observed_time = {"season_num": to_s, "season_day": to_d}
+	save_current_slot()
+	week_processed.emit(to_s, to_d)
+
+func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
+	var gap_log: Array = _data.get("recovery_gap_log", [])
+	gap_log.append({
+		"gap_type": "FAST_FORWARD_CIRCUIT_BREAKER",
+		"from": [from_s, from_d],
+		"to": [to_s, to_d],
+		"reason": "Defasagem superior a 2 temporadas"
+	})
+	_data["recovery_gap_log"] = gap_log
+	
+	# Processa virada anual de cada temporada omitida
+	for s in range(from_s + 1, to_s + 1):
+		_process_annual_rollover_idempotent(s)
+	
+	# Amortização analítica dos indicadores pessoais
+	var stats: Dictionary = _data.get("stats", {})
+	var amortized: Dictionary = LifeLegacyEffects.compute_amortized_stats(stats, to_s - from_s)
+	_data["stats"] = amortized
+	
+	_data["last_processed_time"] = {"season_num": to_s, "season_day": to_d}
+	_last_observed_time = {"season_num": to_s, "season_day": to_d}
+	save_current_slot()
+	week_processed.emit(to_s, to_d)
+
+func _process_annual_rollover_idempotent(season: int) -> void:
+	var processed_seasons: Array = _data.get("processed_annual_rollovers", [])
+	if processed_seasons.has(season):
+		return
+	processed_seasons.append(season)
+	_data["processed_annual_rollovers"] = processed_seasons
+	
+	var annual_hist: Array = _data.get("annual_history", [])
+	annual_hist.append({
+		"season_num": season,
+		"stats_snapshot": _data.get("stats", {}).duplicate(),
+		"timestamp": Time.get_datetime_string_from_system()
+	})
+	_data["annual_history"] = annual_hist
+	
+	annual_rollover_completed.emit(season)
+
+func _process_single_week(s: int, d: int, is_latest: bool) -> void:
+	# 1. Decaimento/Drift natural semanal dos indicadores
+	var stats: Dictionary = _data.get("stats", {})
+	var drifts: Dictionary = LifeLegacyEffects.compute_weekly_drift(stats)
+	for stat_id in drifts:
+		var delta: float = float(drifts[stat_id])
+		if absf(delta) > 0.0001:
+			apply_stat_change(stat_id, delta, "weekly_drift")
+	
+	weekly_tick_completed.emit(s, d, is_latest)
+
 # API de Leitura de Indicadores
 func get_stat(stat_name: String) -> float:
 	var stats: Dictionary = _data.get("stats", {})
@@ -75,7 +243,7 @@ func get_stat(stat_name: String) -> float:
 func get_all_stats() -> Dictionary:
 	return _data.get("stats", {}).duplicate()
 
-# API de Modificação de Indicadores
+# API de Modificação de Indicadores com Log de Auditoria
 func apply_stat_change(stat_id: String, delta: float, reason: String, occurrence_id: String = "") -> bool:
 	if _is_safe_mode:
 		return false

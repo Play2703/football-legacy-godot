@@ -63647,10 +63647,13 @@ func _is_real_save_path(path: String) -> bool:
 var _save_frame: int = -1
 var _save_pending: bool = false
 var _save_last_path: String = ""
+var _save_epoch: int = 0
 
 
 
-func _save_flush() -> void:
+func _save_flush(scheduled_epoch: int = -1) -> void:
+	if scheduled_epoch != -1 and scheduled_epoch != _save_epoch:
+		return
 	if not _save_pending:
 		return
 	_save_pending = false
@@ -63717,12 +63720,37 @@ func _save() -> void:
 	if frame_actual == _save_frame and save_path == _save_last_path:
 		if not _save_pending:
 			_save_pending = true
-			_save_flush.call_deferred()
+			var scheduled_epoch: int = _save_epoch
+			_save_flush.call_deferred(scheduled_epoch)
 		return
 	_save_frame = frame_actual
 	_save_last_path = save_path
 
 	_mesa_sin_volcar = false
+	var cfg: ConfigFile = _build_career_cfg()
+	SaveSlots.save_cfg_atomic(cfg, save_path)
+	SaveSlots.summary_dirty()
+
+
+func _save_synchronous_barrier() -> bool:
+	if GameState.readonly_save and _is_real_save_path(save_path):
+		return false
+	var was_pending: bool = _save_pending
+	_save_epoch += 1
+	_save_pending = false
+	_save_frame = Engine.get_process_frames()
+	_save_last_path = save_path
+	_mesa_sin_volcar = false
+	var cfg: ConfigFile = _build_career_cfg()
+	var success: bool = SaveSlots.save_cfg_atomic(cfg, save_path)
+	if not success:
+		_save_pending = was_pending
+		return false
+	SaveSlots.summary_dirty()
+	return true
+
+
+func _build_career_cfg() -> ConfigFile:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.set_value("meta", "rel_version", REL_VERSION)
 	cfg.set_value("player", "name", player_name)
@@ -64386,10 +64414,7 @@ func _save() -> void:
 	cfg.set_value("season", "historia_trofeos", historia_trofeos_vivida)
 	cfg.set_value("season", "record_marks", record_marks)
 	cfg.set_value("season", "best_presentation", best_presentation)
-
-	SaveSlots.save_cfg_atomic(cfg, save_path)
-
-	SaveSlots.summary_dirty()
+	return cfg
 
 
 func _load() -> void:

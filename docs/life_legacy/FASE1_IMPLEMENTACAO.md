@@ -12,29 +12,36 @@
 
 ## 2. ARQUITETURA IMPLEMENTADA E ÁRVORE DE ARQUIVOS
 
-### 2.1. Arquivos Criados no Marco 1
-- `autoload/life_legacy_manager.gd`: Autoload coordenador singleton (`LifeLegacy`), ciclo de vida, sinais e API de indicadores.
+### 2.1. Arquivos Criados
+- `autoload/life_legacy_manager.gd`: Autoload coordenador singleton (`LifeLegacy`), ciclo de vida, sinais, comparação temporal de tupla canônica `(season_num, season_day)`, processamento semanal, catch-up multi-semanal, circuit breaker e API de indicadores com histórico de auditoria.
 - `features/life_legacy/life_legacy_state.gd`: Modelo de dados, esquema padrão versionado (`schema_version = 1`), limites e validação de dicionário.
 - `features/life_legacy/life_legacy_persistence.gd`: Motor de persistência isolado por slot (`user://slot{N}/life_legacy.json`), máquina de estados para Casos A a E, gravação atômica temporária (`.tmp`) e promoção com backup (`.bak`).
 - `features/life_legacy/life_legacy_rng.gd`: Gerador Congruencial Linear Knuth LCG de 64 bits com eliminação de viés de módulo.
+- `features/life_legacy/life_legacy_effects.gd`: Motor de decaimento natural semanal (drift) dos 6 indicadores e amortização para saltos analíticos superiores a 2 temporadas.
 - `tests/life_legacy/test_deterministic_rng.gd`: Teste automatizado de vetores canônicos do LCG.
 - `tests/life_legacy/test_persistence_cases_a_to_e.gd`: Teste automatizado dos Casos A, B, C, D e promoção atômica.
 - `tests/life_legacy/test_slot_switch.gd`: Teste automatizado de troca de slot, reatividade ao sinal e isolamento de indicadores.
 - `tests/life_legacy/runner_slot_switch.tscn`: Cena executável para testes integrados com autoloads.
+- `tests/life_legacy/test_marco2_integration.gd`: Teste automatizado da integração do Marco 2 (comparação temporal lexicográfica, descarte de emissões sem avanço, barreira síncrona com `_save_epoch`, avanços semanais e circuit breaker).
+- `tests/life_legacy/runner_marco2.tscn`: Cena executável para testes do Marco 2.
 
-### 2.2. Arquivos Modificados no Marco 1 (Alterações Mínimas Justificadas)
+### 2.2. Arquivos Modificados (Alterações Mínimas Justificadas)
 - `project.godot`:
   - Registro do Autoload `LifeLegacy="*res://autoload/life_legacy_manager.gd"`.
 - `autoload/save_slots.gd`:
   - Adição do sinal `signal active_slot_changed(previous_slot: int, new_slot: int)`.
   - Emissão síncrona do sinal ao final do método `switch_to(slot: int)`.
+- `autoload/career.gd`:
+  - Adição da variável de geração `var _save_epoch: int = 0`.
+  - Extração de `_build_career_cfg() -> ConfigFile` para permitir reutilização atômica sem duplicação.
+  - Implementação de `_save_synchronous_barrier() -> bool` com avanço atômico de `_save_epoch`.
+  - Invalidação de chamadas diferidas obsoletas em `_save_flush(scheduled_epoch: int = -1)`.
 
 ---
 
-## 3. RESULTADOS DOS TESTES DO MARCO 1
+## 3. RESULTADOS DOS TESTES AUTOMATIZADOS
 
-Todos os testes automatizados do Marco 1 foram executados no ambiente Godot 4.7.2 headless e obtiveram aprovação estrita:
-
+### 3.1. Marco 1 — Fundação e Persistência [CONCLUÍDO E HOMOLOGADO]
 1. **`test_deterministic_rng.gd` — [APROVADO]**
    - Vetor 1 com semente 12345: `470636529` (Esperado: `470636529`)
    - Vetor 2 com semente 12345: `1139821166` (Esperado: `1139821166`)
@@ -54,11 +61,43 @@ Todos os testes automatizados do Marco 1 foram executados no ambiente Godot 4.7.
    - Troca para o slot 1 com carregamento independente (40.0 inicial mantido).
    - Modificação independente no slot 1 e retorno ao slot 0 com dados intactos (65.0 preservado).
 
+### 3.2. Marco 2 — Integração e Indicadores [CONCLUÍDO E HOMOLOGADO]
+Executado via `godot --headless res://tests/life_legacy/runner_marco2.tscn`:
+
+1. **Comparação Lexicográfica Temporal:**
+   - $(1, 5) == (1, 5) \rightarrow$ `EQUAL`
+   - $(1, 6) > (1, 5) \rightarrow$ `FORWARD_TICK`
+   - $(2, 0) > (1, 38) \rightarrow$ `SEASON_ROLLOVER`
+   - $(1, 4) < (1, 5) \rightarrow$ `TEMPORAL_REGRESSION`
+   - $(1, 10) < (2, 1) \rightarrow$ `TEMPORAL_REGRESSION`
+   - Status: **APROVADO**.
+
+2. **Save Epoch e Barreira Síncrona do Career:**
+   - `_save_epoch` incrementa atomicamente em `_save_synchronous_barrier()`.
+   - Chamada diferida `_save_flush(scheduled_epoch)` com epoch obsoleto é descartada sem realizar I/O redundante.
+   - Status: **APROVADO**.
+
+3. **Descarte de Emissões sem Avanço Temporal:**
+   - Emissões de `GameState.career_updated` sem alteração na tupla `(season_num, season_day)` (ex: `set_customization()`) são descartadas imediatamente, preservando indicadores e histórico sem mutações.
+   - Status: **APROVADO**.
+
+4. **Avanço Semanal e Multi-Semanal:**
+   - Avanço de 1 semana (10 $\rightarrow$ 11): drift computado e `last_processed_time` persistido.
+   - Avanço em lacuna multi-semanal (11 $\rightarrow$ 14): execução controlada e alinhamento do estado.
+   - Status: **APROVADO**.
+
+5. **Circuit Breaker (> 2 Temporadas):**
+   - Salto de $(1, 14)$ para $(4, 2)$: ativação registrada em `recovery_gap_log`, viradas anuais processadas de forma idempotente e amortização analítica dos indicadores executada.
+   - Status: **APROVADO**.
+
+6. **Proteção contra Regressão Temporal:**
+   - Detecção de recuo de $(4, 2)$ para $(1, 1)$ ativa imediatamente o Modo Seguro (`_is_safe_mode = true`) e cancela escritas no disco para proteger o histórico contra corrupção externa.
+   - Status: **APROVADO**.
+
 ---
 
 ## 4. CRONOGRAMA DE EXECUÇÃO DOS PRÓXIMOS MARCOS
 
-- **Marco 2 (Em andamento):** Integração com `GameState`, `Career`, filtragem temporal canônica e indicadores independentes.
 - **Marco 3:** Motor de eventos declarativos, Intent-Log e Outbox transacional.
 - **Marco 4:** Módulo de família, envelhecimento canônico e saga de sucessão dinástica.
 - **Marco 5:** Os 8 eventos declarativos jogáveis e interfaces no Smartphone ("Minha Vida").
