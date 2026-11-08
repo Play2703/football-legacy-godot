@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ci1u8n4i4f4e12"]
+
+[ext_resource type="Script" path="res://EVIDENCIAS_ETAPA_4E12/testes/test_auditoria_completa_4e12.gd" id="1_4e12"]
+
+[node name="RunnerAuditoriaCompleta4e12" type="Node"]
+script = ExtResource("1_4e12")

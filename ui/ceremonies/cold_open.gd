@@ -2518,7 +2518,9 @@ func _pases_partida_arma(du: Dictionary) -> void:
 	move_child(_partida, _vp2_box.get_index() + 1)
 	var color: Color = CareerTheme.accent_of(club) if not club.is_empty() \
 			else CareerTheme.TEXT_MID
-	_partida.arma(accent, Career.espalda_de(String(du.get("name", ""))), color,
+	var mio_team: Dictionary = GameState.current_team()
+	var color_mio: Color = CareerTheme.accent_of(mio_team) if not mio_team.is_empty() else accent
+	_partida.arma(color_mio, Career.espalda_de(String(du.get("name", ""))), color,
 		UiKit.top_safe_inset(get_viewport()))
 
 

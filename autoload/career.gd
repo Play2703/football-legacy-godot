@@ -62752,9 +62752,16 @@ func _apply_rebirth_mods(ids: Array) -> void:
 func _aplica_mod(m: Dictionary) -> void:
 	money += int(m.get("money_bonus", 0))
 	skill_points += int(m.get("skill_points", 0))
-	for stat in m.get("skill_bonus", {}):
-
-		skills[stat] = mini(90, int(skills.get(stat, 60)) + int(m["skill_bonus"][stat]))
+	var raw_bonus = m.get("skill_bonus")
+	if raw_bonus is Dictionary:
+		for stat in raw_bonus:
+			var stat_name: String = str(stat)
+			if stat_name.is_empty() or not skills.has(stat_name):
+				continue
+			var delta: int = int(raw_bonus[stat])
+			if delta > 0 and skill_en_declive(stat_name):
+				continue
+			skills[stat_name] = mini(90, int(skills.get(stat_name, 60)) + delta)
 
 
 

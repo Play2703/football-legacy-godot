@@ -1,0 +1,96 @@
+{
+  "id": "libertadores",
+  "nome": "CONMEBOL Libertadores",
+  "familia": "modulos_separados",
+  "confianca": "medido",
+  "fonte": "larga_negrito",
+  "ordem_relogio": "apos_times",
+  "proporcao_barra": 9.31,
+  "skew_deg": 0.0,
+  "raio_canto": 6.0,
+  "gap": 0.09,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 1.1,
+      "forma": "retangulo_arredondado",
+      "fundo": "#101010",
+      "cor_texto": "#DCA92E",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 1.4,
+      "forma": "retangulo_arredondado",
+      "fundo": "#121212",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "faixa_clube"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.35,
+      "forma": "retangulo_arredondado",
+      "fundo": "#121212",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.4,
+      "forma": "retangulo_arredondado",
+      "fundo": "#121212",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "faixa_clube"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.85,
+      "forma": "retangulo_arredondado",
+      "fundo": "#DCA92E",
+      "cor_texto": "#121111",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "penaltis",
+      "peso": 1.1,
+      "forma": "retangulo_arredondado",
+      "fundo": "#171717",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "penaltis_score"
+      ]
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#D82020",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#121111",
+    "texto_cor": "#DCA92E",
+    "borda_cor": "#DCA92E"
+  },
+  "variante_compacta": {
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 714,
+  "largura_em_62": 515
+}

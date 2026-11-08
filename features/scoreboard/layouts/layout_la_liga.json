@@ -1,0 +1,106 @@
+{
+  "id": "la_liga",
+  "nome": "LaLiga EA Sports",
+  "familia": "la_liga_horizontal",
+  "confianca": "medido",
+  "fonte": "condensada",
+  "proporcao_barra": 9.464,
+  "altura_ref": 56.0,
+  "skew_deg": 0.0,
+  "raio_canto": 6.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "relogio",
+      "peso": 95,
+      "forma": "retangulo",
+      "fundo": "#EF4435",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 125,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "filete_clube"
+      ]
+    },
+    {
+      "tipo": "gol_casa",
+      "peso": 45,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol"
+      ]
+    },
+    {
+      "tipo": "divisor_placar",
+      "peso": 20,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "hifen"
+      ]
+    },
+    {
+      "tipo": "gol_fora",
+      "peso": 45,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 125,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla",
+        "escudo",
+        "filete_clube"
+      ]
+    },
+    {
+      "tipo": "logo_liga",
+      "peso": 75,
+      "forma": "retangulo",
+      "fundo": "#10193A",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "logo"
+      ]
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#10193A",
+    "texto_cor": "#FFFFFF",
+    "canto": "direita_relogio"
+  },
+  "pilula_periodo": {
+    "fundo": "#111A3B",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#EF4435"
+  },
+  "variante_compacta": {
+    "habilitada": true,
+    "escala_fonte": 0.88,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 530,
+  "largura_em_62": 382
+}

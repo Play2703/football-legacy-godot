@@ -1,0 +1,24 @@
+=== DIAGNÓSTICO DO AMBIENTE GRÁFICO (ETAPA 4e.18-R1) ===
+DISPLAY: UNSET / VAZIO
+WAYLAND_DISPLAY: wayland-1 (socket não existente em /run/user/1000/wayland-1)
+XDG_RUNTIME_DIR: /run/user/1000
+
+Verificação do diretório /tmp/.X11-unix:
+Diretório vazio (nenhum socket X11 ativo).
+
+Hardware Gráfico (lspci):
+04:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Renoir [Radeon RX Vega 6 / 7 / 8] (rev c6)
+
+Driver e Biblioteca 3D (glxinfo -B):
+Error: unable to open display
+
+Execução do Godot sem flag --headless:
+ERROR: X11 Display is not available
+WARNING: Display driver x11 failed, falling back to wayland.
+ERROR: Can't connect to a Wayland display.
+ERROR: Unable to create DisplayServer, all display drivers failed. Use "--headless" if you're running without a display.
+
+Conclusão:
+Não há display server (X11 ou Wayland) ativo ou acessível no ambiente Linux terminal.
+Conforme regra estrita do protocolo da ETAPA 4e.18-R1:
+"Se não houver ambiente gráfico disponível, interromper esta seção e registrar NÃO VALIDADO. Não instalar componentes ou modificar o ambiente sem autorização. Se não houver ambiente gráfico, registrar a limitação e encerrar como PARCIALMENTE HOMOLOGADA."

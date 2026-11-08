@@ -848,6 +848,9 @@ const POOL: Array = [
 		"kit": Color("0a52b8"), "kit2": Color("0a52b8"), "pattern": "stripes", "kit_b": Color("f5f5f5"), "crest": "shield", "rating": 67},
 	{"id": "bota", "name": "Botafogo-SP", "abbrev": "BOS", "country": "Brasil", "div": 3,
 		"kit": Color("f5f5f5"), "kit2": Color("f5f5f5"), "pattern": "band_h", "kit_b": Color("c8102e"), "crest": "round", "rating": 67},
+	{"id": "bot_pb", "name": "Botafogo-PB", "abbrev": "BPB", "country": "Brasil", "div": 3,
+		"kit": Color("14161a"), "kit2": Color("14161a"), "pattern": "stripes", "kit_b": Color("f5f5f5"),
+		"shape": "shield", "crest_pattern": "solid", "emblem": "star", "emblem_tone": "red", "rim": "dark", "rating": 66},
 	{"id": "fig", "name": "Figueirense", "abbrev": "FIG", "country": "Brasil", "div": 3,
 		"kit": Color("14161a"), "kit2": Color("14161a"), "pattern": "stripes", "kit_b": Color("f5f5f5"), "crest": "diamond", "rating": 67},
 	{"id": "lon", "name": "Londrina", "abbrev": "LON", "country": "Brasil", "div": 3,
@@ -7710,3 +7713,19 @@ static func _sin_choque(cands: Array, contra: Color) -> Color:
 		if c is Color and not kits_clash(c, contra):
 			return c
 	return _contrast_accent(contra)
+
+
+## ETAPA 4e.3 — Delegação para o sistema centralizado de identidade cromática oficial
+static func get_team_identity_colors(team_id: String, team_data: Dictionary = {}) -> Dictionary:
+	var id_script = load("res://features/scoreboard/team_identity_colors.gd")
+	if id_script != null:
+		return id_script.get_team_identity_colors(team_id, team_data)
+	return {}
+
+
+## ETAPA 4e.4 — Delegação para configuração de estilo de cabeçalho e telas externas
+static func get_team_header_style(team_id: String, team_data: Dictionary = {}) -> Dictionary:
+	var id_script = load("res://features/scoreboard/team_identity_colors.gd")
+	if id_script != null:
+		return id_script.get_team_header_style(team_id, team_data)
+	return {}

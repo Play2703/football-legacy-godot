@@ -1,0 +1,142 @@
+Godot Engine v4.7.2.stable.arch_linux.ed1daf0bf (2026-08-17 01:18:38 UTC) - https://godotengine.org
+
+=================================================================
+INICIANDO SUÍTE DE HOMOLOGAÇÃO GERAL — ETAPA 4e.17
+=================================================================
+[PASS] 4e.15 DECLÍNIO: Idade 32: Físico livre de declínio
+[PASS] 4e.15 DECLÍNIO: Idade 33: Declínio físico ativado (velocidad)
+[PASS] 4e.15 DECLÍNIO: Idade 33: Declínio físico ativado (aceleracion)
+[PASS] 4e.15 DECLÍNIO: Idade 33: Declínio físico ativado (fisico)
+[PASS] 4e.15 DECLÍNIO: Idade 33: Técnico livre de declínio (potencia)
+[PASS] 4e.15 DECLÍNIO: Idade 34: Técnico livre de declínio (potencia)
+[PASS] 4e.15 DECLÍNIO: Idade 35: Declínio técnico ativado (potencia)
+[PASS] 4e.15 DECLÍNIO: Idade 35: Declínio técnico ativado (precision)
+[PASS] 4e.15 DECLÍNIO: Idade 35: Declínio técnico ativado (efecto)
+[PASS] 4e.15 DECLÍNIO: Idade 35: Declínio técnico ativado (regate)
+[PASS] 4e.15 DECLÍNIO: Idade 39: Maturidade livre (vision)
+[PASS] 4e.15 DECLÍNIO: Idade 39: Maturidade livre (penal)
+[PASS] 4e.15 DECLÍNIO: Idade 39: Maturidade livre (parado)
+[PASS] 4e.15 DECLÍNIO: Bônus externo bloqueado em velocidade aos 39 anos
+[PASS] 4e.15 DECLÍNIO: Bônus externo concedido em visão aos 39 anos
+[PASS] 4e.16 CABELOS: Total de cortes de cabelo é exatamente 36
+[PASS] 4e.16 CABELOS: Estilo 'afro' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'trenzas' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'largo' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'edgar' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'tupe' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'hongo' presente no catálogo
+[PASS] 4e.16 CABELOS: Estilo 'rastas' presente no catálogo
+[PASS] 4e.16 CABELOS: Renderização procedural dos 7 estilos em 3 peles e 3 cores de cabelo
+[PASS] 4e.16 CABELOS: Atribuição de estilo em team_custom é persistida
+[PASS] 4e.16 CABELOS: Migração de save antigo 'afro' para 'p_afro_redondo'
+[PASS] 4e.16 CABELOS: Migração de save antigo 'edgar' para 'p_edgar'
+[PASS] 4e.16 ÓCULOS: Filtro comemoração robot usa óculos
+[PASS] 4e.16 ÓCULOS: Filtro comemoração surf usa óculos
+[PASS] 4e.16 ÓCULOS: Filtro comemoração pinguinazo usa óculos
+[PASS] 4e.16 ÓCULOS: Filtro comemoração cumbia NÃO usa óculos
+[PASS] 4e.16 ÓCULOS: Filtro comemoração pasillo NÃO usa óculos
+[PASS] 4e.16 ÓCULOS: GafasCeleb anexado com sucesso ao ator
+[PASS] 4e.16 ÓCULOS: GafasCeleb billboard sincronizado com ator
+[PASS] 4e.16 ÓCULOS: Orientação South: óculos visíveis com textura frontal
+[PASS] 4e.16 ÓCULOS: Orientação East: textura leste ativada
+[PASS] 4e.16 ÓCULOS: Orientação West: textura oeste ativada
+[PASS] 4e.16 ÓCULOS: Orientação North (costas): óculos ocultos
+[PASS] 4e.16 ÓCULOS: Remoção limpa via quita(): ator sem metadado residual
+[PASS] 4e.16 SÉPIA: Instanciação de material sépia com uniform intensity 0.88
+[PASS] 4e.16 SÉPIA: Imagem clara: canais clamped sem aberrações (R=1, G=1, B≈0.937)
+[PASS] 4e.16 SÉPIA: Imagem escura: tom sépia escuro preservado com proporção correta
+[PASS] 4e.16 SÉPIA: Material atribuído ao viewport_box em item de recordação
+[PASS] FLUXOS GERAIS: 1. Inicialização: Engine ativa e estável
+[PASS] FLUXOS GERAIS: 2. Menu Principal: Cena res://ui/main_menu.tscn carrega com sucesso
+[PASS] FLUXOS GERAIS: 3. Criação de nova carreira: Nome e clube inicializados
+[PASS] FLUXOS GERAIS: 4. Carregamento de carreira: Estrutura de dados ativa
+[PASS] FLUXOS GERAIS: 5. Personalização do atleta: Estilo 'p_edgar' atribuído
+[PASS] FLUXOS GERAIS: 6. Seleção de clube: Alteração de clube refletida
+[PASS] FLUXOS GERAIS: 7. Entrada em partida: Cena de partida res://features/match/match.tscn existe
+[PASS] FLUXOS GERAIS: 8. Execução de partidas: Módulos de match e física intactos
+[PASS] FLUXOS GERAIS: 9. Comemorações: Módulo Celebs e gestos ativos
+[PASS] FLUXOS GERAIS: 10. Treinamento: Pontos de habilidade disponíveis
+[PASS] FLUXOS GERAIS: 11. Evolução de habilidades: spend_point evolui atributo em jogador jovem
+[PASS] FLUXOS GERAIS: 12. Passagem de temporada: Incremento de temporada
+[PASS] FLUXOS GERAIS: 13. Envelhecimento: Jogador atinge idade de declínio técnico (35)
+[PASS] FLUXOS GERAIS: 14. Premiações: grant_title_now executa e concede título
+[PASS] FLUXOS GERAIS: 15. Recordações históricas: Estrutura de keepsake válida
+[PASS] FLUXOS GERAIS: 16. Salvamento: Gravação de save de teste em disco
+[PASS] FLUXOS GERAIS: 17. Fechamento de sessão: Limpeza de memória sem falhas
+[PASS] FLUXOS GERAIS: 18. Reinicialização e carregamento: Dados restaurados com integridade total
+[PASS] COMPATIBILIDADE: Save legado: 'afro' migrado para 'p_afro_redondo'
+[PASS] COMPATIBILIDADE: Save legado: 'beard' migrado para 'p_barba_recortada'
+[PASS] COMPATIBILIDADE: Save legado: Atributos intactos sem perdas
+[PASS] ESTABILIDADE: Recurso gafas.png presente
+[PASS] ESTABILIDADE: Recurso gafas_east.png presente
+[PASS] ESTABILIDADE: Recurso gafas_west.png presente
+[PASS] ESTABILIDADE: Shader de sépia compila sem erros
+[PASS] ESTABILIDADE: Ausência de nós órfãos em instanciação temporária de GafasCeleb
+--- Gerando painéis de evidência da ETAPA 4e.17 ---
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_afro_redondo_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_trenzas_de_caja_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_melena_surfera_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_edgar_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_tupe_ladeado_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_tazon_con_rapado_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_rastas_finas_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:388)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+[OK] Gerado EVIDENCIAS_ETAPA_4E17/capturas/painel_7_novos_cortes_homologacao.png
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:399)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas_east.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:400)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas_west.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:401)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+[OK] Gerado EVIDENCIAS_ETAPA_4E17/capturas/painel_gafas_orientacoes_homologacao.png
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/branding/android/icon_192.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_evidencias_4e17 (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:416)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E17/testes/test_homologacao_4e17.gd:43)
+[OK] Gerado EVIDENCIAS_ETAPA_4E17/capturas/painel_sepia_homologacao.png
+=================================================================
+RESUMO DA HOMOLOGAÇÃO GERAL — ETAPA 4e.17
+Total de testes: 69
+Testes APROVADOS: 69
+Testes REPROVADOS: 0
+Taxa de Conformidade: 100.0%
+=================================================================
+WARNING: 1 ObjectDB instance was leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

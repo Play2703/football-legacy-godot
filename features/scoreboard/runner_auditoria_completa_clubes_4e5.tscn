@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ci1u8n4i4f4e5"]
+
+[ext_resource type="Script" path="res://features/scoreboard/runner_auditoria_completa_clubes_4e5.gd" id="1_4e5"]
+
+[node name="RunnerAuditoriaCompletaClubes4e5" type="Node"]
+script = ExtResource("1_4e5")

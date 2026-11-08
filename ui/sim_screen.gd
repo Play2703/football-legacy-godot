@@ -1,6 +1,8 @@
 class_name SimScreen
 extends CanvasLayer
 
+const TeamIdentityColors = preload("res://features/scoreboard/team_identity_colors.gd")
+
 
 
 
@@ -296,6 +298,9 @@ var _bug: PanelContainer
 
 
 
+
+const USE_TEAM_COLOR_HEADER: bool = true
+var _team_header_bg: Control = null
 
 var _bug_band: OpenBand
 var _comp_cap: PanelContainer
@@ -1066,43 +1071,33 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 
 
 
-	_you_accent = _side_tint(you_team, UiKit.CYAN)
-	_rival_accent = _side_tint(rival_team, accent)
-
-
-
 	var yid: String = String(you_team.get("id", ""))
 	var rid: String = String(rival_team.get("id", ""))
+	var you_pal: Dictionary = TeamIdentityColors.get_team_identity_colors(yid, you_team)
+	var rival_pal: Dictionary = TeamIdentityColors.get_team_identity_colors(rid, rival_team)
+
+	_you_accent = you_pal["accent_color"] if you_pal["primary_color"].get_luminance() > 0.85 else you_pal["primary_color"]
+	_rival_accent = rival_pal["accent_color"] if rival_pal["primary_color"].get_luminance() > 0.85 else rival_pal["primary_color"]
+
 	if _riv_sub != null:
 		_riv_sub.text = ScenarioStore.formation_of(rid)
 	if _you_sub != null:
 		_you_sub.text = ScenarioStore.formation_of(yid)
 	_reencaja.call_deferred()
 
-
-
-
 	if Teams.kits_clash(_you_accent, _rival_accent):
-
-
-		var kit2: Color = rival_team.get("kit2", Color.WHITE)
-		_rival_accent = _vivid(kit2)
+		_rival_accent = rival_pal["secondary_color"]
 		if Teams.kits_clash(_you_accent, _rival_accent):
-			_rival_accent = _vivid(accent)
+			_rival_accent = rival_pal["accent_color"]
 		if Teams.kits_clash(_you_accent, _rival_accent):
 			_rival_accent = UiKit.GOLD
 
-
-
-
-
-
-
-
 	_soy_local = bool(fx.get("home", true))
 	if _rot_local != null:
-		_rot_local.color = _you_accent if _soy_local else _rival_accent
-		_rot_visita.color = _rival_accent if _soy_local else _you_accent
+		var home_pal = you_pal if _soy_local else rival_pal
+		var away_pal = rival_pal if _soy_local else you_pal
+		_rot_local.color = home_pal["primary_color"]
+		_rot_visita.color = away_pal["primary_color"]
 
 
 	_pinta_marcas()
@@ -1195,22 +1190,22 @@ func begin(you_team: Dictionary, rival_team: Dictionary, div: int = 1,
 		UiKit.style_button(tb, tab_pal)
 
 
-	_you_name.add_theme_color_override("font_color", _tinta(_you_accent))
+	if not USE_TEAM_COLOR_HEADER:
+		_you_name.add_theme_color_override("font_color", _tinta(_you_accent))
+		_rival_name.add_theme_color_override("font_color", _tinta(_rival_accent))
 
 	_glow_you_grad.colors = PackedColorArray([
 		Color(_you_accent.r, _you_accent.g, _you_accent.b, 0.0),
 		Color(_you_accent.r, _you_accent.g, _you_accent.b, 0.9)])
 
-	_rival_name.add_theme_color_override("font_color", _tinta(_rival_accent))
-
-
 	_pinta_dom_cifra()
-
 
 	_repinta_fichas()
 
-
 	_apply_sub_lock()
+
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
 
 
 
@@ -3366,6 +3361,12 @@ func _build_score_row() -> Control:
 	margin.add_theme_constant_override("margin_bottom", 22)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+	if USE_TEAM_COLOR_HEADER:
+		_team_header_bg = Control.new()
+		_team_header_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_team_header_bg.draw.connect(_on_draw_team_header_bg)
+		margin.add_child(_team_header_bg)
+
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 26)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -3377,6 +3378,7 @@ func _build_score_row() -> Control:
 	_you_medal_sb = _medal_style()
 	_you_crest = CrestView.new()
 	_you_crest.custom_minimum_size = Vector2(112, 112)
+	_you_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_you_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(_team_column(_you_crest, _you_medal_sb, _you_name, _you_sub, 0))
 
@@ -3489,6 +3491,7 @@ func _build_score_row() -> Control:
 	_rival_medal_sb = _medal_style()
 	_rival_crest = CrestView.new()
 	_rival_crest.custom_minimum_size = Vector2(112, 112)
+	_rival_crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_rival_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(_team_column(_rival_crest, _rival_medal_sb, _rival_name, _riv_sub, 1))
 	return margin
@@ -3575,7 +3578,15 @@ func _team_column(crest: CrestView, medal_sb: StyleBoxFlat, name_label: Label,
 func _make_form() -> Label:
 	var l: Label = Label.new()
 	l.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	l.add_theme_color_override("font_color", UiKit.INK_BODY)
+	if USE_TEAM_COLOR_HEADER:
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
+		l.add_theme_constant_override("outline_size", 2)
+		l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+		l.add_theme_constant_override("shadow_offset_x", 0)
+		l.add_theme_constant_override("shadow_offset_y", 1)
+	else:
+		l.add_theme_color_override("font_color", UiKit.INK_BODY)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
@@ -3605,19 +3616,205 @@ func _viste_bug(accent: Color) -> void:
 	var m: Vector2 = _bug_band.margenes()
 	_comp_cap_sb.content_margin_top = 8.0 + m.x
 	_score_row.add_theme_constant_override("margin_bottom", int(22.0 + m.y))
+	if USE_TEAM_COLOR_HEADER:
+		_update_team_color_header()
+
+## ETAPA 4e.4 — Obtenção centralizada da identidade cromática e estilo geométrico
+func _get_team_header_style(team_data: Dictionary) -> Dictionary:
+	var tid = String(team_data.get("id", "")).to_lower().strip_edges()
+	return TeamIdentityColors.get_team_header_style(tid, team_data)
+
+func _update_team_color_header() -> void:
+	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:
+		return
+	if is_instance_valid(_team_header_bg):
+		_team_header_bg.queue_redraw()
+	
+	var home_t: Dictionary = _you_team if _soy_local else _rival_team
+	var away_t: Dictionary = _rival_team if _soy_local else _you_team
+	var home_cfg: Dictionary = _get_team_header_style(home_t)
+	var away_cfg: Dictionary = _get_team_header_style(away_t)
+	
+	var home_col: Color = home_cfg["colors"][0] if not home_cfg["colors"].is_empty() else Color("#202028")
+	var away_col: Color = away_cfg["colors"][0] if not away_cfg["colors"].is_empty() else Color("#202028")
+	
+	var home_lbl: Label = _you_name if _soy_local else _rival_name
+	var away_lbl: Label = _rival_name if _soy_local else _you_name
+	var home_sub: Label = _you_sub if _soy_local else _riv_sub
+	var away_sub: Label = _riv_sub if _soy_local else _you_sub
+	
+	_apply_header_text_contrast(home_lbl, home_sub, home_col)
+	_apply_header_text_contrast(away_lbl, away_sub, away_col)
+
+func _apply_header_text_contrast(name_lbl: Label, sub_lbl: Label, bg_col: Color) -> void:
+	if name_lbl == null or not is_instance_valid(name_lbl):
+		return
+	var text_col: Color = TeamIdentityColors.calculate_contrast_text_color(bg_col)
+	var is_dark_txt: bool = (text_col == Color("#101015") or bg_col.get_luminance() > 0.50)
+	var outline_col: Color = Color(1.0, 1.0, 1.0, 0.70) if is_dark_txt else Color(0.04, 0.05, 0.08, 0.95)
+	var shadow_col: Color = Color(0.0, 0.0, 0.0, 0.15) if is_dark_txt else Color(0.0, 0.0, 0.0, 0.60)
+	
+	name_lbl.add_theme_color_override("font_color", text_col)
+	name_lbl.add_theme_color_override("font_outline_color", outline_col)
+	name_lbl.add_theme_constant_override("outline_size", 2 if is_dark_txt else 3)
+	name_lbl.add_theme_color_override("font_shadow_color", shadow_col)
+	name_lbl.add_theme_constant_override("shadow_offset_x", 0)
+	name_lbl.add_theme_constant_override("shadow_offset_y", 1 if is_dark_txt else 2)
+	
+	if sub_lbl != null and is_instance_valid(sub_lbl):
+		sub_lbl.add_theme_color_override("font_color", text_col)
+		sub_lbl.add_theme_color_override("font_outline_color", outline_col)
+		sub_lbl.add_theme_constant_override("outline_size", 1 if is_dark_txt else 2)
+		sub_lbl.add_theme_color_override("font_shadow_color", shadow_col)
+		sub_lbl.add_theme_constant_override("shadow_offset_x", 0)
+		sub_lbl.add_theme_constant_override("shadow_offset_y", 1)
+
+func _on_draw_team_header_bg() -> void:
+	if not USE_TEAM_COLOR_HEADER or _team_header_bg == null:
+		return
+	var par: MarginContainer = _team_header_bg.get_parent() as MarginContainer
+	var ml: float = float(par.get_theme_constant("margin_left")) if par else 20.0
+	var mr: float = float(par.get_theme_constant("margin_right")) if par else 20.0
+	var mt: float = float(par.get_theme_constant("margin_top")) if par else 18.0
+	var mb: float = float(par.get_theme_constant("margin_bottom")) if par else 22.0
+	
+	var origin_x: float = -ml
+	var origin_y: float = -mt
+	var total_w: float = _team_header_bg.size.x + ml + mr
+	var total_h: float = _team_header_bg.size.y + mt + mb
+	if total_w <= 0.0 or total_h <= 0.0:
+		return
+		
+	var mid_x: float = origin_x + total_w * 0.5
+	var skew_dx: float = 32.0
+	var x_top: float = mid_x + skew_dx
+	var x_bot: float = mid_x - skew_dx
+	
+	var home_t: Dictionary = _you_team if _soy_local else _rival_team
+	var away_t: Dictionary = _rival_team if _soy_local else _you_team
+	var home_cfg: Dictionary = _get_team_header_style(home_t)
+	var away_cfg: Dictionary = _get_team_header_style(away_t)
+	
+	# 1. Desenhar faixas e listras autênticas dos clubes de ponta a ponta (sem caixas ou suavizadores escuros sobre os clubes)
+	_draw_header_team_side(home_cfg, true, origin_x, origin_y, x_top, x_bot, total_w, total_h)
+	_draw_header_team_side(away_cfg, false, origin_x, origin_y, x_top, x_bot, total_w, total_h)
+	
+	# 2. Divisória central diagonal entre as cores dos clubes
+	_team_header_bg.draw_line(Vector2(x_top, origin_y), Vector2(x_bot, origin_y + total_h), Color(0.0, 0.0, 0.0, 0.40), 2.5)
+	_team_header_bg.draw_line(Vector2(x_top + 1.0, origin_y), Vector2(x_bot + 1.0, origin_y + total_h), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+	
+	# 3. Fundo do placar central (independente dos blocos dos clubes, mantendo a geometria e estética original)
+	var center_w: float = minf(total_w * 0.36, 360.0)
+	var center_x: float = (total_w - center_w) * 0.5 + origin_x
+	_team_header_bg.draw_rect(Rect2(center_x, origin_y, center_w, total_h), Color(0.04, 0.05, 0.08, 0.65))
+
+func _draw_header_team_side(cfg: Dictionary, is_home: bool, ox: float, oy: float, x_top: float, x_bot: float, W: float, H: float) -> void:
+	var colors: Array = cfg.get("colors", [Color("#1a1a24")])
+	var pattern: String = cfg.get("pattern", "solid")
+	if colors.is_empty():
+		colors = [Color("#1a1a24")]
+		
+	var right_bound: float = ox + W
+	var bottom_bound: float = oy + H
+	var poly: PackedVector2Array
+	if is_home:
+		poly = PackedVector2Array([
+			Vector2(ox, oy),
+			Vector2(x_top, oy),
+			Vector2(x_bot, bottom_bound),
+			Vector2(ox, bottom_bound)
+		])
+	else:
+		poly = PackedVector2Array([
+			Vector2(x_top, oy),
+			Vector2(right_bound, oy),
+			Vector2(right_bound, bottom_bound),
+			Vector2(x_bot, bottom_bound)
+		])
+		
+	if colors.size() == 1 or pattern == "solid":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+	elif pattern == "stripes_h":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+		var stripe_h: float = 24.0
+		var num_stripes: int = int(ceil(H / stripe_h))
+		for i in range(1, num_stripes, 2):
+			var y1: float = oy + float(i) * stripe_h
+			var y2: float = minf(y1 + stripe_h, bottom_bound)
+			if y1 >= bottom_bound:
+				break
+			var t1: float = (y1 - oy) / H
+			var t2: float = (y2 - oy) / H
+			var cur_x1: float = lerpf(x_top, x_bot, t1)
+			var cur_x2: float = lerpf(x_top, x_bot, t2)
+			var stripe_poly: PackedVector2Array
+			if is_home:
+				stripe_poly = PackedVector2Array([
+					Vector2(ox, y1),
+					Vector2(cur_x1, y1),
+					Vector2(cur_x2, y2),
+					Vector2(ox, y2)
+				])
+			else:
+				stripe_poly = PackedVector2Array([
+					Vector2(cur_x1, y1),
+					Vector2(right_bound, y1),
+					Vector2(right_bound, y2),
+					Vector2(cur_x2, y2)
+				])
+			_team_header_bg.draw_colored_polygon(stripe_poly, colors[1])
+	elif pattern == "stripes_v":
+		_team_header_bg.draw_colored_polygon(poly, colors[0])
+		var stripe_w: float = 28.0
+		var start_x: float = ox if is_home else x_bot
+		var end_x: float = x_top if is_home else right_bound
+		var total_span: float = end_x - start_x
+		var num_v: int = int(ceil(total_span / stripe_w))
+		for i in range(1, num_v, 2):
+			var sx1: float = start_x + float(i) * stripe_w
+			var sx2: float = minf(sx1 + stripe_w, end_x)
+			if sx1 >= end_x:
+				break
+			var v_poly: PackedVector2Array
+			if is_home:
+				var cx1_top: float = minf(sx1, x_top)
+				var cx2_top: float = minf(sx2, x_top)
+				var cx1_bot: float = minf(sx1, x_bot)
+				var cx2_bot: float = minf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			else:
+				var cx1_top: float = maxf(sx1, x_top)
+				var cx2_top: float = maxf(sx2, x_top)
+				var cx1_bot: float = maxf(sx1, x_bot)
+				var cx2_bot: float = maxf(sx2, x_bot)
+				v_poly = PackedVector2Array([
+					Vector2(cx1_top, oy),
+					Vector2(cx2_top, oy),
+					Vector2(cx2_bot, bottom_bound),
+					Vector2(cx1_bot, bottom_bound)
+				])
+			_team_header_bg.draw_colored_polygon(v_poly, colors[1])
 
 
 func _make_name(color: Color) -> Label:
 	var l: Label = Label.new()
-
-
-
-
-
 	l.add_theme_font_size_override("font_size", CareerTheme.T_HEAD)
-	l.add_theme_color_override("font_color", color)
-	l.add_theme_color_override("font_outline_color", UiKit.OUTLINE)
-	l.add_theme_constant_override("outline_size", 5)
+	if USE_TEAM_COLOR_HEADER:
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08, 0.95))
+		l.add_theme_constant_override("outline_size", 3)
+		l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.60))
+		l.add_theme_constant_override("shadow_offset_x", 0)
+		l.add_theme_constant_override("shadow_offset_y", 2)
+	else:
+		l.add_theme_color_override("font_color", color)
+		l.add_theme_color_override("font_outline_color", UiKit.OUTLINE)
+		l.add_theme_constant_override("outline_size", 5)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.custom_minimum_size = Vector2(240, 0)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -7845,6 +8042,12 @@ func _band_tex(tex: Texture2D, top: bool) -> TextureRect:
 
 
 
+
+
+func _exit_tree() -> void:
+	for tw in [_fade_tw, _dom_tw, _gol_bug_tw, _gol_pop_tw, _energy_pulse_tw, _rating_tw, _alin_scroll_tw, _vivo_tw]:
+		if tw and is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
 
 
 class _Vecina extends Node:

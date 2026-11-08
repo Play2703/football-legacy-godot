@@ -419,6 +419,7 @@ const EXTRA_HAIR_STYLES: Array[String] = [
 	"fade_alto", "fade_bajo", "crop", "caesar", "crew_cut", "flequillo",
 	"slick_back", "quiff_corto", "coleta", "coleta_alta", "bun_corto",
 	"liga_coleta", "banda_pelo",
+	"afro", "trenzas", "largo", "edgar", "tupe", "hongo", "rastas",
 ]
 const EXTRA_FACIAL_HAIR: Array[String] = [
 	"sideburns", "soul", "chinstrap", "full", "handlebar",
@@ -8850,6 +8851,24 @@ static func _apply_hair_style(img: Image, style: String,
 				var he_dx: float = absf(float(p.x) - cx_top) / hair_hw
 				var he_bot: float = float(hair_top) + hair_h *(0.62 if is_back else 0.72)
 				blend = 0.86 if float(p.y) <= he_bot and he_dx <= 0.62 else 0.0
+			"afro", "largo":
+				blend = 0.0
+			"trenzas":
+				var k_tr: int = ((p.x - int(cx_top)) % 3 + 3) % 3
+				blend = 0.42 if k_tr == 1 else 0.0
+			"rastas":
+				var k_ra: int = ((p.x - int(cx_top)) % 4 + 4) % 4
+				blend = 0.35 if k_ra == 2 else 0.0
+			"edgar":
+				var dx_ed: float = absf(float(p.x) - cx_top) / maxf(hair_hw, 1.0)
+				var y_ed: float = (float(p.y) - float(hair_top)) / hair_h
+				blend = 0.82 if (dx_ed > 0.62 and y_ed > 0.36) else 0.0
+			"tupe":
+				var dx_tu: float = absf(float(p.x) - cx_top) / maxf(hair_hw, 1.0)
+				blend = 0.72 if dx_tu > 0.68 else 0.0
+			"hongo":
+				var y_ho: float = (float(p.y) - float(hair_top)) / hair_h
+				blend = 0.82 if y_ho > 0.64 else 0.0
 		if blend <= 0.0:
 			out_kept[p] = 1.0
 			continue

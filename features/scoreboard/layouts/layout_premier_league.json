@@ -1,0 +1,94 @@
+{
+  "id": "premier_league",
+  "nome": "Premier League",
+  "familia": "skew",
+  "confianca": "medido",
+  "fonte": "condensada",
+  "cor_time": "kit",
+  "proporcao_barra": 8.5,
+  "skew_deg": 14.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 1.19,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
+      "cor_texto": "#00FF87",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.7,
+      "forma": "paralelogramo",
+      "fundo": "#35053C",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 1.9,
+      "forma": "paralelogramo",
+      "fundo": "cor_clube",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.35,
+      "forma": "paralelogramo",
+      "fundo": "#FEFEFE",
+      "cor_texto": "#35053C",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.9,
+      "forma": "paralelogramo",
+      "fundo": "cor_clube_fora",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.46,
+      "forma": "paralelogramo",
+      "fundo": "#00FF87",
+      "cor_texto": "",
+      "conteudo": []
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#E13432",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito_relogio"
+  },
+  "pilula_periodo": {
+    "fundo": "#0C1033",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#3A4565"
+  },
+  "variante_compacta": {
+    "modo": "escala_proporcional",
+    "escala_fonte": 0.88,
+    "sigla_max_chars": 3
+  }
+}

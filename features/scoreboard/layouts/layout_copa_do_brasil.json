@@ -1,0 +1,93 @@
+{
+  "id": "copa_do_brasil",
+  "nome": "Copa Betano do Brasil",
+  "familia": "skew",
+  "confianca": "medido",
+  "fonte": "condensada",
+  "proporcao_barra": 8.5,
+  "skew_deg": 14.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 1.19,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
+      "cor_texto": "#F4B800",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.7,
+      "forma": "paralelogramo",
+      "fundo": "#EAB003",
+      "cor_texto": "#093020",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 1.9,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "placar_unico",
+      "peso": 1.35,
+      "forma": "paralelogramo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "#093020",
+      "conteudo": [
+        "gol_casa",
+        "hifen",
+        "gol_fora"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 1.9,
+      "forma": "paralelogramo",
+      "fundo": "#093020",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "tracos_3"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.46,
+      "forma": "paralelogramo",
+      "fundo": "#F4B800",
+      "cor_texto": "",
+      "conteudo": []
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#E13432",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito_relogio"
+  },
+  "pilula_periodo": {
+    "fundo": "#0C1033",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#3A4565"
+  },
+  "variante_compacta": {
+    "modo": "escala_proporcional",
+    "escala_fonte": 0.88,
+    "sigla_max_chars": 3
+  }
+}

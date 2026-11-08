@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4e3chromatic01"]
+
+[ext_resource type="Script" path="res://features/scoreboard/runner_match_hud_chromatic_identity_4e3.gd" id="1_4e3gd"]
+
+[node name="RunnerMatchHudChromaticIdentity4e3" type="Node"]
+script = ExtResource("1_4e3gd")

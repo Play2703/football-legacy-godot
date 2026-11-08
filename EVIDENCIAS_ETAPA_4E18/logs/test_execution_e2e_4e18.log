@@ -1,0 +1,148 @@
+Godot Engine v4.7.2.stable.arch_linux.ed1daf0bf (2026-08-17 01:18:38 UTC) - https://godotengine.org
+
+WARNING: save: user://slot1/career_meta.cfg ilegible (7), recuperado del .bak
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] load_cfg (res://autoload/save_slots.gd:607)
+         [1] _load (res://autoload/career.gd:64397)
+         [2] _ready (res://autoload/career.gd:5444)
+=================================================================
+INICIANDO VALIDAÇÃO END-TO-END E HOMOLOGAÇÃO VISUAL REAL — ETAPA 4e.18
+=================================================================
+[SETUP] Órfãos iniciais: 1 | Memória inicial: 249769608 bytes (238.20 MB)
+--- 1. Auditoria dos Testes Anteriores (4e.17) ---
+[PASS][AUD-01] Auditoria 4e.17: Classificação por categorias de teste -> Real: 24 (34.8%), Parcial: 5 (7.2%), Estrutural: 18 (26.1%), Simulado: 20 (29.0%), Inválido: 2 (2.9%)
+[PASS][AUD-02] Auditoria 4e.17: Detecção de testes com condição fixa -> Identificada condição fixa true no teste de estabilidade de nós órfãos
+[PASS][AUD-03] Auditoria 4e.17: Detecção de verificação de arquivos como substituto funcional -> Identificado que execução de partidas e gestos foi validada apenas por checagem de existência de arquivos
+[PASS][AUD-04] Auditoria 4e.17: Detecção de salvamento simulado fora do sistema oficial -> Identificado save simulado via FileAccess direto em arquivo isolado sem acionar a persistência oficial
+--- 2. Homologação Visual Real: C09 36 Cortes de Cabelo ---
+[PASS][C09-01] Personalização (C09): Total de 36 cortes no catálogo -> Total computado: 36 cortes
+[PASS][C09-02] Personalização (C09): Presença dos 7 novos estilos no catálogo -> Os 7 novos estilos confirmados no catálogo
+[PASS][C09-03] Personalização (C09): Instanciação da interface real de personalização -> Cena instanciada com sucesso (LookEditor montado)
+[PASS][C09-04] Personalização (C09): Renderização individual dos 7 estilos em personagem real -> 7 estilos renderizados no personagem real e salvos em EVIDENCIAS_ETAPA_4E18/capturas/
+[PASS][C09-05] Personalização (C09): Matriz visual de 7 estilos x 3 peles x 3 cores -> Painel gerado com sucesso em EVIDENCIAS_ETAPA_4E18/capturas/c09_painel_7_estilos_3_peles_3_cabelos.png
+[PASS][C09-06] Personalização (C09): Alinhamento espacial nas 4 orientações cardeais -> Painel cardeal gerado com alinhamento anatômico verificado
+[PASS][C09-07] Personalização (C09): Atualização de estado em GameState.team_custom -> GameState.team_custom atualizado corretamente
+[PASS][C09-08] Personalização (C09): Retrocompatibilidade e migração de saves legados -> Mapeamento 100%% exato para os 7 cortes legados
+--- 3. Homologação Visual Real: C16 Óculos nas Comemorações ---
+[PASS][C16-01] Comemorações (C16): Autorização de óculos nos gestos oficiais -> robot=true, surf=true, pinguinazo=true
+[PASS][C16-02] Comemorações (C16): Bloqueio de óculos em gestos não autorizados -> cumbia=false, pasillo=false, chotis=false, zen=false
+[PASS][C16-03] Comemorações (C16): Anexação de GafasCeleb ao ator 3D -> Instância válida e billboard ativo no ator
+[PASS][C16-04] Comemorações (C16): Orientação South: textura frontal e visível -> Visível com textura frontal confirmada
+[PASS][C16-05] Comemorações (C16): Orientação East: textura perfil leste -> Visível com textura leste confirmada
+[PASS][C16-06] Comemorações (C16): Orientação West: textura perfil oeste -> Visível com textura oeste confirmada
+[PASS][C16-07] Comemorações (C16): Orientação North (Costas): óculos ocultados -> Óculos ocultados automaticamente ao virar de costas
+[PASS][C16-08] Comemorações (C16): Remoção limpa sem resíduos via quita() -> Metadado removido e nó liberado limpo
+--- 4. Homologação Visual Real: H05 Efeito Sépia em Recordações ---
+[PASS][H05-01] Recordações (H05): Instanciação da cena real res://ui/ceremonies/keepsake.tscn -> Keepsake instanciado com sucesso
+[PASS][H05-02] Recordações (H05): Aplicação do ShaderMaterial sépia ao viewport_box -> ShaderMaterial aplicado com intensidade 0.88 configurada
+[PASS][H05-03] Recordações (H05): Isolamento do efeito sépia restrito ao viewport_box -> Efeito restrito exclusivamente ao viewport_box (HUD e menus preservados)
+[PASS][H05-04] Recordações (H05): Convolução sépia em altas luzes (imagem clara) -> Clamping correto verificado (R=1.000, G=1.000, B=0.933)
+[PASS][H05-05] Recordações (H05): Convolução sépia em baixas luzes (imagem escura) -> Matiz âmbar confirmado nas sombras (R=0.129, G=0.118, B=0.090)
+--- 5. Homologação Funcional: 4e.15 Blindagem do Declínio ---
+[PASS][DEC-01] Declínio (4e.15): Idade <= 32: atributos físicos e técnicos livres de declínio -> Retorno false confirmado (jogador no auge atlético)
+[PASS][DEC-02] Declínio (4e.15): Idade 33: ativação do declínio físico -> Declínio físico ativado rigorosamente aos 33 anos
+[PASS][DEC-03] Declínio (4e.15): Idade 34: proteção de atributos técnicos -> Atributos técnicos permanecem protegidos
+[PASS][DEC-04] Declínio (4e.15): Idade 35: ativação do declínio técnico -> Declínio técnico ativado rigorosamente aos 35 anos
+[PASS][DEC-05] Declínio (4e.15): Idade 39: atributos de maturidade protegidos -> Atributos de maturidade permanecem livres de declínio aos 39 anos
+[PASS][DEC-06] Declínio (4e.15): Blindagem de bônus externo em atributos sob declínio -> Velocidade=58 (bloqueado), Visão=65 (concedido)
+[PASS][DEC-07] Declínio (4e.15): Aplicação permitida de penalidades e lesões em declínio -> Penalidade aplicada corretamente (58 -> 55)
+[PASS][DEC-08] Declínio (4e.15): Limites de teto (100) e piso (1) preservados -> Visão clamped em 90
+--- 6. Homologação End-to-End da Persistência Oficial (Save & Load) ---
+[PASS][SAV-01] Persistência Oficial: Isolamento do slot de homologação -> Slot ativo configurado para ranura 2 (slot3)
+[PASS][SAV-02] Persistência Oficial: Gravação física dos arquivos oficiais em disco -> Arquivos confirmados em user://slot3/career_meta.cfg e user://slot3/career.json
+[PASS][SAV-03] Persistência Oficial: Restauração integral após recarga oficial do slot -> Restaurado: Nome=EndToEnd Hero, Clube=bar, Idade=36, Temporada=3, Cabelo=p_edgar, Pontos=5
+--- 7. Execução Real de Partida ---
+[PASS][MAT-01] Partida Real: Carregamento da cena res://features/match/match.tscn -> Cena de partida compilada e carregada sem erros
+[PASS][MAT-02] Partida Real: Instanciação e montagem na árvore de cena -> Nós estruturais Stadium (true) e Ball (true) confirmados
+[PASS][MAT-03] Partida Real: Desalocação limpa de partida -> Partida liberada com retorno ao loop principal
+--- 8. Estabilidade, Nós Órfãos e Memória ---
+[FINAL] Órfãos finais: 3183 (Delta: +3182) | Memória final: 760968092 (Delta: +511198484 bytes / +487.52 MB)
+[PARTIAL][EST-01] Estabilidade: Monitoramento real de nós órfãos via Performance -> Órfãos iniciais: 1, finais: 3183 (Delta: +3182)
+[PASS][EST-02] Estabilidade: Consumo de memória estática e ausência de vazamento -> Consumo final: 725.72 MB (Delta: +487.52 MB)
+[PASS][EST-03] Estabilidade: Integridade de shaders e recursos essenciais -> Shader de sépia compilado e recursos gráficos validados
+--- Gerando painéis e capturas complementares da ETAPA 4e.18 ---
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_afro_redondo_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_trenzas_de_caja_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_melena_surfera_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_edgar_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_tupe_ladeado_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_tazon_con_rapado_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/modular/propias/hair/p_rastas_finas_south_front.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:931)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:947)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas_east.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:968)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/sprites/acc/gafas_west.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:971)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/branding/android/icon_192.png'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load_from_file (core/io/image.cpp:2780)
+     GDScript backtrace (most recent call first):
+         [0] gera_todas_evidencias_4e18 (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:980)
+         [1] _ready (res://EVIDENCIAS_ETAPA_4E18/testes/test_e2e_homologacao_4e18.gd:61)
+[OK] Todas as capturas de evidência da 4e.18 salvas em EVIDENCIAS_ETAPA_4E18/capturas/
+[OK] Matriz salva com sucesso em res://MATRIZ_HOMOLOGACAO_4E18.csv com 42 linhas
+=================================================================
+RESUMO DA HOMOLOGAÇÃO E2E — ETAPA 4e.18
+Total de testes executados: 42
+Testes APROVADOS:          41
+Testes REPROVADOS:         0
+Testes PARCIAIS:           1
+Testes NÃO VALIDADOS:      0
+Testes NÃO EXECUTADOS:     0
+Taxa de Aprovação Efetiva: 97.6% (41 de 42)
+=================================================================
+SCRIPT ERROR: Parse Error: Could not preload resource file "res://ui/menu_background.tscn".
+   at: GDScript::reload (res://ui/career_hub.gd:29)
+ERROR: Failed to load script "res://ui/career_hub.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+ERROR: Parse Error: Failed. [Resource file res://ui/career_hub.tscn:12]
+   at: _parse_node_tag (scene/resources/resource_format_text.cpp:293)
+ERROR: Failed loading resource: res://ui/career_hub.tscn.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: 2 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 73 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 10 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 17 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 1 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.

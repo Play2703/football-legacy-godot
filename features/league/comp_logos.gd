@@ -73,6 +73,8 @@ static func texture(tipo: String) -> Texture2D:
 
 		_index.erase(tipo)
 		return null
+	if not img.has_mipmaps():
+		img.generate_mipmaps()
 	var tex: ImageTexture = ImageTexture.create_from_image(img)
 
 

@@ -68050,6 +68050,10 @@ func _start_celebration(actor: AnimatedSprite3D) -> void:
 				if _anim_usable(actor, _celeb_gesture):
 					_hold_celebration(actor)
 					actor.play(_celeb_gesture)
+					if Celebs.usa_gafas(_celeb_gesture):
+						var g: GafasCeleb = GafasCeleb.pon(actor)
+						if g != null:
+							_celeb_props.append(g)
 					if _celeb_gesture == "anillo":
 						_palco_pareja_programa(actor)
 					return

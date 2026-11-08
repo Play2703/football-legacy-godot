@@ -1,6 +1,8 @@
 class_name MatchHud
 extends CanvasLayer
 
+const TeamIdentityColors = preload("res://features/scoreboard/team_identity_colors.gd")
+
 
 
 signal restart_requested
@@ -257,6 +259,7 @@ var _center_sb: StyleBoxFlat
 
 var _score_box: PanelContainer
 var _cola_holder: MarginContainer
+var _cuelga_box: VBoxContainer
 
 
 var _clock_box: ClockTab
@@ -367,6 +370,14 @@ var _goal_flash: ColorRect
 var _goal_tween: Tween
 
 @onready var _score_chip: PanelContainer = % ScoreChip
+const USE_NEW_SCOREBOARD: bool = true
+const INGAME_BOARD_SCALE: float = 1.0
+const INGAME_LA_LIGA_SCALE: float = 1.0
+const INGAME_BOARD_WIDTH_FRAC: float = 0.50
+const INGAME_BOARD_HEIGHT_MAX_FRAC: float = 0.12
+var custom_board_width_frac: float = 0.0
+var _new_scoreboard: ScoreboardView = null
+var _match_state: String = ""
 
 
 
@@ -472,6 +483,28 @@ func _ready() -> void:
 
 
 	Entrada.botones_cambiados.connect(_repinta_hint)
+
+
+func _exit_tree() -> void:
+	if Settings.changed.is_connected(_fit_hint_box):
+		Settings.changed.disconnect(_fit_hint_box)
+	var vp = get_viewport()
+	if vp != null:
+		if vp.size_changed.is_connected(_apply_safe_area):
+			vp.size_changed.disconnect(_apply_safe_area)
+		if vp.size_changed.is_connected(_centra_marcador):
+			vp.size_changed.disconnect(_centra_marcador)
+	if _tic != null and is_instance_valid(_tic):
+		_tic.stop()
+	var tweens = [
+		_clock_pulse, _rating_count_tw, _rating_delta_tw, _pts_tw,
+		_fly_tw, _mood_tw, _heat_tw, _gol_bug_tw, _message_tween,
+		_sub_swap_tw, _aim_dim_tw, _mode_pulse_tween, _goal_tween,
+		_celeb_tween, _open_tw, _rec_tw, _rec_blink_tw, _rec_focus_tw
+	]
+	for tw in tweens:
+		if tw != null and is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
 
 
 
@@ -698,15 +731,35 @@ func _build_pause_button() -> void:
 func set_minute(minute: int) -> void:
 	_match_minute = minute
 
-
 	if _practice:
 		return
 
+	var en_extra: bool = _stoppage_base > 0 and minute >= _stoppage_base
+	var ref: int = _stoppage_base if en_extra else minute
 
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		_new_scoreboard.minute = minute
+		if _match_state.is_empty() or _match_state == "1T" or _match_state == "2T" or _match_state == "PR":
+			_match_state = "1T" if ref <= 45 else ("2T" if ref <= 90 else "PR")
+		_new_scoreboard.match_state = _match_state
+		if en_extra and _stoppage_added > 0:
+			_new_scoreboard.stoppage = _stoppage_added
+		else:
+			_new_scoreboard.stoppage = 0
+		_new_scoreboard.queue_redraw()
+	else:
+		_pinta_reloj()
+		_breathe_clock(minute)
 
-
-	_pinta_reloj()
-	_breathe_clock(minute)
+	var tenso: bool = minute >= RELOJ_TENSO
+	var late: bool = tenso and _tic != null and not Settings.reduce_motion
+	if late and _tic.is_stopped() and _tic.is_inside_tree():
+		_tic_on = true
+		_tic.start()
+	elif not late:
+		if _tic != null and not _tic.is_stopped():
+			_tic.stop()
+		_tic_on = true
 
 
 
@@ -869,6 +922,23 @@ func set_stoppage(base: int, added: int) -> void:
 		return
 	_stoppage_base = maxi(base, 0)
 	_stoppage_added = maxi(added, 0)
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var en_extra: bool = _stoppage_base > 0 and _new_scoreboard.minute >= _stoppage_base
+		if en_extra and _stoppage_added > 0:
+			_new_scoreboard.stoppage = _stoppage_added
+		else:
+			_new_scoreboard.stoppage = 0
+		_new_scoreboard.queue_redraw()
+	else:
+		_pinta_reloj()
+
+func set_match_state(p_state: String) -> void:
+	_match_state = p_state
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		_new_scoreboard.set_match_state(p_state)
+		if p_state == "INT" or p_state == "FIM":
+			_new_scoreboard.stoppage = 0
+		_new_scoreboard.queue_redraw()
 
 
 
@@ -939,8 +1009,10 @@ func set_practice(label: String, attempt: int, releva: bool = false) -> void:
 
 	_chance_chip.visible = _calladas == 0 and not _chance_label.text.is_empty()
 	_chance_label.add_theme_color_override("font_color", _accent_text)
-	_rating_chip.visible = false
-	_momentum_chip.visible = false
+	if _rating_chip != null and is_instance_valid(_rating_chip):
+		_rating_chip.visible = false
+	if _momentum_chip != null and is_instance_valid(_momentum_chip):
+		_momentum_chip.visible = false
 
 
 	if _heat_bar != null:
@@ -1574,21 +1646,18 @@ func set_momentum(level: int, text: String) -> void:
 	if _practice:
 		return
 	_set_mood(level)
+	if _momentum_chip == null or not is_instance_valid(_momentum_chip):
+		return
 	if level == 0 or text.is_empty():
 		_momentum_chip.visible = false
 		return
 
+	if _momentum_label == null or not is_instance_valid(_momentum_label):
+		return
 
 	var changed: bool = not _momentum_chip.visible or _momentum_label.text != text
 
-
 	_momentum_label.text = text
-
-
-
-
-
-
 	_momentum_label.add_theme_color_override("font_color",
 		Momentum.HOT if level > 0 else Momentum.COLD)
 	_momentum_chip.visible = true
@@ -2329,7 +2398,10 @@ func _msg_techo_h() -> float:
 		_score_chip.resized.connect(_refit_msg_tumbado)
 	var techo: float = 0.0
 	if _score_chip != null and is_instance_valid(_score_chip) and _score_chip.visible:
-		techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
+		if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
+			techo = _score_chip.offset_bottom
+		else:
+			techo = _score_chip.offset_top + _score_chip.get_combined_minimum_size().y
 	if _dianas_box != null and is_instance_valid(_dianas_box) and _dianas_box.visible:
 		techo = maxf(techo, _dianas_box.position.y + _dianas_box.get_combined_minimum_size().y)
 	return techo + 16.0
@@ -2531,7 +2603,72 @@ const MEDALLON_LOGO_ALTO: float = 46.0
 const MEDALLON_LOGO_ANCHO: float = 80.0
 const MEDALLON_EMBLEMA: float = 60.0
 
+func _build_momentum_and_stage_chips(parent_container: Control) -> void:
+	var mom_holder: CenterContainer = CenterContainer.new()
+	mom_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_momentum_chip = PanelContainer.new()
+	var mom_sb: StyleBoxFlat = StyleBoxFlat.new()
+	mom_sb.bg_color = HeatBar.TRACK
+	mom_sb.set_corner_radius_all(4)
+	mom_sb.content_margin_left = 12.0
+	mom_sb.content_margin_right = 12.0
+	mom_sb.content_margin_top = 2.0
+	mom_sb.content_margin_bottom = 2.0
+	_momentum_chip.add_theme_stylebox_override("panel", mom_sb)
+	_momentum_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_momentum_label = Label.new()
+	_momentum_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
+	_momentum_chip.add_child(_momentum_label)
+	_momentum_chip.visible = false
+	mom_holder.add_child(_momentum_chip)
+	parent_container.add_child(mom_holder)
+
+	var stage_holder: CenterContainer = CenterContainer.new()
+	stage_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_chip = PanelContainer.new()
+	_stage_sb = StyleBoxFlat.new()
+	_stage_sb.bg_color = _accent
+	_stage_sb.content_margin_left = 14.0
+	_stage_sb.content_margin_right = 14.0
+	_stage_sb.content_margin_top = 2.0
+	_stage_sb.content_margin_bottom = 2.0
+	_stage_chip.add_theme_stylebox_override("panel", _stage_sb)
+	_stage_chip.visible = false
+	_stage_label = Label.new()
+	_stage_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
+	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage_chip.add_child(_stage_label)
+	stage_holder.add_child(_stage_chip)
+	parent_container.add_child(stage_holder)
+
+
 func _build_scorebug() -> void:
+	if USE_NEW_SCOREBOARD:
+		_score_chip.remove_child(_score_label)
+		_score_chip.add_theme_stylebox_override("panel", _transparent_sb())
+		_new_scoreboard = ScoreboardView.new()
+		_new_scoreboard.name = "ScoreboardView"
+		_new_scoreboard.la_liga_scale_override = INGAME_LA_LIGA_SCALE
+		_score_chip.add_child(_new_scoreboard)
+		_build_gol_bug(_score_chip)
+		_cuelga_box = VBoxContainer.new()
+		_cuelga_box.name = "CuelgaBox"
+		_cuelga_box.add_theme_constant_override("separation", 6)
+		_cuelga_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_score_chip.add_child(_cuelga_box)
+		_build_momentum_and_stage_chips(_cuelga_box)
+		if _tic == null:
+			_tic = Timer.new()
+			_tic.wait_time = 0.5
+			_tic.ignore_time_scale = true
+			_tic.timeout.connect(_on_tic)
+			add_child(_tic)
+		_new_scoreboard.resized.connect(_centra_marcador)
+		_score_chip.resized.connect(_centra_marcador)
+		if not get_viewport().size_changed.is_connected(_centra_marcador):
+			get_viewport().size_changed.connect(_centra_marcador)
+		return
+
 	_score_chip.remove_child(_score_label)
 
 
@@ -2718,43 +2855,7 @@ func _build_scorebug() -> void:
 
 
 
-	var mom_holder: CenterContainer = CenterContainer.new()
-	_momentum_chip = PanelContainer.new()
-	var mom_sb: StyleBoxFlat = StyleBoxFlat.new()
-	mom_sb.bg_color = HeatBar.TRACK
-	mom_sb.set_corner_radius_all(4)
-	mom_sb.content_margin_left = 12.0
-	mom_sb.content_margin_right = 12.0
-	mom_sb.content_margin_top = 2.0
-	mom_sb.content_margin_bottom = 2.0
-	_momentum_chip.add_theme_stylebox_override("panel", mom_sb)
-	_momentum_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_momentum_label = Label.new()
-	_momentum_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	_momentum_chip.add_child(_momentum_label)
-	_momentum_chip.visible = false
-	mom_holder.add_child(_momentum_chip)
-	cuelga.add_child(mom_holder)
-
-
-
-
-	var stage_holder: CenterContainer = CenterContainer.new()
-	_stage_chip = PanelContainer.new()
-	_stage_sb = StyleBoxFlat.new()
-	_stage_sb.bg_color = _accent
-	_stage_sb.content_margin_left = 14.0
-	_stage_sb.content_margin_right = 14.0
-	_stage_sb.content_margin_top = 2.0
-	_stage_sb.content_margin_bottom = 2.0
-	_stage_chip.add_theme_stylebox_override("panel", _stage_sb)
-	_stage_chip.visible = false
-	_stage_label = Label.new()
-	_stage_label.add_theme_font_size_override("font_size", CareerTheme.T_DIM)
-	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_stage_chip.add_child(_stage_label)
-	stage_holder.add_child(_stage_chip)
-	cuelga.add_child(stage_holder)
+	_build_momentum_and_stage_chips(cuelga)
 
 
 
@@ -2784,7 +2885,122 @@ func _capsule_rect() -> Rect2:
 
 
 
+var _is_centering_marcador: bool = false
+
 func _centra_marcador() -> void:
+	if _is_centering_marcador:
+		return
+	_is_centering_marcador = true
+	_do_centra_marcador()
+	_is_centering_marcador = false
+
+func _do_centra_marcador() -> void:
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null and is_instance_valid(_new_scoreboard):
+		var vp = get_viewport()
+		var vp_rect = vp.get_visible_rect() if vp != null else Rect2(0, 0, 1920, 1080)
+		var vp_w = vp_rect.size.x
+		var vp_h = vp_rect.size.y
+		var is_la_liga: bool = _new_scoreboard.board_theme != null and (_new_scoreboard.board_theme.theme_id == "la_liga" or _new_scoreboard.board_theme.familia == "la_liga_horizontal")
+		
+		if is_la_liga:
+			var layout = ScoreboardView.calculate_la_liga_layout(Vector2(vp_w, vp_h), custom_board_width_frac)
+			var scale_factor: float = layout["scale_factor"]
+			var scaled_sz: Vector2 = layout["scaled_size"]
+			var top_margin: float = layout["top_margin"]
+			var half_w: float = layout["half_w"]
+			
+			_new_scoreboard.scale = Vector2.ONE
+			_new_scoreboard.la_liga_scale_override = scale_factor
+			_new_scoreboard._recalculate_dimensions()
+			_new_scoreboard.custom_minimum_size = scaled_sz
+			_new_scoreboard.size = scaled_sz
+			
+			_score_chip.anchor_left = 0.5
+			_score_chip.anchor_right = 0.5
+			_score_chip.anchor_top = 0.0
+			_score_chip.anchor_bottom = 0.0
+			_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+			_score_chip.grow_vertical = Control.GROW_DIRECTION_END
+			
+			_score_chip.offset_left = -half_w
+			_score_chip.offset_right = half_w
+			_score_chip.offset_top = top_margin
+			_score_chip.offset_bottom = top_margin + scaled_sz.y
+			_score_chip.custom_minimum_size = scaled_sz
+			_score_chip.size = scaled_sz
+			_new_scoreboard.position = Vector2.ZERO
+			
+			if _cuelga_box != null and is_instance_valid(_cuelga_box):
+				_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
+				_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
+				
+			# Ajuste inteligente do botão de pausa para evitar qualquer sobreposição
+			if _pause_button != null and is_instance_valid(_pause_button):
+				var sb_right = (vp_w * 0.5) + half_w
+				var pb_orig_left = vp_w - 144.0
+				if sb_right > (pb_orig_left - 16.0):
+					# Em telas estreitas onde o placar ocupa ~88%, posiciona o botão de pausa logo abaixo do placar à direita
+					var btn_w = clampf(roundf(56.0 * (vp_w / 720.0)), 44.0, 84.0)
+					var btn_h = clampf(roundf(44.0 * (vp_w / 720.0)), 36.0, 60.0)
+					_pause_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+					_pause_button.offset_top = _score_chip.offset_bottom + 8.0
+					_pause_button.offset_bottom = _pause_button.offset_top + btn_h
+					_pause_button.offset_right = -16.0
+					_pause_button.offset_left = -16.0 - btn_w
+				else:
+					# Em desktop e telas largas onde há margem suficiente, posiciona no canto superior direito
+					var btn_w = clampf(roundf(96.0 * (vp_w / 1920.0)), 64.0, 120.0)
+					var btn_h = clampf(roundf(64.0 * (vp_h / 1080.0)), 40.0, 80.0)
+					_pause_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+					_pause_button.offset_top = top_margin
+					_pause_button.offset_bottom = top_margin + btn_h
+					_pause_button.offset_right = -24.0
+					_pause_button.offset_left = -24.0 - btn_w
+			return
+		
+		# Outras competições (Brasileirão, Premier League, Bundesliga, etc.)
+		var base_sz: Vector2 = _new_scoreboard.get_real_size()
+		var is_portrait: bool = vp_w < vp_h or (vp_w / vp_h) < 1.25
+		var scale_factor: float
+		var max_h: float = vp_h * INGAME_BOARD_HEIGHT_MAX_FRAC
+		
+		if custom_board_width_frac > 0.0:
+			var target_w = vp_w * custom_board_width_frac
+			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
+		elif is_portrait:
+			var target_w = vp_w * INGAME_BOARD_WIDTH_FRAC
+			scale_factor = minf(target_w / maxf(base_sz.x, 1.0), max_h / maxf(base_sz.y, 1.0))
+		else:
+			var s_h = (vp_h / 1080.0) * INGAME_BOARD_SCALE
+			scale_factor = minf(s_h, max_h / maxf(base_sz.y, 1.0))
+			
+		_new_scoreboard.scale = Vector2.ONE * scale_factor
+		_new_scoreboard.custom_minimum_size = Vector2.ZERO
+		var scaled_sz: Vector2 = Vector2(roundf(base_sz.x * scale_factor), roundf(base_sz.y * scale_factor))
+		
+		_score_chip.anchor_left = 0.5
+		_score_chip.anchor_right = 0.5
+		_score_chip.anchor_top = 0.0
+		_score_chip.anchor_bottom = 0.0
+		_score_chip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_score_chip.grow_vertical = Control.GROW_DIRECTION_END
+		
+		var half_w = scaled_sz.x * 0.5
+		_score_chip.offset_left = -half_w
+		_score_chip.offset_right = half_w
+		var top_margin = roundf(24.0 * (vp_h / 1080.0))
+		if is_portrait:
+			top_margin = roundf(16.0 * (vp_h / 1920.0))
+		_score_chip.offset_top = top_margin
+		_score_chip.offset_bottom = top_margin + scaled_sz.y
+		_score_chip.custom_minimum_size = scaled_sz
+		_score_chip.size = scaled_sz
+		_new_scoreboard.position = Vector2.ZERO
+		if _cuelga_box != null and is_instance_valid(_cuelga_box):
+			_cuelga_box.position = Vector2(0.0, scaled_sz.y + 6.0)
+			_cuelga_box.size = Vector2(scaled_sz.x, 0.0)
+		return
+
 	if _cola_holder == null or _score_box == null or _score_bar == null:
 		return
 	var marco: Control = _score_bar.get_parent() as Control
@@ -3089,30 +3305,27 @@ func show_card_bug(roja: bool, quien: String = "", mia: bool = false) -> void:
 
 
 func _bug_show(tipo: String) -> void:
-
-
-
-
-
-
-
-	if _gol_bug == null or _score_bar == null or not _score_bar.is_inside_tree() \
-			or not _score_bar.visible:
+	if _gol_bug == null:
 		return
-	if _capsule_rect().size.x <= 1.0:
-		return
+	if not USE_NEW_SCOREBOARD:
+		if _score_bar == null or not _score_bar.is_inside_tree() or not _score_bar.visible:
+			return
+		if _capsule_rect().size.x <= 1.0:
+			return
+	else:
+		if _new_scoreboard == null or not _new_scoreboard.is_inside_tree() or not _new_scoreboard.visible:
+			return
 	_bug_tipo = tipo
-
-
 
 	var base: Color = _kit_readable(_kit_a)
 	var equipo: Dictionary = _you_team_data
-	var abbr: String = _you_abbr.text
+	var abbr: String = _you_abbr.text if _you_abbr != null else String(_you_team_data.get("abbrev", "MI"))
 	var grito: String = CareerTheme.caps(I18n.t("gol"))
 	if tipo != "gol":
 		base = RefCard.ROJA if tipo == "roja" else RefCard.AMARILLA
 		equipo = _you_team_data if _bug_card_mia else _rival_team_data
-		abbr = _you_abbr.text if _bug_card_mia else _rival_abbr.text
+		abbr = (_you_abbr.text if _you_abbr != null else String(_you_team_data.get("abbrev", "MI"))) if _bug_card_mia \
+				else (_rival_abbr.text if _rival_abbr != null else String(_rival_team_data.get("abbrev", "RIV")))
 
 
 		grito = CareerTheme.caps(_bug_card_quien)
@@ -3197,7 +3410,29 @@ func _bug_desliza(f: float) -> void:
 
 
 func _bug_coloca() -> void:
-	if _gol_bug == null or _score_bar == null:
+	if _gol_bug == null:
+		return
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var vp_h = get_viewport().get_visible_rect().size.y if get_viewport() != null else 1080.0
+		var scale_factor = INGAME_BOARD_SCALE * (vp_h / 1080.0)
+		var b_sz: Vector2 = _score_chip.size if (_score_chip != null and _score_chip.size.x > 0.0) else (_new_scoreboard.get_real_size() * scale_factor)
+		_gol_bug.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_gol_bug.position = Vector2.ZERO
+		_gol_bug.size = b_sz
+		_gol_bug_in.size = b_sz
+		_gol_bug_bg.size = b_sz
+		_gol_bug_patch.size = b_sz
+		_gol_bug_label.position = Vector2.ZERO
+		_gol_bug_label.size = b_sz
+		_gol_bug_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_gol_bug_side.position = Vector2(16.0 * scale_factor, 0.0)
+		_gol_bug_side.size = Vector2(b_sz.x * 0.5, b_sz.y)
+		var mascara: StyleBoxFlat = _gol_bug.get_theme_stylebox("panel") as StyleBoxFlat
+		if mascara != null:
+			mascara.set_corner_radius_all(int(minf(b_sz.x, b_sz.y) * 0.5))
+		return
+
+	if _score_bar == null:
 		return
 
 
@@ -3315,9 +3550,9 @@ func _club_tag(sb: StyleBoxFlat) -> Panel:
 
 
 func _tag_color(team: Dictionary) -> Color:
-	var k: Variant = team.get("kit", null)
-	return CareerTheme.fill_on_dark(k as Color, 0.0) if k is Color \
-			else CareerTheme.fill_on_dark(_accent, 0.0)
+	var tid = String(team.get("id", ""))
+	var pal = TeamIdentityColors.get_team_identity_colors(tid, team)
+	return pal["primary_color"]
 
 
 
@@ -3387,8 +3622,8 @@ func _style_scorebar() -> void:
 
 	_you_tag_sb.bg_color = _tag_color(_you_team_data)
 	_rival_tag_sb.bg_color = _tag_color(_rival_team_data)
-	_you_abbr.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
-	_rival_abbr.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
+	_you_abbr.add_theme_color_override("font_color", TeamIdentityColors.calculate_contrast_text_color(_you_tag_sb.bg_color))
+	_rival_abbr.add_theme_color_override("font_color", TeamIdentityColors.calculate_contrast_text_color(_rival_tag_sb.bg_color))
 	_score_label.add_theme_color_override("font_color", CareerTheme.INK_LIGHT)
 
 
@@ -3478,38 +3713,36 @@ func _style_scorebar() -> void:
 
 func set_competition(fixture: Dictionary) -> void:
 	_accent = Competitions.accent_of(fixture)
-
-
-
 	_comp_key = String(fixture.get("comp", "league"))
 	_comp_style = Competitions.style_of(fixture)
+
+	var stage: String = Competitions.stage_of(fixture)
+	if _stage_chip != null and is_instance_valid(_stage_chip):
+		_stage_chip.visible = not stage.is_empty()
+		if _stage_label != null and is_instance_valid(_stage_label):
+			_stage_label.text = I18n.t(stage)
+
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var theme_id = Competitions.scoreboard_theme_of(fixture)
+		var theme = ScoreboardLoader.load_theme(theme_id)
+		if theme != null:
+			_new_scoreboard.board_theme = theme
+			if theme_id == "la_liga" or theme_id == "laliga":
+				_new_scoreboard.la_liga_scale_override = INGAME_LA_LIGA_SCALE
+			_new_scoreboard._recalculate_dimensions()
+			_centra_marcador()
+		return
 
 	_apply_plate_shape()
 	if _comp_logo != null:
 		_comp_logo.set_type(Competitions.logo_type_of(fixture))
-
-
 		_fit_medallion_logo()
-
-	var stage: String = Competitions.stage_of(fixture)
-	if _stage_chip != null:
-		_stage_chip.visible = not stage.is_empty()
-		_stage_label.text = I18n.t(stage)
 	_style_scorebar()
-
-
 
 
 func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 	_you_team_data = you_team
 	_rival_team_data = rival_team
-
-
-
-
-
-
-
 
 	if not you_team.is_empty():
 		var ka: Variant = you_team.get("kit", null)
@@ -3520,10 +3753,22 @@ func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 			_kit_b = kb
 		_style_player_chip()
 
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var is_home = GameState.current_fixture().get("home", true) if (GameState and GameState.has_method("current_fixture")) else true
+		var home_t = you_team if is_home else rival_team
+		var away_t = rival_team if is_home else you_team
+		_new_scoreboard.home_team = home_t
+		_new_scoreboard.away_team = away_t
+		if _new_scoreboard._home_crest != null:
+			_new_scoreboard._home_crest.set_team(home_t)
+		if _new_scoreboard._away_crest != null:
+			_new_scoreboard._away_crest.set_team(away_t)
+		_new_scoreboard._recalculate_dimensions()
+		_centra_marcador()
+		return
 
 	_you_abbr.text = String(you_team.get("abbrev", "MI"))
 	_rival_abbr.text = String(rival_team.get("abbrev", "RIV"))
-
 
 	if _you_crest != null:
 		_you_crest.visible = not you_team.is_empty()
@@ -3534,15 +3779,18 @@ func set_teams(you_team: Dictionary, rival_team: Dictionary) -> void:
 		if not rival_team.is_empty():
 			_rival_crest.set_team(rival_team)
 
-
 	_style_scorebar()
 
 
 func set_score(you: int, rival: int) -> void:
 	_you_goals = you
 	_rival_goals = rival
-
-
+	if USE_NEW_SCOREBOARD and _new_scoreboard != null:
+		var is_home = GameState.current_fixture().get("home", true) if (GameState and GameState.has_method("current_fixture")) else true
+		_new_scoreboard.home_score = you if is_home else rival
+		_new_scoreboard.away_score = rival if is_home else you
+		_new_scoreboard.queue_redraw()
+		return
 
 	_score_label.text = "%d-%d" % [you, rival]
 
@@ -5196,6 +5444,7 @@ func maybe_show_rule(id: String) -> Control:
 
 
 func show_end(title: String, stats_text: String) -> void:
+	set_match_state("FIM")
 	_pause_button.visible = false
 	_end_title.text = CareerTheme.caps(title)
 	_end_stats.text = CareerTheme.caps(stats_text)
@@ -5216,6 +5465,7 @@ func show_end(title: String, stats_text: String) -> void:
 
 
 func show_summary(data: Dictionary) -> void:
+	set_match_state("FIM")
 	_pause_button.visible = false
 
 

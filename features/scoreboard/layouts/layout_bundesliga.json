@@ -1,0 +1,80 @@
+{
+  "id": "bundesliga",
+  "nome": "Bundesliga",
+  "familia": "reto",
+  "confianca": "medido",
+  "fonte": "larga_negrito",
+  "cor_time": "kit",
+  "proporcao_barra": 10.17,
+  "skew_deg": 0.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 1.58,
+      "forma": "retangulo",
+      "fundo": "#C9C8CA",
+      "cor_texto": "#E13432",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 1.97,
+      "forma": "retangulo",
+      "fundo": "#343434",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "time_casa",
+      "peso": 3.3,
+      "forma": "retangulo",
+      "fundo": "cor_clube",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "escudo",
+        "sigla",
+        "espaco_gol",
+        "gol",
+        "faixa_inferior"
+      ]
+    },
+    {
+      "tipo": "time_fora",
+      "peso": 3.32,
+      "forma": "retangulo",
+      "fundo": "cor_clube_fora",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "gol",
+        "espaco_gol",
+        "sigla",
+        "escudo",
+        "faixa_inferior"
+      ]
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#E13432",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#323131",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#555555"
+  },
+  "variante_compacta": {
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 875,
+  "largura_em_62": 631
+}

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8runnerdeclinio4e15"]
+
+[ext_resource type="Script" path="res://EVIDENCIAS_ETAPA_4E15/testes/test_declinio_4e15.gd" id="1_test"]
+
+[node name="RunnerDeclinio4e15" type="Node"]
+script = ExtResource("1_test")

@@ -1,0 +1,83 @@
+{
+  "id": "champions_league",
+  "nome": "UEFA Champions League",
+  "familia": "reto",
+  "confianca": "medido",
+  "fonte": "larga_espacada",
+  "proporcao_barra": 11.43,
+  "skew_deg": 0.0,
+  "raio_canto": 0.0,
+  "gap": 0.0,
+  "celulas": [
+    {
+      "tipo": "logo_liga",
+      "peso": 0.96,
+      "forma": "retangulo",
+      "fundo": "#1F2BDB",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "logo"
+      ]
+    },
+    {
+      "tipo": "relogio",
+      "peso": 2.4,
+      "forma": "retangulo",
+      "fundo": "#EEF1F8",
+      "cor_texto": "#1A1485",
+      "conteudo": [
+        "minuto",
+        "acrescimo_etiqueta"
+      ]
+    },
+    {
+      "tipo": "divisor",
+      "peso": 0.04,
+      "forma": "retangulo",
+      "fundo": "#FFFFFF",
+      "cor_texto": "",
+      "conteudo": []
+    },
+    {
+      "tipo": "barra_unica",
+      "peso": 7.85,
+      "forma": "retangulo",
+      "fundo": "#1A1485",
+      "cor_texto": "#FFFFFF",
+      "conteudo": [
+        "sigla_casa",
+        "divisor_fino",
+        "gol_casa",
+        "divisor_fino",
+        "gol_fora",
+        "divisor_fino",
+        "sigla_fora"
+      ]
+    },
+    {
+      "tipo": "tampa",
+      "peso": 0.22,
+      "forma": "retangulo",
+      "fundo": "#E0344A",
+      "cor_texto": "",
+      "conteudo": []
+    }
+  ],
+  "etiqueta_acrescimo": {
+    "cor": "#E0344A",
+    "texto_cor": "#FFFFFF",
+    "canto": "superior_direito"
+  },
+  "pilula_periodo": {
+    "fundo": "#1C1688",
+    "texto_cor": "#FFFFFF",
+    "borda_cor": "#2E3BFF"
+  },
+  "variante_compacta": {
+    "habilitada": true,
+    "escala_fonte": 0.85,
+    "max_largura_retrato": 648
+  },
+  "largura_em_86": 983,
+  "largura_em_62": 708
+}

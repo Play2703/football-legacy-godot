@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3qg0scoreboardview"]
+
+[ext_resource type="Script" path="res://features/scoreboard/scoreboard_view.gd" id="1_view"]
+
+[node name="ScoreboardView" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 430.0
+offset_bottom = 86.0
+mouse_filter = 2
+script = ExtResource("1_view")

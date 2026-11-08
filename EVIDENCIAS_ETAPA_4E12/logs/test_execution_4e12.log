@@ -1,0 +1,143 @@
+EXECUÇÃO DE AUDITORIA TÉCNICA E FUNCIONAL - ETAPA 4e.12
+Data/Hora: 2026-11-07T17:04:11
+Engine: Godot 4.7.2.stable (headless)
+-----------------------------------------------------------------
+
+--- [SEÇÃO A: ÍDOLO, TROFÉUS E LEGADO] ---
+[A01] Escolha do ídolo no 1º Jogador do Mês: PASS
+[A02] Reaparecimento do ídolo em túnel, vestiário, camarote: PASS
+[A03] Reconhecimento e continuidade da história do ídolo: PASS
+[A04] Taça nas mãos do jogador (cena trophy.tscn): PASS
+[A05] Desfile e Sacada (parade.tscn e balcon.tscn): PASS
+[A06] Exposição permanente da taça na vitrine: PASS
+[A07] Álbum de cards em PRÊMIOS: PASS
+[A08] Criação e personalização do jogador (look_editor): PASS
+[A09] Seleção de troféus para cada vitrine (tu_vitrina): PASS
+[A10] Pendurar e vender camisas (subasta_playera): PASS
+[A11] SUA RUA com casas dos amigos (calle.tscn): PASS
+
+--- [SEÇÃO B: MECÂNICAS DE JOGO E TREINAMENTO] ---
+[B01] Bola longa lançada para o jogador (RecepcionAerea.plan): PASS
+[B02] Domínio da bola com pé, coxa, peito e cabeça: PASS
+[B03] Bola longa disponível no treinamento: PASS
+[B04] Bola longa integrada no motor de partidas (match.gd): PASS
+[B05] Mecânica de Caneta (Cano.dispara/resultado): PASS
+[B06] Treino específico TREINO • CANETAS: PASS
+[B07] Partida livre entre clubes (partido_libre.tscn): PASS
+[B08] Partida livre entre seleções (modo seleções): PASS
+[B09] Treinamento DOMÍNIO E VOLEIO (pecho_volea): PASS
+[B10] Treinamento O CARRINHO (LaEntrada): PASS
+[B11] Gandula fazendo cera no final do jogo (BaloneroLento): PASS
+[B12] Conquista secreta do gandula (balonero_lento): PASS
+
+--- [SEÇÃO C: APARÊNCIA E PERSONALIZAÇÃO] ---
+[C01] Durag em registro modular e loja: PASS
+[C02] Pérolas (Colar de pérolas): PASS
+[C03] Pochete (Riñonera cruzada): PASS
+[C04] Bandanas em acessórios de cabeça: PASS
+[C05] Óculos / Lentes de sol no KitRecolor/LookEditor: PASS
+[C06] Mochila em registro modular: PASS
+[C07] Meia-calça (mallas) em KitRecolor: PASS
+[C08] Joelheira (rodillera) em KitRecolor: PASS
+[C09] Cortes de cabelo: contagem exata de 36: FAIL (encontrado 29 em KitRecolor)
+[C10] Sobrancelhas: contagem exata de 4: PASS (encontrado 4)
+[C11] Comemoração robô (g_robot.png): PASS
+[C12] Comemoração surfe (g_surf.png): PASS
+[C13] Comemoração cumbia (g_cumbia.png): PASS
+[C14] Corredor do gol 100 (s_pasillo): PASS
+[C15] Comemoração do pinguim (Pinguinazo): PASS
+[C16] Óculos escuros nas comemorações específicas in-match: FAIL (ausente em match.gd)
+
+--- [SEÇÃO D: HABILIDADES E ENVELHECIMENTO] ---
+[D01] Botão '-' retira pontos recém-adicionados (Career.unspend_point): PASS
+[D02] Botão '-' rejeita remover pontos consolidados: PASS
+[D03] Declínio impede aumento de atributos físicos: PASS
+[D04] Declínio impede aumento de atributos técnicos (potencia): PASS
+[D05] Regra de declínio presente na interface e no backend: PASS
+[D06] Ausência de brechas no declínio (_aplica_mod): FAIL (aplica_mod bypassa declínio)
+
+--- [SEÇÃO E: ADMINISTRAÇÃO DOS CLUBES] ---
+[E01] Clube muda de proprietário (Duenos.perfil_de): PASS
+[E02] Clube entra em crise financeira (ClubFinance.caja_en_crisis): PASS
+[E03] Clube realiza eleições (Elecciones.toca / noche_electoral): PASS
+[E04] Diretoria muda meta esportiva da liga (ClubGoals.update_expectation): PASS
+[E05] Diretoria estabelece metas financeiras (ClubGoals.board_goal): PASS
+[E06] Metas influenciam decisões e consequências na carreira: PASS
+[E07] Persistência de proprietário, diretoria e finanças: PASS
+
+--- [SEÇÃO F: CASA, CAMISAS E VITRINES] ---
+[F01] Pendurar camisas na casa: PASS
+[F02] Vender camisas (vender_playera / subasta): PASS
+[F03] Selecionar troféus para cada vitrine: PASS
+[F04] Salvar escolhas de decoração: PASS
+[F05] Restaurar escolhas após reiniciar o jogo: PASS
+[F06] SUA RUA com casas dos amigos (calle.tscn): PASS
+[F07] Visitar casas e visualizar itens expostos (visita.gd): PASS
+
+--- [SEÇÃO G: COMPETIÇÕES] ---
+[G01] Copa nacional de cada país (FormatoCopa): PASS
+[G02] Supercopa de cada país (SupercopaNacional): PASS
+[G03] Duas copas inglesas (copaliga e fa cup): PASS
+[G04] Copa das Ligas da América do Norte (CopaLigas): PASS
+[G05] Liga das Nações (LigaNaciones): PASS
+[G06] Competições sub-23 (JuegosOlimpicos): PASS
+[G07] Copa Intercontinental (Supercopas.INTERCONT): PASS
+[G08] Competições da seleção do jogador (NatTeam): PASS
+[G09] Oito posições/vagas de carreira (Squad.PUESTOS_ALTA = 8): PASS
+
+--- [SEÇÃO H: PRÊMIOS, RANKINGS E CONQUISTAS] ---
+[H01] Gala do Golden Boy (Ballon.chico_de_oro): PASS
+[H02] Prêmio do Mundo (Ballon.premio_mundo): PASS
+[H03] Gol do Ano (GolDelAnio.candidatos/elige): PASS
+[H04] Ranking MUNDO (WorldRanking.rows): PASS
+[H05] Lembranças em sépia (filtro sépia): FAIL (lembranças existem mas sépia ausente)
+[H06] Conquista SÊXTUPLO ('sextete'): PASS
+[H07] Sistema de patrocinadores: PASS
+[H08] Critérios de elegibilidade e registro histórico: PASS
+
+--- [SEÇÃO I: TV, NOTÍCIAS E APRESENTAÇÃO] ---
+[I01] Programa CARA A CARA (cara_a_cara.tscn): PASS
+[I02] Mesas-redondas (tertulia.tscn): PASS
+[I03] Boletim médico (parte_medico.tscn): PASS
+[I04] Tira-teima / Moviola (moviola.tscn): PASS
+[I05] Notícias esportivas (WorldNews): PASS
+[I06] Foto oficial da equipe (foto_equipo.tscn): PASS
+[I07] Início redesenhado na horizontal: PASS
+[I08] Notícias redesenhadas na horizontal: PASS
+
+--- [SEÇÃO J: MINIJOGOS E CONTROLES] ---
+[J01] Minijogos controlados pelo toque: PASS
+[J02] Funcionamento por mouse: PASS
+[J03] Funcionamento por controle físico (teclado_mando): PASS
+[J04] Reconhecimento e troca de dispositivos de entrada: PASS
+[J05] Salvamento dos recordes (pingpong_records / simulador): PASS
+[J06] Continuidade dos recordes após reiniciar: PASS
+
+--- [SEÇÃO K: AMIGOS E RECURSOS ONLINE] ---
+[K01] Adicionar amigos por código (Nube.agregar): PASS
+[K02] Ligas de amigos com duração de 28 dias: PASS
+[K03] Desafios entre amigos (retos): PASS
+[K04] Solicitação de permissão (pide_permiso): PASS
+[K05] Exclusão de conta (Nube.borrar_cuenta): PASS
+[K06] Bloqueio de usuários (Nube.bloquea): PASS
+[K07] Bloqueio impede efetivamente a interação: PASS
+[K08] Exclusão remove dados previstos no servidor: PASS (código presente; servidor externo pendente)
+[K09] Regras de privacidade e anonimização: PASS
+[K10] Sincronização e persistência dos dados sociais: PASS
+
+--- [SEÇÃO L: CARREIRAS, NUVEM E RESTAURAÇÃO] ---
+[L01] Salvamento de carreira na nuvem: FAIL (apenas metadados/resumo, save completo não enviado)
+[L02] Sincronização entre dispositivos: FAIL (apenas perfil social, carreira não sincroniza)
+[L03] Restauração após reinstalação: FAIL (ausência de download de save)
+[L04] Recuperação de carreiras existentes da nuvem: FAIL (não implementado)
+[L05] Proteção contra perda de dados local (SaveSlots): PASS
+[L06] Tratamento de conflitos entre versões: FAIL (não implementado)
+[L07] Provedor remoto identificado: PASS (Supabase PostgREST detectado; iCloud ausente)
+[L08] Documentação técnica do provedor e limitações: PASS
+=================================================================
+RESUMO FINAL DA EXECUÇÃO AUTOMATIZADA
+Total de testes executados: 108
+Testes APROVADOS: 99
+Testes REPROVADOS / LIMITAÇÕES: 9
+Taxa de Conformidade Técnica: 92 %
+=================================================================

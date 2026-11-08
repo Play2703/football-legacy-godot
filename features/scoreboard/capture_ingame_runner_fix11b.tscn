@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0fix11brunner"]
+
+[ext_resource type="Script" path="res://features/scoreboard/capture_ingame_runner_fix11b.gd" id="1_runner"]
+
+[node name="CaptureIngameRunnerFix11b" type="Node"]
+script = ExtResource("1_runner")

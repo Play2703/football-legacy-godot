@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmc8j2k11d4d1"]
+
+[ext_resource type="Script" path="res://features/scoreboard/capture_match_center_4d.gd" id="1_4drunner"]
+
+[node name="CaptureMatchCenter4d" type="Node"]
+script = ExtResource("1_4drunner")
