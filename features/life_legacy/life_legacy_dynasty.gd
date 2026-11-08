@@ -11,6 +11,14 @@ const STAGE_HEIR_PROFILE_READY: String = "HEIR_PROFILE_READY"
 const STAGE_DYNASTY_UPDATED: String = "DYNASTY_UPDATED"
 const STAGE_COMPLETED: String = "COMPLETED"
 
+# Gerador monotônico de ID de transação dinástica persistente por slot
+static func generate_dynasty_tx_id(slot: int, dynasty: Dictionary) -> String:
+	var seq: int = int(dynasty.get("next_dynasty_tx_seq", 1))
+	dynasty["next_dynasty_tx_seq"] = seq + 1
+	var unix_t: int = Time.get_unix_time_from_system()
+	var usec_t: int = Time.get_ticks_usec()
+	return "dyn_tx_s%d_seq%d_%d_%d" % [slot, seq, unix_t, usec_t]
+
 # Inicia a saga transacional de sucessão geracional com diário persistente
 static func start_succession(heir_child: Dictionary, inheritance_percent: float, start_club: String, ll_manager) -> bool:
 	var c_age: int = int(heir_child.get("canonical_age", 0))
@@ -20,7 +28,8 @@ static func start_succession(heir_child: Dictionary, inheritance_percent: float,
 
 	var data: Dictionary = ll_manager.get_data()
 	var dynasty: Dictionary = data.get("dynasty", {})
-	var tx_id: String = "dyn_tx_%d" % Time.get_unix_time_from_system()
+	var slot: int = ll_manager.get_current_slot()
+	var tx_id: String = generate_dynasty_tx_id(slot, dynasty)
 
 	# 1. PREPARED
 	var journal: Dictionary = {

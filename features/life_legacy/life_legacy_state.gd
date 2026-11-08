@@ -43,7 +43,8 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 		"dynasty": {
 			"current_generation": 1,
 			"ancestors": [],
-			"heir_candidates": []
+			"heir_candidates": [],
+			"next_dynasty_tx_seq": 1
 		},
 		"active_event": {},
 		"outbox": {

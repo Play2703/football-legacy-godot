@@ -24,6 +24,7 @@ func _ready() -> void:
 	test_salon_fama_colgar_dinastia_idempotency()
 	test_career_instantiate_dynasty_heir()
 	test_full_dynasty_saga_and_crash_recovery()
+	test_dynasty_tx_id_uniqueness_and_monotonicity()
 	print("--- TEST MARCO 4: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
 
@@ -251,3 +252,42 @@ func test_full_dynasty_saga_and_crash_recovery() -> void:
 	assert(ok_rec3 == true, "Recuperação quando já concluído deve ser no-op e retornar true")
 	
 	print("  -> OK!")
+
+func test_dynasty_tx_id_uniqueness_and_monotonicity() -> void:
+	print("[TEST] 6. Bloqueador 3: Unicidade Monotônica de ID de Sucessão Dinástica...")
+	var dynasty_test: Dictionary = {
+		"current_generation": 1,
+		"ancestors": [],
+		"next_dynasty_tx_seq": 1
+	}
+	
+	# Dispara 100 gerações consecutivas no mesmo segundo / nanossegundos
+	var generated_ids: Dictionary = {}
+	for i in range(100):
+		var id: String = LifeLegacyDynasty.generate_dynasty_tx_id(0, dynasty_test)
+		assert(not generated_ids.has(id), "Colisão detectada de tx_id dinástico no mesmo segundo: %s" % id)
+		assert(id.begins_with("dyn_tx_s0_seq%d_" % (i + 1)), "Formato deve conter slot e sequência monotônica exata")
+		generated_ids[id] = true
+	
+	assert(generated_ids.size() == 100, "Todos os 100 IDs devem ser estritamente distintos")
+	assert(dynasty_test["next_dynasty_tx_seq"] == 101, "Sequência monotônica deve avançar para 101")
+	
+	# Verifica preservação de tx_id durante recuperação
+	var ll = LifeLegacy
+	var journal: Dictionary = {
+		"tx_id": "dyn_tx_s0_seq999_preserve_check",
+		"stage": LifeLegacyDynasty.STAGE_PREPARED,
+		"father_archived": false,
+		"heir_instantiated": false,
+		"heir_child": {"name": "Herdeiro Teste", "canonical_age": 17},
+		"inheritance_percent": 30.0,
+		"start_club": "rma"
+	}
+	ll.get_data()["dynasty"]["transition_journal"] = journal
+	ll.save_current_slot()
+	
+	var ok_rec = LifeLegacyDynasty.recover_or_resume_succession(ll)
+	assert(ok_rec == true, "Recuperação deve suceder")
+	var rec_journal = ll.get_data()["dynasty"]["transition_journal"]
+	assert(rec_journal["tx_id"] == "dyn_tx_s0_seq999_preserve_check", "O tx_id original do journal jamais deve ser regerado na recuperação!")
+	print("  -> Bloqueador 3 (Unicidade e Monotonicidade) aprovado com sucesso!")
