@@ -1385,3 +1385,244 @@ features/life_legacy/
 
 ---
 *Fase 0 — Auditoria Arquitetural, Confiabilidade Transacional e Planejamento Dinástico integralmente concluídos. Nenhum código de produção da Fase 1 foi criado ou modificado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
+
+
+---
+
+## O. ADENDO FINAL DE CONSISTÊNCIA TRANSACIONAL E SUCESSÃO
+
+Este adendo estabelece os refinamentos finais de integridade transacional, corrigindo a comparação temporal da tupla canônica, instituindo o ledger persistente independente para o feed social, definindo o contrato síncrono de confirmação de gravação no `Career`, formalizando o determinismo criptográfico/algorítmico do sorteio de recuperação e detalhando a arquitetura completa de sucessão dinástica integrada ao ciclo de aposentadoria.
+
+---
+
+### 1. COMPARAÇÃO TEMPORAL RIGOROSA DA TUPLA `(season_num, season_day)`
+
+A avaliação temporal entre o estado persistido (`last_processed_time`) e o estado atual do motor (`GameState`) deve seguir estritamente a ordem lexicográfica de tuplas para evitar que viradas de ano ou restaurações de backup sejam interpretadas erroneamente.
+
+#### 1.1. Definição Algorítmica das Relações Temporais
+Considerando:
+- $T_{\text{proc}} = (S_{\text{proc}}, D_{\text{proc}}) \rightarrow$ `last_processed_time`
+- $T_{\text{cur}} = (S_{\text{cur}}, D_{\text{cur}}) \rightarrow$ `(GameState.season_num, GameState.season_day)`
+
+```gdscript
+enum TimeRelation {
+    EQUAL,              # T_cur == T_proc
+    FORWARD_TICK,       # T_cur > T_proc na mesma temporada (S_cur == S_proc e D_cur > D_proc)
+    SEASON_ROLLOVER,    # T_cur > T_proc com mudança de ano (S_cur > S_proc)
+    TEMPORAL_REGRESSION # T_cur < T_proc (S_cur < S_proc OU (S_cur == S_proc e D_cur < D_proc))
+}
+
+func evaluate_time_relation(cur_s: int, cur_d: int, proc_s: int, proc_d: int) -> int:
+    if cur_s == proc_s and cur_d == proc_d:
+        return TimeRelation.EQUAL
+    if cur_s > proc_s:
+        return TimeRelation.SEASON_ROLLOVER
+    if cur_s == proc_s and cur_d > proc_d:
+        return TimeRelation.FORWARD_TICK
+    return TimeRelation.TEMPORAL_REGRESSION
+```
+
+#### 1.2. Tratamento Específico de Cada Relação Temporal
+
+1. **Igualdade Temporal (`EQUAL`):**
+   - Calendário não avançou (ex: chamada de `set_customization()`, recarga de tela, retorno da partida).
+   - *Ação:* Descarta a notificação imediatamente. Nenhum processamento é disparado.
+2. **Avanço Semanal (`FORWARD_TICK`):**
+   - Calendário avançou normalmente na mesma temporada.
+   - *Ação:* Processa a semana pendente e avança $T_{\text{proc}}$ atomicamente após a gravação.
+3. **Virada de Temporada (`SEASON_ROLLOVER`):**
+   - A temporada mudou ($S_{\text{cur}} > S_{\text{proc}}$).
+   - *Ação:* Executa a rotina anual `_process_annual_rollover()` (aniversários familiares, envelhecimento canônico dos filhos, balanço patrimonial) antes ou como parte da resolução semanal, de forma estritamente idempotente.
+4. **Retrocesso Temporal (`TEMPORAL_REGRESSION`):**
+   - $T_{\text{cur}} < T_{\text{proc}}$ indica anomalia externa grave:
+     - Restauração de backup manual mais antigo pelo usuário;
+     - Incompatibilidade entre slots (ex: slot 1 carregou dados de slot 2 por erro de caminho);
+     - Downgrade de versão do save.
+   - *Ação Mandatória:* **PROIBIDO alinhar a referência automaticamente e prosseguir.**
+     - Não sobrescrever o arquivo `life_legacy.json`.
+     - Registrar aviso crítico: `push_error("[LifeLegacy] Divergência temporal: GameState=(%d,%d) é anterior ao Processado=(%d,%d). Ativando Modo de Diagnóstico." % [cur_s, cur_d, proc_s, proc_d])`.
+     - Ativar `_is_safe_mode = true` (somente leitura).
+     - Preservar o histórico íntegro sem perda de dados.
+
+---
+
+### 2. LEDGER PERSISTENTE INDEPENDENTE DO MUROREDES
+
+#### 2.1. Diagnóstico do `MuroRedes.sanea()` e Limitação do Feed
+A auditoria direta de [`features/career/muro_redes.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/features/career/muro_redes.gd) (linhas 411-445) revelou que:
+1. `MuroRedes.sanea()` reconstrói explicitamente o dicionário de cada post aceitando **apenas** chaves canônicas (`season`, `day`, `hecho`, `autor`, `club`, `n`, `semilla`, `partido`, `quien`, `nombre`, `otro`, `foto`, `celeb`, `cara`).
+2. Qualquer chave customizada (como `idempotency_token`) é **sumariamente eliminada** na sanitização pós-carregamento.
+3. O array `muro_redes` possui limite rígido de tamanho (`const MAX = 30`). Posts mais antigos são descartados, o que apagaria tokens de posts anteriores e quebraria a deduplicação em retransmissões futuras.
+
+#### 2.2. Arquitetura do Ledger Persistente (`processed_muro_tokens`)
+Para garantir deduplicação robusta e durável:
+- Cria-se um **Ledger Dedicado de Idempotência** no `career_meta.cfg`, sob a seção `[state]`, desacoplado do feed visual:
+  ```ini
+  [state]
+  processed_muro_tokens=["occ_s02_d14_evt_festa_post", "occ_s02_d20_evt_polemica_post"]
+  ```
+- **Propriedades do Ledger:**
+  - Sobrevive ao carregamento do save e não é afetado por `MuroRedes.sanea()`.
+  - É atualizado atomicamente na mesma operação em que o post é empurrado para `muro_redes`.
+  - **Política de Retenção:** Buffer circular FIFO limitado aos últimos 200 tokens. Como o Outbox resolve pendências no boot seguinte ou na mesma sessão, 200 tokens cobrem com folga mais de 3 temporadas completas de eventos sociais.
+
+#### 2.3. Arquivos Existentes a Alterar na Fase 1
+- [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd): Adição da lista `var processed_muro_tokens: Array = []`, sua persistência no `career_meta.cfg` e função de inserção segura `post_social_idempotent(token: String, post_dict: Dictionary) -> bool`.
+
+---
+
+### 3. CONFIRMAÇÃO DE GRAVAÇÃO DURÁVEL NO CAREER
+
+#### 3.1. Diagnóstico de `Career._save()`
+A auditoria de [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd) (linhas 63653-63725 e 64390) identificou:
+1. Quando `_save()` é chamado mais de uma vez no mesmo frame (`frame_actual == _save_frame`), a gravação física é postergada via `_save_flush.call_deferred()`.
+2. A função `_save()` possui retorno `void`.
+3. Na linha 64390, a chamada `SaveSlots.save_cfg_atomic(cfg, save_path)` retorna um `bool`, mas o resultado é **completamente descartado**.
+
+#### 3.2. Contrato Síncrono de Confirmação do `Career.apply_idempotent_effect()`
+Para que o padrão Outbox do `LifeLegacy` funcione sem risco de commits fantasmas (falsos positivos de gravação), o despacho para `Career` seguirá o contrato:
+
+```
+[LifeOutbox]                           [Career]                         [Disco]
+     |                                    |                                |
+     |-- apply_idempotent_effect(tok) --->|                                |
+     |                                    |-- Token já existe no ledger?   |
+     |                                    |   SIM: Retorna TRUE            |
+     |                                    |   NÃO:                         |
+     |                                    |-- Aplica dinheiro / energia    |
+     |                                    |-- Adiciona tok ao ledger       |
+     |                                    |-- _save_immediate_sync() ----->|
+     |                                    |                                |-- Grava .tmp
+     |                                    |                                |-- Promove .bak
+     |                                    |                                |-- Substitui cfg
+     |                                    |<-- Retorna bool (OK / FAIL) ---|
+     |<-- Retorna SUCESSO (TRUE / FALSE) -|
+     |
+  [Se TRUE: comuta status para COMMITTED]
+  [Se FALSE: mantém status como PENDING]
+```
+
+#### 3.3. Implementação sem Duplicação de Código em `career.gd`
+Não é necessário duplicar a serialização de 700 linhas de `career.gd`. Na Fase 1, o método `_save(force_sync: bool = false) -> bool` será parametrizado:
+- Se `force_sync == true`, desativa a guarda de `_save_frame`, executa a montagem imediata do `ConfigFile`, invoca `SaveSlots.save_cfg_atomic()` e propaga o valor booleano de retorno diretamente para o chamador.
+- Dessa forma, o `LifeOutbox` **jamais** marcará um despacho como `COMMITTED` se a gravação de `career_meta.cfg` não tiver sido 100% concluída e verificada no disco.
+
+---
+
+### 4. DETERMINISMO CRIPTOGRÁFICO/ALGORÍTMICO DA RECUPERAÇÃO APÓS CRASH
+
+#### 4.1. Princípio da Reprodutibilidade Estrita
+Caso ocorram quedas repetidas durante a tentativa de recuperação de uma semana pendente, o sistema **não pode sortear um evento diferente a cada reinicialização** (o que abriria brecha para o jogador forçar o encerramento do app até sair um evento favorável ou gerar estados desincronizados).
+
+#### 4.2. Fórmula da Semente Pseudorrandômica
+A seleção de eventos na rotina de recuperação utiliza uma instância local isolada de `RandomNumberGenerator` alimentada por uma semente determinística baseada na tupla espacial-temporal:
+
+$$\text{SeedString} = \text{"ll\_seed\_s\%d\_d\%d\_slot\%d\_cat\%s\_v\%d"} \pmod{\text{slot}, \text{season}, \text{day}, \text{catalogo}, \text{versao}}$$
+$$\text{SeedValue} = \text{hash}(\text{SeedString})$$
+
+```gdscript
+const SEED_ALGO_VERSION: int = 1
+
+func get_deterministic_rng(slot_id: int, season: int, day: int, catalog_name: String) -> RandomNumberGenerator:
+    var seed_str: String = "ll_seed_s%d_d%d_slot%d_cat%s_v%d" % [season, day, slot_id, catalog_name, SEED_ALGO_VERSION]
+    var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+    rng.seed = hash(seed_str)
+    return rng
+```
+
+#### 4.3. Garantia nos Cenários de Teste
+- **Cenário A:** O jogo cai após o sorteio do evento $E_1$ mas antes de salvar. Ao reabrir, o recovery executa com a mesma semente, avalia as mesmas condições esportivas reconstruídas e seleciona rigorosamente o mesmo evento $E_1$.
+- **Cenário B:** Tentativas sucessivas de crash intencional produzem rigorosamente a mesma oferta de escolhas, eliminando qualquer viés estatístico ou exploração por *save-scumming*.
+
+---
+
+### 5. FLUXO COMPLETO DE SUCESSÃO DINÁSTICA
+
+A sucessão geracional permite transferir o protagonismo do jogo para o filho elegível preservando a linhagem familiar e a integridade da carreira.
+
+#### 5.1. Mapeamento de Arquivos e Pontos de Integração Existentes
+
+| Arquivo Existente | Função Atual | Ponto de Extensão para a Sucessão Dinástica |
+|---|---|---|
+| [`ui/retirement.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/retirement.gd) | Exibe a despedida da carreira, sala de conquistas, botão de pendurar chuteiras (`_colgar()`) e iniciar nova carreira (`_empezar_otra()`). | Inserção do botão contextual **"ASSUMIR LEGADO DO FILHO"**, visível exclusivamente se `DynastyManager.can_succeed(SaveSlots.active)` retornar `true`. |
+| [`ui/salon_fama.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/salon_fama.gd) | Gerencia a gravação definitiva da placa do jogador no Hall da Fama global (`SalonFama.colgar()`). | O `DynastyManager` invoca `SalonFama.colgar()` antes da transição, garantindo que toda a história do pai (gols, títulos, notas, Keepsakes) permaneça eternizada na galeria de honra. |
+| [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd) | Gerencia o perfil atlético do avatar em jogo (`player_name`, `age`, `skills`, `money`). | Adição do método de transição `Career.inherit_from_dynasty(heir_profile: Dictionary, inherited_money: int)`. |
+| [`features/life_legacy/dynasty/dynasty_manager.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/features/life_legacy/dynasty/dynasty_manager.gd) (Novo) | Controlador central de sucessão e validação etária. | Orquestra a extração dos dados do filho de `FamilyManager`, o arquivamento do pai e a inicialização da nova fase. |
+
+#### 5.2. O Ciclo de Transição Passo a Passo
+1. **Detecção de Aposentadoria:**
+   - O jogador atinge a idade limite ou clica em se aposentar em `ui/career_hub.gd`.
+   - A cena `ui/retirement.gd` é carregada.
+2. **Avaliação pelo `DynastyManager`:**
+   - O gestor consulta o `FamilyManager`:
+     - Existe ao menos um descendente registrado?
+     - A idade canônica calculada pela fórmula $\ge 16$ anos?
+   - Se negativo: Apresenta apenas as opções convencionais (Hall da Fama ou Nova Carreira).
+   - Se positivo: Renderiza o painel **"O Legado Continua"**, listando os filhos elegíveis com suas posições, perna preferida e traços de personalidade consolidados na base.
+3. **Seleção do Herdeiro e Execução da Transição:**
+   - O jogador escolhe o filho desejado.
+   - O `DynastyManager` executa a operação transacional:
+     1. **Imortalização do Pai:** Executa `SalonFama.colgar(SaveSlots.active)`. O registro histórico de lenda do pai é selado com todos os títulos e recordes.
+     2. **Cálculo da Herança:** 30% do saldo financeiro acumulado pelo pai é transferido para o herdeiro; o restante fica arquivado como fundo de aposentadoria da família.
+     3. **Reconfiguração do Avatar no `Career`:**
+        - `player_name` $\leftarrow$ Nome do herdeiro;
+        - `shirt_name` $\leftarrow$ Sobrenome da família;
+        - `age` $\leftarrow$ Idade canônica real do filho (16 a 18 anos);
+        - `skills` $\leftarrow$ Atributos próprios gerados na base pelo `FamilyManager`;
+        - `money` $\leftarrow$ Herança calculada;
+        - `energy` $\leftarrow 100.0$.
+     4. **Atualização no `life_legacy.json`:**
+        - O pai é movido para o histórico dinástico (`dynasty.ancestors.append(father_data)`);
+        - O herdeiro assume como protagonista ativo (`family.active_player`);
+        - A árvore genealógica é preservada integralmente;
+        - Os indicadores pessoais (`popularity`, `reputation`) recebem bônus de berço proporcional à lenda do pai;
+        - O arquivo é persistido atomicamente com `schema_version = 1`.
+4. **Reinício de Carreira:**
+   - O slot permanece ativo e o jogo transiciona para a assinatura do primeiro contrato profissional, sem necessidade de apagar o save ou utilizar slot adicional.
+
+---
+
+### 6. MATRIZ DEFINITIVA DE TESTES AUTOMATIZADOS
+
+A homologação da Fase 1 exigirá a aprovação em três níveis estruturados de teste:
+
+#### 6.1. Nível 1: Testes Unitários de Algoritmo e Persistência
+- `test_lexicographical_time_comparison.gd`:
+  - Valida tuplas: avanço na mesma temporada, avanço com virada de temporada, igualdade e detecção de retrocesso temporal.
+- `test_deterministic_recovery_rng.gd`:
+  - Valida que sementes com mesmo `(slot, season, day, catalog, v)` produzem rigorosamente a mesma sequência pseudoaleatória em 1.000 repetições.
+- `test_canonical_age_formula.gd`:
+  - Testa aniversários antes, durante e após o dia de nascimento em múltiplos anos, validando as 5 faixas etárias.
+- `test_muro_token_ledger_isolation.gd`:
+  - Valida que `processed_muro_tokens` permanece intacto após execução de `MuroRedes.sanea()` e poda de posts excedentes a 30.
+
+#### 6.2. Nível 2: Testes de Integração e Resiliência
+- `test_crash_recovery_after_match.gd`:
+  - Simula gravação de `career.json` seguida de encerramento forçado do motor; valida reconstrução do contexto esportivo e processamento da semana pendente no boot seguinte.
+- `test_idempotent_retransmission_career.gd`:
+  - Envia duas vezes o mesmo token com $\Delta \text{money} = 5.000$; comprova que o saldo aumenta estritamente uma única vez e que o retorno síncrono é `true`.
+- `test_deferred_save_synchronous_barrier.gd`:
+  - Dispara chamadas no mesmo frame e comprova que a confirmação de escrita aguarda a durabilidade física em disco.
+- `test_cases_a_to_e_persistence.gd`:
+  - Injeta JSON corrompido, arquivo truncado, `.bak` bom e schema superior; valida ativação do modo seguro e preservação irrestrita de dados.
+
+#### 6.3. Nível 3: Testes de Validação Dinástica e Simulação Real
+- `test_dynasty_succession_eligible.gd`:
+  - Simula aposentadoria com filho de 17 anos; valida imortalização do pai no Hall da Fama, reconfiguração do avatar com atributos próprios e herança de 30% do patrimônio.
+- `test_dynasty_succession_underage_blocked.gd`:
+  - Simula aposentadoria com filho de 8 anos; comprova bloqueio de sucessão imediata e exibição do diálogo explicativo.
+- `test_52_weeks_stress_and_memory.gd`:
+  - Executa 52 avanços semanais consecutivos no motor com medição de:
+    - `OBJECT_ORPHAN_NODE_COUNT == 0`;
+    - Estabilidade de `OBJECT_COUNT` e `OBJECT_RESOURCE_COUNT`;
+    - `OS.get_static_memory_usage()` sem tendência de crescimento residual após Garbage Collection.
+
+---
+
+### 7. LIMITAÇÕES RESTANTES E COMPROMISSO DE ESCOPO
+
+1. **Alterações em Arquivos Existentes:** Nenhuma alteração foi realizada nesta etapa. As alterações mínimas mapeadas (`career.gd`, `muro_redes.gd`, `save_slots.gd`, `project.godot`, `ui/retirement.gd`, `ui/celular.gd`) estão estritamente documentadas e justificadas, dependendo de autorização expressa para a Fase 1.
+2. **Tempo de Espera para Sucessão Dinástica:** Para manter a verossimilhança biológica sem manipulação artificial de idades, a sucessão geracional exige que o jogador gere um filho nas primeiras temporadas de sua carreira para que ele atinja 16 anos antes de sua aposentadoria esportiva (aos 35-38 anos).
+
+---
+*Fase 0 — Auditoria Arquitetural, Garantias Transacionais e Cronologia Dinástica formalmente concluídas e blindadas. Nenhum arquivo de código de produção da Fase 1 foi criado ou alterado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
