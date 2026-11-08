@@ -209,6 +209,47 @@ func _init() -> void:
 	assert(not FileAccess.file_exists(tmp_path), "Temporário deve ser removido após falha de promoção")
 	LifeLegacyPersistence.reset_fault_injection()
 	print("  -> Rollback automático na falha de promoção comprovado com sucesso!")
+
+	# E.10: Injeção de falha ao remover backup antigo
+	print("[Teste 6.10] Injeção de falha ao remover backup antigo...")
+	LifeLegacyPersistence.fault_inject_remove_old_bak = true
+	var ok_save_old_bak = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(ok_save_old_bak == true, "Gravação principal deve suceder mesmo com falha no descarte do backup antigo")
+	assert(LifeLegacyPersistence.last_save_status == LifeLegacyPersistence.SaveStatus.WARN_BACKUP_CONSOLIDATION_FAILED, "Status deve alertar sobre falha na consolidação do backup")
+	assert(FileAccess.file_exists(bak_staging), "Staging deve ser preservado como backup alternativo")
+	LifeLegacyPersistence.reset_fault_injection()
+	print("  -> Preservação de staging na falha de descarte do backup antigo comprovada!")
+
+	# E.11: Injeção de falha ao promover staging para backup definitivo
+	print("[Teste 6.11] Injeção de falha ao promover staging para backup definitivo...")
+	LifeLegacyPersistence.fault_inject_promote_staging_bak = true
+	var ok_save_prom_bak = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(ok_save_prom_bak == true, "Gravação principal sucede")
+	assert(LifeLegacyPersistence.last_save_status == LifeLegacyPersistence.SaveStatus.WARN_BACKUP_CONSOLIDATION_FAILED, "Status deve ser WARN_BACKUP_CONSOLIDATION_FAILED")
+	assert(FileAccess.file_exists(bak_staging), "Staging deve ser mantido no disco para recuperação")
+	LifeLegacyPersistence.reset_fault_injection()
+	print("  -> Preservação de staging na falha de promoção do backup comprovada!")
+
+	# E.12: Injeção de falha no rollback e subsequente recuperação via .bak_staging
+	print("[Teste 6.12] Injeção de falha no rollback e recuperação via staging...")
+	var pre_fail_data = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
+	LifeLegacyPersistence.fault_inject_promote = true
+	LifeLegacyPersistence.fault_inject_rollback_fail = true
+	var fail_both = LifeLegacyPersistence.save_slot_data(test_slot, candidate_data)
+	assert(fail_both == false, "Deve falhar")
+	LifeLegacyPersistence.reset_fault_injection()
+	
+	# Simula que o principal ficou ausente ou corrompido, e .bak também ausente:
+	DirAccess.remove_absolute(file_path)
+	if FileAccess.file_exists(bak_path):
+		DirAccess.remove_absolute(bak_path)
+	assert(FileAccess.file_exists(bak_staging), "Staging deve estar presente no disco")
+
+	# load_slot_data deve identificar .bak_staging e recuperar com sucesso!
+	var load_rec_staging = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
+	assert(load_rec_staging["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Deve recuperar via backup a partir do staging")
+	assert(load_rec_staging["data"]["save_revision"] == pre_fail_data["save_revision"], "Dados recuperados do staging devem ser os válidos anteriores")
+	print("  -> Recuperação a partir de .bak_staging comprovada com sucesso!")
 	
 	# Limpeza final
 	_cleanup([file_path, bak_path, tmp_path, bak_staging])
