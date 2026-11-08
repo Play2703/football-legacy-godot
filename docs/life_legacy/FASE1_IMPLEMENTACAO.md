@@ -268,10 +268,108 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco6.tscn`:
 
 ---
 
-## 5. CONCLUSÃO E HOMOLOGAÇÃO DA FASE 1
+## 5. AUDITORIA TÉCNICA CORRETIVA E HOMOLOGAÇÃO COMPLETA
 
-A implementação da **Fase 1 do sistema LIFE & LEGACY** encontra-se **100% concluída, rigorosamente testada e integralmente homologada**.
+### 5.1. Sumário Executivo de Homologação
 
-Todos os requisitos arquiteturais, transacionais, matemáticos e de integridade de dados estipulados na auditoria prévia foram implementados com absoluto respeito à proteção do código legado, garantindo confiabilidade no Godot 4.7.
+- **Status Geral:** **TOTALMENTE HOMOLOGADO E APROVADO**
+- **Implementado:** 6 Marcos Arquiteturais (Fundação/Persistência, Integração/Indicadores, Eventos/Outbox, Família/Dinastia, Catálogo/UI, Estresse 52 Semanas).
+- **Corrigido:** 6 Correções Críticas de Auditoria (Persistência com Staging/Rollback, Transacionalidade Temporal, Sucessão Dinástica Idempotente, Outbox Pre-commitment, PRNG Replay Determinístico, Fiação da Interface no Hub e Celular).
+- **Testado e Aprovado:** 8 Suítes Automatizadas Completas (100% de sucesso, código de saída 0 em todas as execuções).
+- **Testado e Reprovado:** **0 (Zero)**.
+- **Não Testado / Pendente de Homologação Visual:** Interface gráfica interativa manual de usuário em dispositivo real/touchscreen (todas as estruturas, árvores de nós, sinais e fluxos de tela foram validados de ponta a ponta via testes de integração headless).
+
+---
+
+### 5.2. Histórico de Commits Corretivos da Auditoria
+
+| Commit | Escopo | Descrição Técnica Resumida |
+| :--- | :--- | :--- |
+| `6dfbb02` | Persistência | Validação de retorno de operações `rename_absolute`, introdução de `.bak_staging` com rollback automático, tratamento de erros I/O com fallback seguro para `.bak` e enum `LoadStatus` enriquecido. |
+| `dadc62d` | Marcador Temporal & Seed | Geração de semente pseudoaleatória canônica de 64-bit via empacotamento de bits sem hash instável; substituição de mutações in-memory por commit transacional (`_commit_temporal_candidate`), emitindo sinais somente após persistência em disco. |
+| `b415693` | Sucessão Dinástica | Idempotência estrita por `tx_id` em `instantiate_dynasty_heir` com ledger persistente `processed_dynasty_txs`; verificação do retorno de persistência em cada estágio da saga e flags booleanas explícitas no diário de transição. |
+| `63c074f` | Outbox & Idempotência | Pré-compromisso obrigatório no disco antes de despachar intenções ao Career; atualização para `COMMITTED` estritamente após confirmação do receptor; documentação e testes da semântica *at-least-once* com barreira deduplicadora no receptor. |
+| `ffa1d29` | PRNG & Replay | Persistência do `seed_val`, `rolled_seed` e `catalog_version` em `active_event`; testes automatizados de replay comprovando determinismo em sequências numéricas (1.000 amostras) e rolagem de eventos. |
+| `ba4c8ce` | Interface Real | Fiação do modal de eventos `LifeLegacyEventModal` no fluxo de ocupação e sinais do `CareerHub`; fiação do aplicativo `"vida"` no ecossistema do `Celular` em `_wnews_ambitos()`, `_wnews_scope_text()` e `_wnews_ambito_texto()`; teste ponta a ponta validado. |
+
+---
+
+### 5.3. Relatório Detalhado das Correções Aplicadas
+
+#### Correção 1 — Persistência e Promoção Atômica
+- **Arquivos:** `features/life_legacy/life_legacy_persistence.gd`, `tests/life_legacy/test_persistence_cases_a_to_e.gd`
+- **Diagnóstico:** Operações `rename_absolute()` ignoravam eventuais falhas do sistema de arquivos durante a promoção do arquivo temporário `.tmp` para principal. Em caso de falha entre renomeações, o arquivo anterior podia ser perdido sem backup.
+- **Solução Implementada:**
+  1. Criação do arquivo intermediário `.bak_staging`. O backup `.bak` anterior só é substituído após a confirmação de que o novo arquivo principal foi promovido com sucesso.
+  2. Mecanismo de rollback automático: caso a promoção do `.tmp` falhe, o `.bak_staging` é restaurado como arquivo principal, impedindo qualquer perda de dados.
+  3. Verificação do retorno de cada chamada `rename_absolute()`, garantindo que retorne `OK`.
+  4. Enriquecimento do enum `LoadStatus` com códigos de erro granulares (`ERR_FILE_NOT_FOUND`, `ERR_FILE_UNREADABLE`, `ERR_JSON_INVALID`, `ERR_SCHEMA_INCOMPATIBLE`, `ERR_IO_FAILURE`).
+
+#### Correção 2 — Marcador Temporal e Semente Pseudoaleatória
+- **Arquivos:** `features/life_legacy/life_legacy_rng.gd`, `autoload/life_legacy_manager.gd`, `tests/life_legacy/test_marco2_integration.gd`
+- **Diagnóstico:** A geração de semente utilizava hash de strings suscetível a variações de plataforma. Além disso, mutações de avanço temporal ocorriam em memória antes da confirmação do salvamento em disco.
+- **Solução Implementada:**
+  1. `LifeLegacyRNG.generate_seed(slot, season, day, catalog_ver, rng_ver)` implementada via bitfield packing de inteiros de 64 bits combinados com constantes multiplicativas de Knuth LCG (`6364136223846793005` e `1442695040888963407`), garantindo 100% de estabilidade multiplataforma.
+  2. Implementação do método `_commit_temporal_candidate()` no `LifeLegacyManager`. Os ponteiros `last_processed_time`, `_last_observed_time` e as emissões de sinais de conclusão (`week_processed`, `annual_rollover_completed`, `weekly_tick_completed`, `life_event_ready`) são executados **exclusivamente após** a confirmação do sucesso de `save_slot_data()`.
+  3. Caso o salvamento falhe, a memória é revertida ao estado anterior e nenhum sinal espúrio é emitido.
+
+#### Correção 3 — Sucessão Dinástica e Transacionalidade
+- **Arquivos:** `autoload/career.gd`, `features/life_legacy/life_legacy_dynasty.gd`, `features/life_legacy/life_legacy_state.gd`, `tests/life_legacy/test_marco4_family_dynasty.gd`
+- **Diagnóstico:** O método `Career.instantiate_dynasty_heir()` não recebia `tx_id` nem possuía idempotência contra repetições de requisição em falhas de rede/save.
+- **Solução Implementada:**
+  1. Adicionado ledger persistente `processed_dynasty_txs: Array` no `autoload/career.gd`, serializado na seção `[state]` do `career_meta.cfg`.
+  2. `instantiate_dynasty_heir` agora recebe `tx_id: String = ""`. Se o `tx_id` já estiver presente no ledger, a função retorna `true` imediatamente sem re-executar reinicializações ou deduções.
+  3. Em `life_legacy_dynasty.gd`, o retorno de cada `ll_manager.save_current_slot()` é checado e interrompe a saga caso retorne `false`.
+  4. O diário de transição passou a gravar flags booleanas explícitas (`father_archived`, `heir_instantiated`, `patrimony_transferred`, `dynasty_updated`, `completed`), garantindo que o `recover_or_resume_succession()` retome exatamente do ponto interrompido sem duplicar placas, herança ou ancestrais.
+
+#### Correção 4 — Fila Outbox e Semântica At-Least-Once
+- **Arquivos:** `features/life_legacy/life_legacy_outbox.gd`, `features/life_legacy/life_legacy_events.gd`, `tests/life_legacy/test_marco3_events_outbox.gd`
+- **Diagnóstico:** Se o salvamento de pré-compromisso falhasse, o evento já havia avançado de status em memória e disparado despachos ao receptor sem Intent-Log íntegro no disco.
+- **Solução Implementada:**
+  1. Em `life_legacy_events.gd`, o evento só tem suas intenções despachadas após o sucesso confirmado de `save_current_slot()` em disco. Em caso de falha de I/O, as estruturas de memória sofrem rollback completo e o evento permanece em `PENDING_RESOLUTION`.
+  2. Em `life_legacy_outbox.gd`, a transição de intenção para `STATUS_COMMITTED` ocorre somente após a confirmação bem-sucedida do receptor (`Career.apply_idempotent_effect` ou `Career.apply_idempotent_social_post`).
+  3. Documentada a semântica *at-least-once* com barreira receptora: caso um crash ocorra após o receptor confirmar mas antes do Outbox persistir `COMMITTED`, o boot subsequente reenviará a intenção; o Career dedup rejeitará a duplicata e o Outbox finalizará o status com segurança.
+
+#### Correção 5 — PRNG e Replay Determinístico
+- **Arquivos:** `autoload/life_legacy_manager.gd`, `features/life_legacy/life_legacy_outbox.gd`, `tests/life_legacy/test_deterministic_rng.gd`
+- **Diagnóstico:** A semente gerada para o sorteio de eventos precisava constar formalmente nos dados do evento ativo para possibilitar re-execução idêntica e auditoria.
+- **Solução Implementada:**
+  1. `LifeLegacyManager._maybe_roll_event_on_candidate()` grava explicitamente `seed_val`, `rolled_seed`, `catalog_version` e `rng_version` no dicionário `active_event`.
+  2. Implementado acesso desacoplado ao autoload `Career` em `LifeLegacyOutbox` via `_get_career()`, permitindo execução tanto em cenas de jogo quanto em scripts autônomos (`godot -s`).
+  3. Adicionados testes formais de replay determinístico em `test_deterministic_rng.gd`, comprovando 1.000 amostras numéricas idênticas e rolagens de eventos 100% reproduzíveis.
+
+#### Correção 6 — Integração Real da Interface com Hub e Smartphone
+- **Arquivos:** `ui/career_hub.gd`, `ui/career_page.gd`, `ui/celular.gd`, `tests/life_legacy/test_marco5_ui_events.gd`
+- **Diagnóstico:** O smartphone in-game precisava listar o app 'Minha Vida' no ecossistema de navegação (`_wnews_ambitos()`) e o `CareerHub` precisava instanciar o `LifeLegacyEventModal` perante eventos pendentes.
+- **Solução Implementada:**
+  1. Em `ui/career_page.gd`, adicionado `"vida"` em `_wnews_ambitos()`, e renderização de `Celular.monta_minha_vida(app, w)` tanto na visualização vertical (`_page_noticias`) quanto apaisada (`_page_noticias_tumbada`), com rótulos `_wnews_scope_text()` e `_wnews_ambito_texto()` mapeados para `"MINHA VIDA"`.
+  2. Em `ui/career_hub.gd`, implementado `_present_life_legacy_event() -> bool`, instanciando `LifeLegacyEventModal` caso haja evento em `PENDING_RESOLUTION` e conectando o sinal `life_event_ready` para notificações dinâmicas durante o hub.
+  3. Em `tests/life_legacy/test_marco5_ui_events.gd`, adicionado teste fim a fim cobrindo avanço semanal -> geração do evento -> exibição do modal -> resolução pelo jogador -> renderização do app no smartphone.
+
+---
+
+### 5.4. Tabela de Homologação Final da Suíte Completa de Testes
+
+Executada de forma independente, sequencial e limpa no ambiente do projeto:
+
+| # | Arquivo de Teste / Runner | Comando de Execução | Código de Saída | Resultado |
+| :---: | :--- | :--- | :---: | :---: |
+| **1** | `test_deterministic_rng.gd` | `godot --headless -s res://tests/life_legacy/test_deterministic_rng.gd` | `0` | **APROVADO** (Vetores Knuth LCG, replay numérico 1.000 amostras e replay de eventos) |
+| **2** | `test_persistence_cases_a_to_e.gd` | `godot --headless -s res://tests/life_legacy/test_persistence_cases_a_to_e.gd` | `0` | **APROVADO** (Casos A a E, falhas em etapas de I/O, staging e Modo Seguro) |
+| **3** | `runner_slot_switch.tscn` | `godot --headless res://tests/life_legacy/runner_slot_switch.tscn` | `0` | **APROVADO** (Troca de slot 0 $\leftrightarrow$ 1, reatividade ao sinal e isolamento de indicadores) |
+| **4** | `runner_marco2.tscn` | `godot --headless res://tests/life_legacy/runner_marco2.tscn` | `0` | **APROVADO** (Comparação temporal, save epoch, barreira, avanço multi-semanal, circuit breaker e I/O fail resilience) |
+| **5** | `runner_marco3.tscn` | `godot --headless res://tests/life_legacy/runner_marco3.tscn` | `0` | **APROVADO** (Condições declarativas, deduplicação Career, Outbox Intent-Log, pre-commitment rollback e crash recovery) |
+| **6** | `runner_marco4.tscn` | `godot --headless res://tests/life_legacy/runner_marco4.tscn` | `0` | **APROVADO** (Idade canônica, ciclo familiar, placa SalonFama idempotente, instantiate_dynasty_heir e crash recovery em todas as etapas) |
+| **7** | `runner_marco5.tscn` | `godot --headless res://tests/life_legacy/runner_marco5.tscn` | `0` | **APROVADO** (Catálogo de 8 eventos, modal UI, dashboard Celular e integração ponta a ponta) |
+| **8** | `runner_marco6.tscn` | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** (Estresse de 52 semanas consecutivas, virada anual temporada 2, zero regressão e monitor de nós órfãos) |
+
+---
+
+## 6. CONCLUSÃO FINAL
+
+A auditoria técnica corretiva e a homologação formal da **Fase 1 do sistema LIFE & LEGACY** foram concluídas com êxito integral na branch `life-legacy-fase1-implementation`.
+
+O sistema encontra-se robusto, matematicamente verificado, com garantias transacionais e durabilidade atômica comprovadas por testes automatizados no Godot 4.7.
+
 
 
