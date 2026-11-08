@@ -239,6 +239,13 @@ func test_career_hub_real_scene_integration_and_slot_switch() -> void:
 		Career.last_summary = ""
 		Career.last_report = {}
 		Career.retired = false
+		Career.injury_weeks = 0
+		Career.injury_dias = 0
+		Career.injury_peak_weeks = 0
+		Career.injury_matches_lost = 0
+		Career._rehab_debido = -1
+		Career.birthday_year_seen = int(Time.get_date_dict_from_system().get("year", 0))
+		Career.pending_ceremonies.clear()
 
 	# 1. Configura Slot 0 com um evento pendente
 	GameState.season_num = 1

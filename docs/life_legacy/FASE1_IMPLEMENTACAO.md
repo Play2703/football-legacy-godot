@@ -365,11 +365,48 @@ Executada de forma independente, sequencial e limpa no ambiente do projeto:
 
 ---
 
-## 6. CONCLUSÃO FINAL
+## 7. RESOLUÇÃO DE BLOQUEADORES RESIDUAIS E HOMOLOGAÇÃO FINAL
 
-A auditoria técnica corretiva e a homologação formal da **Fase 1 do sistema LIFE & LEGACY** foram concluídas com êxito integral na branch `life-legacy-fase1-implementation`.
+Em conformidade com a auditoria de bloqueadores residuais da Fase 1, foram implementadas soluções rigorosas para os cinco bloqueadores identificados e para a guarda de limites do gerador pseudoaleatório, seguidas de bateria completa de testes automatizados com injeção de falhas controladas.
 
-O sistema encontra-se robusto, matematicamente verificado, com garantias transacionais e durabilidade atômica comprovadas por testes automatizados no Godot 4.7.
+### 7.1. Histórico dos Commits de Resolução dos Bloqueadores
+
+| Commit | Bloqueador / Escopo | Descrição Técnica Detalhada |
+| :--- | :--- | :--- |
+| `ff7c6a7` | **Bloqueadores 1 e 4** (Persistência & Recuperação de Backup) | 1. Implementado status `WARN_RECOVERED_MEMORY_ONLY`: se o arquivo `.bak` estiver íntegro mas a regravação do arquivo principal falhar, o jogo entra em Modo Seguro em memória sem tentar gravar nem corromper o disco.<br>2. Proteção contra destruição do backup íntegro: adicionado parâmetro `rotate_backup: bool = true` em `save_slot_data()`, desativando a rotação de backup durante a restauração do Caso B para que o `.bak` válido original permaneça intocado caso a gravação do principal falhe.<br>3. Suíte de injeção de falhas I/O reais controladas (`FaultInjection` em `LifeLegacyPersistence`): simulação de erro de abertura de escrita, truncamento de buffer, divergência de tamanho de arquivo, falha de staging e falha de renomeação na promoção atômica com comprovação de rollback. |
+| `0eaa88e` | **Bloqueador 2** (Protocolo Transacional de Eventos em 3 Estágios) | 1. Implementado protocolo transacional de 3 estágios em `LifeLegacyEvents.resolve_choice()`: Estágio 1 (`PRE_COMMITMENT`), Estágio 2 (Despacho atômico das intenções) e Estágio 3 (`RESOLVED` após confirmação completa do receptor).<br>2. Se o pré-compromisso no disco falhar, o despacho é cancelado e as mutações em memória são revertidas.<br>3. Se qualquer intenção falhar durante o despacho ou não for confirmada pelo receptor, o evento permanece estritamente em `PRE_COMMITMENT` e o status `RESOLVED` não é atribuído.<br>4. Implementação de 7 testes exaustivos de cenários de falha e recuperação em `test_marco3_events_outbox.gd`. |
+| `e8904a9` | **Bloqueador 3** (Monotonicidade e Unicidade Dinástica) | 1. Substituição do timestamp Unix volátil por gerador de sequência estritamente monotônico persistente `next_dynasty_tx_seq: int` no dicionário dinástico.<br>2. Formato do identificador transacional: `dyn_tx_s{slot}_seq{seq}_{father_id}_to_{heir_id}`.<br>3. Teste automatizado com 100 iterações em loop síncrono comprovando zero colisões e monotonicidade estrita. |
+| `1831f5a` | **Bloqueador 5** (Ciclo de Vida Real do CareerHub & Modal) | 1. Integração da cena real `ui/career_hub.tscn` com detecção de eventos pendentes e instanciação automática de `LifeLegacyEventModal`.<br>2. Suporte a troca reativa de slots (`reload_slot`) durante modal aberto: remoção limpa do modal anterior e instanciação do modal correspondente ao novo slot ativo sem re-exibição para eventos já resolvidos.<br>3. Resolução de escolhas via clique real de botões na UI, refletindo no `LifeLegacy` e persistindo em disco. |
+| `e0f9330` | **PRNG Canônico & Guardas de Domínio** | 1. Aplicação de `clampi` em todos os parâmetros canônicos de `LifeLegacyRNG.generate_seed()`: `slot` (0..9), `season` (1..999), `day` (0..365), `catalog_version` (1..9999), `rng_version` (1..999).<br>2. Guarda contra overflow aritmético de 64 bits utilizando a constante do LCG de Knuth (`6364136223846793005`).<br>3. Testes formais de limites extremos, entradas fora da faixa e estabilidade determinística em `test_deterministic_rng.gd`. |
+
+---
+
+### 7.2. Tabela de Homologação Final dos 8 Runners (Pós-Bloqueadores)
+
+Todas as suítes foram executadas sequencialmente via Godot Engine headless (`v4.7.2.stable.arch_linux`), atingindo **100% de aprovação (código de saída 0)**:
+
+| # | Suíte / Runner | Comando de Execução | Exit Code | Status | Cobertura Validada |
+| :---: | :--- | :--- | :---: | :---: | :--- |
+| **1** | `test_deterministic_rng.gd` | `godot --headless -s res://tests/life_legacy/test_deterministic_rng.gd` | `0` | **APROVADO** | Vetores Knuth LCG, replay de 1.000 amostras, replay de sorteio de eventos, clamping de domínios e guarda de overflow. |
+| **2** | `test_persistence_cases_a_to_e.gd` | `godot --headless -s res://tests/life_legacy/test_persistence_cases_a_to_e.gd` | `0` | **APROVADO** | Casos A a E, `.bak_staging`, `WARN_RECOVERED_MEMORY_ONLY`, preservação do `.bak` em falha de restauração e 5 injeções de falha de I/O reais controladas com rollback comprovado. |
+| **3** | `runner_slot_switch.tscn` | `godot --headless res://tests/life_legacy/runner_slot_switch.tscn` | `0` | **APROVADO** | Troca atômica de slots ($0 \leftrightarrow 1$), reatividade ao sinal `life_legacy_loaded` e isolamento estrito de indicadores. |
+| **4** | `runner_marco2.tscn` | `godot --headless res://tests/life_legacy/runner_marco2.tscn` | `0` | **APROVADO** | Comparação temporal lexicográfica, save epoch, barreira síncrona, avanço multi-semanal, circuit breaker $> 2$ temporadas e resiliência a falhas de I/O temporal. |
+| **5** | `runner_marco3.tscn` | `godot --headless res://tests/life_legacy/runner_marco3.tscn` | `0` | **APROVADO** | Protocolo transacional de eventos em 3 estágios, deduplicação Career por token, Outbox Intent-Log e os 7 cenários exaustivos de falha e recuperação. |
+| **6** | `runner_marco4.tscn` | `godot --headless res://tests/life_legacy/runner_marco4.tscn` | `0` | **APROVADO** | Fórmula canônica de idade e fases, ciclo de vida familiar, placa SalonFama idempotente, ledger `processed_dynasty_txs`, monotonicidade do `next_dynasty_tx_seq` (100 iterações sem colisão) e crash recovery em todas as etapas da saga. |
+| **7** | `runner_marco5.tscn` | `godot --headless res://tests/life_legacy/runner_marco5.tscn` | `0` | **APROVADO** | Catálogo declarativo de 8 eventos, `LifeLegacyEventModal`, dashboard no smartphone Celular, teste fim a fim e integração com cena real `CareerHub` com suporte a troca de slots. |
+| **8** | `runner_marco6.tscn` | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** | Simulação longitudinal contínua de 52 semanas consecutivas, virada anual temporada 2, zero regressão em SaveSlots/Career/GameState e auditoria de nós órfãos na memória ($\Delta \le 0$). |
+
+---
+
+## 8. CONCLUSÃO FINAL E PRONTIDÃO
+
+A implementação e a resolução de bloqueadores da **FASE 1 — LIFE & LEGACY** foram concluídas com sucesso integral e absoluto no repositório `Play2703/football-legacy-godot`, mantendo estrito isolamento na branch `life-legacy-fase1-implementation`.
+
+- **Branches Técnicas Protegidas:** `master`, `etapa-4e18-r2` e `life-legacy-fase0-auditoria` permaneceram 100% intocadas.
+- **Taxa de Homologação:** 8 de 8 suítes de testes automatizados aprovadas (0 falhas, 0 erros de script, 0 nós órfãos vazados).
+- **Prontidão:** O sistema Life & Legacy Fase 1 encontra-se pronto e homologado.
+- **Fase 2:** A Fase 2 **NÃO** foi iniciada e aguarda autorização formal do usuário.
+
 
 
 
