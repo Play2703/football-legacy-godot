@@ -418,15 +418,15 @@ O momento ideal e seguro é a recepção do sinal **`GameState.career_updated`**
 
 #### 1.4. Mecanismo de Idempotência e Prevenção de Duplicidade
 Para garantir que eventos e decaimentos de indicadores ocorram **rigorosamente uma única vez por semana**:
-1. O `LifeLegacyManager` mantém em sua estrutura a variável persistida `last_processed_week: Dictionary = {"season": -1, "day": -1}`.
-2. Ao receber `GameState.career_updated`:
+1. O `LifeLegacyManager` mantém em sua estrutura a variável persistida `last_processed_week: Dictionary = {"season_num": -1, "season_day": -1}`.
+2. Ao receber a notificação de atualização:
    ```gdscript
-   var current_season: int = GameState.season
+   var current_season: int = GameState.season_num
    var current_day: int = GameState.season_day
-   if last_processed_week.get("season", -1) == current_season and last_processed_week.get("day", -1) == current_day:
-       return # Semana já processada. Aborta para garantir execução única.
+   if last_processed_week.get("season_num", -1) == current_season and last_processed_week.get("season_day", -1) == current_day:
+       return # Chave temporal inalterada. Aborta para garantir execução única e ignorar chamadas espúrias.
    ```
-3. **Comportamento pós-Load:** Ao carregar um save existente, `last_processed_week` é restaurado do disco. Como `GameState.career_updated` só é emitido em partidas e trocas de calendário, a simples abertura do jogo ou troca de telas **jamais** reprocessa indicadores nem gera eventos duplicados.
+3. **Comportamento pós-Load:** Ao carregar um save existente, `last_processed_week` é restaurado do disco. Como `GameState.career_updated` só avança temporalmente após partidas gravadas, a simples abertura do jogo ou troca de telas **jamais** reprocessa indicadores nem gera eventos duplicados.
 4. **Isolamento da UI:** Telas como `ui/career_hub.gd`, `ui/celular.gd` e `ui/decision_scene.gd` são projetadas estritamente como **apresentadoras passivas (read-only)**. Abrir, fechar, alternar abas ou pausar telas de interface não altera contadores nem consome eventos pendentes.
 
 ---
@@ -484,7 +484,7 @@ O formato persistido em `life_legacy.json` seguirá rigorosamente o schema versi
 ```json
 {
   "schema_version": 1,
-  "last_processed_week": { "season": 1, "day": 12 },
+  "last_processed_week": { "season_num": 1, "season_day": 12 },
   "stats": {
     "popularity": 40.0,
     "reputation": 50.0,
@@ -541,7 +541,7 @@ Analisou-se minuciosamente a estratégia de ciclo de vida do coordenador central
 - **Abordagem de Instância Gerenciada (Componente filho de nós de cena):** Se o coordenador fosse um nó instanciado dentro de `ui/career_hub.tscn` ou `ui/celular.tscn`, ele seria destruído sempre que o jogador entrasse em uma partida 3D (`match.tscn`) ou navegasse para telas como a loja ou o mercado de transferências. Isso causaria perda de continuidade, impossibilitando que eventos rodassem de forma autônoma após partidas ou simulações.
 - **Abordagem de Autoload Singleton (Recomendada):** Registrando `LifeLegacy="*res://features/life_legacy/core/life_legacy_manager.gd"` em `project.godot`:
   1. O coordenador permanece ativo durante todo o ciclo do jogo na raiz do `SceneTree`.
-  2. Inscreve-se nos sinais de avanço esportivo (`GameState.career_updated`) e de virada de temporada (`GameState.season_advanced`) imediatamente no `_ready()`.
+  2. Inscreve-se na notificação `GameState.career_updated` imediatamente no `_ready()`, filtrando estritamente por mudança efetiva do par `(season_num, season_day)`.
   3. Desacopla 100% o processamento de regras da exibição visual. A semana avança e os indicadores são processados mesmo que o jogador nunca abra o celular.
   4. Disponibiliza uma API estática/global limpa para qualquer interface que necessite exibir dados (`LifeLegacy.get_stats()`, `LifeLegacy.has_pending_decision()`).
 
@@ -550,8 +550,8 @@ Analisou-se minuciosamente a estratégia de ciclo de vida do coordenador central
 res://features/life_legacy/core/life_legacy_manager.gd
 ```
 - **Ciclo de Inicialização (`_ready`):**
-  - Conecta-se a `GameState.career_updated` e `GameState.season_advanced`.
-  - Conecta-se aos eventos de troca de slot de `SaveSlots`.
+  - Conecta-se a `GameState.career_updated` (com filtragem temporal).
+  - Conecta-se à notificação de troca de slot ativo.
   - Invoca `LifePersistence.load_slot(SaveSlots.active)` para carregar os dados em memória.
 - **Processamento de Semana:**
   - Verifica o mecanismo de idempotência `last_processed_week`.
@@ -638,3 +638,407 @@ Implementação no catálogo declarativo `features/life_legacy/data/`:
 
 ---
 *Adendo incorporado e formalizado. Arquitetura 100% blindada e documentada. Aguardando autorização expressa para iniciar a Fase 1.*
+
+
+---
+
+## M. ADENDO FINAL — CORREÇÕES DE CONSISTÊNCIA E DECISÃO DE ARQUITETURA
+
+Este adendo consolida a revisão técnica definitiva da Fase 0, retificando as inconsistências detectadas nas auditorias prévias e estabelecendo os contratos finais e inequívocos de arquitetura, integração, persistência, integridade transacional e ciclo de vida dinástico antes de qualquer implementação de código.
+
+---
+
+### 1. RETIFICAÇÃO DE IDENTIFICADORES E VARIÁVEIS TEMPORAIS
+
+Fica formalmente retificado que o projeto Football Legacy **não** utiliza a propriedade `GameState.season` nem emite `calendar_advanced`.
+
+#### 1.1. Propriedades Canônicas no Código
+As propriedades oficiais e vigentes em [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd) são:
+- `GameState.season_num: int` (Linha 528: declaração inicial `var season_num: int = 1`).
+- `GameState.season_day: int` (Linha 529: declaração inicial `var season_day: int = 0`).
+
+Todas as referências a `season` em diagramas, pseudocódigos e estruturas de dados do Life & Legacy passam a utilizar estritamente o par canônico `(season_num, season_day)`.
+
+#### 1.2. Evidências de Código: Incremento e Ciclo de Temporada
+- **Incremento Diário/Semanal:**
+  - Arquivo: [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd)
+  - Linha 7350: `func _advance_calendar(team_goals: int, rival_goals: int) -> void`
+  - Linha 7488: `season_day += 1`
+- **Incremento Anual (Virada de Temporada):**
+  - Arquivo: [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd)
+  - Linha 12853: `season_num += 1`
+  - Linha 12876: `season_advanced.emit(result)`
+- **Regra de Isolamento de Sinais:**
+  - O sinal `season_advanced` ocorre em fase assíncrona durante o fechamento administrativo da temporada (`_sella_verano_convocado()`).
+  - **Fica proibido** conectar o tick de eventos semanais ao sinal `season_advanced`.
+  - Processamentos anuais (aniversários familiares, envelhecimento dos filhos, renegociação de patrocínios pessoais) são disparados exclusivamente dentro de uma rotina controlada e idempotente (`_process_annual_rollover()`) acionada quando `GameState.season_num > _last_observed_time.season_num`.
+
+---
+
+### 2. AUDITORIA DE EMISSÕES DE `GameState.career_updated` E FLUXO SEMANAL DEFINITIVO
+
+A auditoria comprovou que `GameState.career_updated` é emitido em dois contextos inteiramente distintos:
+1. **Emissão por Customização Visual:**
+   - Linhas 13861-13865 em [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd):
+     ```gdscript
+     func set_customization(team: Dictionary, rival: Dictionary) -> void:
+         team_custom = _strip_kit(team)
+         rival_custom = _strip_kit(rival)
+         _save()
+         career_updated.emit()
+     ```
+   - *Impacto:* Ocorre quando o jogador altera uniformes ou kits na interface. O calendário **não avança** (`season_day` permanece inalterado).
+2. **Emissão por Consolidação de Partida:**
+   - Linhas 14143-14146 em [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd):
+     ```gdscript
+     if team_goals >= 0 and rival_goals >= 0:
+         _advance_calendar(team_goals, rival_goals)
+     _save()
+     career_updated.emit()
+     ```
+   - *Impacto:* Aqui ocorre o avanço real do calendário (`season_day += 1` na linha 7488), gravação de `career.json` e encerramento da rodada.
+
+#### 2.1. Algoritmo de Filtragem Temporal e Idempotência no `LifeLegacyManager`
+Para garantir que o subsistema Life & Legacy processe o avanço semanal com precisão cirúrgica e jamais dispare eventos espúrios:
+
+```gdscript
+extends Node
+
+# Estado temporal interno em memória
+var _last_observed_time: Dictionary = {"season_num": -1, "season_day": -1}
+var _is_initialized: bool = false
+var _is_safe_mode: bool = false
+
+func _ready() -> void:
+    # Inscreve-se na notificação geral
+    GameState.career_updated.connect(_on_career_updated)
+
+func initialize_temporal_reference(season: int, day: int) -> void:
+    # Inicialização explícita no carregamento de save/slot
+    _last_observed_time = {"season_num": season, "season_day": day}
+    _is_initialized = true
+
+func _on_career_updated() -> void:
+    if _is_safe_mode:
+        return # Modo seguro ativo: bloqueia processamento por integridade
+
+    var cur_season: int = GameState.season_num
+    var cur_day: int = GameState.season_day
+
+    # 1. Guarda contra primeira notificação arbitrária / não inicializada
+    if not _is_initialized:
+        _last_observed_time = {"season_num": cur_season, "season_day": cur_day}
+        _is_initialized = true
+        return
+
+    # 2. Guarda contra chamadas sem avanço temporal (ex: set_customization, reload de cena)
+    if cur_season == _last_observed_time["season_num"] and cur_day == _last_observed_time["season_day"]:
+        return # Chave temporal idêntica: ignora categoricamente
+
+    # 3. Guarda contra reversão temporal inesperada (recargas parciais)
+    if cur_season < _last_observed_time["season_num"] or (cur_season == _last_observed_time["season_num"] and cur_day < _last_observed_time["season_day"]):
+        # Alinha a referência sem processar eventos no passado
+        _last_observed_time = {"season_num": cur_season, "season_day": cur_day}
+        return
+
+    # 4. Detecção de virada de ano controlada
+    if cur_season > _last_observed_time["season_num"]:
+        _process_annual_rollover(_last_observed_time["season_num"], cur_season)
+
+    # 5. Avanço semanal efetivo
+    var prev_time: Dictionary = _last_observed_time.duplicate()
+    _last_observed_time = {"season_num": cur_season, "season_day": cur_day}
+    _process_weekly_advance(prev_time, _last_observed_time)
+```
+
+**Benefícios Comprovados:**
+- Chamadas de `set_customization()` mantêm `cur_day == _last_observed_time.season_day` e são descartadas imediatamente no passo 2.
+- Abertura de telas, retorno do 3D e múltiplos loads não geram ticks duplicados.
+- O avanço da semana ocorre somente após a gravação atômica de `career.json` e `career_meta.cfg`.
+
+---
+
+### 3. ARQUITETURA DE TROCA DE SLOTS E NOTIFICAÇÃO CONFIÁVEL
+
+#### 3.1. Diagnóstico do `autoload/save_slots.gd` Atual
+Linhas 112-115 em [`autoload/save_slots.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/save_slots.gd):
+```gdscript
+func switch_to(slot: int) -> void:
+    set_active(slot)
+    GameState.reload_active_slot()
+    Career.reload_active_slot()
+```
+- O método executa o reload sincrônico dos dois autoloads principais, mas **não emite nenhum sinal de notificação pública**.
+- Nem `GameState.reload_active_slot()` nem `Career.reload_active_slot()` emitem sinais.
+
+#### 3.2. Proposta Arquitetural Recomendada: Sinal Explícito em `SaveSlots`
+A solução mais segura, limpa e idiomática em Godot 4.7 é adicionar um sinal explícito em `save_slots.gd`.
+
+**Alteração Mínima Necessária (2 linhas):**
+1. Na declaração de sinais de `save_slots.gd`:
+   ```gdscript
+   signal active_slot_changed(previous_slot: int, new_slot: int)
+   ```
+2. Ao final de `switch_to(slot: int)`:
+   ```gdscript
+   func switch_to(slot: int) -> void:
+       var prev: int = active
+       set_active(slot)
+       GameState.reload_active_slot()
+       Career.reload_active_slot()
+       active_slot_changed.emit(prev, active)
+   ```
+**Justificativa Técnica:**
+- Impacto zero nas regras de negócio existentes.
+- Garantia determinística de que quando `active_slot_changed` for emitido, `GameState` e `Career` já completaram suas operações de leitura em disco.
+- Elimina completamente polling ou timers artificiais.
+
+#### 3.3. Solução Alternativa Totalmente Desacoplada (Sem Alterar SaveSlots)
+Caso a governança do projeto determine estritamente nenhuma alteração no arquivo `save_slots.gd`, a alternativa desacoplada adotada será a **Interceptação via Hook de Fachada no Carregamento de Interface**:
+- A interface de carregamento (`ui/load_career_screen.gd` ou `ui/career_hub.gd`) que invoca `SaveSlots.switch_to(target_slot)` chama explicitamente `LifeLegacy.on_slot_switched(target_slot)` logo em seguida.
+- No `LifeLegacyManager`:
+  ```gdscript
+  func on_slot_switched(slot: int) -> void:
+      LifePersistence.load_slot(slot)
+      initialize_temporal_reference(GameState.season_num, GameState.season_day)
+  ```
+- *Decisão:* A solução de sinal em `SaveSlots` é tecnicamente superior e deve ser adotada se aprovada na Fase 1; caso contrário, o Hook explícito garante a mesma segurança sem polling.
+
+---
+
+### 4. BLINDAGEM DA RECUPERAÇÃO DE DADOS (CONTRATO LIFEPERSISTENCE)
+
+O método utilitário `SaveSlots.read_json_dict()` retorna `{}` indiscriminadamente quando um arquivo não existe ou quando a leitura falha por corrupção. 
+
+Portanto, o `LifePersistence` implementará sua própria máquina de verificação de integridade antes de interpretar os dados, distinguindo rigorosamente os 5 cenários:
+
+```
+               [Leitura de life_legacy.json]
+                            |
+           +----------------+----------------+
+           | Existe arquivo principal?       |
+          SIM                               NÃO
+           |                                 |
+    +------+------+                 +--------+--------+
+    | JSON Válido?|                 | Existe .bak?    |
+   SIM           NÃO               SIM               NÃO
+    |             |                 |                 |
+  Verifica     Verifica           Verifica         [CASO A]
+  Schema        .bak               .bak         Arquivo Inexistente
+    |             |                 |           (Perfil Padrão)
+[CASO D/E/OK]  [CASO B/C]        [CASO B/C]
+```
+
+#### 4.1. Definição Rígida dos 5 Estados de Leitura
+
+| Cenário | Condição dos Arquivos | Ação do LifePersistence | Estado Resultante |
+|---|---|---|---|
+| **CASO A** | `life_legacy.json` **NÃO** existe e `.bak` **NÃO** existe. | Trata-se de um save novo ou legado da versão anterior. Inicializa perfil padrão com `schema_version = 1`, grava atomicamente no disco via `SaveSlots.write_text_atomic()`. | `OK_NOVO_PERFIL` |
+| **CASO B** | Arquivo principal inexistente ou corrompido, mas `.bak` **VÁLIDO** com JSON íntegro. | Restaura os dados a partir do `.bak`, registra aviso em log (`push_warning("[LifePersistence] Recuperado com sucesso via backup .bak")`), recria o principal atomicamente preservando a integridade. | `OK_RECUPERADO_BACKUP` |
+| **CASO C** | Arquivo principal E backup corrompidos/ilegíveis (ou parse de JSON resultou inválido). | **PROIBIDO sobrescrever.** Não cria perfil padrão por cima dos arquivos corrompidos. Sinaliza falha crítica, emite `life_legacy_load_failed(slot)`, ativa `_is_safe_mode = true` (subsistema permanece em somente-leitura) e preserva os arquivos intocados para recuperação manual ou ferramenta de reparo. | `ERRO_CRITICO_SAFE_MODE` |
+| **CASO D** | JSON íntegro, porém `schema_version > CURRENT_SUPPORTED_SCHEMA`. | Arquivo gerado por versão mais nova do jogo. **PROIBIDO regravar.** Bloqueia gravação automática para evitar perda de dados por downgrade. Notifica o jogador de incompatibilidade de versão. | `BLOQUEIO_VERSAO_SUPERIOR` |
+| **CASO E** | JSON íntegro, porém `schema_version < CURRENT_SUPPORTED_SCHEMA`. | Aciona pipeline de migração sequencial controlada (`_migrate_v1_to_v2()`, etc.). Valida o dicionário pós-migração contra o schema alvo. **Salva em disco somente após a validação retornar 100% de conformidade.** Se falhar, reverte para leitura segura. | `OK_MIGRADO_COM_SUCESSO` |
+
+#### 4.2. Respeito ao Critério Científico de Verificação
+- Fica proibido alegar "estabilidade de 100%" de forma retórica.
+- A estabilidade será atestada exclusivamente mediante a aprovação de suíte automatizada de testes que injete bytes truncados, JSON com sintaxe quebrada e schemas adulterados.
+
+---
+
+### 5. GARANTIA DE IDEMPOTÊNCIA E INTEGRIDADE DE EVENTOS (OUTBOX PATTERN)
+
+A persistência de Football Legacy envolve múltiplos arquivos independentes (`career.json`, `career_meta.cfg`, `life_legacy.json` e estruturas de redes sociais). Não existe transação atômica ACID compartilhada entre o sistema operacional e múltiplos arquivos.
+
+Para garantir que uma interrupção abrupta (queda de energia, fechamento forçado no Android/PC) durante a escolha de um evento **jamais duplique efeitos**, implementa-se o **Padrão Outbox Transacional com Tokens de Idempotência**.
+
+#### 5.1. Estrutura do Estado do Evento no `life_legacy.json`
+```json
+{
+  "active_event": {
+    "occurrence_id": "occ_s02_d14_evt_festa_derby_a8f9c1b2",
+    "event_id": "evt_festa_vespera_derby",
+    "status": "RESOLVED",
+    "temporal_key": { "season_num": 2, "season_day": 14 },
+    "selected_choice_id": "choice_3_camarote",
+    "applied_internal_effects": {
+      "discipline": -5.0,
+      "popularity": 5.0
+    },
+    "outbox_dispatches": [
+      {
+        "target": "career_meta",
+        "idempotency_token": "occ_s02_d14_evt_festa_derby_a8f9c1b2_dinero",
+        "payload": { "dinero": -2500 },
+        "status": "COMMITTED"
+      },
+      {
+        "target": "muro_redes",
+        "idempotency_token": "occ_s02_d14_evt_festa_derby_a8f9c1b2_post",
+        "payload": { "post_id": "post_camarote_discreto", "followers_delta": 450 },
+        "status": "PENDING"
+      }
+    ]
+  }
+}
+```
+
+#### 5.2. Protocolo de Duas Fases (Two-Phase Dispatch)
+1. **Fase 1 — Gravação Local:** No momento em que o jogador clica na escolha, o `LifeLegacyManager` aplica os efeitos internos nos indicadores (`discipline`, `popularity`), gera os tokens únicos para efeitos externos e salva `life_legacy.json` com `status = "RESOLVED"` e despachos externos marcados como `"PENDING"`.
+2. **Fase 2 — Despacho Externo:**
+   - O adaptador envia o efeito para `Career` (dinheiro) e `MuroRedes` acompanhado do `idempotency_token`.
+   - O subsistema receptor registra o token em seu próprio histórico de idempotência. Se receber o mesmo token duas vezes, ignora a operação e retorna sucesso.
+   - Assim que o receptor confirma, o `LifeLegacyManager` marca o despacho como `"COMMITTED"` e atualiza `life_legacy.json`.
+3. **Fase de Reconciliação no Boot:**
+   - Ao carregar qualquer slot, `LifeLegacyManager.reconcile_outbox()` busca despachos em estado `"PENDING"` e retransmite aos receptores com o mesmo token.
+   - **Garantia:** Exatamente-Uma (Exactly-Once) execução de consequências financeiras, sociais e atléticas.
+
+---
+
+### 6. SISTEMA FAMILIAR COMPLETO E SUCESSÃO GERACIONAL
+
+A sucessão geracional é pilar estruturante do escopo de Life & Legacy. O plano passa a contemplar expressamente dois gestores dedicados: `FamilyManager` e `DynastyManager`.
+
+```
+features/life_legacy/
+├── core/
+│   ├── life_legacy_manager.gd
+│   ├── life_persistence.gd
+│   ├── life_event_engine.gd
+│   └── life_outbox.gd
+└── dynasty/
+    ├── family_manager.gd
+    └── dynasty_manager.gd
+```
+
+#### 6.1. `FamilyManager`: Administração Familiar e Ciclo de Vida da Prole
+Responsável por relacionamentos conjugais, nascimento e desenvolvimento dos filhos:
+- **Casamento e Parceria:** Registro de status afetivo, perfil do cônjuge, harmonia conjugal e eventos de casal.
+- **Nascimento de Filhos:**
+  - Evento de concepção e nascimento (`anuncio_primeiro_filho`).
+  - Registro de filiação: identificação clara dos pais, nome escolhido pelo jogador ou sugerido pela cultura de origem, data de nascimento canônica `(season_num, season_day)`.
+- **Fases de Desenvolvimento por Temporadas:**
+  - **Fase Bebê (0 a 3 temporadas):** Foco em estabilidade emocional, noites em claro (energia temporária reduzida), celebrações de batismo e primeiros passos.
+  - **Fase Infância (4 a 11 temporadas):** Escola, festas infantis, decisões educacionais, apoio aos primeiros chutes no quintal.
+  - **Fase Academia de Base (12 a 15 temporadas):** O filho ingressa na escolinha/base do clube do pai ou rival; manifestação das predisposições esportivas.
+  - **Fase Promessa Juvenil (16 a 17 temporadas):** Assinatura de contrato de formação, destaque em copas juvenis, possibilidade de conselhos de carreira.
+  - **Fase Adulto / Profissional (18+ temporadas):** Elegibilidade completa para atuar profissionalmente.
+- **Genética e Hereditariedade:**
+  - Tom de pele, estilo de textura e cor de cabelo herdados dos pais com variação biológica realista.
+  - Altura e constituição física influenciadas pelo perfil dos progenitores.
+- **Atributos Esportivos Próprios e Personalidade:**
+  - Posição em campo, perna preferida e atributos atléticos gerados com base em predisposição genética + histórico de acompanhamento do pai durante a infância.
+  - Personalidade independente configurada por 4 eixos (`work_ethic`, `temperament`, `ambition`, `loyalty`), reagindo a eventos de forma autônoma.
+
+#### 6.2. `DynastyManager`: Sucessão Geracional e Continuidade de Carreira
+Responsável pelo momento culminante da carreira esportiva:
+- **Gatilho de Aposentadoria:** Quando o jogador veterano atinge a aposentadoria (por idade ou decisão do jogador), o `DynastyManager` avalia se existe ao menos um filho com 16 anos ou mais.
+- **Opção de Sucessão Dinástica:**
+  - O jogador pode optar por encerrar a linhagem ou **Assumir o Controle do Filho**.
+  - **Transição de Save:**
+    1. A carreira do pai é encerrada com todas as honras e imortalizada no `Keepsake` / Sala de Troféus Histórica como "Lenda e Mentor".
+    2. O novo avatar da carreira é gerado no slot com o filho aos 17/18 anos.
+    3. **Herança Patrimonial:** Fração do patrimônio financeiro da família e reputação de berço são transmitidos ao herdeiro.
+    4. **Narrativa e Mídia:** O feed de notícias e o `MuroRedes` reconhecem o parentesco com manchetes temáticas ("Filho de peixe? Herdeiro de [Nome do Pai] inicia sua jornada profissional").
+
+---
+
+### 7. RESTRIÇÃO ABSOLUTA SOBRE O MOTOR ESPORTIVO NA FASE 1
+
+Fica formalmente estabelecida a **separação hermética** entre o subsistema Life & Legacy e o motor esportivo do Football Legacy na Fase 1.
+
+#### 7.1. Proibições Rígidas (Invariantes Técnicos)
+O Life & Legacy **NÃO ALTERA** diretamente:
+- Atributos físicos (velocidade, aceleração, resistência, força).
+- Atributos técnicos (finalização, passe, drible, desarme, cabeceio).
+- Motor de simulação de partidas (`features/match/`).
+- Fórmulas de finalização e cobrança de pênaltis.
+- Algoritmos e probabilidades de lesão durante o jogo.
+- Curvas de declínio físico (33+ anos) e técnico (35+ anos) blindadas na Etapa 4e.15.
+
+#### 7.2. Escopo Permitido na Fase 1
+- Os 6 indicadores (`popularity`, `reputation`, `discipline`, `emotional_stability`, `personal_relationships`, `social_influence`) existem e operam **estritamente no domínio extracampo**.
+- Consequências permitidas:
+  - Narrativas e diálogos nos eventos.
+  - Reações de fãs e imprensa no `MuroRedes`.
+  - Gastos financeiros e patrocínios na carreira via adaptadores autorizados.
+  - Desgaste ou bônus de energia extracampo (sono e descanso).
+  - Relações familiares e progresso da dinastia.
+- *Fases Futuras:* Qualquer influência indireta de disciplina ou estabilidade emocional sobre foco em treino ou recomposição sob pressão de clássico fica expressamente postergada para etapas futuras, condicionada a aprovação e auditoria própria.
+
+---
+
+### 8. PLANO REVISADO DA FASE 1 E ARQUITETURA DE ARQUIVOS
+
+#### 8.1. Divisão Executiva das 7 Subetapas
+1. **Subetapa 1.1 — Motor de Persistência Seguro (`LifePersistence`):**
+   - Criação de `features/life_legacy/core/life_persistence.gd`.
+   - Implementação da máquina de estados para Casos A, B, C, D e E com atomicidade e `.bak`.
+2. **Subetapa 1.2 — Coordenador Central (`LifeLegacyManager`) e Integração Temporal:**
+   - Criação de `features/life_legacy/core/life_legacy_manager.gd` (Autoload `LifeLegacy`).
+   - Implementação do filtro temporal canônico sobre `GameState.career_updated` (linhas 14146 vs 13865).
+   - Implementação da notificação de troca de slot de save.
+3. **Subetapa 1.3 — Indicadores Extracampo e Transacionalidade Outbox:**
+   - Implementação dos 6 indicadores independentes com saturação não-linear parabólica.
+   - Criação de `features/life_legacy/core/life_outbox.gd` para tokens de idempotência e filas de despacho.
+4. **Subetapa 1.4 — Sistema Familiar (`FamilyManager`):**
+   - Criação de `features/life_legacy/dynasty/family_manager.gd`.
+   - Modelagem de cônjuge, nascimento, genética e avanço etário por temporadas.
+5. **Subetapa 1.5 — Catálogo Declarativo de Eventos e Encadeamento:**
+   - Criação de `features/life_legacy/core/life_event_engine.gd` e catálogos em `features/life_legacy/data/`.
+   - Implementação dos 8 eventos declarativos com escolhas ramificadas e pré-condições de derby.
+6. **Subetapa 1.6 — Sucessão Geracional (`DynastyManager`):**
+   - Criação de `features/life_legacy/dynasty/dynasty_manager.gd`.
+   - Mecanismo de aposentadoria com transição para o filho elegível e imortalização do pai no Keepsake.
+7. **Subetapa 1.7 — Smartphone In-Game, Visualização e Homologação:**
+   - Integração da aba "Minha Vida" em `ui/celular.gd`.
+   - Integração com `ui/decision_scene.gd`.
+   - Execução da suíte completa de testes de regressão, memória e estabilidade.
+
+#### 8.2. Mapeamento Completo de Arquivos
+- **Arquivos Novos a Criar:**
+  - `features/life_legacy/core/life_legacy_manager.gd`
+  - `features/life_legacy/core/life_persistence.gd`
+  - `features/life_legacy/core/life_event_engine.gd`
+  - `features/life_legacy/core/life_outbox.gd`
+  - `features/life_legacy/dynasty/family_manager.gd`
+  - `features/life_legacy/dynasty/dynasty_manager.gd`
+  - `features/life_legacy/data/catalogo_eventos.gd`
+  - `features/life_legacy/data/catalogo_lifestyle.gd`
+  - `tests/life_legacy/test_save_load_roundtrip.gd`
+  - `tests/life_legacy/test_slot_switch.gd`
+  - `tests/life_legacy/test_idempotency_and_outbox.gd`
+  - `tests/life_legacy/test_corruption_cases_a_to_e.gd`
+  - `tests/life_legacy/test_family_lifecycle_dynasty.gd`
+  - `tests/life_legacy/test_season_52_weeks_simulation.gd`
+- **Arquivos Existentes com Alteração Mínima Planejada (Sob Autorização):**
+  - `project.godot` (registro do Autoload `LifeLegacy`).
+  - `autoload/save_slots.gd` (emissão do sinal `active_slot_changed`).
+  - `ui/celular.gd` (exibição do app no smartphone).
+
+---
+
+### 9. SUÍTE DE TESTES E VERIFICAÇÃO MULTIDIMENSIONAL DE MEMÓRIA
+
+Fica revogado o uso isolado de `OBJECT_ORPHAN_NODE_COUNT` como critério exclusivo de qualidade. A homologação da Fase 1 exigirá medição em três dimensões independentes:
+
+1. **Nós Órfãos no SceneTree:**
+   - Verificação via `Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)`.
+   - Meta: 0 nós órfãos residuais gerados pelo subsistema após navegação e conclusão de eventos.
+2. **Ciclo de Vida de Objetos e Recursos Persistentes:**
+   - Verificação via `Performance.get_monitor(Performance.OBJECT_COUNT)` e `Performance.OBJECT_RESOURCE_COUNT`.
+   - Garantir que dicionários, arrays e instâncias de `RefCounted` ou nós instanciados dinamicamente sejam desalocados após o fechamento de telas de eventos.
+3. **Comportamento de Memória Físico/Estático:**
+   - Verificação via `OS.get_static_memory_usage()`.
+   - Medição antes e depois da simulação acelerada de **52 semanas consecutivas**: a memória estática residual deve permanecer estável (sem vazamento contínuo linear / sem "degrau" permanente após coleta de lixo).
+
+---
+
+### 10. LIMITAÇÕES ATUAIS CONHECIDAS E MITIGAÇÕES
+
+1. **Ausência de Transações Multi-Arquivo:** Mitigada pelo padrão Outbox de duas fases com tokens de idempotência no `LifeLegacyManager`.
+2. **Inexistência de Notificação em SaveSlots:** Mitigada pela proposta de sinal explícito de 2 linhas (`active_slot_changed`) com fallback para Hook de interface.
+3. **Ambiguidade de `career_updated`:** Mitigada pelo algoritmo de guarda com o par temporal canônico `(season_num, season_day)`.
+4. **Risco de Corrupção de JSON:** Mitigado pela máquina de 5 estados no `LifePersistence` com modo seguro que impede sobrescrever dados avariados.
+
+---
+*Fase 0 — Auditoria Arquitetural e Plano Técnico concluídos e blindados com rigor absoluto. Nenhum código de produção foi criado ou alterado. Aguardando autorização expressa para iniciar a Fase 1.*
