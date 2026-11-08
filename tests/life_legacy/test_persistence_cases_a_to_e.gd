@@ -47,11 +47,38 @@ func _init() -> void:
 	f_bad.store_string("CORROMPIDO {{{ syntax error")
 	f_bad.close()
 	
+	# B.1: Recuperação com sucesso de regravação
 	var res_b: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(res_b["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Caso B falhou ao recuperar .bak")
 	assert(res_b["is_safe_mode"] == false, "Caso B recuperado não deve estar em safe mode")
+	assert(res_b["is_persisted"] == true, "Caso B recuperado deve ter is_persisted = true")
 	assert(res_b["data"]["stats"]["discipline"] == 85.0, "Caso B deve conter os dados do backup íntegro (85.0)")
-	print("  -> Caso B aprovado!")
+	print("  -> Caso B (sucesso de regravação) aprovado!")
+
+	# B.2: Bloqueador 1 - Falha ao regravar principal a partir do backup .bak
+	print("[Teste 3.2] Bloqueador 1: Falha na regravação do .bak -> WARN_RECOVERED_MEMORY_ONLY...")
+	var f_bad_re: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
+	f_bad_re.store_string("CORROMPIDO_NOVAMENTE {{{")
+	f_bad_re.close()
+	
+	LifeLegacyPersistence.fault_inject_restore_backup_save = true
+	var res_b_mem: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(res_b_mem["status"] == LifeLegacyPersistence.LoadStatus.WARN_RECOVERED_MEMORY_ONLY, "Deve retornar WARN_RECOVERED_MEMORY_ONLY")
+	assert(res_b_mem["is_safe_mode"] == true, "Deve ativar is_safe_mode quando regravação falha")
+	assert(res_b_mem["is_persisted"] == false, "Deve indicar is_persisted = false")
+	assert(res_b_mem["data"]["stats"]["discipline"] == 85.0, "Dados em memória devem ser recuperados do .bak")
+	assert(FileAccess.file_exists(bak_path), "O arquivo .bak deve permanecer intacto no disco")
+	var f_check_bad: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	assert(f_check_bad.get_as_text().begins_with("CORROMPIDO_NOVAMENTE"), "Principal não deve ser destruído se regravação falhou")
+	f_check_bad.close()
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# Restauração limpa subsequente sem falha injetada
+	var res_b_retry: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(res_b_retry["status"] == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Retry deve ter sucesso")
+	assert(res_b_retry["is_safe_mode"] == false, "Retry não deve estar em safe mode")
+	assert(res_b_retry["is_persisted"] == true, "Retry deve ter is_persisted = true")
+	print("  -> Bloqueador 1 (WARN_RECOVERED_MEMORY_ONLY) aprovado com sucesso!")
 	
 	# CASO C: Principal e backup ambos corrompidos
 	print("[Teste 4] Caso C: Principal e backup corrompidos (Modo Seguro sem destruição)...")
@@ -125,6 +152,63 @@ func _init() -> void:
 		var err_json = LifeLegacyPersistence._read_and_parse_json(err_corrupt_path)
 		assert(err_json["ok"] == false and err_json["error_type"] == "json_invalid", "Deve reportar json_invalid")
 		DirAccess.remove_absolute(err_corrupt_path)
+
+	# E.5: Bloqueador 4 - Injeção de Falha: Abertura para escrita
+	print("[Teste 6.5] Injeção de falha ao abrir arquivo temporário para escrita...")
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var fail_open = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(fail_open == false, "save_slot_data deve falhar se open_write falhar")
+	assert(not FileAccess.file_exists(tmp_path), "Arquivo temporário não deve restar")
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# E.6: Bloqueador 4 - Injeção de Falha: Truncamento no buffer temporário
+	print("[Teste 6.6] Injeção de falha de truncamento de buffer temporário...")
+	LifeLegacyPersistence.fault_inject_write_truncate = true
+	var fail_trunc = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(fail_trunc == false, "save_slot_data deve falhar se buffer for truncado")
+	assert(not FileAccess.file_exists(tmp_path), "Temporário truncado deve ser deletado")
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# E.7: Bloqueador 4 - Injeção de Falha: Validação de leitura pós-escrita
+	print("[Teste 6.7] Injeção de falha na validação de leitura do temporário...")
+	LifeLegacyPersistence.fault_inject_read_validation = true
+	var fail_val = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(fail_val == false, "save_slot_data deve falhar na validação de leitura")
+	assert(not FileAccess.file_exists(tmp_path), "Temporário inválido deve ser deletado")
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# E.8: Bloqueador 4 - Injeção de Falha: Rotação para staging de backup
+	print("[Teste 6.8] Injeção de falha na rotação do principal para staging...")
+	var pre_rot_data = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
+	LifeLegacyPersistence.fault_inject_rotate_staging = true
+	var fail_rot = LifeLegacyPersistence.save_slot_data(test_slot, good_data)
+	assert(fail_rot == false, "save_slot_data deve falhar se rotação de staging falhar")
+	var post_rot_data = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
+	assert(post_rot_data["save_revision"] == pre_rot_data["save_revision"], "Principal não deve ser alterado se rotação falhar")
+	assert(not FileAccess.file_exists(bak_staging), "Staging não deve restar")
+	assert(not FileAccess.file_exists(tmp_path), "Temporário não deve restar")
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# E.9: Bloqueador 4 - Injeção de Falha: Promoção com Rollback Automático
+	print("[Teste 6.9] Injeção de falha na promoção atômica com rollback automático...")
+	var saved_data_rev = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
+	var orig_rep: float = float(saved_data_rev["stats"]["reputation"])
+	var candidate_data = saved_data_rev.duplicate(true)
+	candidate_data["stats"]["reputation"] = 999.0
+	candidate_data["save_revision"] = int(candidate_data.get("save_revision", 0)) + 1
+	
+	LifeLegacyPersistence.fault_inject_promote = true
+	var fail_prom = LifeLegacyPersistence.save_slot_data(test_slot, candidate_data)
+	assert(fail_prom == false, "save_slot_data deve retornar false se _promote falhar")
+	
+	# Verifica que o rollback restaurou o principal a partir do staging
+	var rolled_back = LifeLegacyPersistence._read_and_parse_json(file_path)["data"]
+	assert(rolled_back["stats"]["reputation"] == orig_rep, "Rollback deve restaurar o principal intacto!")
+	assert(rolled_back["save_revision"] == saved_data_rev["save_revision"], "Revisão deve ser a original após rollback")
+	assert(not FileAccess.file_exists(bak_staging), "Staging deve ser consumido pelo rollback")
+	assert(not FileAccess.file_exists(tmp_path), "Temporário deve ser removido após falha de promoção")
+	LifeLegacyPersistence.reset_fault_injection()
+	print("  -> Rollback automático na falha de promoção comprovado com sucesso!")
 	
 	# Limpeza final
 	_cleanup([file_path, bak_path, tmp_path, bak_staging])

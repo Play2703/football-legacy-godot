@@ -13,6 +13,7 @@ enum LoadStatus {
 	OK_SUCCESS,
 	OK_NEW_PROFILE,
 	OK_RECOVERED_BACKUP,
+	WARN_RECOVERED_MEMORY_ONLY,
 	ERR_SAFE_MODE_CORRUPT,
 	ERR_FUTURE_SCHEMA_BLOCKED,
 	ERR_MIGRATION_FAILED,
@@ -22,6 +23,22 @@ enum LoadStatus {
 	ERR_SCHEMA_INCOMPATIBLE,
 	ERR_IO_FAILURE
 }
+
+# --- Hooks controláveis para injeção de falhas em testes de I/O ---
+static var fault_inject_open_write: bool = false
+static var fault_inject_write_truncate: bool = false
+static var fault_inject_read_validation: bool = false
+static var fault_inject_rotate_staging: bool = false
+static var fault_inject_promote: bool = false
+static var fault_inject_restore_backup_save: bool = false
+
+static func reset_fault_injection() -> void:
+	fault_inject_open_write = false
+	fault_inject_write_truncate = false
+	fault_inject_read_validation = false
+	fault_inject_rotate_staging = false
+	fault_inject_promote = false
+	fault_inject_restore_backup_save = false
 
 static func slot_dir(slot: int) -> String:
 	return "user://slot%d/" % [clampi(slot, 0, 2) + 1]
@@ -50,6 +67,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"error_type": "",
 						"data": res_tmp["data"],
 						"is_safe_mode": false,
+						"is_persisted": true,
 						"is_new_profile": false
 					}
 				else:
@@ -59,6 +77,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"error_type": "io_failure",
 						"data": res_tmp["data"],
 						"is_safe_mode": true,
+						"is_persisted": false,
 						"is_new_profile": false
 					}
 			else:
@@ -73,6 +92,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 				"error_type": "io_failure",
 				"data": {},
 				"is_safe_mode": true,
+				"is_persisted": false,
 				"is_new_profile": true
 			}
 		return {
@@ -80,6 +100,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 			"error_type": "",
 			"data": new_data,
 			"is_safe_mode": false,
+			"is_persisted": true,
 			"is_new_profile": true
 		}
 
@@ -96,6 +117,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"error_type": "",
 						"data": parsed_main,
 						"is_safe_mode": false,
+						"is_persisted": true,
 						"is_new_profile": false
 					}
 				else:
@@ -107,6 +129,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 					"error_type": "future_schema",
 					"data": parsed_main,
 					"is_safe_mode": true,
+					"is_persisted": false,
 					"is_new_profile": false
 				}
 			elif schema_v < CURRENT_SUPPORTED_SCHEMA:
@@ -118,6 +141,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"error_type": "" if mig_saved else "io_failure",
 						"data": migrated,
 						"is_safe_mode": not mig_saved,
+						"is_persisted": mig_saved,
 						"is_new_profile": false
 					}
 				else:
@@ -126,6 +150,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 						"error_type": "migration_failed",
 						"data": parsed_main,
 						"is_safe_mode": true,
+						"is_persisted": false,
 						"is_new_profile": false
 					}
 
@@ -133,15 +158,30 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 	if bak_exists:
 		var res_bak = _read_and_parse_json(bak_path)
 		if res_bak.get("ok", false) and res_bak.get("data") is Dictionary and LifeLegacyState.validate_schema(res_bak["data"]):
-			push_warning("[LifeLegacyPersistence] Arquivo principal ilegível em slot %d. Recuperado com sucesso via backup .bak." % slot)
-			save_slot_data(slot, res_bak["data"])
-			return {
-				"status": LoadStatus.OK_RECOVERED_BACKUP,
-				"error_type": "",
-				"data": res_bak["data"],
-				"is_safe_mode": false,
-				"is_new_profile": false
-			}
+			push_warning("[LifeLegacyPersistence] Arquivo principal ilegível em slot %d. Recuperando via backup .bak..." % slot)
+			var restore_ok: bool = false
+			if not fault_inject_restore_backup_save:
+				# Regrava principal a partir do backup preservando o .bak intacto (sem rotacionar o corrompido para backup)
+				restore_ok = save_slot_data(slot, res_bak["data"], false)
+			if restore_ok:
+				return {
+					"status": LoadStatus.OK_RECOVERED_BACKUP,
+					"error_type": "",
+					"data": res_bak["data"],
+					"is_safe_mode": false,
+					"is_persisted": true,
+					"is_new_profile": false
+				}
+			else:
+				push_error("[LifeLegacyPersistence] Falha ao regravar principal a partir do backup .bak. Retornando dados em memória sob Modo Seguro.")
+				return {
+					"status": LoadStatus.WARN_RECOVERED_MEMORY_ONLY,
+					"error_type": "restore_write_failed",
+					"data": res_bak["data"],
+					"is_safe_mode": true,
+					"is_persisted": false,
+					"is_new_profile": false
+				}
 
 	# CASO C: Principal e backup quebrados/ilegíveis
 	push_error("[LifeLegacyPersistence] Falha crítica de leitura no slot %d: principal e backup corrompidos. Ativando Modo Seguro sem sobrescrever." % slot)
@@ -150,10 +190,11 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 		"error_type": "corrupt_files",
 		"data": {},
 		"is_safe_mode": true,
+		"is_persisted": false,
 		"is_new_profile": false
 	}
 
-static func save_slot_data(slot: int, data: Dictionary) -> bool:
+static func save_slot_data(slot: int, data: Dictionary, rotate_backup: bool = true) -> bool:
 	if not LifeLegacyState.validate_schema(data):
 		push_error("[LifeLegacyPersistence] Validação de schema falhou antes da gravação. Abortando.")
 		return false
@@ -177,12 +218,19 @@ static func save_slot_data(slot: int, data: Dictionary) -> bool:
 		return false
 
 	# 1. Escreve no temporário
+	if fault_inject_open_write:
+		push_error("[LifeLegacyPersistence] [FaultInjection] Falha simulada ao abrir %s para escrita." % tmp_path)
+		return false
+
 	var f: FileAccess = FileAccess.open(tmp_path, FileAccess.WRITE)
 	if f == null:
 		var open_err: Error = FileAccess.get_open_error()
 		push_error("[LifeLegacyPersistence] Não foi possível abrir %s para escrita (código %d)." % [tmp_path, open_err])
 		return false
-	f.store_buffer(bytes)
+	if fault_inject_write_truncate:
+		f.store_buffer(bytes.slice(0, maxi(1, bytes.size() / 2)))
+	else:
+		f.store_buffer(bytes)
 	f.close()
 
 	# 2. Valida tamanho do temporário
@@ -192,24 +240,30 @@ static func save_slot_data(slot: int, data: Dictionary) -> bool:
 		return false
 	var read_len: int = r.get_length()
 	r.close()
-	if read_len != bytes.size():
-		push_error("[LifeLegacyPersistence] Tamanho divergente no temporário (%d != %d). Abortando." % [read_len, bytes.size()])
+	if fault_inject_read_validation or read_len != bytes.size():
+		push_error("[LifeLegacyPersistence] Tamanho divergente no temporário (%d != %d) ou falha induzida de validação. Abortando." % [read_len, bytes.size()])
 		DirAccess.remove_absolute(tmp_path)
 		return false
 
 	# 3. Rotação do principal existente para staging de backup
-	var main_had_file: bool = FileAccess.file_exists(path)
+	var main_had_file: bool = FileAccess.file_exists(path) and rotate_backup
 	if main_had_file:
 		if FileAccess.file_exists(bak_staging):
 			DirAccess.remove_absolute(bak_staging)
-		var r_err: Error = DirAccess.rename_absolute(path, bak_staging)
+		var r_err: Error = OK
+		if fault_inject_rotate_staging:
+			r_err = FAILED
+		else:
+			r_err = DirAccess.rename_absolute(path, bak_staging)
 		if r_err != OK:
 			push_error("[LifeLegacyPersistence] Falha ao rotacionar principal para staging (%d). Abortando sem tocar no backup existente." % r_err)
 			DirAccess.remove_absolute(tmp_path)
 			return false
 
 	# 4. Promove temporário para principal
-	var p_ok: bool = _promote_tmp(tmp_path, path)
+	var p_ok: bool = false
+	if not fault_inject_promote:
+		p_ok = _promote_tmp(tmp_path, path)
 	if not p_ok:
 		push_error("[LifeLegacyPersistence] Falha ao promover %s para %s." % [tmp_path, path])
 		# Rollback: se moveu o principal para staging, restaura de volta preservando o único arquivo válido
@@ -235,6 +289,8 @@ static func _promote_tmp(tmp: String, target: String) -> bool:
 	if not FileAccess.file_exists(tmp):
 		push_error("[LifeLegacyPersistence] _promote_tmp: arquivo temporário %s não existe." % tmp)
 		return false
+	if FileAccess.file_exists(target):
+		DirAccess.remove_absolute(target)
 	var err: Error = DirAccess.rename_absolute(tmp, target)
 	if err != OK:
 		push_error("[LifeLegacyPersistence] _promote_tmp: rename_absolute falhou (%s -> %s) com erro %d." % [tmp, target, err])
