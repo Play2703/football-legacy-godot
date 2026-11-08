@@ -4,6 +4,8 @@ const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd
 const LifeLegacyPersistence = preload("res://features/life_legacy/life_legacy_persistence.gd")
 const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
 const LifeLegacyEffects = preload("res://features/life_legacy/life_legacy_effects.gd")
+const LifeLegacyEvents = preload("res://features/life_legacy/life_legacy_events.gd")
+const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -20,6 +22,8 @@ signal life_legacy_safe_mode_activated(reason: String)
 signal week_processed(season_num: int, season_day: int)
 signal weekly_tick_completed(season_num: int, season_day: int, is_latest: bool)
 signal annual_rollover_completed(season_num: int)
+signal life_event_ready(event_data: Dictionary)
+signal life_event_resolved(event_id: String, choice_id: String)
 
 var _current_slot: int = 0
 var _data: Dictionary = {}
@@ -88,6 +92,12 @@ func reload_slot(slot: int) -> void:
 	elif rel == TimeRelation.FORWARD_TICK or rel == TimeRelation.SEASON_ROLLOVER:
 		push_warning("[LifeLegacy] Crash recovery no boot: avanço pendente detectado de (%d,%d) para (%d,%d)." % [proc_s, proc_d, s_num, s_day])
 		_handle_temporal_advance(proc_s, proc_d, s_num, s_day)
+	
+	# Reconciliação do Outbox no Boot/Reload
+	var outbox: Dictionary = _data.get("outbox", {})
+	var reconciled: int = LifeLegacyOutbox.reconcile_outbox(outbox)
+	if reconciled > 0:
+		save_current_slot()
 	
 	life_legacy_loaded.emit(slot)
 
@@ -233,7 +243,46 @@ func _process_single_week(s: int, d: int, is_latest: bool) -> void:
 		if absf(delta) > 0.0001:
 			apply_stat_change(stat_id, delta, "weekly_drift")
 	
+	# 2. Sorteio de evento declarativo (apenas na rodada mais recente e se não houver pendente)
+	if is_latest:
+		var act_evt: Dictionary = _data.get("active_event", {})
+		if act_evt.get("status", "") != "PENDING_RESOLUTION":
+			var ctx: Dictionary = {
+				"season_num": s,
+				"season_day": d,
+				"age": Career.age if Career != null else 18,
+				"stats": _data.get("stats", {}),
+				"money": Career.money if Career != null else 5000,
+				"energy": Career.energy if Career != null else 100.0,
+				"is_derby": GameState.is_derby if (GameState != null and "is_derby" in GameState) else false,
+				"has_spouse": not _data.get("family", {}).get("spouse", {}).is_empty(),
+				"has_children": not _data.get("family", {}).get("children", []).is_empty()
+			}
+			var seed_val: int = int(s * 10000 + d * 100 + _current_slot)
+			var rng = LifeLegacyRNG.new(seed_val)
+			var rolled: Dictionary = LifeLegacyEvents.roll_event(ctx, rng)
+			if not rolled.is_empty():
+				_data["active_event"] = rolled
+				# Intent-Log: Salva o evento antes de notificar ou solicitar escolha
+				save_current_slot()
+				life_event_ready.emit(rolled)
+
 	weekly_tick_completed.emit(s, d, is_latest)
+
+func get_active_event() -> Dictionary:
+	return _data.get("active_event", {}).duplicate()
+
+func resolve_active_event(choice_id: String) -> bool:
+	if _is_safe_mode:
+		return false
+	var act_evt: Dictionary = _data.get("active_event", {})
+	if act_evt.is_empty():
+		return false
+	var outbox: Dictionary = _data.get("outbox", {})
+	var ok: bool = LifeLegacyEvents.resolve_choice(act_evt, choice_id, outbox, self)
+	if ok:
+		life_event_resolved.emit(String(act_evt.get("event_id", "")), choice_id)
+	return ok
 
 # API de Leitura de Indicadores
 func get_stat(stat_name: String) -> float:

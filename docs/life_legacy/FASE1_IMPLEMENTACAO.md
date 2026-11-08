@@ -16,14 +16,19 @@
 - `autoload/life_legacy_manager.gd`: Autoload coordenador singleton (`LifeLegacy`), ciclo de vida, sinais, comparação temporal de tupla canônica `(season_num, season_day)`, processamento semanal, catch-up multi-semanal, circuit breaker e API de indicadores com histórico de auditoria.
 - `features/life_legacy/life_legacy_state.gd`: Modelo de dados, esquema padrão versionado (`schema_version = 1`), limites e validação de dicionário.
 - `features/life_legacy/life_legacy_persistence.gd`: Motor de persistência isolado por slot (`user://slot{N}/life_legacy.json`), máquina de estados para Casos A a E, gravação atômica temporária (`.tmp`) e promoção com backup (`.bak`).
-- `features/life_legacy/life_legacy_rng.gd`: Gerador Congruencial Linear Knuth LCG de 64 bits com eliminação de viés de módulo.
+- `features/life_legacy/life_legacy_rng.gd`: Gerador Congruencial Linear Knuth LCG de 64 bits com eliminação de viés de módulo e método `rand_range(min, max)`.
 - `features/life_legacy/life_legacy_effects.gd`: Motor de decaimento natural semanal (drift) dos 6 indicadores e amortização para saltos analíticos superiores a 2 temporadas.
+- `features/life_legacy/life_legacy_conditions.gd`: Avaliador declarativo de condições (idade, contexto esportivo, derby, família e indicadores).
+- `features/life_legacy/life_legacy_outbox.gd`: Fila transacional Outbox (`PENDING`, `COMMITTED`, `FAILED`), Intent-Log e reconciliação idempotente no boot.
+- `features/life_legacy/life_legacy_events.gd`: Motor de eventos declarativos (`LifeLegacyEvents`), sorteio ponderado determinístico, Intent-Log pré-compromisso e resolução de escolhas com despacho transacional.
 - `tests/life_legacy/test_deterministic_rng.gd`: Teste automatizado de vetores canônicos do LCG.
 - `tests/life_legacy/test_persistence_cases_a_to_e.gd`: Teste automatizado dos Casos A, B, C, D e promoção atômica.
 - `tests/life_legacy/test_slot_switch.gd`: Teste automatizado de troca de slot, reatividade ao sinal e isolamento de indicadores.
 - `tests/life_legacy/runner_slot_switch.tscn`: Cena executável para testes integrados com autoloads.
-- `tests/life_legacy/test_marco2_integration.gd`: Teste automatizado da integração do Marco 2 (comparação temporal lexicográfica, descarte de emissões sem avanço, barreira síncrona com `_save_epoch`, avanços semanais e circuit breaker).
+- `tests/life_legacy/test_marco2_integration.gd`: Teste automatizado da integração do Marco 2.
 - `tests/life_legacy/runner_marco2.tscn`: Cena executável para testes do Marco 2.
+- `tests/life_legacy/test_marco3_events_outbox.gd`: Teste automatizado do Marco 3 (condições, receptor idempotente de dinheiro/energia com rollback, ledger social, Outbox e Intent-Log de eventos).
+- `tests/life_legacy/runner_marco3.tscn`: Cena executável para testes do Marco 3.
 
 ### 2.2. Arquivos Modificados (Alterações Mínimas Justificadas)
 - `project.godot`:
@@ -33,9 +38,13 @@
   - Emissão síncrona do sinal ao final do método `switch_to(slot: int)`.
 - `autoload/career.gd`:
   - Adição da variável de geração `var _save_epoch: int = 0`.
+  - Adição dos ledgers persistentes `processed_career_tokens: Array = []` e `processed_muro_tokens: Array = []`.
   - Extração de `_build_career_cfg() -> ConfigFile` para permitir reutilização atômica sem duplicação.
   - Implementação de `_save_synchronous_barrier() -> bool` com avanço atômico de `_save_epoch`.
   - Invalidação de chamadas diferidas obsoletas em `_save_flush(scheduled_epoch: int = -1)`.
+  - Implementação do receptor idempotente `apply_idempotent_effect(token, delta_money, delta_energy) -> bool` com snapshot de rollback.
+  - Implementação do receptor social idempotente `apply_idempotent_social_post(token, post_data) -> bool` com snapshot de rollback e deduplicação de posts.
+  - Serialização e desserialização dos ledgers em `_build_career_cfg()`, `_load()` e `_reset_state()`.
 
 ---
 
@@ -94,11 +103,40 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco2.tscn`:
    - Detecção de recuo de $(4, 2)$ para $(1, 1)$ ativa imediatamente o Modo Seguro (`_is_safe_mode = true`) e cancela escritas no disco para proteger o histórico contra corrupção externa.
    - Status: **APROVADO**.
 
+### 3.3. Marco 3 — Eventos e Outbox [CONCLUÍDO E HOMOLOGADO]
+Executado via `godot --headless res://tests/life_legacy/runner_marco3.tscn`:
+
+1. **Condições Declarativas (`LifeLegacyConditions`):**
+   - Avaliação de filtros de idade (`min_age`, `max_age`), contexto esportivo (`is_derby`, `is_home`), família (`has_spouse`, `has_children`) e indicadores (`min_stat`, `max_stat`).
+   - Rejeição precisa em caso de discrepância em qualquer critério.
+   - Status: **APROVADO**.
+
+2. **Receptor Idempotente com Rollback (`Career.apply_idempotent_effect`):**
+   - Aplicação bem-sucedida de efeitos de dinheiro e energia com snapshot em memória e barreira síncrona.
+   - Deduplicação estrita: retransmissão do mesmo token retorna `true` imediatamente sem re-executar os deltas financeiros ou atléticos.
+   - Status: **APROVADO**.
+
+3. **Ledger Social Persistente (`Career.apply_idempotent_social_post`):**
+   - Publicação atômica no feed do `muro_redes` com barreira síncrona.
+   - Deduplicação estrita: retransmissão do mesmo token não duplica publicações no mural social.
+   - Status: **APROVADO**.
+
+4. **Fila Outbox e Intent-Log Pre-commitment (`LifeLegacyOutbox`):**
+   - Criação de intenções em estado `PENDING`.
+   - Reconciliação atômica com despacho ao `Career` e transição para `COMMITTED`.
+   - Reprocessamento idempotente em loops subsequentes.
+   - Status: **APROVADO**.
+
+5. **Sorteio e Resolução de Evento Declarativo (`LifeLegacyEvents`):**
+   - Registro de evento com escolhas contendo efeitos internos, financeiros e post social.
+   - Sorteio determinístico baseado em contexto via `LifeLegacyRNG`.
+   - Resolução de escolha com gravação prévia no Intent-Log (`status = "RESOLVED"`), despacho transacional para a fila Outbox e auditoria nos indicadores.
+   - Status: **APROVADO**.
+
 ---
 
 ## 4. CRONOGRAMA DE EXECUÇÃO DOS PRÓXIMOS MARCOS
 
-- **Marco 3:** Motor de eventos declarativos, Intent-Log e Outbox transacional.
 - **Marco 4:** Módulo de família, envelhecimento canônico e saga de sucessão dinástica.
 - **Marco 5:** Os 8 eventos declarativos jogáveis e interfaces no Smartphone ("Minha Vida").
 - **Marco 6:** Homologação final, testes de 52 semanas e auditoria de memória.

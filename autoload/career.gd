@@ -63029,6 +63029,8 @@ func _reset_state() -> void:
 
 
 	money = 5000
+	processed_career_tokens = []
+	processed_muro_tokens = []
 
 	money_visto = -1
 
@@ -63648,6 +63650,8 @@ var _save_frame: int = -1
 var _save_pending: bool = false
 var _save_last_path: String = ""
 var _save_epoch: int = 0
+var processed_career_tokens: Array = []
+var processed_muro_tokens: Array = []
 
 
 
@@ -63750,9 +63754,58 @@ func _save_synchronous_barrier() -> bool:
 	return true
 
 
+func apply_idempotent_effect(token: String, delta_money: int, delta_energy: float) -> bool:
+	if processed_career_tokens.has(token):
+		return true
+
+	var snap_money: int = money
+	var snap_energy: float = energy
+	var snap_tokens: Array = processed_career_tokens.duplicate()
+
+	money += delta_money
+	energy = clampf(energy + delta_energy, 0.0, 100.0)
+	processed_career_tokens.append(token)
+
+	var write_ok: bool = _save_synchronous_barrier()
+
+	if not write_ok:
+		money = snap_money
+		energy = snap_energy
+		processed_career_tokens = snap_tokens
+		push_error("[Career] Falha ao persistir efeito idempotente. Rollback executado.")
+		return false
+
+	return true
+
+
+func apply_idempotent_social_post(token: String, post_data: Dictionary) -> bool:
+	if processed_muro_tokens.has(token):
+		return true
+
+	var snap_tokens: Array = processed_muro_tokens.duplicate()
+	var snap_muro: Array = muro_redes.duplicate(true)
+
+	processed_muro_tokens.append(token)
+	muro_redes.push_front(post_data)
+	while muro_redes.size() > 30:
+		muro_redes.pop_back()
+
+	var write_ok: bool = _save_synchronous_barrier()
+
+	if not write_ok:
+		processed_muro_tokens = snap_tokens
+		muro_redes = snap_muro
+		push_error("[Career] Falha ao persistir post social idempotente. Rollback executado.")
+		return false
+
+	return true
+
+
 func _build_career_cfg() -> ConfigFile:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.set_value("meta", "rel_version", REL_VERSION)
+	cfg.set_value("state", "processed_career_tokens", processed_career_tokens)
+	cfg.set_value("state", "processed_muro_tokens", processed_muro_tokens)
 	cfg.set_value("player", "name", player_name)
 	cfg.set_value("player", "shirt_name", shirt_name)
 	cfg.set_value("player", "age", age)
@@ -64482,6 +64535,10 @@ func _load() -> void:
 
 	energy = float(cfg.get_value("state", "energy", energy))
 	money = int(cfg.get_value("state", "money", money))
+	var pct: Variant = cfg.get_value("state", "processed_career_tokens", [])
+	processed_career_tokens = (pct as Array).duplicate() if pct is Array else []
+	var pmt: Variant = cfg.get_value("state", "processed_muro_tokens", [])
+	processed_muro_tokens = (pmt as Array).duplicate() if pmt is Array else []
 
 
 	money_visto = -1

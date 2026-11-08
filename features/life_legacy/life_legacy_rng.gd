@@ -31,6 +31,13 @@ func next_int_bounded(max_val: int) -> int:
 		raw = next_u32()
 	return raw % max_val
 
+# Gera um número inteiro no intervalo fechado [min_val, max_val]
+func rand_range(min_val: int, max_val: int) -> int:
+	if min_val >= max_val:
+		return min_val
+	var count: int = max_val - min_val + 1
+	return min_val + next_int_bounded(count)
+
 # Gera um ponto flutuante normalizado no intervalo [0.0, 1.0)
 func next_float() -> float:
 	return float(next_u32()) / 4294967296.0
