@@ -78,5 +78,26 @@ func _init() -> void:
 	assert(rolled1["title"] == rolled2["title"], "Replay de evento divergiu no title!")
 	print("  -> Rolagem de eventos 100% determinística!")
 	
+	# Test 6: Verificação de Limites e Domínios do PRNG (Bloqueador Complementar)
+	print("[TEST] 6. Verificação de Limites e Domínios de Entrada de generate_seed...")
+	var seed_min: int = LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1)
+	var seed_max: int = LifeLegacyRNG.generate_seed(2, 999, 380, 255, 255)
+	assert(seed_min > 0, "seed_min deve ser positivo")
+	assert(seed_max > 0, "seed_max deve ser positivo")
+	assert(seed_min != seed_max, "Limites mínimo e máximo devem produzir sementes distintas")
+	
+	# Clamping e proteção contra overflow
+	assert(LifeLegacyRNG.generate_seed(-10, 1, 0, 1, 1) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1), "Slot negativo deve ser limitado a 0")
+	assert(LifeLegacyRNG.generate_seed(99, 1, 0, 1, 1) == LifeLegacyRNG.generate_seed(2, 1, 0, 1, 1), "Slot superior deve ser limitado a 2")
+	assert(LifeLegacyRNG.generate_seed(0, -50, 0, 1, 1) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1), "Season < 1 deve ser limitada a 1")
+	assert(LifeLegacyRNG.generate_seed(0, 99999, 0, 1, 1) == LifeLegacyRNG.generate_seed(0, 999, 0, 1, 1), "Season > 999 deve ser limitada a 999")
+	assert(LifeLegacyRNG.generate_seed(0, 1, -5, 1, 1) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1), "Day < 0 deve ser limitado a 0")
+	assert(LifeLegacyRNG.generate_seed(0, 1, 5000, 1, 1) == LifeLegacyRNG.generate_seed(0, 1, 380, 1, 1), "Day > 380 deve ser limitado a 380")
+	assert(LifeLegacyRNG.generate_seed(0, 1, 0, -2, 1) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1), "Catalog_ver < 1 deve ser limitado a 1")
+	assert(LifeLegacyRNG.generate_seed(0, 1, 0, 1000, 1) == LifeLegacyRNG.generate_seed(0, 1, 0, 255, 1), "Catalog_ver > 255 deve ser limitado a 255")
+	assert(LifeLegacyRNG.generate_seed(0, 1, 0, 1, 0) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 1), "Rng_ver < 1 deve ser limitado a 1")
+	assert(LifeLegacyRNG.generate_seed(0, 1, 0, 1, 999) == LifeLegacyRNG.generate_seed(0, 1, 0, 1, 255), "Rng_ver > 255 deve ser limitado a 255")
+	print("  -> Clamping e guarda de overflow aprovados com sucesso!")
+
 	print("[PASS] Test Deterministic RNG aprovado com sucesso!")
 	quit(0)

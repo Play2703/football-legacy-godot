@@ -43,13 +43,14 @@ func next_float() -> float:
 	return float(next_u32()) / 4294967296.0
 
 # Gera semente determinística estável e livre de colisões incorporando slot, temporada, dia, versão de catálogo e PRNG
+# Domínios canônicos estritos: slot (0..2), season (1..999), day (0..380), catalog_ver (1..255), rng_ver (1..255)
 static func generate_seed(slot: int, season: int, day: int, catalog_ver: int = 1, rng_ver: int = 1) -> int:
-	var s_slot: int = clampi(slot, 0, 15) & 0xF
-	var s_season: int = (season & 0xFFFF)
-	var s_day: int = (day & 0xFFF)
-	var s_cat: int = (catalog_ver & 0xFF)
-	var s_rng: int = (rng_ver & 0xFF)
-	var combined: int = s_slot | (s_season << 4) | (s_day << 20) | (s_cat << 32) | (s_rng << 40)
+	var s_slot: int = clampi(slot, 0, 2)
+	var s_season: int = clampi(season, 1, 999)
+	var s_day: int = clampi(day, 0, 380)
+	var s_cat: int = clampi(catalog_ver, 1, 255)
+	var s_rng: int = clampi(rng_ver, 1, 255)
+	var combined: int = (s_slot & 0xF) | ((s_season & 0xFFFF) << 4) | ((s_day & 0xFFF) << 20) | ((s_cat & 0xFF) << 32) | ((s_rng & 0xFF) << 40)
 	var state_seed: int = (combined * MULTIPLIER + INCREMENT) & 0x7FFFFFFFFFFFFFFF
 	state_seed = (state_seed * MULTIPLIER + INCREMENT) & 0x7FFFFFFFFFFFFFFF
 	return state_seed
