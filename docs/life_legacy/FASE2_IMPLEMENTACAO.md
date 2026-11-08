@@ -65,7 +65,7 @@ Todas as suítes foram executadas em modo headless (`godot --headless`) com apro
 
 | Suíte de Testes | Comando | Resultado | Código de Saída |
 |---|---|:---:|:---:|
-| **Marco 7: Arcos Narrativos e Modificadores** | `godot --headless res://tests/life_legacy/runner_marco7.tscn` | **APROVADO (8/8 testes)** | `0` |
+| **Marco 7: Arcos Narrativos e Modificadores** | `godot --headless res://tests/life_legacy/runner_marco7.tscn` | **APROVADO (13/13 testes)** | `0` |
 | **Não-Regressão 1: RNG Determinístico** | `godot --headless -s res://tests/life_legacy/test_deterministic_rng.gd` | **APROVADO** | `0` |
 | **Não-Regressão 2: Persistência Casos A–E** | `godot --headless -s res://tests/life_legacy/test_persistence_cases_a_to_e.gd` | **APROVADO** | `0` |
 | **Não-Regressão 3: Troca de Slots** | `godot --headless res://tests/life_legacy/runner_slot_switch.tscn` | **APROVADO** | `0` |
@@ -74,3 +74,48 @@ Todas as suítes foram executadas em modo headless (`godot --headless`) com apro
 | **Não-Regressão 6: Marco 4 (Dinastia & Sucessão)** | `godot --headless res://tests/life_legacy/runner_marco4.tscn` | **APROVADO** | `0` |
 | **Não-Regressão 7: Marco 5 (Partida Real & Modal)** | `godot --headless res://tests/life_legacy/runner_marco5.tscn` | **APROVADO** | `0` |
 | **Não-Regressão 8: Marco 6 (Estresse 52 Ticks)** | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | **APROVADO** | `0` |
+
+---
+
+## 5. AUDITORIA CORRETIVA DO MARCO 7 — RESOLUÇÃO DOS 5 BLOQUEADORES
+
+### 5.1. Bloqueador 1 — Prevenção de Reincidência Indevida do Primeiro Ato
+- **Problema:** Eventos de Ato 1 (`sociedade_amigo_ato1`, `polemica_midia_ato1_boato`) não impediam explicitamente de serem sorteados novamente após o arco avançar para o estágio 2 ou ser concluído.
+- **Correção:**
+  - Em `LifeLegacyConditions`, introduzida a condição declarativa `not_started_arc`, que verifica rigorosamente se o arco não consta em `active_arcs` nem em `completed_arcs`.
+  - Reforçada a condição `required_arc_stage`: quando `stage == 1`, exige ausência total do arco em `active_arcs` e `completed_arcs`.
+  - Atualizado o catálogo `catalogo_eventos.gd` adicionando `not_started_arc` a todos os primeiros atos de arcos.
+- **Evidência de Teste:** `test_blocker1_act1_reincidence_prevention()` comprovou que o Ato 1 não é sorteado em estágios posteriores nem após conclusão.
+
+### 5.2. Bloqueador 2 — Ramificação Completa e Conclusão Elegante de Arcos
+- **Problema:** No arco `arc_polemica_midia`, a escolha `choice_ignorar_boato` no Ato 1 avançava o arco para o estágio 2, mas não havia evento no catálogo correspondente a essa ramificação, mantendo o arco preso para sempre em `active_arcs`. Além disso, a recusa de sociedade no Ato 1 de `arc_sociedade_amigo` deixava o arco em limbo.
+- **Correção:**
+  - Registrado o evento canônico `polemica_midia_ato2_silencio` ("A Repercussão do Silêncio"), oferecendo um desfecho narrativo com opções serenas e conclusão do arco.
+  - Implementado suporte a `"arc_action": "complete"` e `"arc_action": "abort"` em `life_legacy_events.gd`, permitindo que escolhas terminativas (ex: `choice_recusar_sociedade`) encerrem e arquivem o arco imediatamente em `completed_arcs`.
+- **Evidência de Teste:** `test_blocker2_branching_and_silence_resolution()` validou o fluxo de silêncio e o encerramento limpo por recusa de proposta.
+
+### 5.3. Bloqueador 3 — Cálculo Temporal Monotônico Independente de Temporadas com 52 Semanas
+- **Problema:** A condição `min_ticks_since_prior_act` calculava o tempo decorrido com a fórmula fixa `(cur_s - last_s) * 52 + ...`, gerando distorções graves em temporadas reais de ligas (ex: 38 rodadas).
+- **Correção:**
+  - Adicionado o campo acumulador `total_ticks_processed: int` ao perfil de save (Schema V2) e validado em `LifeLegacyState`.
+  - `total_ticks_processed` é incrementado monotonicamente a cada tick semanal e em recuperações de lacuna temporal em `LifeLegacyManager`.
+  - Na resolução de cada ato de arco, `last_act_resolved_ticks` registra o tick exato da resolução.
+  - `LifeLegacyConditions` compara `current_ticks - last_act_ticks >= min_ticks_since_prior_act`, com fallback seguro para saves legados.
+- **Evidência de Teste:** `test_blocker3_dynamic_temporal_advance_ticks()` comprovou que em ligas de 38 rodadas a virada de temporada contabiliza exatamente os ticks reais sem qualquer distorção de constante 52.
+
+### 5.4. Bloqueador 4 — Tratamento Transacional na Capacidade Máxima de Modificadores
+- **Problema:** Quando `active_modifiers` já continha o limite máximo (10), adicionar novos modificadores via escolha de evento falhava ou descartava modificadores silenciosamente sem controle transacional.
+- **Correção:**
+  - Criada a função `LifeLegacyModifiers.can_add_modifiers(active_modifiers, modifiers_to_add) -> bool`.
+  - Em `LifeLegacyEvents.recover_precommitted_event()`, antes de qualquer mutação ou despacho, verifica-se a capacidade disponível.
+  - Se a capacidade for excedida, a resolução é suspensa: o evento é retido no estado `PRE_COMMITMENT` com `last_error = "MODIFIER_CAPACITY_EXCEEDED"`, sem descartar dados nem gerar despachos duplicados na outbox.
+  - Ao liberar vaga (expiração ou remoção), a retentativa via `retry_precommitted_event()` conclui com 100% de integridade e limpa o erro.
+- **Evidência de Teste:** `test_blocker4_modifier_capacity_transactional_hold()` comprovou retenção do evento em `PRE_COMMITMENT`, persistência do erro descritivo e sucesso na recuperação pós-liberação de vaga.
+
+### 5.5. Bloqueador 5 — Migração Completa e Persistência de Saves V1 em Todas as Rotas
+- **Problema:** Saves no formato Schema V1 recuperados via promoção de `.tmp`, restauração de `.bak_staging` ou `.bak` não garantiam a padronização de campos nem a persistência imediata no disco do formato Schema V2.
+- **Correção:**
+  - A rotina `_migrate()` em `LifeLegacyPersistence` foi padronizada e aplicada a todas as rotas de carregamento (arquivo principal, promoção de `.tmp`, recuperação de `.bak_staging` e fallback de `.bak`).
+  - Garante a presença estrutural de `story_arcs` (`active_arcs: {}`, `completed_arcs: []`) e `total_ticks_processed: 0`.
+  - Persiste a versão migrada no disco imediatamente após o carregamento bem-sucedido.
+- **Evidência de Teste:** `test_blocker5_v1_migration_full_coverage()` gravou saves V1 sintéticos, recuperou via arquivo principal e backup staging, e comprovou que o disco foi atualizado para Schema V2 com campos íntegros.

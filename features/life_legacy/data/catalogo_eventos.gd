@@ -287,6 +287,7 @@ static func registrar_todos() -> void:
 		"description": "Seu amigo de infância traz um plano detalhado para inaugurar uma rede de academias com a sua marca.",
 		"conditions": {
 			"min_money": 8000,
+			"not_started_arc": "arc_sociedade_amigo",
 			"not_completed_arc": "arc_sociedade_amigo"
 		},
 		"weight": 70,
@@ -312,7 +313,8 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_recusar_sociedade",
 				"text": "Recusar a proposta para preservar a amizade",
-				"internal_effects": { "discipline": 10.0, "personal_relationships": -10.0 }
+				"internal_effects": { "discipline": 10.0, "personal_relationships": -10.0 },
+				"arc_action": "complete"
 			}
 		]
 	})
@@ -399,6 +401,7 @@ static func registrar_todos() -> void:
 		"description": "Um colunista influente insinuou que você não possui espírito de liderança e prioriza compromissos comerciais.",
 		"conditions": {
 			"min_stat": { "popularity": 30.0 },
+			"not_started_arc": "arc_polemica_midia",
 			"not_completed_arc": "arc_polemica_midia"
 		},
 		"weight": 65,
@@ -427,7 +430,7 @@ static func registrar_todos() -> void:
 		]
 	})
 
-	# 13. ARCO POLÊMICA NA IMPRENSA — ATO 2: O Desfecho da Guerra de Mídia
+	# 13. ARCO POLÊMICA NA IMPRENSA — ATO 2 (RAMO CONFRONTO): O Desfecho da Guerra de Mídia
 	LifeLegacyEvents.register_event({
 		"id": "polemica_midia_ato2_desfecho",
 		"title": "A Trégua ou o Escândalo Final (Ato 2 - Conclusão)",
@@ -457,6 +460,40 @@ static func registrar_todos() -> void:
 				"id": "choice_vetar_emissora",
 				"text": "Vetar a emissora e reafirmar postura combativa",
 				"internal_effects": { "popularity": 10.0, "reputation": -5.0, "personal_relationships": -5.0 }
+			}
+		]
+	})
+
+	# 14. ARCO POLÊMICA NA IMPRENSA — ATO 2 (RAMO SILÊNCIO): A Repercussão da Postura Serena
+	LifeLegacyEvents.register_event({
+		"id": "polemica_midia_ato2_silencio",
+		"title": "A Repercussão do Silêncio (Ato 2 - Conclusão)",
+		"category": "media",
+		"arc_id": "arc_polemica_midia",
+		"arc_stage": 2,
+		"arc_total_stages": 2,
+		"description": "Seu silêncio maduro fez com que os boatos perdessem força na imprensa esportiva, consolidando sua imagem de atleta focado.",
+		"conditions": {
+			"required_arc_stage": { "arc_id": "arc_polemica_midia", "stage": 2 },
+			"min_ticks_since_prior_act": 1,
+			"required_prior_choices": { "polemica_midia_ato1_boato": "choice_ignorar_boato" }
+		},
+		"weight": 85,
+		"choices": [
+			{
+				"id": "choice_colher_elogios",
+				"text": "Comentar discretamente sobre o valor do foco profissional",
+				"internal_effects": { "reputation": 10.0, "discipline": 5.0, "emotional_stability": 5.0 },
+				"social_post": {
+					"hecho": "silencio_vitorioso",
+					"autor": "Jogador",
+					"texto": "Trabalho duro em silêncio. O resto é ruído."
+				}
+			},
+			{
+				"id": "choice_seguir_em_frente",
+				"text": "Virar a página sem qualquer comentário adicional",
+				"internal_effects": { "discipline": 5.0, "emotional_stability": 5.0 }
 			}
 		]
 	})

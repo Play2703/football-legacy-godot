@@ -9,8 +9,8 @@ const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.
 const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
 const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
 
-var test_slot: int = 1
-var base_dir: String = "user://slot1"
+var test_slot: int = 0
+var base_dir: String = LifeLegacyPersistence.slot_dir(0).trim_suffix("/")
 
 func _ready() -> void:
 	print("=================================================================")
@@ -33,6 +33,11 @@ func _ready() -> void:
 	test_full_3_act_narrative_arc_progression()
 	test_crash_recovery_and_idempotence_in_arcs()
 	test_temporal_advance_integration_and_signals()
+	test_blocker1_act1_reincidence_prevention()
+	test_blocker2_branching_and_silence_resolution()
+	test_blocker3_dynamic_temporal_advance_ticks()
+	test_blocker4_modifier_capacity_transactional_hold()
+	test_blocker5_v1_migration_full_coverage()
 
 	print("=================================================================")
 	print("--- MARCO 7: TODOS OS TESTES PASSARAM COM 100% DE SUCESSO! ---")
@@ -443,3 +448,375 @@ func test_temporal_advance_integration_and_signals() -> void:
 	assert(expired_signaled[0]["id"] == "mod_temp_1tick", "ID do sinal de expiração confere")
 
 	print("  -> Avanço temporal e sinal de expiração integrados perfeitamente!")
+
+func test_blocker1_act1_reincidence_prevention() -> void:
+	print("\n[Teste Bloqueador 1] Prevenção de reincidência indevida do primeiro ato...")
+	_cleanup_test_dir()
+	LifeLegacyCatalogoEventos.reset()
+	LifeLegacyCatalogoEventos.registrar_todos()
+	GameState.season_num = 1
+	GameState.season_day = 0
+	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
+	LifeLegacy.set_safe_mode(false)
+	LifeLegacy.reload_slot(test_slot)
+
+	# 1. Simula ativação do Ato 1 de arc_sociedade_amigo
+	var ato1 = LifeLegacyEvents.get_event_by_id("sociedade_amigo_ato1")
+	assert(not ato1.is_empty(), "Ato 1 deve existir")
+	var ctx: Dictionary = {
+		"season_num": 1,
+		"season_day": 0,
+		"money": 10000,
+		"story_arcs": LifeLegacy.get_story_arcs()
+	}
+	assert(LifeLegacyConditions.evaluate(ato1["conditions"], ctx), "Ato 1 deve ser elegível antes de iniciar o arco")
+
+	# Resolve Ato 1 com investimento pesado
+	var act_evt: Dictionary = {
+		"event_id": "sociedade_amigo_ato1",
+		"occurrence_id": "occ_ato1_reinc",
+		"choices": ato1["choices"],
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 1,
+		"arc_total_stages": 3,
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = act_evt
+	var res: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_investir_pesado", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(res, "Ato 1 deve resolver com sucesso")
+
+	var arcs = LifeLegacy.get_story_arcs()
+	assert(arcs["active_arcs"].has("arc_sociedade_amigo"), "Arco deve estar ativo")
+	assert(arcs["active_arcs"]["arc_sociedade_amigo"]["current_stage"] == 2, "Arco deve estar no estágio 2")
+
+	# 2. Tenta sortear novamente o Ato 1 com o arco no estágio 2
+	var ctx_stage2: Dictionary = {
+		"season_num": 1,
+		"season_day": 1,
+		"money": 10000,
+		"story_arcs": LifeLegacy.get_story_arcs()
+	}
+	assert(not LifeLegacyConditions.evaluate(ato1["conditions"], ctx_stage2), "Ato 1 NÃO pode ser elegível quando arco está no estágio 2")
+
+	# 3. Completa o arco e testa se Ato 1 pode ser re-sorteado
+	arcs["completed_arcs"].append("arc_sociedade_amigo")
+	arcs["active_arcs"].erase("arc_sociedade_amigo")
+	LifeLegacy.get_data()["story_arcs"] = arcs
+	var ctx_completed: Dictionary = {
+		"season_num": 1,
+		"season_day": 5,
+		"money": 10000,
+		"story_arcs": LifeLegacy.get_story_arcs()
+	}
+	assert(not LifeLegacyConditions.evaluate(ato1["conditions"], ctx_completed), "Ato 1 NÃO pode ser elegível quando arco foi concluído")
+
+	# 4. Testa mesmo cenário para polemica_midia_ato1_boato
+	var ato1_pol = LifeLegacyEvents.get_event_by_id("polemica_midia_ato1_boato")
+	var ctx_pol: Dictionary = {
+		"stats": { "popularity": 50.0 },
+		"story_arcs": { "active_arcs": { "arc_polemica_midia": { "current_stage": 2 } }, "completed_arcs": [] }
+	}
+	assert(not LifeLegacyConditions.evaluate(ato1_pol["conditions"], ctx_pol), "Ato 1 de polêmica na mídia NÃO pode ser sorteado se arco estiver no estágio 2")
+
+	print("  -> Bloqueador 1 resolvido com sucesso: reincidência de Ato 1 é bloqueada em arcos ativos e concluídos!")
+
+func test_blocker2_branching_and_silence_resolution() -> void:
+	print("\n[Teste Bloqueador 2] Ramificação completa e desfecho de silêncio no arco de polêmica...")
+	_cleanup_test_dir()
+	LifeLegacyCatalogoEventos.reset()
+	LifeLegacyCatalogoEventos.registrar_todos()
+	GameState.season_num = 1
+	GameState.season_day = 0
+	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
+	LifeLegacy.set_safe_mode(false)
+	LifeLegacy.reload_slot(test_slot)
+
+	var ato1 = LifeLegacyEvents.get_event_by_id("polemica_midia_ato1_boato")
+	var act_evt: Dictionary = {
+		"event_id": "polemica_midia_ato1_boato",
+		"occurrence_id": "occ_pol_silence",
+		"choices": ato1["choices"],
+		"arc_id": "arc_polemica_midia",
+		"arc_stage": 1,
+		"arc_total_stages": 2,
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = act_evt
+
+	# Escolhe IGNORAR O BOATO (ramo de silêncio)
+	var res: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_ignorar_boato", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(res, "Escolha ignorar boato deve resolver com sucesso")
+
+	var arcs = LifeLegacy.get_story_arcs()
+	assert(arcs["active_arcs"].has("arc_polemica_midia"), "Arco de polêmica deve estar ativo no estágio 2")
+	assert(arcs["active_arcs"]["arc_polemica_midia"]["current_stage"] == 2, "Estágio deve ser 2")
+
+	# Avança 1 tick
+	var ctx: Dictionary = {
+		"season_num": 1,
+		"season_day": 2,
+		"total_ticks_processed": 10,
+		"story_arcs": LifeLegacy.get_story_arcs(),
+		"history": LifeLegacy.get_data().get("history", {})
+	}
+
+	# Verifica que o ramo de confronto NÃO é elegível
+	var ato2_confronto = LifeLegacyEvents.get_event_by_id("polemica_midia_ato2_desfecho")
+	assert(not LifeLegacyConditions.evaluate(ato2_confronto["conditions"], ctx), "Ato 2 confronto NÃO pode ser elegível para quem escolheu ignorar boato")
+
+	# Verifica que o novo ramo de silêncio É elegível
+	var ato2_silencio = LifeLegacyEvents.get_event_by_id("polemica_midia_ato2_silencio")
+	assert(not ato2_silencio.is_empty(), "Ato 2 silêncio deve estar registrado no catálogo")
+	assert(LifeLegacyConditions.evaluate(ato2_silencio["conditions"], ctx), "Ato 2 silêncio DEVE ser elegível para quem escolheu ignorar boato")
+
+	# Resolve o Ato 2 de silêncio
+	var act_evt2: Dictionary = {
+		"event_id": "polemica_midia_ato2_silencio",
+		"occurrence_id": "occ_pol_silence_ato2",
+		"choices": ato2_silencio["choices"],
+		"arc_id": "arc_polemica_midia",
+		"arc_stage": 2,
+		"arc_total_stages": 2,
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = act_evt2
+	var res2: bool = LifeLegacyEvents.resolve_choice(act_evt2, "choice_colher_elogios", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(res2, "Ato 2 de silêncio deve resolver com sucesso")
+
+	# Confirma que o arco foi concluído com sucesso e movido para completed_arcs
+	var arcs_final = LifeLegacy.get_story_arcs()
+	assert(not arcs_final["active_arcs"].has("arc_polemica_midia"), "Arco não pode continuar em active_arcs")
+	assert(arcs_final["completed_arcs"].has("arc_polemica_midia"), "Arco deve constar em completed_arcs")
+
+	# Teste do arc_action: complete ao recusar sociedade no Ato 1
+	var ato1_soc = LifeLegacyEvents.get_event_by_id("sociedade_amigo_ato1")
+	var act_soc: Dictionary = {
+		"event_id": "sociedade_amigo_ato1",
+		"occurrence_id": "occ_soc_recusar",
+		"choices": ato1_soc["choices"],
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 1,
+		"arc_total_stages": 3,
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = act_soc
+	var res_rec: bool = LifeLegacyEvents.resolve_choice(act_soc, "choice_recusar_sociedade", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(res_rec, "Recusar sociedade deve resolver")
+	var arcs_soc = LifeLegacy.get_story_arcs()
+	assert(not arcs_soc["active_arcs"].has("arc_sociedade_amigo"), "Arco recusado não deve ficar ativo")
+	assert(arcs_soc["completed_arcs"].has("arc_sociedade_amigo"), "Arco recusado deve ser completado imediatamente")
+
+	print("  -> Bloqueador 2 resolvido com sucesso: ramificação coerente e desfecho de silêncio implementados!")
+
+func test_blocker3_dynamic_temporal_advance_ticks() -> void:
+	print("\n[Teste Bloqueador 3] Cálculo temporal via total_ticks_processed em temporadas não-52...")
+	_cleanup_test_dir()
+	LifeLegacyCatalogoEventos.reset()
+	LifeLegacyCatalogoEventos.registrar_todos()
+	GameState.season_num = 1
+	GameState.season_day = 0
+	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
+	LifeLegacy.set_safe_mode(false)
+	LifeLegacy.reload_slot(test_slot)
+
+	assert(LifeLegacy.get_total_ticks_processed() == 0, "Ticks iniciais devem ser 0")
+
+	# Configura calendário explicitamente com 38 rodadas reais
+	var orig_cal = GameState.calendar.duplicate()
+	GameState.calendar = []
+	for i in range(38):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	# Avança 38 rodadas na temporada 1 (calendário padrão de liga com 38 rodadas)
+	for d in range(1, 39):
+		GameState.season_num = 1
+		GameState.season_day = d
+		GameState.career_updated.emit()
+
+	assert(LifeLegacy.get_total_ticks_processed() == 38, "Deve ter processado exatamente 38 ticks")
+
+	# Registra resolução de um ato no tick 38
+	var arcs: Dictionary = {
+		"active_arcs": {
+			"arc_teste_tempo": {
+				"arc_id": "arc_teste_tempo",
+				"current_stage": 2,
+				"last_act_resolved_ticks": 38,
+				"last_act_resolved_time": { "season_num": 1, "season_day": 38 }
+			}
+		},
+		"completed_arcs": []
+	}
+	LifeLegacy.get_data()["story_arcs"] = arcs
+
+	# Agora vira para a temporada 2, rodada 0 (tick 39)
+	GameState.season_num = 2
+	GameState.season_day = 0
+	GameState.career_updated.emit()
+
+	var current_ticks: int = LifeLegacy.get_total_ticks_processed()
+	assert(current_ticks == 39, "Após virada de temporada deve ser tick 39 (processados=%d)" % current_ticks)
+
+	var cond_req_2ticks: Dictionary = {
+		"required_arc_stage": { "arc_id": "arc_teste_tempo", "stage": 2 },
+		"min_ticks_since_prior_act": 2
+	}
+	var ctx_tick39: Dictionary = {
+		"season_num": 2,
+		"season_day": 0,
+		"total_ticks_processed": current_ticks,
+		"story_arcs": arcs
+	}
+	# Passou apenas 1 tick (39 - 38 = 1 < 2). Pela fórmula antiga com 52: (2-1)*52 + (0-38) = 14 ticks (erroneamente válido!)
+	assert(not LifeLegacyConditions.evaluate(cond_req_2ticks, ctx_tick39), "Com 1 tick decorrido, min_ticks=2 NÃO deve ser elegível")
+
+	# Avança mais 1 rodada: temporada 2, rodada 1 (tick 40: 40 - 38 = 2 ticks)
+	GameState.season_num = 2
+	GameState.season_day = 1
+	GameState.career_updated.emit()
+	var current_ticks40: int = LifeLegacy.get_total_ticks_processed()
+	assert(current_ticks40 == 40, "Deve ser tick 40")
+
+	var ctx_tick40: Dictionary = {
+		"season_num": 2,
+		"season_day": 1,
+		"total_ticks_processed": current_ticks40,
+		"story_arcs": arcs
+	}
+	assert(LifeLegacyConditions.evaluate(cond_req_2ticks, ctx_tick40), "Com 2 ticks decorridos reais, min_ticks=2 DEVE ser elegível")
+
+	GameState.calendar = orig_cal
+	print("  -> Bloqueador 3 resolvido com sucesso: ticks acumulados eliminam distorções de temporadas variáveis!")
+
+func test_blocker4_modifier_capacity_transactional_hold() -> void:
+	print("\n[Teste Bloqueador 4] Tratamento transacional quando o limite de modificadores é excedido...")
+	_cleanup_test_dir()
+	LifeLegacyCatalogoEventos.reset()
+	LifeLegacyCatalogoEventos.registrar_todos()
+	GameState.season_num = 1
+	GameState.season_day = 0
+	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
+	LifeLegacy.set_safe_mode(false)
+	LifeLegacy.reload_slot(test_slot)
+
+	# Preenche active_modifiers até o limite de 10
+	var mods: Array = []
+	for i in range(10):
+		var m = LifeLegacyModifiers.create_modifier("mod_cap_%d" % i, "evt_cap", "Mod %d" % i, {}, 5, 1, 0)
+		LifeLegacyModifiers.add_modifier(mods, m)
+	assert(mods.size() == 10, "Deve ter exatamente 10 modificadores")
+	LifeLegacy.get_data()["active_modifiers"] = mods
+	LifeLegacy.save_current_slot()
+
+	# Cria evento cuja escolha adiciona um 11º modificador
+	var ato1 = LifeLegacyEvents.get_event_by_id("sociedade_amigo_ato1")
+	var act_evt: Dictionary = {
+		"event_id": "sociedade_amigo_ato1",
+		"occurrence_id": "occ_cap_test",
+		"choices": ato1["choices"],
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 1,
+		"arc_total_stages": 3,
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = act_evt
+
+	# Executa escolha com novo modificador (choice_investir_pesado adiciona mod_expectativa_sociedade)
+	var res: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_investir_pesado", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(not res, "Resolução deve falhar quando capacidade for excedida")
+	assert(act_evt.get("status") == "PRE_COMMITMENT", "Status deve permanecer em PRE_COMMITMENT")
+	assert(act_evt.get("last_error") == "MODIFIER_CAPACITY_EXCEEDED", "Erro descritivo deve ser MODIFIER_CAPACITY_EXCEEDED")
+
+	# Verifica persistência no disco
+	var disk_slot = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	var disk_evt = disk_slot["data"]["active_event"]
+	assert(disk_evt.get("status") == "PRE_COMMITMENT", "Evento no disco deve estar retido em PRE_COMMITMENT")
+	assert(disk_evt.get("last_error") == "MODIFIER_CAPACITY_EXCEEDED", "Erro no disco deve estar salvo")
+
+	# Nenhum modificador foi adicionado indevidamente
+	assert(disk_slot["data"]["active_modifiers"].size() == 10, "Modificadores continuam sendo 10 sem descarte silencioso")
+
+	# Libera 1 vaga removendo 1 modificador
+	mods.pop_back()
+	assert(mods.size() == 9, "Agora possui 9 modificadores")
+	LifeLegacy.get_data()["active_modifiers"] = mods
+	LifeLegacy.save_current_slot()
+
+	# Tenta novamente a recuperação da escolha pré-comprometida
+	var retry_res: bool = LifeLegacy.retry_precommitted_event()
+	assert(retry_res, "Com vaga disponível, retry deve ter 100% de sucesso")
+
+	var act_final = LifeLegacy.get_active_event()
+	assert(act_final.get("status") == "RESOLVED", "Status final deve ser RESOLVED")
+	assert(not act_final.has("last_error"), "last_error deve ser limpo após resolução bem-sucedida")
+
+	# Confirma que o modificador foi adicionado com sucesso
+	var mods_after = LifeLegacy.get_active_modifiers()
+	assert(mods_after.size() == 10, "Capacidade deve estar completa agora com o novo modificador")
+	var found_new: bool = false
+	for m in mods_after:
+		if m["id"] == "mod_expectativa_sociedade":
+			found_new = true
+			break
+	assert(found_new, "Modificador mod_expectativa_sociedade deve estar ativo")
+
+	print("  -> Bloqueador 4 resolvido com sucesso: bloqueio transacional e retenção sem perda de dados comprovados!")
+
+func test_blocker5_v1_migration_full_coverage() -> void:
+	print("\n[Teste Bloqueador 5] Migração completa de saves V1 em todas as fontes (Principal e Backups)...")
+	_cleanup_test_dir()
+	DirAccess.make_dir_recursive_absolute(base_dir)
+
+	var v1_data: Dictionary = {
+		"schema_version": 1,
+		"catalog_version": 1,
+		"rng_version": 1,
+		"save_revision": 1,
+		"last_processed_time": { "season_num": 1, "season_day": 0 },
+		"stats": LifeLegacyState.STAT_DEFAULTS.duplicate(),
+		"stats_history": [],
+		"family": { "spouse": {}, "children": [] },
+		"dynasty": { "current_generation": 1, "ancestors": [], "heir_candidates": [], "next_dynasty_tx_seq": 1 },
+		"active_event": {},
+		"outbox": { "pending_dispatches": [] },
+		"history": { "resolved_events": [], "milestones": [] },
+		"recovery_log": []
+	}
+
+	# 1. Teste de migração via Arquivo Principal
+	var fa = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa.store_string(JSON.stringify(v1_data, "\t"))
+	fa.close()
+
+	var load_main = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(load_main.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load do arquivo principal migra com OK_SUCCESS")
+	assert(load_main["data"]["schema_version"] == 2, "Schema deve ser 2")
+	assert(load_main["data"]["story_arcs"]["active_arcs"] is Dictionary, "active_arcs deve ser Dictionary")
+	assert(load_main["data"]["story_arcs"]["completed_arcs"] is Array, "completed_arcs deve ser Array")
+	assert(load_main["data"]["total_ticks_processed"] == 0, "total_ticks_processed deve ser 0")
+
+	# Confirma que arquivo no disco foi atualizado
+	var disk_read = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_read["data"]["schema_version"] == 2, "Arquivo persistido no disco foi migrado para schema 2")
+	assert(disk_read["data"].has("story_arcs"), "Arquivo no disco tem story_arcs")
+	assert(disk_read["data"].has("total_ticks_processed"), "Arquivo no disco tem total_ticks_processed")
+
+	# 2. Teste de migração via Backup (.bak_staging)
+	_cleanup_test_dir()
+	# Principal corrompido, .bak_staging com V1 válido
+	var fa_bad = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa_bad.store_string("{ corrompido")
+	fa_bad.close()
+	var fa_stag = FileAccess.open(base_dir + "/life_legacy.json.bak_staging", FileAccess.WRITE)
+	fa_stag.store_string(JSON.stringify(v1_data, "\t"))
+	fa_stag.close()
+
+	var load_stag = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(load_stag.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação via staging deve ser OK_RECOVERED_BACKUP")
+	assert(load_stag["data"]["schema_version"] == 2, "Dado recuperado de staging deve ser migrado para schema 2")
+	assert(load_stag["data"].has("total_ticks_processed"), "Deve conter total_ticks_processed")
+
+	var disk_rec = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_rec["data"]["schema_version"] == 2, "Principal restaurado a partir do backup deve ser schema 2 no disco")
+
+	print("  -> Bloqueador 5 resolvido com sucesso: migração em todas as rotas e persistência no disco comprovadas!")

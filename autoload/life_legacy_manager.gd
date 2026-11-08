@@ -215,6 +215,7 @@ func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) 
 	if proc_s == cur_s and cur_d == proc_d + 1:
 		# Tick semanal individual padrão
 		var candidate: Dictionary = _data.duplicate(true)
+		candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + 1
 		var stat_changes: Array[Dictionary] = []
 		var expired_mods: Array = []
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
@@ -249,6 +250,7 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 	
 	while iter_s < to_s or (iter_s == to_s and iter_d < to_d):
 		iter_d += 1
+		candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + 1
 		
 		# Virada de temporada dinâmica
 		if iter_s < to_s and (iter_d >= calendar_len or iter_d > 50):
@@ -268,6 +270,8 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 
 func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
 	var candidate: Dictionary = _data.duplicate(true)
+	var delta_ticks: int = (to_s - from_s) * 38 + (to_d - from_d)
+	candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + max(delta_ticks, 1)
 	var rollovers: Array[int] = []
 	
 	var gap_log: Array = candidate.get("recovery_gap_log", [])
@@ -353,6 +357,7 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 		var ctx: Dictionary = {
 			"season_num": s,
 			"season_day": d,
+			"total_ticks_processed": int(candidate.get("total_ticks_processed", 0)),
 			"age": Career.age if Career != null else 18,
 			"stats": candidate.get("stats", {}),
 			"money": Career.money if Career != null else 5000,
@@ -386,6 +391,9 @@ func get_active_modifiers() -> Array:
 
 func get_story_arcs() -> Dictionary:
 	return _data.get("story_arcs", {}).duplicate(true)
+
+func get_total_ticks_processed() -> int:
+	return int(_data.get("total_ticks_processed", 0))
 
 func retry_precommitted_event() -> bool:
 	if _is_safe_mode:

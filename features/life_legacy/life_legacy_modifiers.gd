@@ -21,6 +21,24 @@ static func create_modifier(id: String, source_event_id: String, name: String, s
 		}
 	}
 
+# Verifica se há capacidade disponível para um conjunto de modificadores sem exceder o limite
+static func can_add_modifiers(active_modifiers: Array, modifiers_to_add: Array) -> bool:
+	var existing_ids: Array[String] = []
+	for m in active_modifiers:
+		if m is Dictionary and m.has("id"):
+			existing_ids.append(String(m["id"]))
+
+	var new_unique_count: int = 0
+	var candidate_ids: Array[String] = []
+	for m in modifiers_to_add:
+		if m is Dictionary and m.has("id"):
+			var mid: String = String(m["id"])
+			if not existing_ids.has(mid) and not candidate_ids.has(mid):
+				new_unique_count += 1
+				candidate_ids.append(mid)
+
+	return (active_modifiers.size() + new_unique_count) <= MAX_ACTIVE_MODIFIERS
+
 # Adiciona modificador com controle de duplicidade (idempotência) e teto máximo
 static func add_modifier(active_modifiers: Array, mod_dict: Dictionary) -> bool:
 	if mod_dict.is_empty() or not mod_dict.has("id"):

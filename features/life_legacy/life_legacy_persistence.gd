@@ -81,14 +81,21 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 		if tmp_exists:
 			var res_tmp = _read_and_parse_json(tmp_path)
 			if res_tmp.get("ok", false) and res_tmp.get("data") is Dictionary and LifeLegacyState.validate_schema(res_tmp["data"]):
+				var tmp_data: Dictionary = res_tmp["data"]
+				var tmp_schema: int = int(tmp_data.get("schema_version", 0))
+				if tmp_schema < CURRENT_SUPPORTED_SCHEMA:
+					tmp_data = _migrate(tmp_data, tmp_schema, CURRENT_SUPPORTED_SCHEMA)
 				var p_ok: bool = _promote_tmp(tmp_path, path)
 				if p_ok:
+					var mig_persisted: bool = true
+					if tmp_schema < CURRENT_SUPPORTED_SCHEMA:
+						mig_persisted = save_slot_data(slot, tmp_data)
 					return {
-						"status": LoadStatus.OK_SUCCESS,
-						"error_type": "",
-						"data": res_tmp["data"],
-						"is_safe_mode": false,
-						"is_persisted": true,
+						"status": LoadStatus.OK_SUCCESS if mig_persisted else LoadStatus.ERR_IO_FAILURE,
+						"error_type": "" if mig_persisted else "io_failure",
+						"data": tmp_data,
+						"is_safe_mode": not mig_persisted,
+						"is_persisted": mig_persisted,
 						"is_new_profile": false
 					}
 				else:
@@ -96,7 +103,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 					return {
 						"status": LoadStatus.ERR_IO_FAILURE,
 						"error_type": "io_failure",
-						"data": res_tmp["data"],
+						"data": tmp_data,
 						"is_safe_mode": true,
 						"is_persisted": false,
 						"is_new_profile": false
@@ -194,15 +201,19 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 	if not bak_to_use.is_empty():
 		var res_rec = _read_and_parse_json(bak_to_use)
 		push_warning("[LifeLegacyPersistence] Arquivo principal ilegível em slot %d. Recuperando via %s..." % [slot, bak_source])
+		var rec_data: Dictionary = res_rec["data"]
+		var rec_schema: int = int(rec_data.get("schema_version", 0))
+		if rec_schema < CURRENT_SUPPORTED_SCHEMA:
+			rec_data = _migrate(rec_data, rec_schema, CURRENT_SUPPORTED_SCHEMA)
 		var restore_ok: bool = false
 		if not fault_inject_restore_backup_save:
 			# Regrava principal a partir do backup preservando o arquivo original de recuperação
-			restore_ok = save_slot_data(slot, res_rec["data"], false)
+			restore_ok = save_slot_data(slot, rec_data, false)
 		if restore_ok:
 			return {
 				"status": LoadStatus.OK_RECOVERED_BACKUP,
 				"error_type": "",
-				"data": res_rec["data"],
+				"data": rec_data,
 				"is_safe_mode": false,
 				"is_persisted": true,
 				"is_new_profile": false
@@ -212,7 +223,7 @@ static func load_slot_data(slot: int, cur_season: int = 1, cur_day: int = 0) -> 
 			return {
 				"status": LoadStatus.WARN_RECOVERED_MEMORY_ONLY,
 				"error_type": "restore_write_failed",
-				"data": res_rec["data"],
+				"data": rec_data,
 				"is_safe_mode": true,
 				"is_persisted": false,
 				"is_new_profile": false
@@ -381,12 +392,19 @@ static func _read_and_parse_json(file_path: String) -> Dictionary:
 static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 	var d: Dictionary = data.duplicate(true)
 	if from_v < 2 and to_v >= 2:
-		if not d.has("active_modifiers"):
+		if not d.has("active_modifiers") or not (d["active_modifiers"] is Array):
 			d["active_modifiers"] = []
-		if not d.has("story_arcs"):
+		if not d.has("story_arcs") or not (d["story_arcs"] is Dictionary):
 			d["story_arcs"] = {
 				"active_arcs": {},
 				"completed_arcs": []
 			}
+		else:
+			if not d["story_arcs"].has("active_arcs") or not (d["story_arcs"]["active_arcs"] is Dictionary):
+				d["story_arcs"]["active_arcs"] = {}
+			if not d["story_arcs"].has("completed_arcs") or not (d["story_arcs"]["completed_arcs"] is Array):
+				d["story_arcs"]["completed_arcs"] = []
+		if not d.has("total_ticks_processed"):
+			d["total_ticks_processed"] = 0
 	d["schema_version"] = to_v
 	return d

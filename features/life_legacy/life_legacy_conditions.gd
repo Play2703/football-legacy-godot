@@ -78,6 +78,11 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 	var active_arcs: Dictionary = story_arcs.get("active_arcs", {})
 	var completed_arcs: Array = story_arcs.get("completed_arcs", [])
 
+	if conditions.has("not_started_arc"):
+		var req_not_started: String = String(conditions["not_started_arc"])
+		if active_arcs.has(req_not_started) or completed_arcs.has(req_not_started):
+			return false
+
 	if conditions.has("not_completed_arc"):
 		var req_not_comp: String = String(conditions["not_completed_arc"])
 		if completed_arcs.has(req_not_comp):
@@ -94,9 +99,7 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 		var req_stage: int = int(arc_req.get("stage", 1))
 		if req_stage == 1:
 			# Estágio 1: pode iniciar se o arco não estiver ativo nem concluído
-			if completed_arcs.has(arc_id):
-				return false
-			if active_arcs.has(arc_id) and int(active_arcs[arc_id].get("current_stage", 1)) != 1:
+			if active_arcs.has(arc_id) or completed_arcs.has(arc_id):
 				return false
 		else:
 			# Estágios posteriores: arco deve estar ativo e no estágio exato
@@ -105,7 +108,7 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 			if int(active_arcs[arc_id].get("current_stage", 1)) != req_stage:
 				return false
 
-	# 10. Tempo Mínimo Decorrido desde o Ato Anterior do Arco
+	# 10. Tempo Mínimo Decorrido desde o Ato Anterior do Arco (Ticks Monotônicos)
 	if conditions.has("min_ticks_since_prior_act"):
 		var min_ticks: int = int(conditions["min_ticks_since_prior_act"])
 		var check_arc_id: String = ""
@@ -116,12 +119,19 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 
 		if not check_arc_id.is_empty() and active_arcs.has(check_arc_id):
 			var arc_info: Dictionary = active_arcs[check_arc_id]
-			var last_time: Dictionary = arc_info.get("last_act_resolved_time", {})
-			var last_s: int = int(last_time.get("season_num", 1))
-			var last_d: int = int(last_time.get("season_day", 0))
-			var cur_s: int = int(ctx.get("season_num", 1))
-			var cur_d: int = int(ctx.get("season_day", 0))
-			var elapsed: int = (cur_s - last_s) * 52 + (cur_d - last_d)
+			var elapsed: int = 0
+			if ctx.has("total_ticks_processed") and arc_info.has("last_act_resolved_ticks"):
+				var cur_ticks: int = int(ctx.get("total_ticks_processed", 0))
+				var last_ticks: int = int(arc_info.get("last_act_resolved_ticks", 0))
+				elapsed = cur_ticks - last_ticks
+			else:
+				# Fallback seguro para perfis legados sem total_ticks_processed
+				var last_time: Dictionary = arc_info.get("last_act_resolved_time", {})
+				var last_s: int = int(last_time.get("season_num", 1))
+				var last_d: int = int(last_time.get("season_day", 0))
+				var cur_s: int = int(ctx.get("season_num", 1))
+				var cur_d: int = int(ctx.get("season_day", 0))
+				elapsed = (cur_s - last_s) * 52 + (cur_d - last_d)
 			if elapsed < min_ticks:
 				return false
 

@@ -20,6 +20,9 @@ static func get_event_by_id(id: String) -> Dictionary:
 			return evt
 	return {}
 
+static func get_event(id: String) -> Dictionary:
+	return get_event_by_id(id)
+
 static func clear_registry() -> void:
 	_registry.clear()
 
@@ -164,6 +167,27 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 		push_error("[LifeLegacyEvents] Escolha pré-comprometida '%s' não encontrada no catálogo do evento." % choice_id)
 		return false
 
+	# 0. Verificação transacional prévia de capacidade de modificadores (Bloqueador 4)
+	var mods_to_add: Array = []
+	if chosen.has("modifier") and chosen["modifier"] is Dictionary:
+		mods_to_add.append(chosen["modifier"])
+	if chosen.has("modifiers") and chosen["modifiers"] is Array:
+		for m in chosen["modifiers"]:
+			if m is Dictionary:
+				mods_to_add.append(m)
+
+	if not mods_to_add.is_empty():
+		var cur_mods: Array = ll_manager.get_data().get("active_modifiers", [])
+		if not LifeLegacyModifiers.can_add_modifiers(cur_mods, mods_to_add):
+			push_error("[LifeLegacyEvents] Limite de modificadores ativos atingido (%d). Resolução suspensa em PRE_COMMITMENT." % LifeLegacyModifiers.MAX_ACTIVE_MODIFIERS)
+			active_event["last_error"] = "MODIFIER_CAPACITY_EXCEEDED"
+			ll_manager.get_data()["active_event"] = active_event
+			ll_manager.save_current_slot()
+			return false
+
+	if active_event.has("last_error"):
+		active_event.erase("last_error")
+
 	var occ_id: String = String(active_event.get("occurrence_id", "occ"))
 
 	# 1. Reprocessa exclusivamente as intenções pendentes daquela ocorrência e daquela escolha
@@ -275,9 +299,11 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 			choices_map[String(active_event.get("event_id", ""))] = choice_id
 			arc_data["choices"] = choices_map
 			arc_data["last_act_resolved_time"] = { "season_num": s_num, "season_day": s_day }
+			arc_data["last_act_resolved_ticks"] = int(candidate.get("total_ticks_processed", 0))
 
-			if arc_stage >= arc_total:
-				arc_data["status"] = "COMPLETED"
+			var arc_action: String = String(chosen.get("arc_action", ""))
+			if arc_stage >= arc_total or arc_action == "complete" or arc_action == "abort":
+				arc_data["status"] = "ABORTED" if arc_action == "abort" else "COMPLETED"
 				arc_data["current_stage"] = arc_stage
 				if not completed_arcs.has(arc_id):
 					completed_arcs.append(arc_id)
@@ -307,6 +333,8 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 	# 4. Transita o evento candidato para RESOLVED
 	cand_event["status"] = "RESOLVED"
 	cand_event["resolved_at"] = Time.get_datetime_string_from_system()
+	if cand_event.has("last_error"):
+		cand_event.erase("last_error")
 
 	candidate["stats"] = cand_stats
 	candidate["stats_history"] = cand_hist
@@ -325,6 +353,8 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 	# 6. Gravação confirmada no disco! Aplica candidate na memória de ll_manager e atualiza referências
 	if "_data" in ll_manager:
 		ll_manager._data = candidate
+	if active_event.has("last_error"):
+		active_event.erase("last_error")
 	for k in cand_event:
 		active_event[k] = cand_event[k]
 	for k in candidate["outbox"]:

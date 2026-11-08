@@ -34,6 +34,7 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 			"season_num": season_num,
 			"season_day": season_day
 		},
+		"total_ticks_processed": 0,
 		"stats": STAT_DEFAULTS.duplicate(),
 		"stats_history": [],
 		"active_modifiers": [],
@@ -87,5 +88,7 @@ static func validate_schema(data: Dictionary) -> bool:
 		if data.has("active_modifiers") and not (data["active_modifiers"] is Array):
 			return false
 		if data.has("story_arcs") and not (data["story_arcs"] is Dictionary):
+			return false
+		if data.has("total_ticks_processed") and not (data["total_ticks_processed"] is int or (data["total_ticks_processed"] is float and data["total_ticks_processed"] == int(data["total_ticks_processed"]))):
 			return false
 	return true
