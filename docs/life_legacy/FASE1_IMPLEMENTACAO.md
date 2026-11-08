@@ -21,6 +21,8 @@
 - `features/life_legacy/life_legacy_conditions.gd`: Avaliador declarativo de condições (idade, contexto esportivo, derby, família e indicadores).
 - `features/life_legacy/life_legacy_outbox.gd`: Fila transacional Outbox (`PENDING`, `COMMITTED`, `FAILED`), Intent-Log e reconciliação idempotente no boot.
 - `features/life_legacy/life_legacy_events.gd`: Motor de eventos declarativos (`LifeLegacyEvents`), sorteio ponderado determinístico, Intent-Log pré-compromisso e resolução de escolhas com despacho transacional.
+- `features/life_legacy/life_legacy_family.gd`: Gestão de casamento, divórcio, filiação, cálculo matemático da idade canônica e fases etárias.
+- `features/life_legacy/life_legacy_dynasty.gd`: Saga transacional de sucessão geracional com diário persistente (`PREPARED`, `FATHER_ARCHIVED`, `HEIR_PROFILE_READY`, `DYNASTY_UPDATED`, `COMPLETED`) e recuperação de crash.
 - `tests/life_legacy/test_deterministic_rng.gd`: Teste automatizado de vetores canônicos do LCG.
 - `tests/life_legacy/test_persistence_cases_a_to_e.gd`: Teste automatizado dos Casos A, B, C, D e promoção atômica.
 - `tests/life_legacy/test_slot_switch.gd`: Teste automatizado de troca de slot, reatividade ao sinal e isolamento de indicadores.
@@ -29,6 +31,8 @@
 - `tests/life_legacy/runner_marco2.tscn`: Cena executável para testes do Marco 2.
 - `tests/life_legacy/test_marco3_events_outbox.gd`: Teste automatizado do Marco 3 (condições, receptor idempotente de dinheiro/energia com rollback, ledger social, Outbox e Intent-Log de eventos).
 - `tests/life_legacy/runner_marco3.tscn`: Cena executável para testes do Marco 3.
+- `tests/life_legacy/test_marco4_family_dynasty.gd`: Teste automatizado do Marco 4 (idade canônica, fases, ciclo de vida familiar, placa no SalonFama com `tx_id`, instanciação não destrutiva do herdeiro no Career e saga com crash recovery).
+- `tests/life_legacy/runner_marco4.tscn`: Cena executável para testes do Marco 4.
 
 ### 2.2. Arquivos Modificados (Alterações Mínimas Justificadas)
 - `project.godot`:
@@ -45,6 +49,9 @@
   - Implementação do receptor idempotente `apply_idempotent_effect(token, delta_money, delta_energy) -> bool` com snapshot de rollback.
   - Implementação do receptor social idempotente `apply_idempotent_social_post(token, post_data) -> bool` com snapshot de rollback e deduplicação de posts.
   - Serialização e desserialização dos ledgers em `_build_career_cfg()`, `_load()` e `_reset_state()`.
+  - Implementação do fluxo não destrutivo de sucessão geracional `instantiate_dynasty_heir(heir_data, inherited_money, start_club) -> bool`.
+- `features/career/salon_fama.gd`:
+  - Implementação de `colgar_dinastia(slot: int, tx_id: String) -> String` com consulta prévia para deduplicação idempotente por `tx_id` e arquivamento não destrutivo.
 
 ---
 
@@ -133,10 +140,39 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco3.tscn`:
    - Resolução de escolha com gravação prévia no Intent-Log (`status = "RESOLVED"`), despacho transacional para a fila Outbox e auditoria nos indicadores.
    - Status: **APROVADO**.
 
+### 3.4. Marco 4 — Família e Dinastia [CONCLUÍDO E HOMOLOGADO]
+Executado via `godot --headless res://tests/life_legacy/runner_marco4.tscn`:
+
+1. **Fórmula Canônica de Idade e Fases de Desenvolvimento (`LifeLegacyFamily`):**
+   - Validação da fórmula `(cur_season - birth_season) - (1 se cur_day < birth_day)` com transições exatas no dia do aniversário.
+   - Classificação nas 4 fases etárias: `infant` (0..5), `child` (6..11), `teen` (12..15) e `eligible_heir` (16+).
+   - Status: **APROVADO**.
+
+2. **Ciclo de Vida Familiar:**
+   - Casamento e divórcio com guarda contra poligamia.
+   - Nascimento de filho, persistência da data canônica e filtragem reativa de herdeiros elegíveis aos 16 anos.
+   - Status: **APROVADO**.
+
+3. **Arquivamento e Idempotência no Hall da Fama (`SalonFama.colgar_dinastia`):**
+   - Criação da placa histórica do pai preservando a integridade física do slot ativo.
+   - Deduplicação estrita por `tx_id`: chamadas repetidas com o mesmo token localizam a placa existente e retornam o ID sem criar duplicatas.
+   - Status: **APROVADO**.
+
+4. **Instanciação Não-Destrutiva do Herdeiro (`Career.instantiate_dynasty_heir`):**
+   - Configuração de identidade própria (nome, camisa, idade canônica, nacionalidade, posição e skills de base).
+   - Zeramento de gols, convocações, cartões e vida amorosa anterior, preservando o histórico global de conquistas do save.
+   - Transferência percentual de patrimônio herdado com persistência síncrona imediata.
+   - Status: **APROVADO**.
+
+5. **Saga Transacional Dinástica Completa e Crash Recovery (`LifeLegacyDynasty`):**
+   - Execução das etapas `PREPARED -> FATHER_ARCHIVED -> HEIR_PROFILE_READY -> DYNASTY_UPDATED -> COMPLETED`.
+   - Vinculação genealógica do pai com placa de museu em `dynasty.ancestors` e incremento do contador geracional.
+   - Resiliência contra crash: interrupção simulada no estágio `HEIR_PROFILE_READY` recuperada no boot com transição atômica para `COMPLETED`.
+   - Status: **APROVADO**.
+
 ---
 
 ## 4. CRONOGRAMA DE EXECUÇÃO DOS PRÓXIMOS MARCOS
 
-- **Marco 4:** Módulo de família, envelhecimento canônico e saga de sucessão dinástica.
 - **Marco 5:** Os 8 eventos declarativos jogáveis e interfaces no Smartphone ("Minha Vida").
 - **Marco 6:** Homologação final, testes de 52 semanas e auditoria de memória.

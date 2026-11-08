@@ -6,6 +6,8 @@ const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
 const LifeLegacyEffects = preload("res://features/life_legacy/life_legacy_effects.gd")
 const LifeLegacyEvents = preload("res://features/life_legacy/life_legacy_events.gd")
 const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
+const LifeLegacyFamily = preload("res://features/life_legacy/life_legacy_family.gd")
+const LifeLegacyDynasty = preload("res://features/life_legacy/life_legacy_dynasty.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -98,6 +100,9 @@ func reload_slot(slot: int) -> void:
 	var reconciled: int = LifeLegacyOutbox.reconcile_outbox(outbox)
 	if reconciled > 0:
 		save_current_slot()
+	
+	# Reconciliação de Saga Dinástica no Boot/Reload
+	LifeLegacyDynasty.recover_or_resume_succession(self)
 	
 	life_legacy_loaded.emit(slot)
 
@@ -321,3 +326,53 @@ func apply_stat_change(stat_id: String, delta: float, reason: String, occurrence
 
 	life_legacy_stat_changed.emit(stat_id, old_v, new_v, reason)
 	return true
+
+# API de Família
+func get_family() -> Dictionary:
+	return _data.get("family", {}).duplicate()
+
+func marry(spouse_data: Dictionary) -> bool:
+	if _is_safe_mode:
+		return false
+	var fam: Dictionary = _data.get("family", {})
+	var ok: bool = LifeLegacyFamily.marry(spouse_data, fam)
+	if ok:
+		_data["family"] = fam
+		save_current_slot()
+	return ok
+
+func divorce() -> bool:
+	if _is_safe_mode:
+		return false
+	var fam: Dictionary = _data.get("family", {})
+	var ok: bool = LifeLegacyFamily.divorce(fam)
+	if ok:
+		_data["family"] = fam
+		save_current_slot()
+	return ok
+
+func register_child(name: String, gender: String) -> Dictionary:
+	if _is_safe_mode:
+		return {}
+	var fam: Dictionary = _data.get("family", {})
+	var s_num: int = GameState.season_num if GameState != null else 1
+	var s_day: int = GameState.season_day if GameState != null else 0
+	var ch: Dictionary = LifeLegacyFamily.register_child(name, gender, s_num, s_day, fam)
+	_data["family"] = fam
+	save_current_slot()
+	return ch
+
+func get_eligible_heirs() -> Array[Dictionary]:
+	var fam: Dictionary = _data.get("family", {})
+	var s_num: int = GameState.season_num if GameState != null else 1
+	var s_day: int = GameState.season_day if GameState != null else 0
+	return LifeLegacyFamily.get_eligible_heirs(fam, s_num, s_day)
+
+# API de Sucessão Dinástica
+func get_dynasty() -> Dictionary:
+	return _data.get("dynasty", {}).duplicate()
+
+func start_succession(heir_child: Dictionary, inheritance_percent: float, start_club: String) -> bool:
+	if _is_safe_mode:
+		return false
+	return LifeLegacyDynasty.start_succession(heir_child, inheritance_percent, start_club, self)

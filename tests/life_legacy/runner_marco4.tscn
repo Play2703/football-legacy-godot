@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://testmarco4runner01"]
+
+[ext_resource type="Script" path="res://tests/life_legacy/test_marco4_family_dynasty.gd" id="1_test"]
+
+[node name="RunnerMarco4" type="Node"]
+script = ExtResource("1_test")

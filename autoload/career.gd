@@ -63801,6 +63801,87 @@ func apply_idempotent_social_post(token: String, post_data: Dictionary) -> bool:
 	return true
 
 
+func instantiate_dynasty_heir(heir_data: Dictionary, inherited_money: int, start_club_id: String) -> bool:
+	player_name = String(heir_data.get("name", "Filho"))
+	shirt_name = String(heir_data.get("surname", player_name.split(" ")[-1] if " " in player_name else player_name))
+	nationality = String(heir_data.get("nationality", nationality))
+	age = maxi(16, int(heir_data.get("canonical_age", 16)))
+
+	var pos_alta: String = String(heir_data.get("position", "DC"))
+	if not Squad.PUESTOS_ALTA.has(pos_alta):
+		pos_alta = "DC"
+	poss = [pos_alta]
+	start_club = start_club_id
+	pos_by_team = {start_club_id: pos_alta}
+
+	var base_ovr: int = clampi(int(heir_data.get("initial_ovr", 60)), 50, 70)
+	skills = {
+		"potencia": base_ovr, "precision": base_ovr, "efecto": base_ovr, "vision": base_ovr,
+		"fisico": base_ovr, "velocidad": base_ovr, "aceleracion": base_ovr, "regate": base_ovr,
+		"penal": base_ovr, "parado": base_ovr
+	}
+
+	level = 1
+	xp = 0
+	skill_points = 0
+	level_seen = 1
+
+	energy = 100.0
+	injury_weeks = 0
+	injury_dias = 0
+	_injury_was_grave = false
+	_rehab_debido = false
+	suspension_matches = 0
+	suspension_comp = ""
+	form = 0
+	sharpness = float(SHARP_MAX)
+	match_load = 0.0
+	slump = 0
+	out_streak = 0
+	opportunity_left = 3
+
+	season_goals = 0
+	season_assists = 0
+	season_matches = 0
+	nat_caps_official = 0
+	nat_captain = false
+	nat_captain_seasons = 0
+	derby_book = []
+	betrayed = []
+	nemesis = {}
+	cronica_hist = {}
+	awards = []
+	titles_grada = {}
+	club_titles = {}
+
+	pareja = {}
+	citas_hechas = 0
+	citas_cuenta = {}
+	citas_aciertos = 0
+	pareja_pago = 0.0
+	pareja_frio = 0
+	pareja_rechazadas = {}
+	pareja_cand_sello = {}
+	pareja_pension = 0.0
+	pareja_pension_hasta = -1
+	pareja_prenup = false
+	pareja_boda_season = 0
+
+	money = inherited_money
+	contract = {
+		"club": start_club_id,
+		"wage": 500,
+		"years": 3,
+		"role": "canterano"
+	}
+	agent_level = clampi(int(heir_data.get("initial_agent_level", 1)), 0, 3)
+
+	processed_career_tokens = []
+	processed_muro_tokens = []
+
+	return _save_synchronous_barrier()
+
+
 func _build_career_cfg() -> ConfigFile:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.set_value("meta", "rel_version", REL_VERSION)

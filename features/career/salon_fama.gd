@@ -322,6 +322,42 @@ static func colgar(slot: int) -> String:
 	return id if ok else ""
 
 
+static func colgar_dinastia(slot: int, tx_id: String) -> String:
+	# 1. Consulta Prévia por tx_id para Idempotência Estrita
+	if not tx_id.is_empty() and DirAccess.dir_exists_absolute(raiz()):
+		for p_id in DirAccess.get_directories_at(raiz()):
+			var existing_placa: Dictionary = SaveSlots.read_json_dict(carpeta_de(p_id) + PLACA)
+			if existing_placa.get("dynasty_tx_id", "") == tx_id:
+				return p_id
+
+	# 2. Prepara Placa do Pai
+	var antes: int = SaveSlots.active
+	if antes != slot:
+		SaveSlots.switch_to(slot)
+
+	if Career._save_pending:
+		Career._save_flush()
+
+	var placa: Dictionary = placa_de_carrera()
+	placa["dynasty_tx_id"] = tx_id
+	var id: String = _id_libre()
+
+	var dir_placa: String = carpeta_de(id)
+	if not DirAccess.dir_exists_absolute(dir_placa):
+		DirAccess.make_dir_recursive_absolute(dir_placa)
+
+	# 3. Arquivamento Não-Destrutivo: Grava placa.json preservando o slot original
+	var ok: bool = SaveSlots.escribe_atomico(dir_placa + PLACA, JSON.stringify(placa))
+	if ok:
+		Respaldo.marca(dir_placa + PLACA)
+		compacta()
+
+	if antes != slot:
+		SaveSlots.switch_to(antes)
+
+	return id if ok else ""
+
+
 
 
 
