@@ -234,6 +234,8 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 		Career.pending_ceremonies.clear()
 		Career.pending_summary = {}
 		Career.pending_decision = ""
+		Career.week_event = ""
+		Career.week_event_pospuesto = ""
 		Career._market_settled = true
 		Career._rehab_debido = -1
 		Career.nat_retired = true
