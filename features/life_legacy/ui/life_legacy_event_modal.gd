@@ -5,6 +5,9 @@ signal event_choice_selected(event_id: String, choice_id: String)
 
 var _event_data: Dictionary = {}
 
+func _init() -> void:
+	name = "LifeLegacyEventModal"
+
 func setup_event(evt: Dictionary) -> void:
 	_event_data = evt
 	_rebuild_ui()

@@ -28,6 +28,7 @@ func _ready() -> void:
 	test_event_modal_ui()
 	test_celular_vida_dashboard_ui()
 	test_end_to_end_advance_event_modal_celular()
+	test_career_hub_real_scene_integration_and_slot_switch()
 	
 	print("--- TODOS OS TESTES DO MARCO 5 FORAM APROVADOS COM SUCESSO! ---")
 	get_tree().quit(0)
@@ -222,6 +223,107 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 	
 	phone_box.queue_free()
 	print("  -> Integração fim a fim homologada com sucesso absoluto!")
+
+func test_career_hub_real_scene_integration_and_slot_switch() -> void:
+	print("[Teste 6] Bloqueador 5: Integração Real da Cena CareerHub, Ciclo de Vida do Modal e Troca de Slot...")
+	var ll = LifeLegacy
+	assert(ll != null, "LifeLegacy autoload deve existir")
+
+	# Limpa pendências legadas do Career para permitir apresentação do hub
+	if Career != null:
+		Career.nat_retired = true
+		Career.pending_ceremonies.clear()
+		Career.pending_summary = {}
+		Career.pending_decision = ""
+		Career.week_event = ""
+		Career.last_summary = ""
+		Career.last_report = {}
+		Career.retired = false
+
+	# 1. Configura Slot 0 com um evento pendente
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof0 = LifeLegacyState.get_default_profile(1, 10)
+	var evt_derby = LifeLegacyEvents.get_event_by_id("festa_vespera_derby")
+	var pending_evt_slot0 = {
+		"event_id": "festa_vespera_derby",
+		"occurrence_id": "occ_hub_test_s0",
+		"title": evt_derby.get("title", "Festa"),
+		"description": evt_derby.get("description", ""),
+		"category": "lifestyle",
+		"choices": evt_derby.get("choices", []),
+		"status": "PENDING_RESOLUTION"
+	}
+	prof0["active_event"] = pending_evt_slot0
+	LifeLegacyPersistence.save_slot_data(0, prof0)
+	
+	# Configura Slot 1 com um evento pendente diferente
+	var prof1 = LifeLegacyState.get_default_profile(1, 10)
+	var evt_crise = LifeLegacyEvents.get_event_by_id("crise_conjugal")
+	var pending_evt_slot1 = {
+		"event_id": "crise_conjugal",
+		"occurrence_id": "occ_hub_test_s1",
+		"title": evt_crise.get("title", "Crise"),
+		"description": evt_crise.get("description", ""),
+		"category": "family",
+		"choices": evt_crise.get("choices", []),
+		"status": "PENDING_RESOLUTION"
+	}
+	prof1["active_event"] = pending_evt_slot1
+	LifeLegacyPersistence.save_slot_data(1, prof1)
+
+	# Carrega slot 0
+	ll.set_safe_mode(false)
+	ll.reload_slot(0)
+
+	# 2. Instancia a cena REAL ui/career_hub.tscn
+	var hub_scene = load("res://ui/career_hub.tscn")
+	assert(hub_scene != null, "Cena ui/career_hub.tscn deve ser carregável")
+	var hub = hub_scene.instantiate()
+	add_child(hub)
+
+	# 3. Verifica que CareerHub detectou o evento pendente e instanciou automaticamente o LifeLegacyEventModal
+	var modal = hub.get_node_or_null("LifeLegacyEventModal")
+	assert(modal != null, "CareerHub deve instanciar automaticamente LifeLegacyEventModal como filho")
+	assert(modal is LifeLegacyEventModal, "Nó instanciado deve ser da classe LifeLegacyEventModal")
+
+	# 4. Simula resolução da escolha clicando no botão do modal
+	var buttons: Array[Button] = []
+	_collect_buttons(modal, buttons)
+	assert(buttons.size() >= 2, "Modal no CareerHub deve conter botões de escolha")
+	
+	# Pressiona primeira opção (choice_1_ir)
+	buttons[0].pressed.emit()
+
+	# 5. Verifica que o evento foi resolvido no LifeLegacy e persistido no disco
+	var act_after = ll.get_active_event()
+	assert(act_after.get("status") == "RESOLVED", "Evento ativo deve transitar para RESOLVED após clique no modal")
+	var file_data = LifeLegacyPersistence.load_slot_data(0, 1, 10)
+	assert(file_data["data"]["active_event"]["status"] == "RESOLVED", "Resolução do evento deve ser persistida em disco")
+
+	# 6. Recarrega o slot 0 e comprova que o modal NÃO reaparece para evento já resolvido
+	var showed_again: bool = hub._present_life_legacy_event()
+	assert(showed_again == false, "Modal NÃO deve ser reaberto se o evento já estiver RESOLVED")
+
+	# 7. Teste de Troca de Slot durante evento pendente:
+	# Troca para Slot 1 (que possui crise_conjugal pendente)
+	ll.reload_slot(1)
+	
+	# Verifica que o CareerHub atualizou o modal para o evento do Slot 1
+	var modal_s1 = hub.get_node_or_null("LifeLegacyEventModal")
+	assert(modal_s1 != null, "CareerHub deve exibir modal para evento pendente do novo slot")
+	var s1_labels: Array[String] = []
+	_collect_labels(modal_s1, s1_labels)
+	var found_event_title: bool = false
+	for lbl in s1_labels:
+		if "Tensão" in lbl or "Conflito" in lbl or "FAMILY" in lbl:
+			found_event_title = true
+			break
+	assert(found_event_title, "Modal deve conter dados do evento do Slot 1 (Tensão e Conflito Conjugal)")
+
+	# Limpeza
+	hub.queue_free()
+	print("  -> Bloqueador 5 (Ciclo de Vida da Cena Real CareerHub e Modal) aprovado com sucesso!")
 
 func _collect_labels(node: Node, acc: Array[String]) -> void:
 	if node is Label:

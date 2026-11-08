@@ -227,6 +227,8 @@ func _ready() -> void:
 	Settings.marca_hub(true)
 	if LifeLegacy != null and LifeLegacy.has_signal("life_event_ready"):
 		LifeLegacy.life_event_ready.connect(func(_evt: Dictionary) -> void: _present_life_legacy_event())
+	if LifeLegacy != null and LifeLegacy.has_signal("life_legacy_loaded"):
+		LifeLegacy.life_legacy_loaded.connect(_on_life_legacy_loaded)
 
 
 
@@ -537,13 +539,24 @@ func _present_life_legacy_event() -> bool:
 	var act_evt: Dictionary = LifeLegacy.get_active_event()
 	if act_evt.is_empty() or act_evt.get("status", "") != "PENDING_RESOLUTION":
 		return false
+	if has_node("LifeLegacyEventModal"):
+		return false
 	var modal_script = load("res://features/life_legacy/ui/life_legacy_event_modal.gd")
 	if modal_script == null:
 		return false
 	var modal: Control = modal_script.new()
+	modal.name = "LifeLegacyEventModal"
 	add_child(modal)
 	modal.setup_event(act_evt)
 	return true
+
+
+func _on_life_legacy_loaded(_slot: int) -> void:
+	var existing = get_node_or_null("LifeLegacyEventModal")
+	if existing != null:
+		existing.name = "OldModal"
+		existing.queue_free()
+	_present_life_legacy_event()
 
 
 
