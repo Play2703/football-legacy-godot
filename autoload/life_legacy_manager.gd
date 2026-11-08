@@ -103,6 +103,13 @@ func reload_slot(slot: int) -> void:
 	var reconciled: int = LifeLegacyOutbox.reconcile_outbox(outbox)
 	if reconciled > 0:
 		save_current_slot()
+
+	# Reconciliação de Evento em PRE_COMMITMENT no Boot/Reload
+	var act_evt: Dictionary = _data.get("active_event", {})
+	if act_evt.get("status", "") == "PRE_COMMITMENT":
+		var recovered: bool = LifeLegacyEvents.recover_precommitted_event(act_evt, outbox, self)
+		if recovered:
+			life_event_resolved.emit(String(act_evt.get("event_id", "")), String(act_evt.get("selected_choice_id", "")))
 	
 	# Reconciliação de Saga Dinástica no Boot/Reload
 	LifeLegacyDynasty.recover_or_resume_succession(self)
@@ -309,7 +316,8 @@ func _apply_weekly_drift_on_candidate(candidate: Dictionary, stat_changes: Array
 
 func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_event: Dictionary) -> void:
 	var act_evt: Dictionary = candidate.get("active_event", {})
-	if act_evt.get("status", "") != "PENDING_RESOLUTION":
+	var act_status: String = String(act_evt.get("status", ""))
+	if act_status != "PENDING_RESOLUTION" and act_status != "PRE_COMMITMENT":
 		var ctx: Dictionary = {
 			"season_num": s,
 			"season_day": d,
@@ -338,11 +346,27 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 func get_active_event() -> Dictionary:
 	return _data.get("active_event", {}).duplicate()
 
+func retry_precommitted_event() -> bool:
+	if _is_safe_mode:
+		return false
+	var act_evt: Dictionary = _data.get("active_event", {})
+	if act_evt.get("status", "") != "PRE_COMMITMENT":
+		return false
+	var outbox: Dictionary = _data.get("outbox", {})
+	var recovered: bool = LifeLegacyEvents.recover_precommitted_event(act_evt, outbox, self)
+	if recovered:
+		life_event_resolved.emit(String(act_evt.get("event_id", "")), String(act_evt.get("selected_choice_id", "")))
+	return recovered
+
 func resolve_active_event(choice_id: String) -> bool:
 	if _is_safe_mode:
 		return false
 	var act_evt: Dictionary = _data.get("active_event", {})
 	if act_evt.is_empty():
+		return false
+	var pre_choice: String = String(act_evt.get("selected_choice_id", ""))
+	if act_evt.get("status", "") == "PRE_COMMITMENT" and not pre_choice.is_empty() and choice_id != pre_choice:
+		push_error("[LifeLegacyManager] Evento já pré-comprometido com a escolha %s. Não é permitido alterar a escolha." % pre_choice)
 		return false
 	var outbox: Dictionary = _data.get("outbox", {})
 	var ok: bool = LifeLegacyEvents.resolve_choice(act_evt, choice_id, outbox, self)

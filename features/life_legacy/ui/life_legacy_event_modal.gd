@@ -51,11 +51,29 @@ func _rebuild_ui() -> void:
 
 	# Botões de Escolha
 	var choices: Array = _event_data.get("choices", [])
+	var is_precommitment: bool = (_event_data.get("status", "") == "PRE_COMMITMENT")
+	var selected_id: String = String(_event_data.get("selected_choice_id", ""))
+
+	if is_precommitment:
+		var retry_info: Label = Label.new()
+		retry_info.text = "Decisão pré-comprometida. Concluindo confirmação..."
+		retry_info.modulate = Color(0.9, 0.6, 0.2)
+		vbox.add_child(retry_info)
+
 	for ch in choices:
 		var btn: Button = Button.new()
-		btn.text = String(ch.get("text", "Opção"))
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var ch_id: String = String(ch.get("id", ""))
+		var txt: String = String(ch.get("text", "Opção"))
+		if is_precommitment:
+			if ch_id == selected_id:
+				btn.text = "Confirmar Escolha: %s" % txt
+				btn.disabled = false
+			else:
+				btn.text = txt
+				btn.disabled = true
+		else:
+			btn.text = txt
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.pressed.connect(_on_choice_pressed.bind(ch_id))
 		vbox.add_child(btn)
 

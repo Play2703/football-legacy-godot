@@ -26,6 +26,7 @@ func _ready() -> void:
 	test_pre_commitment_failure_aborts_dispatch()
 	test_interrupted_outbox_reconciliation()
 	test_seven_failure_scenarios_and_recovery()
+	test_pre_commitment_recovery_scenarios_a_to_e()
 	print("--- TEST MARCO 3: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
 
@@ -475,3 +476,252 @@ func test_seven_failure_scenarios_and_recovery() -> void:
 	assert(outbox_c7["pending_dispatches"][0]["status"] == LifeLegacyOutbox.STATUS_COMMITTED, "Status deve ser COMMITTED")
 	assert(Career.money == m_pre_c7 - 1500, "Dinheiro NÃO deve ser deduzido novamente! Dedup absoluto!")
 	print("    -> Cenário 7 Aprovado!")
+
+func test_pre_commitment_recovery_scenarios_a_to_e() -> void:
+	print("[TEST] 9. Testes Rigorosos de Recuperação PRE_COMMITMENT (Cenários A a E)...")
+	var ll = LifeLegacy
+
+	# ==========================================
+	# CENÁRIO A — Falha antes do primeiro despacho
+	# ==========================================
+	print("  [Cenário A] Falha antes do primeiro despacho...")
+	var prof_a = LifeLegacyState.get_default_profile(1, 10)
+	var evt_a = {
+		"event_id": "evt_scen_a",
+		"occurrence_id": "occ_a_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "choice_a",
+			"text": "Escolha A",
+			"career_effects": {"money": -300, "energy": -5.0},
+			"internal_effects": {"discipline": 4.0}
+		}]
+	}
+	prof_a["active_event"] = evt_a
+	LifeLegacyPersistence.save_slot_data(0, prof_a)
+	ll.reload_slot(0)
+
+	var money_pre_a: int = Career.money
+	var energy_pre_a: float = Career.energy
+	var disc_pre_a: float = ll.get_stat("discipline")
+
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "occ_a_001"
+	var res_a = ll.resolve_active_event("choice_a")
+	assert(res_a == false, "Cenário A: Despacho deve falhar")
+
+	var act_a_disk = LifeLegacyPersistence.load_slot_data(0, 1, 10)["data"]["active_event"]
+	assert(act_a_disk["status"] == "PRE_COMMITMENT", "Cenário A: Deve persistir PRE_COMMITMENT")
+	assert(act_a_disk["selected_choice_id"] == "choice_a", "Cenário A: Deve salvar choice_a")
+	assert(Career.money == money_pre_a, "Cenário A: Career dinheiro não deve ter mudado")
+	assert(ll.get_stat("discipline") == disc_pre_a, "Cenário A: Indicador não deve ter mudado")
+
+	# Simula reload após encerramento do jogo
+	LifeLegacyOutbox.reset_fault_injection()
+	ll.reload_slot(0)
+
+	var act_a_post = ll.get_active_event()
+	assert(act_a_post["status"] == "RESOLVED", "Cenário A: Após reload, evento deve ser concluído e transitar para RESOLVED")
+	assert(Career.money == money_pre_a - 300, "Cenário A: Dinheiro deve ser debitado exatamente uma vez (-300)")
+	assert(Career.energy == energy_pre_a - 5.0, "Cenário A: Energia deve ser debitada exatamente uma vez (-5.0)")
+	assert(ll.get_stat("discipline") == disc_pre_a + 4.0, "Cenário A: Disciplina deve ter incrementado exatamente uma vez (+4.0)")
+	var disk_a_resolved = LifeLegacyPersistence.load_slot_data(0, 1, 10)["data"]["active_event"]
+	assert(disk_a_resolved["status"] == "RESOLVED", "Cenário A: Status RESOLVED deve estar persistido no disco")
+	print("    -> Cenário A Aprovado!")
+
+	# ==========================================
+	# CENÁRIO B — Falha parcial da Outbox
+	# ==========================================
+	print("  [Cenário B] Falha parcial da Outbox...")
+	var prof_b = LifeLegacyState.get_default_profile(1, 10)
+	var evt_b = {
+		"event_id": "evt_scen_b",
+		"occurrence_id": "occ_b_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "choice_b",
+			"text": "Escolha B",
+			"career_effects": {"money": -450, "energy": -2.0},
+			"social_post": {"author": "Player", "text": "Post B", "likes": 12},
+			"internal_effects": {"popularity": 7.0}
+		}]
+	}
+	prof_b["active_event"] = evt_b
+	LifeLegacyPersistence.save_slot_data(0, prof_b)
+	ll.reload_slot(0)
+
+	var money_pre_b: int = Career.money
+	var pop_pre_b: float = ll.get_stat("popularity")
+	var posts_before_b: int = Career.muro_redes.size()
+
+	# Falha no segundo despacho (_social)
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "_social"
+	var res_b = ll.resolve_active_event("choice_b")
+	assert(res_b == false, "Cenário B: Deve retornar false pois social falhou")
+	assert(Career.money == money_pre_b - 450, "Cenário B: Primeiro despacho deve ter tido sucesso")
+	assert(ll.get_stat("popularity") == pop_pre_b, "Cenário B: Indicador interno ainda não deve ter sido aplicado")
+
+	var act_b_disk = LifeLegacyPersistence.load_slot_data(0, 1, 10)["data"]["active_event"]
+	assert(act_b_disk["status"] == "PRE_COMMITMENT", "Cenário B: Deve estar em PRE_COMMITMENT")
+
+	# Simula reload: reprocessa a intenção pendente
+	LifeLegacyOutbox.reset_fault_injection()
+	ll.reload_slot(0)
+
+	var act_b_post = ll.get_active_event()
+	assert(act_b_post["status"] == "RESOLVED", "Cenário B: Evento deve chegar a RESOLVED após reload")
+	assert(Career.money == money_pre_b - 450, "Cenário B: Dinheiro NÃO deve ser debitado novamente")
+	assert(Career.muro_redes.size() == posts_before_b + 1, "Cenário B: Post social adicionado exatamente uma vez")
+	assert(ll.get_stat("popularity") == pop_pre_b + 7.0, "Cenário B: Popularidade aplicada exatamente uma vez")
+	print("    -> Cenário B Aprovado!")
+
+	# ==========================================
+	# CENÁRIO C — Crash após confirmação do receptor
+	# ==========================================
+	print("  [Cenário C] Crash após confirmação do receptor...")
+	var prof_c = LifeLegacyState.get_default_profile(1, 10)
+	var tok_c: String = "occ_c_crash_001_choice_c_career"
+	var evt_c = {
+		"event_id": "evt_scen_c",
+		"occurrence_id": "occ_c_crash_001",
+		"status": "PRE_COMMITMENT",
+		"selected_choice_id": "choice_c",
+		"internal_effects_applied": false,
+		"choices": [{
+			"id": "choice_c",
+			"text": "Escolha C",
+			"career_effects": {"money": -600, "energy": -8.0},
+			"internal_effects": {"discipline": 5.0}
+		}]
+	}
+	# Receptor já confirmou o token antes do crash
+	var money_pre_c: int = Career.money
+	assert(Career.apply_idempotent_effect(tok_c, -600, -8.0) == true)
+	assert(Career.money == money_pre_c - 600)
+	var disc_pre_c: float = ll.get_stat("discipline")
+
+	# Mas na Outbox do disco, o item ainda constava como STATUS_PENDING por queda abrupta
+	prof_c["active_event"] = evt_c
+	prof_c["outbox"] = {
+		"pending_dispatches": [{
+			"target": "career_effects",
+			"token": tok_c,
+			"payload": {"money": -600, "energy": -8.0},
+			"status": LifeLegacyOutbox.STATUS_PENDING,
+			"retry_count": 0
+		}]
+	}
+	LifeLegacyPersistence.save_slot_data(0, prof_c)
+
+	# Reload do slot
+	ll.reload_slot(0)
+
+	var act_c_post = ll.get_active_event()
+	assert(act_c_post["status"] == "RESOLVED", "Cenário C: Evento deve chegar a RESOLVED")
+	assert(Career.money == money_pre_c - 600, "Cenário C: Deduplicação impediu duplicidade de saldo")
+	assert(ll.get_stat("discipline") == disc_pre_c + 5.0, "Cenário C: Indicador interno aplicado exatamente uma vez")
+	print("    -> Cenário C Aprovado!")
+
+	# ==========================================
+	# CENÁRIO D — Falha na persistência final
+	# ==========================================
+	print("  [Cenário D] Falha na persistência final...")
+	var prof_d = LifeLegacyState.get_default_profile(1, 10)
+	var tok_d: String = "occ_d_001_choice_d_career"
+	var evt_d = {
+		"event_id": "evt_scen_d",
+		"occurrence_id": "occ_d_001",
+		"status": "PRE_COMMITMENT",
+		"selected_choice_id": "choice_d",
+		"internal_effects_applied": false,
+		"choices": [{
+			"id": "choice_d",
+			"text": "Escolha D",
+			"career_effects": {"money": -200, "energy": -1.0},
+			"internal_effects": {"reputation": 6.0}
+		}]
+	}
+	var money_pre_d: int = Career.money
+	assert(Career.apply_idempotent_effect(tok_d, -200, -1.0) == true)
+	var rep_pre_d: float = 50.0
+	prof_d["stats"]["reputation"] = rep_pre_d
+	prof_d["active_event"] = evt_d
+	prof_d["outbox"] = {
+		"pending_dispatches": [{
+			"target": "career_effects",
+			"token": tok_d,
+			"payload": {"money": -200, "energy": -1.0},
+			"status": LifeLegacyOutbox.STATUS_COMMITTED,
+			"retry_count": 0
+		}]
+	}
+	LifeLegacyPersistence.save_slot_data(0, prof_d)
+
+	# Reload: detecta PRE_COMMITMENT com intents já COMMITTED no receptor/outbox,
+	# aplica internal_effects (+6.0), transita para RESOLVED e persiste!
+	ll.reload_slot(0)
+	var act_d_post = ll.get_active_event()
+	assert(act_d_post["status"] == "RESOLVED", "Cenário D: Evento transita para RESOLVED")
+	assert(Career.money == money_pre_d - 200, "Cenário D: Dinheiro deduzido exatamente uma vez")
+	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação incrementada exatamente uma vez (+6.0)")
+
+	# Segundo reload para certificar idempotência
+	ll.reload_slot(0)
+	assert(ll.get_active_event()["status"] == "RESOLVED", "Cenário D: Permanece RESOLVED")
+	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação não duplicada em reloads subsequentes")
+	print("    -> Cenário D Aprovado!")
+
+	# ==========================================
+	# CENÁRIO E — Falha persistente
+	# ==========================================
+	print("  [Cenário E] Falha persistente e bloqueio contra sobrescrita...")
+	var prof_e = LifeLegacyState.get_default_profile(1, 10)
+	var evt_e = {
+		"event_id": "evt_scen_e",
+		"occurrence_id": "occ_e_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [
+			{
+				"id": "choice_e_1",
+				"text": "Escolha E 1",
+				"career_effects": {"money": -100, "energy": -1.0}
+			},
+			{
+				"id": "choice_e_2",
+				"text": "Escolha E 2",
+				"career_effects": {"money": -900, "energy": -9.0}
+			}
+		]
+	}
+	prof_e["active_event"] = evt_e
+	LifeLegacyPersistence.save_slot_data(0, prof_e)
+	ll.reload_slot(0)
+
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "occ_e_001"
+	var res_e1 = ll.resolve_active_event("choice_e_1")
+	assert(res_e1 == false, "Cenário E: Despacho falha")
+	assert(ll.get_active_event()["status"] == "PRE_COMMITMENT", "Cenário E: Permanece em PRE_COMMITMENT")
+
+	# Jogador tenta mudar de alternativa para choice_e_2: DEVE SER BLOQUEADO!
+	var res_change = ll.resolve_active_event("choice_e_2")
+	assert(res_change == false, "Cenário E: Jogador NÃO pode escolher alternativa diferente para decisão pré-comprometida")
+	assert(ll.get_active_event()["selected_choice_id"] == "choice_e_1", "Cenário E: selected_choice_id continua sendo choice_e_1")
+
+	# Reload mantendo o receptor em falha
+	ll.reload_slot(0)
+	assert(ll.get_active_event()["status"] == "PRE_COMMITMENT", "Cenário E: Evento continua em PRE_COMMITMENT após reload")
+	assert(ll.get_active_event()["selected_choice_id"] == "choice_e_1", "Cenário E: selected_choice_id preservado")
+
+	# Simula tentativa de avanço semanal com evento pré-comprometido
+	var cand_e = ll.get_data().duplicate(true)
+	var new_e: Dictionary = {}
+	ll._maybe_roll_event_on_candidate(cand_e, 1, 11, new_e)
+	assert(new_e.is_empty(), "Cenário E: _maybe_roll_event_on_candidate NÃO deve gerar novo evento se ativo estiver em PRE_COMMITMENT")
+	assert(cand_e["active_event"]["event_id"] == "evt_scen_e", "Cenário E: Evento pré-comprometido NÃO deve ser sobrescrito")
+
+	# Quando o receptor finalmente voltar a funcionar:
+	LifeLegacyOutbox.reset_fault_injection()
+	var res_retry = ll.retry_precommitted_event()
+	assert(res_retry == true, "Cenário E: retry_precommitted_event deve suceder quando receptor volta a funcionar")
+	assert(ll.get_active_event()["status"] == "RESOLVED", "Cenário E: Evento finalmente chega a RESOLVED")
+	print("    -> Cenário E Aprovado!")
+

@@ -537,7 +537,8 @@ func _present_life_legacy_event() -> bool:
 	if LifeLegacy == null:
 		return false
 	var act_evt: Dictionary = LifeLegacy.get_active_event()
-	if act_evt.is_empty() or act_evt.get("status", "") != "PENDING_RESOLUTION":
+	var status: String = String(act_evt.get("status", ""))
+	if act_evt.is_empty() or (status != "PENDING_RESOLUTION" and status != "PRE_COMMITMENT"):
 		return false
 	if has_node("LifeLegacyEventModal"):
 		return false
