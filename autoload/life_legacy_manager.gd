@@ -93,6 +93,7 @@ func reload_slot(slot: int) -> void:
 		push_error("[LifeLegacy] Divergência temporal no boot: GameState=(%d,%d) < Processed=(%d,%d). Ativando Modo Seguro." % [s_num, s_day, proc_s, proc_d])
 		_is_safe_mode = true
 		life_legacy_safe_mode_activated.emit("Divergência temporal detectada no carregamento")
+		return
 	elif rel == TimeRelation.FORWARD_TICK or rel == TimeRelation.SEASON_ROLLOVER:
 		push_warning("[LifeLegacy] Crash recovery no boot: avanço pendente detectado de (%d,%d) para (%d,%d)." % [proc_s, proc_d, s_num, s_day])
 		_handle_temporal_advance(proc_s, proc_d, s_num, s_day)

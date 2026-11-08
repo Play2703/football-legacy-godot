@@ -13,6 +13,8 @@ func _ready() -> void:
 	# Prepara slot 0 limpo sincronizado em (1, 10)
 	GameState.season_num = 1
 	GameState.season_day = 10
+	Career.processed_dynasty_txs = []
+	Career.player_name = "Pai Teste"
 	LifeLegacyPersistence.save_slot_data(0, LifeLegacyState.get_default_profile(1, 10))
 	LifeLegacy.set_safe_mode(false)
 	LifeLegacy.reload_slot(0)
@@ -107,7 +109,7 @@ func test_salon_fama_colgar_dinastia_idempotency() -> void:
 	print("  -> OK!")
 
 func test_career_instantiate_dynasty_heir() -> void:
-	print("[TEST] 4. Career.instantiate_dynasty_heir...")
+	print("[TEST] 4. Career.instantiate_dynasty_heir com Idempotência por tx_id...")
 	var heir_data: Dictionary = {
 		"name": "Lucas Silva",
 		"surname": "Silva",
@@ -117,9 +119,11 @@ func test_career_instantiate_dynasty_heir() -> void:
 		"initial_ovr": 62,
 		"initial_agent_level": 1
 	}
+	var test_tx_id: String = "dyn_tx_heir_test_001"
 	
-	var ok: bool = Career.instantiate_dynasty_heir(heir_data, 15000, "rma")
+	var ok: bool = Career.instantiate_dynasty_heir(heir_data, 15000, "rma", test_tx_id)
 	assert(ok == true, "instantiate_dynasty_heir deve retornar true")
+	assert(Career.processed_dynasty_txs.has(test_tx_id), "tx_id deve ser registrado em processed_dynasty_txs")
 	
 	# Validações dos campos do herdeiro
 	assert(Career.player_name == "Lucas Silva", "Nome deve ser Lucas Silva")
@@ -135,10 +139,16 @@ func test_career_instantiate_dynasty_heir() -> void:
 	assert(Career.pareja.is_empty() == true, "Vida amorosa do pai não deve ser herdada")
 	assert(Career.processed_career_tokens.is_empty() == true, "Tokens de carreira anteriores devem ser limpos")
 	
+	# Teste de idempotência com o mesmo tx_id: altera dinheiro manualmente para verificar que não reinicializa
+	Career.money = 99999
+	var ok_repeat: bool = Career.instantiate_dynasty_heir(heir_data, 15000, "rma", test_tx_id)
+	assert(ok_repeat == true, "Chamada repetida com mesmo tx_id deve retornar true")
+	assert(Career.money == 99999, "Estado do jogador não deve ser sobrescrito em chamada idempotente repetida")
+	
 	print("  -> OK!")
 
 func test_full_dynasty_saga_and_crash_recovery() -> void:
-	print("[TEST] 5. Saga Transacional Dinástica Completa e Crash Recovery...")
+	print("[TEST] 5. Saga Transacional Dinástica Completa e Crash Recovery em Todas as Etapas...")
 	var ll = LifeLegacy
 	
 	# Prepara estado com filho elegível aos 16 anos
@@ -161,7 +171,7 @@ func test_full_dynasty_saga_and_crash_recovery() -> void:
 	Career.money = 50000
 	Career.player_name = "Pai Lendário"
 	
-	# Executa sucessão
+	# 5.1 Execução completa padrão
 	var ok_succ: bool = ll.start_succession(ch, 40.0, "bar")
 	assert(ok_succ == true, "Sucessão dinástica deve ser concluída com sucesso")
 	
@@ -176,21 +186,68 @@ func test_full_dynasty_saga_and_crash_recovery() -> void:
 	var ancestors: Array = dyn.get("ancestors", [])
 	assert(ancestors.size() == 1, "Deve haver 1 ancestral")
 	assert(ancestors[0]["name"] == "Pai Lendário", "Nome do ancestral deve ser Pai Lendário")
-	assert(ancestors[0]["plaque_id"].is_empty() == false, "Placa no museu deve estar vinculada")
+	var initial_plaque: String = ancestors[0]["plaque_id"]
+	assert(initial_plaque.is_empty() == false, "Placa no museu deve estar vinculada")
 	
 	# Verifica que diário terminou em COMPLETED
 	var journal: Dictionary = dyn.get("transition_journal", {})
 	assert(journal.get("stage", "") == LifeLegacyDynasty.STAGE_COMPLETED, "Diário deve estar em STAGE_COMPLETED")
+	assert(journal.get("completed", false) == true, "Flag completed deve ser true")
 	
-	# Teste de Crash Recovery: Simula crash em estágio intermediário HEIR_PROFILE_READY
-	journal["stage"] = LifeLegacyDynasty.STAGE_HEIR_PROFILE_READY
-	ll.get_data()["dynasty"]["transition_journal"] = journal
+	# 5.2 Simulação de Crash após STAGE_FATHER_ARCHIVED (pai arquivado, herdeiro pendente)
+	var crash_tx: String = "dyn_tx_crash_sim_archived"
+	var simulated_journal: Dictionary = {
+		"tx_id": crash_tx,
+		"stage": LifeLegacyDynasty.STAGE_FATHER_ARCHIVED,
+		"father_archived": true,
+		"plaque_id": initial_plaque,
+		"heir_child": ch,
+		"inheritance_percent": 50.0,
+		"start_club": "rma",
+		"father_name": "Pai Lendário",
+		"heir_instantiated": false,
+		"patrimony_transferred": false,
+		"dynasty_updated": false,
+		"completed": false
+	}
+	ll.get_data()["dynasty"]["transition_journal"] = simulated_journal
 	ll.save_current_slot()
 	
-	# Invoca recuperação de boot
-	var ok_rec: bool = LifeLegacyDynasty.recover_or_resume_succession(ll)
-	assert(ok_rec == true, "Recuperação de crash deve ter sucesso")
-	var journal_after: Dictionary = ll.get_dynasty().get("transition_journal", {})
-	assert(journal_after.get("stage", "") == LifeLegacyDynasty.STAGE_COMPLETED, "Diário recuperado deve finalizar em STAGE_COMPLETED")
+	# Retoma sucessão interrompida
+	Career.money = 100000
+	var ok_rec1: bool = LifeLegacyDynasty.recover_or_resume_succession(ll)
+	assert(ok_rec1 == true, "Recuperação a partir de FATHER_ARCHIVED deve ter sucesso")
+	assert(Career.money == 50000, "Herança de 50% de 100.000 deve transferir 50.000")
+	assert(ll.get_dynasty()["transition_journal"]["stage"] == LifeLegacyDynasty.STAGE_COMPLETED, "Diário deve finalizar em COMPLETED")
+	assert(ll.get_dynasty()["transition_journal"]["completed"] == true, "Flag completed deve ser true")
+	
+	# 5.3 Simulação de Crash após STAGE_HEIR_PROFILE_READY (herdeiro já instanciado, dinastia não atualizada)
+	var crash_tx2: String = "dyn_tx_crash_sim_heir_ready"
+	var simulated_journal2: Dictionary = {
+		"tx_id": crash_tx2,
+		"stage": LifeLegacyDynasty.STAGE_HEIR_PROFILE_READY,
+		"father_archived": true,
+		"plaque_id": initial_plaque,
+		"heir_child": ch,
+		"inheritance_percent": 50.0,
+		"start_club": "rma",
+		"father_name": "Pai Lendário",
+		"heir_instantiated": true,
+		"patrimony_transferred": true,
+		"dynasty_updated": false,
+		"completed": false
+	}
+	ll.get_data()["dynasty"]["transition_journal"] = simulated_journal2
+	ll.save_current_slot()
+	
+	Career.money = 77777 # Se repetisse transferência, mudaria esse valor
+	var ok_rec2: bool = LifeLegacyDynasty.recover_or_resume_succession(ll)
+	assert(ok_rec2 == true, "Recuperação a partir de HEIR_PROFILE_READY deve ter sucesso")
+	assert(Career.money == 77777, "Dinheiro não deve ser recalculado se patrimony_transferred for true")
+	assert(ll.get_dynasty()["transition_journal"]["completed"] == true, "Flag completed deve ser true")
+	
+	# 5.4 Chamada idempotente adicional quando já completado
+	var ok_rec3: bool = LifeLegacyDynasty.recover_or_resume_succession(ll)
+	assert(ok_rec3 == true, "Recuperação quando já concluído deve ser no-op e retornar true")
 	
 	print("  -> OK!")

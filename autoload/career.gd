@@ -63031,6 +63031,7 @@ func _reset_state() -> void:
 	money = 5000
 	processed_career_tokens = []
 	processed_muro_tokens = []
+	processed_dynasty_txs = []
 
 	money_visto = -1
 
@@ -63652,6 +63653,7 @@ var _save_last_path: String = ""
 var _save_epoch: int = 0
 var processed_career_tokens: Array = []
 var processed_muro_tokens: Array = []
+var processed_dynasty_txs: Array = []
 
 
 
@@ -63801,7 +63803,14 @@ func apply_idempotent_social_post(token: String, post_data: Dictionary) -> bool:
 	return true
 
 
-func instantiate_dynasty_heir(heir_data: Dictionary, inherited_money: int, start_club_id: String) -> bool:
+func instantiate_dynasty_heir(heir_data: Dictionary, inherited_money: int, start_club_id: String, tx_id: String = "") -> bool:
+	if not tx_id.is_empty() and processed_dynasty_txs.has(tx_id):
+		return true
+
+	var snap_dynasty_txs: Array = processed_dynasty_txs.duplicate()
+	if not tx_id.is_empty():
+		processed_dynasty_txs.append(tx_id)
+
 	player_name = String(heir_data.get("name", "Filho"))
 	shirt_name = String(heir_data.get("surname", player_name.split(" ")[-1] if " " in player_name else player_name))
 	nationality = String(heir_data.get("nationality", nationality))
@@ -63879,7 +63888,13 @@ func instantiate_dynasty_heir(heir_data: Dictionary, inherited_money: int, start
 	processed_career_tokens = []
 	processed_muro_tokens = []
 
-	return _save_synchronous_barrier()
+	var ok: bool = _save_synchronous_barrier()
+	if not ok:
+		processed_dynasty_txs = snap_dynasty_txs
+		push_error("[Career] Falha ao persistir transação de herdeiro dinástico. Rollback executado.")
+		return false
+
+	return true
 
 
 func _build_career_cfg() -> ConfigFile:
@@ -63887,6 +63902,7 @@ func _build_career_cfg() -> ConfigFile:
 	cfg.set_value("meta", "rel_version", REL_VERSION)
 	cfg.set_value("state", "processed_career_tokens", processed_career_tokens)
 	cfg.set_value("state", "processed_muro_tokens", processed_muro_tokens)
+	cfg.set_value("state", "processed_dynasty_txs", processed_dynasty_txs)
 	cfg.set_value("player", "name", player_name)
 	cfg.set_value("player", "shirt_name", shirt_name)
 	cfg.set_value("player", "age", age)
@@ -64620,6 +64636,8 @@ func _load() -> void:
 	processed_career_tokens = (pct as Array).duplicate() if pct is Array else []
 	var pmt: Variant = cfg.get_value("state", "processed_muro_tokens", [])
 	processed_muro_tokens = (pmt as Array).duplicate() if pmt is Array else []
+	var pdt: Variant = cfg.get_value("state", "processed_dynasty_txs", [])
+	processed_dynasty_txs = (pdt as Array).duplicate() if pdt is Array else []
 
 
 	money_visto = -1
