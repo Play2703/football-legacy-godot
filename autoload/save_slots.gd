@@ -1,5 +1,7 @@
 extends Node
 
+signal active_slot_changed(previous_slot: int, new_slot: int)
+
 
 
 
@@ -110,9 +112,11 @@ func set_active(slot: int) -> void:
 
 
 func switch_to(slot: int) -> void:
+	var prev: int = active
 	set_active(slot)
 	GameState.reload_active_slot()
 	Career.reload_active_slot()
+	active_slot_changed.emit(prev, active)
 
 
 

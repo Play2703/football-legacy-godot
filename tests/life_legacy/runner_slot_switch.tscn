@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://testslotswitchrunner"]
+
+[ext_resource type="Script" path="res://tests/life_legacy/test_slot_switch.gd" id="1_tss"]
+
+[node name="TestRunner" type="Node"]
+script = ExtResource("1_tss")
