@@ -23,6 +23,8 @@ func _ready() -> void:
 	test_career_idempotent_social_post()
 	test_outbox_and_intent_log()
 	test_event_roll_and_resolution()
+	test_pre_commitment_failure_aborts_dispatch()
+	test_interrupted_outbox_reconciliation()
 	print("--- TEST MARCO 3: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
 
@@ -207,5 +209,79 @@ func test_event_roll_and_resolution() -> void:
 	# Valida auditoria no histórico
 	var hist: Array = ll.get_data().get("stats_history", [])
 	assert(hist.size() >= 2, "Histórico deve registrar mudanças de indicadores")
+	
+	print("  -> OK!")
+
+func test_pre_commitment_failure_aborts_dispatch() -> void:
+	print("[TEST] 6. Falha no Pré-compromisso Aborta Despacho e Rollback de Memória...")
+	var ll = LifeLegacy
+	var event_dummy: Dictionary = {
+		"event_id": "evt_fail_sim",
+		"occurrence_id": "occ_fail_sim_01",
+		"status": "PENDING_RESOLUTION",
+		"choices": [
+			{
+				"id": "ch_sim_err",
+				"text": "Escolha de teste",
+				"internal_effects": { "stress": 20.0 },
+				"career_effects": { "money": -9999, "energy": -50.0 }
+			}
+		]
+	}
+	
+	var initial_money: int = Career.money
+	var initial_energy: float = Career.energy
+	var outbox_dict: Dictionary = { "pending_dispatches": [] }
+	
+	# Força modo seguro no manager, o que faz save_current_slot() retornar false
+	ll.set_safe_mode(true)
+	
+	var ok: bool = LifeLegacyEvents.resolve_choice(event_dummy, "ch_sim_err", outbox_dict, ll)
+	assert(ok == false, "resolve_choice deve retornar false quando o pré-compromisso falha")
+	assert(event_dummy["status"] == "PENDING_RESOLUTION", "Evento não deve avançar para RESOLVED após falha")
+	assert(Career.money == initial_money, "Dinheiro do Career não deve ser alterado")
+	assert(Career.energy == initial_energy, "Energia do Career não deve ser alterada")
+	assert(outbox_dict["pending_dispatches"].is_empty() == true, "Outbox deve reverter intents não confirmados")
+	
+	ll.set_safe_mode(false)
+	print("  -> OK!")
+
+func test_interrupted_outbox_reconciliation() -> void:
+	print("[TEST] 7. Reconciliação Pós-Interrupção (Crash) sem Duplicação de Efeitos...")
+	Career.processed_career_tokens.clear()
+	var test_token: String = "tok_crash_reconcile_001"
+	var initial_money: int = 50000
+	var initial_energy: float = 80.0
+	Career.money = initial_money
+	Career.energy = initial_energy
+	
+	# Simula que o Career recebeu e aplicou o intent antes do crash
+	var apply_ok: bool = Career.apply_idempotent_effect(test_token, -2000, -10.0)
+	assert(apply_ok == true, "Aplicação inicial no Career deve ter sucesso")
+	assert(Career.money == 48000, "Dinheiro deve ser 48000 após aplicação")
+	assert(Career.energy == 70.0, "Energia deve ser 70.0 após aplicação")
+	assert(Career.processed_career_tokens.has(test_token), "Token deve estar registrado no receptor")
+	
+	# Simula que o Outbox NÃO salvou a tempo antes do crash (ficou PENDING no disco)
+	var outbox_recovering: Dictionary = {
+		"pending_dispatches": [
+			{
+				"target": "career_effects",
+				"token": test_token,
+				"payload": { "money": -2000, "energy": -10.0 },
+				"status": LifeLegacyOutbox.STATUS_PENDING,
+				"retry_count": 0
+			}
+		]
+	}
+	
+	# Executa reconciliação de boot
+	var reconciled_count: int = LifeLegacyOutbox.reconcile_outbox(outbox_recovering)
+	assert(reconciled_count == 1, "Deve reconciliar 1 despacho")
+	assert(outbox_recovering["pending_dispatches"][0]["status"] == LifeLegacyOutbox.STATUS_COMMITTED, "Status deve ser atualizado para COMMITTED")
+	
+	# Efeitos NÃO devem ter sido aplicados novamente!
+	assert(Career.money == 48000, "Dinheiro NÃO deve sofrer nova dedução de 2000 (deve permanecer 48000)")
+	assert(Career.energy == 70.0, "Energia NÃO deve sofrer nova dedução de 10.0 (deve permanecer 70.0)")
 	
 	print("  -> OK!")

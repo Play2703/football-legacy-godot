@@ -1,6 +1,32 @@
 class_name LifeLegacyOutbox
 extends RefCounted
 
+# Semântica Transacional: At-Least-Once Delivery com Deduplicação no Receptor (Career)
+#
+# 1. Pré-compromisso (Pre-commitment Log):
+#    A intenção de despacho é gerada e gravada no disco como STATUS_PENDING antes de qualquer
+#    chamada ser enviada ao receptor (Career). Se a gravação de pré-compromisso falhar, nenhum
+#    efeito é disparado e o evento permanece pendente.
+#
+# 2. Despacho ao Receptor:
+#    A intenção é despachada via Career.apply_idempotent_effect ou apply_idempotent_social_post.
+#
+# 3. Barreira de Deduplicação do Receptor (Idempotency Barrier):
+#    O receptor (Career) valida se o token da intenção já está presente em seu ledger persistido
+#    (processed_career_tokens ou processed_muro_tokens). Se já constar, retorna true imediatamente
+#    sem reaplicar os efeitos em dinheiro, energia ou muro social.
+#
+# 4. Confirmação do Outbox (COMMITTED):
+#    O intent só tem seu status atualizado para STATUS_COMMITTED no Outbox APÓS a confirmação
+#    estrita de sucesso retornada pelo Career.
+#
+# 5. Tolerância a Crash entre Despacho e Commit:
+#    Caso ocorra uma queda do processo após a confirmação do Career mas antes que o LifeLegacy
+#    persista o status COMMITTED, na reinicialização o mecanismo de boot chamará reconcile_outbox().
+#    A intenção pendente será reenviada; a barreira do Career dedup reconhecerá o token e retornará
+#    true sem efeitos colaterais duplicados, permitindo que o Outbox finalmente seja persistido
+#    como STATUS_COMMITTED com segurança absoluta.
+
 const STATUS_PENDING: String = "PENDING"
 const STATUS_COMMITTED: String = "COMMITTED"
 const STATUS_FAILED: String = "FAILED"
@@ -16,7 +42,7 @@ static func create_intent(target: String, token: String, payload: Dictionary) ->
 		"created_at": Time.get_datetime_string_from_system()
 	}
 
-# Executa o despacho individual garantindo idempotência
+# Executa o despacho individual garantindo idempotência e confirmação estrita
 static func dispatch_intent(intent: Dictionary) -> bool:
 	if intent.get("status", "") == STATUS_COMMITTED:
 		return true
@@ -41,6 +67,7 @@ static func dispatch_intent(intent: Dictionary) -> bool:
 		return false
 
 	if ok:
+		# Marcação COMMITTED ocorre estritamente após a confirmação bem-sucedida do receptor
 		intent["status"] = STATUS_COMMITTED
 		intent["committed_at"] = Time.get_datetime_string_from_system()
 	else:

@@ -78,12 +78,13 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 		push_error("[LifeLegacyEvents] Escolha %s não encontrada no evento %s" % [choice_id, active_event.get("event_id", "")])
 		return false
 
-	active_event["selected_choice_id"] = choice_id
-	active_event["status"] = "RESOLVED"
-	active_event["resolved_at"] = Time.get_datetime_string_from_system()
+	# Snapshots para rollback em caso de falha de persistência no pré-compromisso
+	var snap_active_status: String = active_event.get("status", "PENDING_RESOLUTION")
+	var snap_choice_id: String = active_event.get("selected_choice_id", "")
+	var snap_pending_dispatches: Array = (outbox_data.get("pending_dispatches", []) as Array).duplicate(true)
 
 	var occ_id: String = String(active_event.get("occurrence_id", "occ"))
-	var pending_dispatches: Array = outbox_data.get("pending_dispatches", [])
+	var pending_dispatches: Array = snap_pending_dispatches.duplicate(true)
 
 	# 1. Cria intenção para Career Effects (Dinheiro / Energia)
 	if chosen.has("career_effects"):
@@ -100,20 +101,32 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 		pending_dispatches.append(intent_post)
 
 	outbox_data["pending_dispatches"] = pending_dispatches
+	active_event["selected_choice_id"] = choice_id
+	active_event["status"] = "PRE_COMMITMENT"
 
-	# 3. Aplica alterações de indicadores internos
+	# 3. Pré-compromisso: salva no disco antes do envio ao Career (Intent Log)
+	var pre_saved: bool = ll_manager.save_current_slot()
+	if not pre_saved:
+		# Rollback em memória se o save do pré-compromisso falhar
+		active_event["status"] = snap_active_status
+		active_event["selected_choice_id"] = snap_choice_id
+		outbox_data["pending_dispatches"] = snap_pending_dispatches
+		push_error("[LifeLegacyEvents] Falha ao persistir pré-compromisso do evento no disco. Despacho cancelado.")
+		return false
+
+	# 4. Aplica alterações de indicadores internos
 	if chosen.has("internal_effects"):
 		var in_eff: Dictionary = chosen["internal_effects"]
 		for stat_k in in_eff:
 			var delta: float = float(in_eff[stat_k])
 			ll_manager.apply_stat_change(stat_k, delta, "event:" + String(active_event.get("event_id", "")), occ_id)
 
-	# 4. Pré-compromisso: salva no disco antes do envio (Intent Log)
-	ll_manager.save_current_slot()
-
-	# 5. Despacha ao Career imediatamente
+	# 5. Despacha ao Career imediatamente via Outbox
 	LifeLegacyOutbox.reconcile_outbox(outbox_data)
 
-	# 6. Salva confirmação final
+	# 6. Avança evento para RESOLVED e salva confirmação final
+	active_event["status"] = "RESOLVED"
+	active_event["resolved_at"] = Time.get_datetime_string_from_system()
 	ll_manager.save_current_slot()
+
 	return true
