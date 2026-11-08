@@ -42,6 +42,12 @@ static func create_intent(target: String, token: String, payload: Dictionary) ->
 		"created_at": Time.get_datetime_string_from_system()
 	}
 
+static func _get_career() -> Object:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		return tree.root.get_node_or_null("Career")
+	return null
+
 # Executa o despacho individual garantindo idempotência e confirmação estrita
 static func dispatch_intent(intent: Dictionary) -> bool:
 	if intent.get("status", "") == STATUS_COMMITTED:
@@ -51,16 +57,17 @@ static func dispatch_intent(intent: Dictionary) -> bool:
 	var token: String = String(intent.get("token", ""))
 	var payload: Dictionary = intent.get("payload", {})
 	var ok: bool = false
+	var career = _get_career()
 
 	if target == "career_effects":
 		var delta_money: int = int(payload.get("money", 0))
 		var delta_energy: float = float(payload.get("energy", 0.0))
-		if Career != null:
-			ok = Career.apply_idempotent_effect(token, delta_money, delta_energy)
+		if career != null:
+			ok = career.apply_idempotent_effect(token, delta_money, delta_energy)
 	elif target == "career_social":
 		var post_data: Dictionary = payload.get("post_data", {})
-		if Career != null:
-			ok = Career.apply_idempotent_social_post(token, post_data)
+		if career != null:
+			ok = career.apply_idempotent_social_post(token, post_data)
 	else:
 		push_error("[LifeLegacyOutbox] Destino desconhecido de despacho: %s" % target)
 		intent["status"] = STATUS_FAILED

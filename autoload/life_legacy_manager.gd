@@ -328,6 +328,7 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 		var rolled: Dictionary = LifeLegacyEvents.roll_event(ctx, rng)
 		if not rolled.is_empty():
 			rolled["seed_val"] = seed_val
+			rolled["rolled_seed"] = seed_val
 			rolled["catalog_version"] = cat_v
 			rolled["rng_version"] = rng_v
 			candidate["active_event"] = rolled
@@ -335,7 +336,6 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 				out_event[k] = rolled[k]
 
 func get_active_event() -> Dictionary:
-	return _data.get("active_event", {}).duplicate()
 	return _data.get("active_event", {}).duplicate()
 
 func resolve_active_event(choice_id: String) -> bool:
