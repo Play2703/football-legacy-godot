@@ -230,7 +230,10 @@ func _ready() -> void:
 	if LifeLegacy != null and LifeLegacy.has_signal("life_legacy_loaded"):
 		LifeLegacy.life_legacy_loaded.connect(_on_life_legacy_loaded)
 	if LifeLegacy != null and LifeLegacy.has_signal("life_event_resolved"):
-		LifeLegacy.life_event_resolved.connect(func(_evt_id: String, _choice_id: String) -> void: _refresh())
+		LifeLegacy.life_event_resolved.connect(func(_evt_id: String, _choice_id: String) -> void:
+			if _header != null and is_instance_valid(_header) and _header.has_method("refresh"):
+				_header.refresh()
+		)
 
 
 

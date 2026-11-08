@@ -187,8 +187,9 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 	var cand_stats: Dictionary = candidate.get("stats", {}).duplicate()
 	var cand_hist: Array = candidate.get("stats_history", []).duplicate()
 	var stat_changes_to_emit: Array[Dictionary] = []
-	var s_num: int = GameState.season_num if GameState != null else 1
-	var s_day: int = GameState.season_day if GameState != null else 0
+	var gs = _get_game_state()
+	var s_num: int = gs.season_num if (gs != null and "season_num" in gs) else 1
+	var s_day: int = gs.season_day if (gs != null and "season_day" in gs) else 0
 
 	var cand_event: Dictionary = active_event.duplicate(true)
 	var was_internal_applied: bool = active_event.get("internal_effects_applied", false)
@@ -256,3 +257,9 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 			ll_manager.life_legacy_stat_changed.emit(sc["stat_id"], sc["old_val"], sc["new_val"], sc["reason"])
 
 	return true
+
+static func _get_game_state() -> Object:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		return tree.root.get_node_or_null("GameState")
+	return null

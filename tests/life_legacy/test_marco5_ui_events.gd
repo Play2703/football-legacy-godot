@@ -230,6 +230,15 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 	assert(file_data_pre["data"]["active_event"]["status"] == "PENDING_RESOLUTION", "Evento gerado deve estar persistido no disco")
 
 	# 4. Abre a cena REAL ui/career_hub.tscn e confere instanciação automática do modal
+	if Career != null:
+		Career.pending_ceremonies.clear()
+		Career.pending_summary = {}
+		Career.pending_decision = ""
+		Career._market_settled = true
+		Career._rehab_debido = -1
+		Career.nat_retired = true
+		Career.retired = false
+
 	var hub_scene = load("res://ui/career_hub.tscn")
 	assert(hub_scene != null, "Cena ui/career_hub.tscn deve ser carregável")
 	var hub = hub_scene.instantiate()
