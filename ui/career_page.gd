@@ -11204,6 +11204,9 @@ func _page_noticias() -> void:
 				_wnews_elige("redes"))
 		MensajesTira.build_retrato(self, app, w)
 		return
+	if _wnews_scope == "vida":
+		Celular.monta_minha_vida(app, w)
+		return
 	if has_meta("redes_todas"):
 		remove_meta("redes_todas")
 	if Celular.redes_pendiente():
@@ -11242,6 +11245,8 @@ func _ancho_contenido_retrato() -> float:
 
 
 func _wnews_scope_text() -> String:
+	if _wnews_scope == "vida":
+		return "MINHA VIDA"
 	if _wnews_scope == "redes":
 		return I18n.t("TUS REDES")
 	if _wnews_scope == "mensajes":
@@ -11912,6 +11917,9 @@ func _page_noticias_tumbada() -> void:
 				_wnews_elige("redes"))
 		MensajesTira.build_tumbada(self, app, w)
 		return
+	if _wnews_scope == "vida":
+		Celular.monta_minha_vida(app, w)
+		return
 
 
 	if Celular.redes_pendiente():
@@ -12447,8 +12455,8 @@ func _wnews_default_scope_tumbado() -> String:
 
 
 func _wnews_ambitos() -> Array:
-	return ["liga", "mundo", "redes", "mensajes"] if Career.free_agent \
-			else ["club", "liga", "mundo", "redes", "mensajes"]
+	return ["liga", "mundo", "redes", "mensajes", "vida"] if Career.free_agent \
+			else ["club", "liga", "mundo", "redes", "mensajes", "vida"]
 
 
 
@@ -12465,6 +12473,8 @@ func _wnews_marcas() -> Dictionary:
 
 
 func _wnews_ambito_texto(sc: String) -> String:
+	if sc == "vida":
+		return "MINHA VIDA"
 	if sc == "redes":
 		return I18n.t("TUS REDES")
 	if sc == "mensajes":

@@ -103,6 +103,8 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 	outbox_data["pending_dispatches"] = pending_dispatches
 	active_event["selected_choice_id"] = choice_id
 	active_event["status"] = "PRE_COMMITMENT"
+	ll_manager.get_data()["active_event"] = active_event
+	ll_manager.get_data()["outbox"] = outbox_data
 
 	# 3. Pré-compromisso: salva no disco antes do envio ao Career (Intent Log)
 	var pre_saved: bool = ll_manager.save_current_slot()
@@ -111,6 +113,8 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 		active_event["status"] = snap_active_status
 		active_event["selected_choice_id"] = snap_choice_id
 		outbox_data["pending_dispatches"] = snap_pending_dispatches
+		ll_manager.get_data()["active_event"] = active_event
+		ll_manager.get_data()["outbox"] = outbox_data
 		push_error("[LifeLegacyEvents] Falha ao persistir pré-compromisso do evento no disco. Despacho cancelado.")
 		return false
 
@@ -127,6 +131,8 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 	# 6. Avança evento para RESOLVED e salva confirmação final
 	active_event["status"] = "RESOLVED"
 	active_event["resolved_at"] = Time.get_datetime_string_from_system()
+	ll_manager.get_data()["active_event"] = active_event
+	ll_manager.get_data()["outbox"] = outbox_data
 	ll_manager.save_current_slot()
 
 	return true

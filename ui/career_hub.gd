@@ -225,6 +225,8 @@ func _ready() -> void:
 
 
 	Settings.marca_hub(true)
+	if LifeLegacy != null and LifeLegacy.has_signal("life_event_ready"):
+		LifeLegacy.life_event_ready.connect(func(_evt: Dictionary) -> void: _present_life_legacy_event())
 
 
 
@@ -474,11 +476,12 @@ func _ready() -> void:
 
 
 	var showed_ach: bool = false if salta else _present_achievements()
+	var showed_ll: bool = false if salta else _present_life_legacy_event()
 
 
 
 
-	var hub_ocupado: bool =(hay_resumen or hay_ficha or showed_ach
+	var hub_ocupado: bool =(hay_resumen or hay_ficha or showed_ach or showed_ll
 		or _decision_pendiente())
 	var tour: bool = _maybe_start_hub_tour(hub_ocupado)
 
@@ -523,6 +526,23 @@ func _present_achievements() -> bool:
 	var popup: Control = ACHIEVEMENT_POPUP.new()
 	add_child(popup)
 	popup.setup(rows)
+	return true
+
+
+func _present_life_legacy_event() -> bool:
+	if Career != null and Career.retired:
+		return false
+	if LifeLegacy == null:
+		return false
+	var act_evt: Dictionary = LifeLegacy.get_active_event()
+	if act_evt.is_empty() or act_evt.get("status", "") != "PENDING_RESOLUTION":
+		return false
+	var modal_script = load("res://features/life_legacy/ui/life_legacy_event_modal.gd")
+	if modal_script == null:
+		return false
+	var modal: Control = modal_script.new()
+	add_child(modal)
+	modal.setup_event(act_evt)
 	return true
 
 

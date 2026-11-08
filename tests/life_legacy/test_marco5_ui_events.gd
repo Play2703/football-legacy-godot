@@ -27,6 +27,7 @@ func _ready() -> void:
 	test_festa_vespera_derby_structure_and_resolution()
 	test_event_modal_ui()
 	test_celular_vida_dashboard_ui()
+	test_end_to_end_advance_event_modal_celular()
 	
 	print("--- TODOS OS TESTES DO MARCO 5 FORAM APROVADOS COM SUCESSO! ---")
 	get_tree().quit(0)
@@ -170,6 +171,57 @@ func test_celular_vida_dashboard_ui() -> void:
 	
 	container.queue_free()
 	print("  -> App 'Minha Vida' no Celular renderiza os 6 indicadores, família e dinastia perfeitamente.")
+
+func test_end_to_end_advance_event_modal_celular() -> void:
+	print("[Teste 5] Teste de Integração Fim a Fim (Avanço -> Evento -> Modal -> Resolução -> Smartphone)...")
+	var ll = LifeLegacy
+	GameState.season_num = 1
+	GameState.season_day = 0
+	Career.processed_career_tokens.clear()
+	Career.processed_muro_tokens.clear()
+	LifeLegacyPersistence.save_slot_data(0, LifeLegacyState.get_default_profile(1, 0))
+	ll.set_safe_mode(false)
+	ll.reload_slot(0)
+	
+	LifeLegacyCatalogoEventos.registrar_todos()
+	
+	# 1. Simula avanço de partida semanal no GameState
+	GameState.season_num = 1
+	GameState.season_day = 1
+	GameState.career_updated.emit()
+	
+	# 2. Confere que um evento pendente foi gerado
+	var active_evt: Dictionary = ll.get_active_event()
+	assert(not active_evt.is_empty(), "Avanço semanal deve gerar um evento")
+	assert(active_evt.get("status", "") == "PENDING_RESOLUTION", "Evento gerado deve estar em PENDING_RESOLUTION")
+	
+	# 3. Simula exibição do LifeLegacyEventModal no CareerHub
+	var modal: LifeLegacyEventModal = LifeLegacyEventModal.new()
+	add_child(modal)
+	modal.setup_event(active_evt)
+	
+	var buttons: Array[Button] = []
+	_collect_buttons(modal, buttons)
+	assert(buttons.size() >= 2, "Modal deve renderizar botões para as opções do evento gerado")
+	
+	# 4. Jogador escolhe e resolve através da UI
+	buttons[0].pressed.emit()
+	
+	# 5. Confere resolução do evento
+	var resolved_evt: Dictionary = ll.get_active_event()
+	assert(resolved_evt.get("status", "") == "RESOLVED", "Evento ativo deve transitar para RESOLVED")
+	
+	# 6. Renderiza ecossistema do celular in-game e valida persistência visual no app 'Minha Vida'
+	var phone_box: VBoxContainer = VBoxContainer.new()
+	add_child(phone_box)
+	CelularScript.monta_minha_vida(phone_box, 300.0)
+	
+	var phone_labels: Array[String] = []
+	_collect_labels(phone_box, phone_labels)
+	assert(phone_labels.has("INDICADORES LIFE & LEGACY"), "Smartphone deve exibir dashboard atualizado")
+	
+	phone_box.queue_free()
+	print("  -> Integração fim a fim homologada com sucesso absoluto!")
 
 func _collect_labels(node: Node, acc: Array[String]) -> void:
 	if node is Label:
