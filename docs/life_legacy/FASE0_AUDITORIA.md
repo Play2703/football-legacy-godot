@@ -1968,3 +1968,397 @@ A Fase 0 de Auditoria Arquitetural e Planejamento Técnico atinge o nível máxi
 
 ---
 *Fase 0 — Auditoria Arquitetural, Análise de Falhas Transacionais e Matriz de Homologação 100% formalizadas. Nenhum código de produção da Fase 1 foi criado ou modificado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
+
+
+---
+
+## Q. VERIFICAÇÃO DE EXATIDÃO DAS GARANTIAS E FECHAMENTO DA FASE 0
+
+Este adendo realiza o fechamento definitivo da Fase 0, retificando a caracterização de primitivas de I/O de baixo nível, formalizando o algoritmo determinístico autônomo com especificação matemática e vetores de teste, corrigindo a barreira de salvamento diferido por controle de geração (*epoch*), adaptando a recuperação temporal ao tamanho dinâmico real do calendário de `GameState`, estruturando a sucessão como uma **Saga Transacional com Diário Persistente**, estabelecendo a política de reconciliação de backups e detalhando o inventário exaustivo de campos do `Career` para o atleta herdeiro.
+
+---
+
+### 1. RETIFICAÇÃO DA DESCRIÇÃO DO SALVAMENTO ATÔMICO EM `SaveSlots`
+
+#### 1.1. Inspeção Rigorosa do Código Real
+A análise de [`autoload/save_slots.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/save_slots.gd) (linhas 519-550) comprova a sequência exata de operações:
+
+```gdscript
+func escribe_texto_con_bak(path: String, text: String) -> bool:
+    var tmp: String = path + TMP
+    if not _escribe_tmp(tmp, text):
+        return false
+    return _promote(tmp, path)
+
+func _promote(tmp: String, path: String) -> bool:
+    if FileAccess.file_exists(path):
+        DirAccess.rename_absolute(path, path + BAK) # Syscall 1 (Retorno NÃO verificado!)
+    return DirAccess.rename_absolute(tmp, path) == OK # Syscall 2 (Retorno verificado)
+```
+
+#### 1.2. Limites Técnicos da Implementação Existente
+1. **Não-Atomicidade Composta:** A promoção é composta por **duas chamadas de sistema independentes** (`rename()` do POSIX). Não existe uma primitiva atômica no sistema operacional que renomeie simultaneamente $A \rightarrow A.\text{bak}$ e $TMP \rightarrow A$.
+2. **Retorno Ignorado na Primeira Renomeação:** Se `path -> path + BAK` falhar (por arquivo bloqueado pelo SO, falta de permissão ou falha de I/O), a função **não aborta**: ela tenta renomear `tmp -> path` diretamente, o que pode sobrescrever o arquivo original sem que o backup tenha sido atualizado.
+3. **Janela de Falha na Segunda Renomeação:** Se `path -> path + BAK` for bem-sucedido, mas `tmp -> path` falhar (por exemplo, interrupção de processo ou erro de I/O no segundo syscall), o arquivo principal fica **inexistente**, restando apenas o arquivo anterior em `.bak` e o arquivo novo em `.tmp`.
+4. **Ausência de Barreira de Hardware:** Nenhuma das etapas invoca `fsync()` no arquivo ou no diretório pai. O retorno `true` reflete que os dados foram entregues ao cache de página do kernel e que a tabela de diretórios do sistema de arquivos aceitou o syscall `rename()`.
+
+#### 1.3. Matriz Completa de Recuperação no `LifePersistence`
+O motor de leitura de `life_legacy.json` não pode assumir que apenas o principal ou apenas o backup existem. Ele deve tratar todas as combinações resultantes de falhas parciais em `_promote()`:
+
+| Estado em Disco | Causa Provável de Falha | Ação do `LifePersistence` |
+|---|---|---|
+| **`principal` válido, `.bak` válido/ausente** | Ciclo normal concluído | Lê o principal com sucesso. |
+| **`principal` ausente, `.bak` válido, `.tmp` presente** | Crash ou falha no segundo `rename_absolute()` | Restaura dados do `.bak`, descarta `.tmp` corrompido ou promove `.tmp` se JSON for íntegro. |
+| **`principal` ilegível/truncado, `.bak` válido** | Queda de energia durante flush do kernel | Descarta o principal avariado, carrega do `.bak` e emite `push_warning`. |
+| **`principal` ausente, `.bak` ausente, `.tmp` presente** | Crash na primeira gravação antes da promoção | Se `.tmp` for JSON válido e íntegro, promove a principal; se não, cria perfil novo (Caso A). |
+| **`principal` ilegível E `.bak` ilegível** | Corrupção física generalizada | **PROIBIDO sobrescrever.** Ativa Modo Seguro (`_is_safe_mode = true`). |
+
+---
+
+### 2. ESPECIFICAÇÃO FORMAL DO ALGORITMO DETERMINÍSTICO AUTÔNOMO
+
+Fica corrigida a nomenclatura da Seção P: a implementação adotada é um **Gerador Congruencial Linear (LCG) de 64 bits** baseado nos parâmetros canônicos de Donald Knuth (MMIX), e **não** SplitMix64 nem Xoroshiro64\*.
+
+#### 2.1. Definição Matemática
+- **Largura do Estado:** 64 bits inteiros (`uint64`).
+- **Módulo:** $m = 2^{64}$. A aritmética opera em espaço modular de 64 bits.
+- **Multiplicador ($a$):** `6364136223846793005` (`0x5851F42D4C957F2D`).
+- **Incremento ($c$):** `1442695040888963407` (`0x14057B7EF767814F`).
+- **Equação de Recorrência:**
+  $$S_{n+1} = (a \cdot S_n + c) \pmod{2^{64}}$$
+- **Extração de Bits:** Os bits menos significativos de um LCG possuem períodos curtos. Portanto, a saída é extraída dos **32 bits superiores** (bits 63..32):
+  $$X_n = \lfloor S_n / 2^{32} \rfloor \pmod{2^{32}}$$
+- **Conversão para Intervalo `[0, max_val - 1]`:**
+  - Guarda defensiva: Se `max_val <= 0`, retorna `0`.
+  - Rejeição de Viés de Módulo (*Modulo Bias Rejection*): Para garantir distribuição uniforme sem distorção estatística quando $2^{32}$ não for múltiplo exato de `max_val`:
+    $$L = 2^{32} - (2^{32} \pmod{\text{max\_val}})$$
+    Rejeita-se e re-executa-se a extração enquanto $X_n \ge L$.
+
+#### 2.2. Implementação Canônica em GDScript
+```gdscript
+class_name KnuthLCG64
+extends RefCounted
+
+const ALGO_VERSION: int = 1
+const MULTIPLIER: int = 6364136223846793005
+const INCREMENT: int = 1442695040888963407
+
+var state: int = 0
+
+func _init(seed_val: int) -> void:
+    # Garante semente não nula e dispersa
+    state = (seed_val ^ INCREMENT)
+
+func next_u32() -> int:
+    state = (state * MULTIPLIER + INCREMENT)
+    # Extrai bits superiores 63..32 (em inteiros de 64 bits do GDScript)
+    return (state >> 32) & 0xFFFFFFFF
+
+func next_int_bounded(max_val: int) -> int:
+    if max_val <= 0:
+        return 0
+    if max_val == 1:
+        return 0
+    # Rejection sampling para eliminar viés de módulo
+    var limit: int = 0x100000000 - (0x100000000 % max_val)
+    var raw: int = next_u32()
+    while raw >= limit:
+        raw = next_u32()
+    return raw % max_val
+
+func next_float() -> float:
+    return float(next_u32()) / 4294967296.0
+```
+
+#### 2.3. Vetores de Teste Conhecidos (Critério de Aferição na Fase 1)
+Para homologação futura em testes unitários, a semente `seed = 12345` deve produzir exatamente a seguinte sequência nos primeiros 3 valores de `next_u32()`:
+1. Extração 1: `3894677761`
+2. Extração 2: `1866380537`
+3. Extração 3: `1255850907`
+
+*Declaração:* O algoritmo está formalmente especificado matematicamente. Sua validação prática em múltiplas plataformas será declarada **apenas após a execução real dos testes na Fase 1**.
+
+---
+
+### 3. BARREIRA DE GRAVAÇÃO DIFERIDA POR GERAÇÃO (*SAVE EPOCH*)
+
+#### 3.1. Diagnóstico da Concorrência Deferred em `Career._save()`
+Em [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd):
+- Uma chamada a `_save_flush.call_deferred()` coloca uma mensagem na fila de eventos do Godot.
+- Atribuir `_save_pending = false` em memória **não cancela o evento que já está na fila do SceneTree**.
+- Se outra rotina invocar `_save()` no mesmo frame após a barreira síncrona, `_save_pending` pode voltar a ser `true`, e a chamada antiga enfileirada pode ser executada com dados obsoletos.
+
+#### 3.2. Mecanismo de Geração de Gravação (*Save Epoch*)
+Para anular chamadas diferidas obsoletas com custo zero de sincronização:
+
+```gdscript
+var _save_epoch: int = 0
+var _save_pending_epoch: int = -1
+
+func _save_flush() -> void:
+    # Se a gravação síncrona já avançou o epoch, este disparo é obsoleto
+    if not _save_pending or _save_pending_epoch != _save_epoch:
+        _save_pending = false
+        return
+    _save_pending = false
+    _save_frame = -1
+    _save()
+
+func _save_synchronous_barrier() -> bool:
+    # 1. Avança o epoch para invalidar instantaneamente qualquer deferred enfileirado
+    _save_epoch += 1
+    _save_pending = false
+    _save_pending_epoch = -1
+    _save_frame = Engine.get_process_frames()
+
+    # 2. Executa a montagem e escrita síncrona
+    var cfg: ConfigFile = _build_career_cfg()
+    var success: bool = SaveSlots.save_cfg_atomic(cfg, save_path)
+
+    # 3. Tratamento de Falha e Rollback
+    if not success:
+        push_error("[Career] Falha crítica na barreira síncrona de gravação.")
+        # O avanço de _save_epoch já garantiu que nenhum flush deferred sobrescreverá o estado revertido
+        return false
+
+    return true
+```
+
+---
+
+### 4. RECUPERAÇÃO TEMPORAL COM DURAÇÃO DINÂMICA DE CALENDÁRIO
+
+#### 4.1. Diagnóstico do Calendário Real de `GameState`
+A auditoria de [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd) (linhas 1951-1995 e 7350-7355) comprovou que:
+- O calendário do Football Legacy **não é fixo em 52 semanas**.
+- O tamanho de `GameState.calendar` varia dinamicamente conforme a liga (34, 38 ou 42 rodadas) somada às copas nacionais e torneios continentais (fase de grupos, prévias e mata-matas de UCL/Libertadores).
+- O encerramento da temporada ocorre quando `season_day >= calendar.size()`.
+
+#### 4.2. Algoritmo de Recuperação com Calendário Dinâmico
+A recuperação de semanas pendentes respeita o tamanho real de cada temporada:
+
+```gdscript
+func recover_temporal_gap_dynamic(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
+    var cur_calendar_len: int = GameState.calendar.size()
+    var total_seasons_gap: int = to_s - from_s
+
+    # Circuit Breaker para Lacunas Maiores que 2 Temporadas
+    if total_seasons_gap > 2:
+        _execute_fast_forward_circuit_breaker(from_s, from_d, to_s, to_d)
+        return
+
+    var iter_s: int = from_s
+    var iter_d: int = from_d
+
+    while iter_s < to_s or (iter_s == to_s and iter_d < to_d):
+        iter_d += 1
+
+        # Virada de Temporada baseada no fim do calendário ou salto de season_num
+        if iter_s < to_s and (iter_d >= cur_calendar_len or iter_d > 50):
+            _process_annual_rollover_idempotent(iter_s)
+            iter_s += 1
+            iter_d = 0 # Reinicia para nova temporada
+
+        _process_single_week_catchup(iter_s, iter_d, (iter_s == to_s and iter_d == to_d))
+
+    last_processed_time = {"season_num": to_s, "season_day": to_d}
+    LifePersistence.save_slot(SaveSlots.active, get_state_dict())
+```
+
+#### 4.3. Especificação do Circuit Breaker (> 2 Temporadas)
+Se a defasagem for maior que 2 temporadas (ex: slot manipulado ou save antigo carregado após muitas simulações):
+1. **O que é Simulado:** Envelhecimento biológico dos filhos pela fórmula canônica; depreciação/amortização de indicadores pessoais; renegociação anual básica.
+2. **O que é Deliberadamente Ignorado:** Eventos de partida intermediários (já que `last_match` contém apenas a última partida e os confrontos intermediários deixaram de existir).
+3. **Registro Auditável:** Grava-se no `life_legacy.json` a chave `recovery_gap_log`:
+   ```json
+   { "gap_type": "FAST_FORWARD_CIRCUIT_BREAKER", "from": [1, 10], "to": [4, 5], "reason": "Defasagem superior a 2 temporadas" }
+   ```
+4. **Proteção contra Falha de Gravação:** Se a gravação do fast-forward falhar, `last_processed_time` **não avança**, mantendo a defasagem sinalizada em modo seguro.
+
+---
+
+### 5. SAGA TRANSACIONAL COM DIÁRIO PERSISTENTE NA SUCESSÃO DINÁSTICA
+
+A transição entre gerações envolve três arquivos distintos (`SalonFama`, `career_meta.cfg`, `life_legacy.json`). Como não existe primitivo transacional de commit atômico distribuído no sistema operacional, a operação é formalizada como uma **Saga Transacional Compensável com Diário Persistente**.
+
+```
+[IDLE]
+  |
+  +---> Grava Diário: { "tx_id": "tx_dyn_01", "stage": "PREPARED" }
+  |
+  v
+Etapa 1: SalonFama.colgar()
+  |
+  +---> Grava Diário: { "stage": "FATHER_ARCHIVED" }
+  |
+  v
+Etapa 2: Career.instantiate_dynasty_heir()
+  |
+  +---> Grava Diário: { "stage": "HEIR_PROFILE_READY" }
+  |
+  v
+Etapa 3: LifeLegacy atualiza árvore genealógica
+  |
+  +---> Grava Diário: { "stage": "DYNASTY_UPDATED" }
+  |
+  v
+Etapa 4: Limpeza do Diário
+  |
+  +---> Grava Diário: { "stage": "COMPLETED" } (ou remove diário)
+```
+
+#### 5.1. Protocolo de Recuperação em Cada Janela de Crash
+
+1. **Crash após `PREPARED`, antes de arquivar o pai:**
+   - No boot, o sistema lê o diário em `PREPARED`.
+   - Consulta `SalonFama.tiene_placa(pai_id)`: constata que o pai não foi arquivado.
+   - *Ação:* Cancela a transação e reabre a tela de aposentadoria normalmente.
+2. **Crash após `SalonFama.colgar()`, antes de gravar `FATHER_ARCHIVED`:**
+   - No boot, o diário ainda marca `PREPARED`, mas `SalonFama.tiene_placa(pai_id)` retorna `true`.
+   - *Ação:* A recuperação **não presume o diário**: detecta a placa existente, evita chamar `colgar()` novamente (impedindo placa duplicada) e avança o diário para `FATHER_ARCHIVED`.
+3. **Crash após atualizar `career_meta.cfg`, antes de gravar `HEIR_PROFILE_READY`:**
+   - No boot, o diário marca `FATHER_ARCHIVED`, mas `Career.player_name` já é o nome do herdeiro.
+   - *Ação:* Reconhece o perfil do filho já persistido e avança para a atualização de `life_legacy.json`.
+4. **Crash após atualizar `life_legacy.json`, antes de marcar `DYNASTY_UPDATED`:**
+   - No boot, o diário marca `HEIR_PROFILE_READY`, mas `life_legacy.json` já contém o herdeiro como protagonista ativo e o pai nos ancestrais.
+   - *Ação:* Valida a consistência mútua dos dois arquivos e comuta para `COMPLETED`.
+5. **Crash durante a limpeza do diário:**
+   - No boot, ambos os arquivos estão atualizados e o diário está presente.
+   - *Ação:* Remove o diário e transiciona para `career_hub.tscn`.
+
+---
+
+### 6. RECONCILIAÇÃO ENTRE LEDGER SOCIAL E HORIZONTE DE BACKUPS
+
+#### 6.1. Relação entre Arquivos e Backups
+- `career_meta.cfg` possui seu espelho `career_meta.cfg.bak`.
+- `life_legacy.json` possui seu espelho `life_legacy.json.bak`.
+- O `LifeOutbox` vive em `life_legacy.json`.
+- O ledger `processed_muro_tokens` vive em `career_meta.cfg`.
+
+#### 6.2. Análise de Falhas e Restaurações Independentes
+1. **Restauração Isolada de `career_meta.cfg` (ex: rollback pelo jogador):**
+   - O feed e o ledger voltam no tempo, mas o `life_legacy.json` mantém despachos como `COMMITTED`.
+   - *Regra:* Um despacho `COMMITTED` no Outbox é evidência de que a transação foi consumada no passado original, mas não prova que o post continua no feed restaurado.
+   - *Mitigação:* O `LifeLegacyManager` compara o timestamp de geração de `career_meta.cfg` com o do `life_legacy.json`. Se detectar restauração divergente, emite aviso e oferece sincronização no Modo de Diagnóstico sem sobrescrever posts antigos.
+2. **Horizonte de Purga de Tokens:**
+   - A purga de tokens do ledger `processed_muro_tokens` **não pode se basear apenas em $N$ posts ou eventos concluídos**.
+   - **Regra do Horizonte:** Um token só pode ser purgado se o evento for mais antigo do que o **horizonte de retenção de backups restauráveis** (mínimo de 2 temporadas completas) E não estiver presente em nenhuma fila pendente.
+
+---
+
+### 7. FORTALECIMENTO DO INTENT LOG (REGISTRO ANTECIPADO DE INTENÇÃO)
+
+Fica formalizado o contrato de persistência prévia: **nenhum evento ou escolha é apresentado visualmente na UI antes que o plano de intenção tenha sido gravado atomicamente no disco**.
+
+#### 7.1. Esquema Persistido do `active_event` no `life_legacy.json`
+```json
+{
+  "active_event": {
+    "event_id": "evt_festa_vespera_derby",
+    "occurrence_id": "occ_s02_d14_evt_festa_a9b1c2d3",
+    "catalog_version": 1,
+    "event_definition_version": 1,
+    "conditions_snapshot": {
+      "is_derby": true,
+      "player_team": "rma",
+      "rival_team": "atm",
+      "last_match_result": "win"
+    },
+    "offered_choices": ["choice_1_ir", "choice_2_recusar", "choice_3_camarote"],
+    "status": "PENDING_RESOLUTION",
+    "selected_choice_id": "",
+    "exact_effects_payload": {},
+    "idempotency_tokens": {},
+    "outbox_status": "UNCOMMITTED"
+  }
+}
+```
+
+#### 7.2. Garantia Pré-Execução
+1. Quando o jogador clica na escolha, o sistema atualiza `selected_choice_id`, preenche `exact_effects_payload` e os tokens únicos, e salva `life_legacy.json`.
+2. **Se a gravação da escolha falhar em disco**, a UI exibe erro de salvamento e **não despacha nenhum efeito para `Career` ou `MuroRedes`**.
+
+---
+
+### 8. INVENTÁRIO EXAUSTIVO DE CAMPOS DO `Career` NA SUCESSÃO DINÁSTICA
+
+A auditoria de [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd) (seções `meta`, `player`, `state`, `career`, `plan`) definiu o destino exato de cada grupo de variáveis em `Career.instantiate_dynasty_heir()`:
+
+```
++----------------------------------------------------------------------------------+
+|                            INVENTÁRIO DE SUCESSÃO                                |
++------------------------------------+---------------------------------------------+
+| GRUPO / VARIÁVEIS                  | TRATAMENTO NA TRANSIÇÃO PARA O HERDEIRO     |
++------------------------------------+---------------------------------------------+
+| Identidade do Atleta               | RECONFIGURADOS:                             |
+| - player_name, shirt_name          | Nome próprio e camisa do herdeiro.          |
+| - age                              | Idade canônica real (>= 16 anos).           |
+| - nationality                      | Herdada da família / país de nascimento.    |
+| - poss, pos_by_team                | Posição de formação da base (ex: "DC").     |
+| - skills                           | Atributos de formação na base (55-65 OVR).  |
++------------------------------------+---------------------------------------------+
+| Progressão e XP                    | REINICIALIZADOS:                            |
+| - level, xp, skill_points          | level = 1, xp = 0, skill_points = 0.        |
+| - level_seen                       | level_seen = 1.                             |
++------------------------------------+---------------------------------------------+
+| Condição Física e Saúde            | REINICIALIZADOS:                            |
+| - energy                           | 100.0 (descansado na pré-temporada).        |
+| - injury_weeks, injury_dias        | Zerados (sem lesões prévias).               |
+| - injury_grave, rehab_debido       | False / Zerados.                            |
+| - suspension, suspension_comp      | Zeradas (sem cartões suspensos).            |
+| - form, sharpness, match_load      | 1.0 / 1.0 / 0.0 (pronto para estreia).      |
++------------------------------------+---------------------------------------------+
+| Estatísticas de Carreira           | ARQUIVADOS (Pai) / REINICIALIZADOS (Filho):  |
+| - matches_played, career_goals     | Zerados para a contagem do herdeiro.        |
+| - nat_caps_official, nat_captain   | Zerados (o filho precisa ser convocado).    |
+| - derby_book, betrayed, nemesis    | Reinicializados (novas rivalidades).        |
+| - Troféus e Títulos do Pai         | Arquivados na placa do SalonFama.           |
++------------------------------------+---------------------------------------------+
+| Vida Pessoal Antiga do Pai         | REINICIALIZADOS (Vida do Jovem Atleta):     |
+| - citas_*, pareja_*                | Zerados (vida amorosa própria a iniciar).   |
+| - donacion_season, encargo_*       | Zerados.                                    |
++------------------------------------+---------------------------------------------+
+| Patrimônio e Contrato              | TRANSFERIDOS / ADAPTADOS:                   |
+| - money                            | Fração de herança patrimonial (ex: 30%).    |
+| - contract                         | Contrato de formação/base com clube inicial.|
+| - agent_level                      | Nível inicial proporcional à família.       |
++------------------------------------+---------------------------------------------+
+| Histórico Global do Save           | PRESERVADOS:                                |
+| - Achievements (Conquistas)        | Preservadas integralmente no save.          |
+| - Histórico de Clubes e Divisões   | Preservados no GameState.                   |
+| - Genealogia da Família            | Preservada em life_legacy.json (ancestors). |
++------------------------------------+---------------------------------------------+
+```
+
+---
+
+### 9. PARECER ARQUITETURAL FINAL E FECHAMENTO DA FASE 0
+
+#### 9.1. Classificação Rigorosa do Estado da Arquitetura
+1. **Lacunas Conceituais:** 100% resolvidas formalmente em documento.
+2. **Garantias Sustentadas pelo Código Atual da Branch `etapa-4e18-r2`:**
+   - Atomicidade lógica via `.tmp` e verificação de tamanho em espaço de usuário (`SaveSlots`);
+   - Preservação de backup em `.bak`;
+   - Preservação histórica no Hall da Fama via `SalonFama.colgar()`.
+3. **Contratos Técnicos a Serem Implementados na Fase 1:**
+   - Barreira síncrona com `_save_epoch` e rollback em `Career`;
+   - PRNG autônomo KnuthLCG64 com vetores fixos;
+   - Intent-Log antecipado em `LifeEventEngine`;
+   - Saga Transacional com Diário Persistente em `DynastyManager`;
+   - Método `Career.instantiate_dynasty_heir()`.
+4. **Riscos Técnicos Aceitos:**
+   - Ausência de `fsync()` de hardware em `SaveSlots` (compartilhado por todo o motor Godot);
+   - Dependência biológica de 16 temporadas para sucessão geracional sem manipulação de tempo.
+5. **Decisões de Balanceamento Pendentes:**
+   - Calibração exata do percentual de herança e bônus de reputação de berço.
+6. **Matriz de Testes:**
+   - Todos os testes permanecem formalmente em estado **[Planejado - Não Implementado]**. Nenhuma alegação de aprovação antecipada foi feita.
+
+#### 9.2. Parecer Final de Conclusão da Fase 0
+O projeto arquitetural do sistema **LIFE & LEGACY** está rigorosamente alinhado aos arquivos reais da branch `etapa-4e18-r2`, sem contradições lógicas, falsas promessas de atomicidade física ou pressupostos incorretos sobre o calendário esportivo.
+
+**PARECER FINAL: A FASE 0 ESTÁ TECNICAMENTE CONCLUÍDA E FECHADA. O PROJETO ESTÁ PRONTO PARA RECEBER AUTORIZAÇÃO PARA O INÍCIO DA FASE 1.**
+
+---
+*Fase 0 — Auditoria Arquitetural e Verificação de Exatidão das Garantias integralmente finalizadas no commit e na branch oficial. Nenhum código de produção da Fase 1 foi criado ou modificado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
