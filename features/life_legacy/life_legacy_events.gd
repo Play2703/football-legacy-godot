@@ -86,6 +86,13 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 		push_error("[LifeLegacyEvents] Escolha %s não encontrada no evento %s" % [choice_id, active_event.get("event_id", "")])
 		return false
 
+	if active_event.get("status", "") == "PRE_COMMITMENT":
+		if active_event.get("selected_choice_id", "") == choice_id:
+			return recover_precommitted_event(active_event, outbox_data, ll_manager)
+		else:
+			push_error("[LifeLegacyEvents] Evento já pré-comprometido com a escolha %s. Não é permitido alterar a escolha." % active_event.get("selected_choice_id", ""))
+			return false
+
 	var occ_id: String = String(active_event.get("occurrence_id", "occ"))
 
 	# --- ETAPA A: Pré-compromisso (Pre-commitment) ---
@@ -175,25 +182,77 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 		push_warning("[LifeLegacyEvents] [Recovery] Nem todas as intenções foram confirmadas pelo receptor. Evento permanece em PRE_COMMITMENT.")
 		return false
 
-	# 3. Aplica indicadores internos apenas uma vez
-	if not active_event.get("internal_effects_applied", false):
+	# 3. Prepara indicadores internos e resolução em candidato transacional isolado
+	var candidate: Dictionary = ll_manager.get_data().duplicate(true)
+	var cand_stats: Dictionary = candidate.get("stats", {}).duplicate()
+	var cand_hist: Array = candidate.get("stats_history", []).duplicate()
+	var stat_changes_to_emit: Array[Dictionary] = []
+	var s_num: int = GameState.season_num if GameState != null else 1
+	var s_day: int = GameState.season_day if GameState != null else 0
+
+	var cand_event: Dictionary = active_event.duplicate(true)
+	var was_internal_applied: bool = active_event.get("internal_effects_applied", false)
+
+	if not was_internal_applied:
 		if chosen.has("internal_effects"):
 			var in_eff: Dictionary = chosen["internal_effects"]
 			for stat_k in in_eff:
+				if not LifeLegacyState.STAT_KEYS.has(stat_k):
+					continue
 				var delta: float = float(in_eff[stat_k])
-				ll_manager.apply_stat_change(stat_k, delta, "event:" + String(active_event.get("event_id", "")), occ_id)
-		active_event["internal_effects_applied"] = true
+				var old_v: float = float(cand_stats.get(stat_k, LifeLegacyState.STAT_DEFAULTS.get(stat_k, 50.0)))
+				var new_v: float = LifeLegacyState.clamp_stat(stat_k, old_v + delta)
+				cand_stats[stat_k] = new_v
+				cand_hist.append({
+					"stat_id": stat_k,
+					"old_val": old_v,
+					"new_val": new_v,
+					"delta": delta,
+					"reason": "event:" + String(active_event.get("event_id", "")),
+					"occurrence_id": occ_id,
+					"season_num": s_num,
+					"season_day": s_day
+				})
+				stat_changes_to_emit.append({
+					"stat_id": stat_k,
+					"old_val": old_v,
+					"new_val": new_v,
+					"delta": delta,
+					"reason": "event:" + String(active_event.get("event_id", ""))
+				})
+		cand_event["internal_effects_applied"] = true
 
-	# 4. Transita para RESOLVED e persiste confirmação final
-	active_event["status"] = "RESOLVED"
-	active_event["resolved_at"] = Time.get_datetime_string_from_system()
-	ll_manager.get_data()["active_event"] = active_event
-	ll_manager.get_data()["outbox"] = outbox_data
-	var final_saved: bool = ll_manager.save_current_slot()
-	if not final_saved:
-		active_event["status"] = "PRE_COMMITMENT"
-		ll_manager.get_data()["active_event"] = active_event
-		push_error("[LifeLegacyEvents] Falha ao persistir confirmação final do evento no disco durante recuperação.")
+	# 4. Transita o evento candidato para RESOLVED
+	cand_event["status"] = "RESOLVED"
+	cand_event["resolved_at"] = Time.get_datetime_string_from_system()
+
+	candidate["stats"] = cand_stats
+	candidate["stats_history"] = cand_hist
+	candidate["active_event"] = cand_event
+	candidate["outbox"] = outbox_data.duplicate(true)
+	candidate["save_revision"] = int(candidate.get("save_revision", 0)) + 1
+
+	# 5. Persistência atômica da conclusão antes de qualquer mutação de memória ou emissão de sinal
+	var cur_slot: int = ll_manager._current_slot if ("_current_slot" in ll_manager) else 0
+	var saved: bool = LifeLegacyPersistence.save_slot_data(cur_slot, candidate)
+	if not saved:
+		# Não altera a memória de ll_manager, não altera stats, não altera active_event, não emite sinais!
+		push_error("[LifeLegacyEvents] Falha ao persistir confirmação final do evento no disco durante recuperação. Transação abortada sem modificar memória.")
 		return false
+
+	# 6. Gravação confirmada no disco! Aplica candidate na memória de ll_manager e atualiza referências
+	if "_data" in ll_manager:
+		ll_manager._data = candidate
+	for k in cand_event:
+		active_event[k] = cand_event[k]
+	for k in candidate["outbox"]:
+		outbox_data[k] = candidate["outbox"][k]
+
+	# Emite sinais após durabilidade confirmada
+	if ll_manager.has_signal("life_legacy_saved"):
+		ll_manager.life_legacy_saved.emit(cur_slot)
+	if ll_manager.has_signal("life_legacy_stat_changed"):
+		for sc in stat_changes_to_emit:
+			ll_manager.life_legacy_stat_changed.emit(sc["stat_id"], sc["old_val"], sc["new_val"], sc["reason"])
 
 	return true

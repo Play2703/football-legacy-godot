@@ -622,9 +622,11 @@ func test_pre_commitment_recovery_scenarios_a_to_e() -> void:
 	print("    -> Cenário C Aprovado!")
 
 	# ==========================================
-	# CENÁRIO D — Falha na persistência final
+	# CENÁRIO D — Falha na persistência final e integridade transacional
 	# ==========================================
-	print("  [Cenário D] Falha na persistência final...")
+	print("  [Cenário D] Falha real na persistência final e integridade de indicadores...")
+	GameState.season_num = 1
+	GameState.season_day = 10
 	var prof_d = LifeLegacyState.get_default_profile(1, 10)
 	var tok_d: String = "occ_d_001_choice_d_career"
 	var evt_d = {
@@ -640,6 +642,7 @@ func test_pre_commitment_recovery_scenarios_a_to_e() -> void:
 			"internal_effects": {"reputation": 6.0}
 		}]
 	}
+	# 1. e 2. e 3. Receptor Career já confirmou efeitos externos antes da falha
 	var money_pre_d: int = Career.money
 	assert(Career.apply_idempotent_effect(tok_d, -200, -1.0) == true)
 	var rep_pre_d: float = 50.0
@@ -654,21 +657,58 @@ func test_pre_commitment_recovery_scenarios_a_to_e() -> void:
 			"retry_count": 0
 		}]
 	}
+	# 1. Persistir o evento em PRE_COMMITMENT e outbox em COMMITTED
 	LifeLegacyPersistence.save_slot_data(0, prof_d)
 
-	# Reload: detecta PRE_COMMITMENT com intents já COMMITTED no receptor/outbox,
-	# aplica internal_effects (+6.0), transita para RESOLVED e persiste!
-	ll.reload_slot(0)
-	var act_d_post = ll.get_active_event()
-	assert(act_d_post["status"] == "RESOLVED", "Cenário D: Evento transita para RESOLVED")
-	assert(Career.money == money_pre_d - 200, "Cenário D: Dinheiro deduzido exatamente uma vez")
-	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação incrementada exatamente uma vez (+6.0)")
+	# 4. Carregar o evento no manager
+	ll._data = prof_d.duplicate(true)
+	assert(ll.get_active_event()["status"] == "PRE_COMMITMENT", "Cenário D: Evento carregado em PRE_COMMITMENT")
+	assert(ll.get_stat("reputation") == rep_pre_d, "Cenário D: Reputação inicial é 50.0")
 
-	# Segundo reload para certificar idempotência
+	# Rastreamento de emissão de sinais de alteração de stat
+	var stat_signals_emitted: Array[Dictionary] = []
+	var sig_callable = func(stat_id: String, old_v: float, new_v: float, reason: String) -> void:
+		stat_signals_emitted.append({"stat_id": stat_id, "old_val": old_v, "new_val": new_v, "reason": reason})
+	ll.life_legacy_stat_changed.connect(sig_callable)
+
+	# 5. Injetar falha de escrita exatamente na tentativa de persistir a conclusão RESOLVED
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var res_fail = ll.retry_precommitted_event()
+
+	# 6. Confirmar que a operação retorna falha
+	assert(res_fail == false, "Cenário D: retry_precommitted_event() deve retornar false quando a persistência falha")
+
+	# 7. Confirmar que o evento continua recuperável em PRE_COMMITMENT e que memória/sinais NÃO foram corrompidos
+	assert(stat_signals_emitted.is_empty(), "Cenário D: Nenhum sinal de alteração de stat pode ter sido emitido perante falha de gravação")
+	assert(ll.get_stat("reputation") == rep_pre_d, "Cenário D: Indicador em memória NÃO pode ter sido alterado (permanece 50.0)")
+	var act_d_fail = ll.get_active_event()
+	assert(act_d_fail["status"] == "PRE_COMMITMENT", "Cenário D: Evento permanece em PRE_COMMITMENT após falha")
+	assert(act_d_fail.get("internal_effects_applied", false) == false, "Cenário D: internal_effects_applied permanece false")
+
+	# 8. Restaurar a escrita normal
+	LifeLegacyPersistence.reset_fault_injection()
+
+	# 9. Executar retry_precommitted_event()
+	var res_success = ll.retry_precommitted_event()
+	assert(res_success == true, "Cenário D: retry_precommitted_event() deve retornar true com I/O normalizado")
+
+	# 10. Confirmar RESOLVED persistido e sinais emitidos
+	assert(stat_signals_emitted.size() == 1, "Cenário D: Exatamente 1 sinal de alteração deve ter sido emitido após confirmação")
+	assert(stat_signals_emitted[0]["stat_id"] == "reputation" and stat_signals_emitted[0]["new_val"] == rep_pre_d + 6.0)
+	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação atualizada para 56.0 após confirmação")
+	assert(ll.get_active_event()["status"] == "RESOLVED", "Cenário D: Evento em memória transitou para RESOLVED")
+	
+	var on_disk_d = LifeLegacyPersistence.load_slot_data(0, 1, 10)
+	assert(on_disk_d["data"]["active_event"]["status"] == "RESOLVED", "Cenário D: RESOLVED persistido no disco")
+	assert(on_disk_d["data"]["stats"]["reputation"] == rep_pre_d + 6.0, "Cenário D: Reputação 56.0 persistida no disco")
+
+	# 11. Recarregar novamente e comprovar que dinheiro, energia e indicadores internos não são duplicados
 	ll.reload_slot(0)
-	assert(ll.get_active_event()["status"] == "RESOLVED", "Cenário D: Permanece RESOLVED")
-	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação não duplicada em reloads subsequentes")
-	print("    -> Cenário D Aprovado!")
+	assert(Career.money == money_pre_d - 200, "Cenário D: Dinheiro no receptor não foi duplicado")
+	assert(ll.get_stat("reputation") == rep_pre_d + 6.0, "Cenário D: Reputação não duplicada após reload subsequente")
+	assert(ll.get_active_event()["status"] == "RESOLVED", "Cenário D: Permanece RESOLVED após reload subsequente")
+	ll.life_legacy_stat_changed.disconnect(sig_callable)
+	print("    -> Cenário D Aprovado com sucesso absoluto!")
 
 	# ==========================================
 	# CENÁRIO E — Falha persistente
