@@ -172,7 +172,46 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco4.tscn`:
 
 ---
 
+### 3.5. Marco 5 — Eventos Jogáveis e Interface [CONCLUÍDO E HOMOLOGADO]
+Executado via `godot --headless res://tests/life_legacy/runner_marco5.tscn`:
+
+1. **Catálogo Declarativo Canônico (`LifeLegacyCatalogoEventos`):**
+   - Registro de todos os 8 eventos temáticos planejados na auditoria:
+     * `festa_vespera_derby` (Lifestyle / Pressão de Clássico)
+     * `crise_conjugal` (Família / Relacionamento)
+     * `compra_carro_luxo` (Patrimônio / Finanças)
+     * `investimento_amigo_infancia` (Dilema Ético / Risco Financeiro)
+     * `nascimento_primeiro_filho` (Paternidade / Família)
+     * `escandalo_midia` (Mídia / Gestão de Crise)
+     * `noivado_surpresa` (Relacionamento Sério / Casamento)
+     * `mentoria_jovem_base` (Liderança / Legado no Vestiário)
+   - Validação de integridade: títulos, descrições, categorias, pesos, condições declarativas e ramificações.
+   - Status: **APROVADO**.
+
+2. **Cenário Canônico da Véspera de Derby (`festa_vespera_derby`):**
+   - Estruturação estrita com 4 ramificações balanceadas:
+     * Opção 1 (`choice_1_ir`): Curtição total (-40 energia atlética no Career, post polêmico na imprensa, aumento de popularidade, queda de disciplina).
+     * Opção 2 (`choice_2_recusar`): Descanso integral (+10 disciplina, foco tático).
+     * Opção 3 (`choice_3_sair_cedo`): Presença social moderada (-5 energia, +10 relações).
+     * Opção 4 (`choice_4_camarote`): Camarote privado para amigos (-$2.500 no Career, +10 influência social).
+   - Resolução transacional com geração de intenções no Outbox e despacho síncrono para o Career.
+   - Status: **APROVADO**.
+
+3. **Interface Modal de Decisão Narrativa (`LifeLegacyEventModal`):**
+   - Componente UI instanciável com tema escuro imersivo, cabeçalho categorizado, corpo narrativo e botões de escolha dinâmicos com binding seguro de argumentos.
+   - Disparo do sinal `event_choice_selected(event_id, choice_id)` e fechamento limpo via `queue_free()`.
+   - Status: **APROVADO**.
+
+4. **Dashboard do Smartphone In-Game (`Celular.monta_minha_vida`):**
+   - Registro do novo aplicativo `"vida"` ("Minha Vida") no smartphone com ícone temático, cor esmeralda (`#1fa864`) e rótulo integrado.
+   - Renderização dos 6 indicadores fundamentais (`Popularidade`, `Reputação`, `Disciplina`, `Estabilidade Emocional`, `Relações Pessoais`, `Influência Social`) com barras de progresso e valores formatados.
+   - Seção de Família exibindo cônjuge e listagem dinâmica de filhos com idade canônica e status de elegibilidade.
+   - Seção de Dinastia exibindo a geração ativa e linhagem de antepassados arquivados com identificador da placa no Museu.
+   - Status: **APROVADO**.
+
+---
+
 ## 4. CRONOGRAMA DE EXECUÇÃO DOS PRÓXIMOS MARCOS
 
-- **Marco 5:** Os 8 eventos declarativos jogáveis e interfaces no Smartphone ("Minha Vida").
-- **Marco 6:** Homologação final, testes de 52 semanas e auditoria de memória.
+- **Marco 6:** Homologação final, testes de estresse com 52 semanas consecutivas, verificação de consistência e auditoria de vazamento de memória.
+

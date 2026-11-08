@@ -8,6 +8,7 @@ const LifeLegacyEvents = preload("res://features/life_legacy/life_legacy_events.
 const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
 const LifeLegacyFamily = preload("res://features/life_legacy/life_legacy_family.gd")
 const LifeLegacyDynasty = preload("res://features/life_legacy/life_legacy_dynasty.gd")
+const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -34,6 +35,7 @@ var _is_safe_mode: bool = false
 var _last_observed_time: Dictionary = {"season_num": -1, "season_day": -1}
 
 func _ready() -> void:
+	LifeLegacyCatalogoEventos.registrar_todos()
 	if SaveSlots != null and SaveSlots.has_signal("active_slot_changed"):
 		SaveSlots.active_slot_changed.connect(_on_active_slot_changed)
 	if GameState != null and GameState.has_signal("career_updated"):

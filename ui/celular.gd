@@ -98,7 +98,7 @@ const CAB_LABIO: float = 4.0
 
 
 const APP_ROTULO: Dictionary = {"club": "CLUB", "liga": "LIGA", "mundo": "MUNDO", "redes": "REDES",
-	"mensajes": "MENSAJES"}
+	"mensajes": "MENSAJES", "vida": "VIDA"}
 
 
 const APP_ICONO: Dictionary = {"liga": "torneos", "mundo": "mundo", "mensajes": "buzon"}
@@ -558,6 +558,8 @@ static func color_app(sc: String) -> Color:
 			return CareerTheme.REDES_MARCA
 		"mensajes":
 			return CareerTheme.APP_MENSAJES
+		"vida":
+			return Color(0.18, 0.72, 0.45)
 	return CareerTheme.accent()
 
 
@@ -572,6 +574,8 @@ static func sombra_app(sc: String) -> Color:
 			return CareerTheme.REDES_MARCA_SOMBRA
 		"mensajes":
 			return CareerTheme.APP_MENSAJES_SOMBRA
+		"vida":
+			return Color(0.10, 0.45, 0.28)
 	return CareerTheme.accent().darkened(0.45)
 
 
@@ -617,6 +621,12 @@ static func _dibujo(sc: String, lado: float) -> Control:
 		return esc
 	if sc == "redes":
 		return _burbuja(lado * 0.6)
+	if sc == "vida":
+		var ic_v: MenuIcon = MenuIcon.new()
+		ic_v.setup("estrella", CareerTheme.CELULAR_TINTA)
+		ic_v.custom_minimum_size = Vector2(lado, lado) * 0.55
+		ic_v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return ic_v
 	var ic: MenuIcon = MenuIcon.new()
 	ic.setup(String(APP_ICONO.get(sc, "mundo")), CareerTheme.CELULAR_TINTA)
 	ic.custom_minimum_size = Vector2(lado, lado) * 0.55
@@ -863,3 +873,146 @@ static func _margen(izq: int, der: int, arriba: int, abajo: int) -> MarginContai
 	m.add_theme_constant_override("margin_top", arriba)
 	m.add_theme_constant_override("margin_bottom", abajo)
 	return m
+
+
+static func monta_minha_vida(padre: Container, ancho: float) -> Control:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(ancho, 450.0)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+	var box: VBoxContainer = VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 16)
+	scroll.add_child(box)
+
+	# 1. Painel de Indicadores de Estilo de Vida
+	var pnl_stats: PanelContainer = PanelContainer.new()
+	var sf_stats: StyleBoxFlat = StyleBoxFlat.new()
+	sf_stats.bg_color = Color(0.12, 0.14, 0.18, 0.95)
+	sf_stats.set_corner_radius_all(12)
+	sf_stats.set_content_margin_all(14.0)
+	pnl_stats.add_theme_stylebox_override("panel", sf_stats)
+	box.add_child(pnl_stats)
+
+	var vb_stats: VBoxContainer = VBoxContainer.new()
+	vb_stats.add_theme_constant_override("separation", 10)
+	pnl_stats.add_child(vb_stats)
+
+	var tit_stats: Label = Label.new()
+	tit_stats.text = "INDICADORES LIFE & LEGACY"
+	tit_stats.modulate = Color(0.95, 0.8, 0.3)
+	vb_stats.add_child(tit_stats)
+
+	var stat_names: Dictionary = {
+		"popularity": "Popularidade",
+		"reputation": "Reputação",
+		"discipline": "Disciplina",
+		"emotional_stability": "Estabilidade Emocional",
+		"personal_relationships": "Relações Pessoais",
+		"social_influence": "Influência Social"
+	}
+
+	for k in stat_names:
+		var hb: HBoxContainer = HBoxContainer.new()
+		var lbl: Label = Label.new()
+		lbl.text = stat_names[k]
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hb.add_child(lbl)
+
+		var cur_val: float = LifeLegacy.get_stat(k) if LifeLegacy != null else 50.0
+		var val_lbl: Label = Label.new()
+		val_lbl.text = "%.1f" % cur_val
+		val_lbl.custom_minimum_size = Vector2(45.0, 0.0)
+		hb.add_child(val_lbl)
+
+		var bar: ProgressBar = ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = cur_val
+		bar.custom_minimum_size = Vector2(100.0, 16.0)
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hb.add_child(bar)
+
+		vb_stats.add_child(hb)
+
+	# 2. Painel Familiar
+	var pnl_fam: PanelContainer = PanelContainer.new()
+	var sf_fam: StyleBoxFlat = StyleBoxFlat.new()
+	sf_fam.bg_color = Color(0.12, 0.14, 0.18, 0.95)
+	sf_fam.set_corner_radius_all(12)
+	sf_fam.set_content_margin_all(14.0)
+	pnl_fam.add_theme_stylebox_override("panel", sf_fam)
+	box.add_child(pnl_fam)
+
+	var vb_fam: VBoxContainer = VBoxContainer.new()
+	vb_fam.add_theme_constant_override("separation", 8)
+	pnl_fam.add_child(vb_fam)
+
+	var tit_fam: Label = Label.new()
+	tit_fam.text = "FAMÍLIA E RELACIONAMENTOS"
+	tit_fam.modulate = Color(0.4, 0.85, 0.95)
+	vb_fam.add_child(tit_fam)
+
+	var fam_data: Dictionary = LifeLegacy.get_family() if LifeLegacy != null else {}
+	var spouse: Dictionary = fam_data.get("spouse", {})
+	var spouse_lbl: Label = Label.new()
+	spouse_lbl.text = "Cônjuge: %s" % (spouse.get("name", "Solteiro") if not spouse.is_empty() else "Solteiro")
+	vb_fam.add_child(spouse_lbl)
+
+	var children: Array = fam_data.get("children", [])
+	var ch_lbl: Label = Label.new()
+	ch_lbl.text = "Filhos (%d):" % children.size()
+	vb_fam.add_child(ch_lbl)
+
+	for ch in children:
+		var c_name: String = String(ch.get("name", "Filho"))
+		var c_gender: String = String(ch.get("gender", "M"))
+		var b_s: int = int(ch.get("birth_season_num", 1))
+		var b_d: int = int(ch.get("birth_season_day", 0))
+		var cur_s: int = GameState.season_num if GameState != null else 1
+		var cur_d: int = GameState.season_day if GameState != null else 0
+		var c_age: int = cur_s - b_s - (1 if cur_d < b_d else 0)
+		var c_box: HBoxContainer = HBoxContainer.new()
+		var c_desc: Label = Label.new()
+		c_desc.text = "  · %s (%s, %d anos - %s)" % [c_name, c_gender, maxi(0, c_age), "Base/Elegível" if c_age >= 16 else "Em Formação"]
+		c_box.add_child(c_desc)
+		vb_fam.add_child(c_box)
+
+	# 3. Painel Dinástico
+	var pnl_dyn: PanelContainer = PanelContainer.new()
+	var sf_dyn: StyleBoxFlat = StyleBoxFlat.new()
+	sf_dyn.bg_color = Color(0.12, 0.14, 0.18, 0.95)
+	sf_dyn.set_corner_radius_all(12)
+	sf_dyn.set_content_margin_all(14.0)
+	pnl_dyn.add_theme_stylebox_override("panel", sf_dyn)
+	box.add_child(pnl_dyn)
+
+	var vb_dyn: VBoxContainer = VBoxContainer.new()
+	vb_dyn.add_theme_constant_override("separation", 8)
+	pnl_dyn.add_child(vb_dyn)
+
+	var tit_dyn: Label = Label.new()
+	tit_dyn.text = "LINHAGEM E SUCESSÃO DINÁSTICA"
+	tit_dyn.modulate = Color(0.6, 0.95, 0.5)
+	vb_dyn.add_child(tit_dyn)
+
+	var dyn_data: Dictionary = LifeLegacy.get_dynasty() if LifeLegacy != null else {}
+	var gen_lbl: Label = Label.new()
+	gen_lbl.text = "Geração Ativa: %d" % int(dyn_data.get("current_generation", 1))
+	vb_dyn.add_child(gen_lbl)
+
+	var ancestors: Array = dyn_data.get("ancestors", [])
+	if ancestors.is_empty():
+		var anc_empty: Label = Label.new()
+		anc_empty.text = "Primeira geração da família. Construa seu legado!"
+		anc_empty.modulate = Color(0.7, 0.7, 0.7)
+		vb_dyn.add_child(anc_empty)
+	else:
+		for anc in ancestors:
+			var anc_lbl: Label = Label.new()
+			anc_lbl.text = "  · %s (Aposentado na T%d - Museu: %s)" % [anc.get("name", ""), int(anc.get("retired_season", 1)), anc.get("plaque_id", "")]
+			vb_dyn.add_child(anc_lbl)
+
+	padre.add_child(scroll)
+	return scroll

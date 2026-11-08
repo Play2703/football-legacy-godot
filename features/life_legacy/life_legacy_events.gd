@@ -13,6 +13,12 @@ static func register_event(event_dict: Dictionary) -> void:
 static func get_all_events() -> Array[Dictionary]:
 	return _registry
 
+static func get_event_by_id(id: String) -> Dictionary:
+	for evt in _registry:
+		if evt.get("id", "") == id:
+			return evt
+	return {}
+
 static func clear_registry() -> void:
 	_registry.clear()
 
