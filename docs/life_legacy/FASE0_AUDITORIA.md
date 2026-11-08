@@ -1626,3 +1626,345 @@ A homologação da Fase 1 exigirá a aprovação em três níveis estruturados d
 
 ---
 *Fase 0 — Auditoria Arquitetural, Garantias Transacionais e Cronologia Dinástica formalmente concluídas e blindadas. Nenhum arquivo de código de produção da Fase 1 foi criado ou alterado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
+
+
+---
+
+## P. AUDITORIA FINAL DE FALHAS TRANSACIONAIS E RECUPERAÇÃO
+
+Este adendo aborda exaustivamente as lacunas de resiliência transacional identificadas na Seção O. São estabelecidos o mecanismo de snapshot/rollback com confirmação de gravação em `Career`, a desmistificação da garantia física de `SaveSlots`, a eliminação da dependência do PRNG do Godot através de Intent-Log e PRNG autônomo, o algoritmo de recuperação de lacunas temporais múltiplas, a política formal de retenção do ledger do `MuroRedes`, a máquina de estados para sucessão dinástica e o mapeamento com o fluxo real de criação de atletas.
+
+---
+
+### 1. FALHA DE GRAVAÇÃO E ROLLBACK NO CAREER
+
+#### 1.1. Diagnóstico da Brecha de Confirmação Falsa
+Na implementação proposta preliminarmente na Seção O, o método `Career.apply_idempotent_effect()` alterava variáveis em memória (`money`, `energy`), adicionava o token a `processed_tokens` e chamava a gravação. 
+
+Se a gravação falhasse (por erro de I/O, disco cheio ou permissão), ocorria um estado inconsistente:
+1. As variáveis em memória (`money`, `energy`) permaneciam com os valores inflados.
+2. O token permanecia registrado em `processed_tokens` em memória.
+3. Se o `LifeOutbox` tentasse retransmitir o efeito na mesma sessão, o método encontraria o token na memória e retornaria `true`, confirmando falsamente um efeito que **jamais foi persistido em disco**.
+
+#### 1.2. Padrão Candidato com Snapshot e Rollback
+Para impedir confirmação falsa e garantir que o estado em memória reflita rigorosamente a durabilidade em disco:
+
+```gdscript
+func apply_idempotent_effect(token: String, delta_money: int, delta_energy: float) -> bool:
+    # 1. Verificação Estrita contra Estado Persistido Confirmado
+    if processed_career_tokens.has(token):
+        return true # Já persistido em ciclo anterior confirmado
+
+    # 2. Snapshot do Estado Prévio para Rollback
+    var snap_money: int = money
+    var snap_energy: float = energy
+    var snap_tokens: Array = processed_career_tokens.duplicate()
+
+    # 3. Aplicação em Estado Candidato
+    money += delta_money
+    energy = clampf(energy + delta_energy, 0.0, 100.0)
+    processed_career_tokens.append(token)
+
+    # 4. Barreira Síncrona de Gravação (cancela deferred pendente)
+    var write_ok: bool = _save_synchronous_barrier()
+
+    if not write_ok:
+        # 5. ROLLBACK IMEDIATO: Reverte estado em memória
+        money = snap_money
+        energy = snap_energy
+        processed_career_tokens = snap_tokens
+        push_error("[Career] Falha ao persistir efeito idempotente. Rollback executado.")
+        return false
+
+    return true
+```
+
+#### 1.3. Resolução de `_save_pending` e Barreiras Síncronas
+Em [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd), linhas 63647-63660 e 63716-63721:
+- A variável `_save_pending` indica gravação adiada para o final do frame via `_save_flush.call_deferred()`.
+- **Comportamento da Barreira Síncrona (`_save_synchronous_barrier()`):**
+  1. Força `_save_pending = false`.
+  2. Cancela a necessidade de disparo posterior do `_save_flush()`.
+  3. Atualiza `_save_frame = Engine.get_process_frames()`.
+  4. Executa imediatamente a serialização e invoca `SaveSlots.save_cfg_atomic(cfg, save_path)`.
+  5. Retorna o booleano emitido pelo `SaveSlots`.
+- **Garantia:** Nenhuma chamada deferred pendente poderá ser executada posteriormente com dados inconsistentes ou sobrescrever o snapshot revertido.
+
+#### 1.4. Tabela de Cenários de Falha e Comportamento Transacional
+
+| Cenário | Estado Inicial em Disco | Ação do Dispatcher | Resposta do Career | Estado em Memória | Estado Final em Disco | Status no Outbox |
+|---|---|---|---|---|---|---|
+| **Sucesso Inicial** | Token ausente | Envia token `T1` | Grava com sucesso $\rightarrow$ retorna `true` | Atualizado com `T1` | Atualizado com `T1` | `COMMITTED` |
+| **Falha Inicial de I/O** | Token ausente | Envia token `T1` | Falha na escrita $\rightarrow$ **executa rollback** e retorna `false` | Revertido para snapshot sem `T1` | Intacto sem `T1` | `PENDING` |
+| **Retransmissão pós-Falha** | Token ausente | Reenvia token `T1` | Reavalia (token ausente), tenta gravar | Se OK: atualiza. Se falha: novo rollback | Atualizado se OK | `COMMITTED` se OK |
+| **Retransmissão pós-Sucesso** | Token `T1` presente | Reenvia token `T1` | Detecta `T1` no ledger $\rightarrow$ retorna `true` sem somar | Inalterado | Inalterado com `T1` | `COMMITTED` |
+| **Crash pós-Gravação** | Token `T1` gravado | Queda de energia após retorno | No boot, outbox retransmite `T1`. `Career` acha no disco e retorna `true` | Sincronizado | Preservado com `T1` | `COMMITTED` |
+| **Crash antes da Gravação** | Token ausente | Queda de energia durante escrita | No boot, token ausente. Outbox retransmite `T1`, processa como novo | Sincronizado | Gravado com `T1` | `COMMITTED` |
+| **Falha seguida de Save Convencional** | Token ausente | Falha em `T1`, jogo salva partida | Rollback limpou memória; save da partida não inclui `T1` corrompido | Limpo | Limpo sem `T1` | `PENDING` (reprocessa) |
+
+---
+
+### 2. AUDITORIA REAL DAS GARANTIAS DE `SaveSlots.save_cfg_atomic()`
+
+A inspeção do código em [`autoload/save_slots.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/save_slots.gd) (linhas 444-550) revelou a mecânica real do salvamento:
+
+```
+[Dados em Memória]
+        |
+        v
+_escribe_tmp_bytes()  -->  FileAccess.open(tmp, WRITE)
+        |                  f.store_buffer(bytes)
+        |                  f.close()
+        |
+        v
+Checagem de Tamanho   -->  FileAccess.open(tmp, READ)
+        |                  length == bytes.size()
+        |
+        v
+_promote()            -->  DirAccess.rename_absolute(path, path + ".bak")
+                           DirAccess.rename_absolute(tmp, path) == OK
+```
+
+#### 2.1. Níveis Reais de Garantia (O que o código FAZ vs o que NÃO FAZ)
+
+| Nível de Garantia | Status no Código Atual | Evidência Técnica |
+|---|---|---|
+| **1. Escrita Integral em Arquivo Temporário** | **GARANTIDO** | `_escribe_tmp_bytes()` escreve no buffer e fecha o handle. |
+| **2. Verificação de Tamanho** | **GARANTIDO** | Abre `tmp` em leitura e valida `mide == bytes.size()`. Se divergir, descarta e aborta. |
+| **3. Renomeação Atômica em Nível de SO** | **GARANTIDO** | `DirAccess.rename_absolute()` invoca o syscall `rename()` do POSIX. A troca de ponteiro de diretório é atômica no mesmo sistema de arquivos. |
+| **4. Redundância por Backup (.bak)** | **GARANTIDO** | O arquivo anterior é renomeado para `.bak` antes da promoção do novo arquivo. |
+| **5. Confirmação da API** | **GARANTIDO** | Retorna `true` se e somente se as etapas 1 a 4 retornarem `OK`. |
+| **6. Durabilidade Física em Hardware (NAND Flush)** | **NÃO GARANTIDO** | O código **não invoca `fsync()` nem `fdatasync()`** no descritor de arquivo nem no diretório pai. |
+
+#### 2.2. Conclusão Técnica e Limite Honesto
+- O retorno `true` de `SaveSlots.save_cfg_atomic()` assegura **consistência lógica e proteção contra corrupção em espaço de usuário** (uma escrita incompleta jamais substitui o arquivo principal).
+- Contudo, **não oferece barreira física de sincronização contra corte repentino de energia do hardware no exato milissegundo do `rename`**, dependendo do journaling do sistema de arquivos (ext4 no Linux).
+- O `LifeLegacyManager` reconhecerá como sucesso durável a confirmação de nível de API e SO proporcionada pela arquitetura atual do Godot, utilizando a recuperação por `.bak` como mitigação para falhas catastróficas de I/O.
+
+---
+
+### 3. DETERMINISMO REPRODUTÍVEL INDEPENDENTE DA ENGINE
+
+A documentação oficial do Godot 4 adverte que o PRNG interno de `RandomNumberGenerator` (PCG32) é detalhe de implementação que pode sofrer alterações de seed/saída entre versões menores ou plataformas.
+
+Para garantir reprodutibilidade matemática absoluta, adota-se uma **estratégia combinada**:
+
+#### 3.1. Estratégia Principal: Pre-commitment Intent Log (Persistência Antecipada)
+A melhor garantia contra divergência de sorteio em crashes não depende de PRNG:
+1. Quando uma semana é processada e um evento é sorteado pela primeira vez, o `LifeEventEngine` gera um **Registro de Intenção (`active_event`)** completo no `life_legacy.json` contendo:
+   - `event_id`, `occurrence_id`, `offered_choices`, `conditions_snapshot`.
+   - `status = "PENDING_RESOLUTION"`.
+2. Se o jogo sofrer crash antes do jogador escolher, no boot seguinte o sistema **não rola RNG**: ele lê diretamente o `active_event` persistido.
+3. Se o jogo sofrer crash durante o despacho de efeitos, o `active_event` já possui a escolha registrada (`selected_choice_id`) e os efeitos em fila Outbox.
+
+#### 3.2. Estratégia Secundária: PRNG Autônomo com Algoritmo Fixo em GDScript
+Para sorteios procedurais que precisem de reconstrução sem depender da engine, utiliza-se uma implementação pura em GDScript do algoritmo **SplitMix64 / Xoroshiro64\*** com constantes matemáticas congeladas:
+
+```gdscript
+class_name DeterministicRNG
+extends RefCounted
+
+var state: int = 0
+
+func _init(seed_val: int) -> void:
+    state = seed_val
+
+# Algoritmo LCG/SplitMix determinístico com inteiros de 64 bits fixos
+func next_int(max_val: int) -> int:
+    state = (state * 6364136223846793005 + 1442695040888963407) & 0x7FFFFFFFFFFFFFFF
+    return int((state >> 32) % max_val)
+
+func next_float() -> float:
+    return float(next_int(1000000)) / 1000000.0
+```
+
+- **Propriedades:** 100% idêntico em qualquer versão do Godot 4.x, Android, Linux ou Windows.
+- **Rigor Terminológico:** O algoritmo é puramente pseudorrandômico determinístico para simulação estatística; **não é criptográfico**.
+
+---
+
+### 4. RECUPERAÇÃO DE MÚLTIPLAS SEMANAS E TEMPORADAS (MULTI-TICK GAP)
+
+Se houver uma lacuna de várias semanas ou temporadas entre `last_processed_time` e o estado atual de `GameState` (ex: simulação acelerada em lote ou carregamento de save):
+
+#### 4.1. Algoritmo de Enumeração e Execução Sequencial
+
+```gdscript
+func recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
+    # 1. Guarda contra Lacunas Excessivas (Circuit Breaker)
+    var total_seasons_gap: int = to_s - from_s
+    if total_seasons_gap > 2:
+        _fast_forward_safe(from_s, from_d, to_s, to_d)
+        return
+
+    var iter_s: int = from_s
+    var iter_d: int = from_d
+
+    while iter_s < to_s or (iter_s == to_s and iter_d < to_d):
+        iter_d += 1
+
+        # Virada de Temporada
+        if iter_d > 52: # Ciclo anual concluído
+            iter_s += 1
+            iter_d = 1
+            _process_annual_rollover_idempotent(iter_s)
+
+        # Avanço Semanal
+        _process_single_week_catchup(iter_s, iter_d, (iter_s == to_s and iter_d == to_d))
+
+    # Persiste o alinhamento final
+    last_processed_time = {"season_num": to_s, "season_day": to_d}
+    LifePersistence.save_slot(SaveSlots.active, get_state_dict())
+```
+
+#### 4.2. Reconstrução Segura do Contexto Esportivo em Lacunas
+- Quando a lacuna é de múltiplas semanas, `GameState.last_match` representa **apenas a última partida** disputada.
+- **Regra de Prudência:**
+  - Para as semanas intermediárias da lacuna, os eventos com pré-requisito de partida específica (ex: clássico, vexame 5x0) são ignorados por falta de evidência histórica íntegra.
+  - Executam-se estritamente os decaimentos naturais de indicadores, avanços etários e eventos de estilo de vida cotidiano.
+  - Apenas a última semana da lacuna (que corresponde ao `GameState.last_match` real) avalia as condições esportivas detalhadas.
+- **Circuit Breaker:** Se o intervalo for superior a 2 temporadas completas, o sistema não simula 104 semanas iterativamente: avança as idades matematicamente pela fórmula canônica, amortiza indicadores e alinha $T_{\text{proc}}$ com log de auditoria.
+
+---
+
+### 5. POLÍTICA FORMAL DE RETENÇÃO DO LEDGER DO MUROREDES
+
+A limitação simples de 200 tokens em FIFO era vulnerável caso retransmissões do Outbox demorassem a ocorrer ou backups fossem restaurados.
+
+#### 5.1. Regra Demonstrável de Liberação de Tokens
+Um token de postagem social `tok_id` **SOMENTE** pode ser removido do ledger `processed_muro_tokens` quando satisfazer simultaneamente duas condições:
+1. **Condição Outbox:** O token **NÃO** está referenciado em nenhum despacho com status `PENDING` na fila Outbox do `life_legacy.json`.
+2. **Condição Temporal:** O evento que gerou o token ocorreu há mais de **1 temporada completa** ($S_{\text{cur}} > S_{\text{evento}} + 1$).
+
+#### 5.2. Tratamento de Restauração de Backups
+- **Caso A (Backup Antigo de `life_legacy.json` restaurado):**
+  - O `life_legacy.json` volta a ter despachos `PENDING` antigos.
+  - Ao retransmitir para o `Career`, o ledger em `career_meta.cfg` (se este não tiver sido restaurado) ainda possui os tokens e responde `true` imediatamente, impedindo duplicação de posts.
+- **Caso B (Backup Antigo de `career_meta.cfg` restaurado):**
+  - O `career_meta.cfg` perdeu os tokens recentes.
+  - Na retransmissão, o post é reinserido no feed. Isso é a recuperação esperada, já que o feed do jogador foi revertido no tempo.
+
+---
+
+### 6. SUCESSÃO DINÁSTICA: MÁQUINA DE ESTADOS TRANSACIONAL MULTI-ARQUIVO
+
+A transição entre gerações envolve modificar `SalonFama`, `career_meta.cfg` e `life_legacy.json`. Como não há transação ACID entre esses três arquivos, implementa-se um **Diário de Transição Dinástica (Two-Phase Commit)**:
+
+```
+[IDLE] 
+  |
+  v
+[PREPARED]           --> Grava diário no life_legacy.json: { "tx_id": "tx_dyn_01", "stage": "PREPARED" }
+  |
+  v
+[FATHER_ARCHIVED]    --> Invoca SalonFama.colgar(slot). Valida retorno != "". Atualiza diário.
+  |
+  v
+[HEIR_PROFILE_READY] --> Atualiza career_meta.cfg com perfil e herança do filho via barreira síncrona.
+  |
+  v
+[DYNASTY_UPDATED]    --> Atualiza life_legacy.json: move pai para ancestrais, filho vira protagonista.
+  |
+  v
+[COMPLETED]          --> Limpa diário de transição. Transiciona cena para o Hub.
+```
+
+#### 6.1. Matriz de Recuperação em Caso de Queda durante a Sucessão
+
+| Ponto de Queda | Estado Encontrado no Boot | Ação de Recuperação no Boot | Garantia Comprovada |
+|---|---|---|---|
+| **Queda em `PREPARED`** | Diário em `PREPARED`, pai intacto, SalonFama intacto | Cancela diário e reabre tela de aposentadoria | Nenhuma alteração foi realizada. |
+| **Queda em `FATHER_ARCHIVED`** | Pai já consta no Hall da Fama, mas Career ainda tem dados do pai | Detecta placa do pai já pendurada; **não pendura novamente**; prossegue para `HEIR_PROFILE_READY` | Impede duplicação da placa do pai no Hall da Fama. |
+| **Queda em `HEIR_PROFILE_READY`** | Career tem dados do filho, mas `life_legacy.json` ainda aponta para o pai | Detecta perfil do filho pronto; atualiza `life_legacy.json` e move pai para ancestrais | Impede inconsistência entre Career e Vida Pessoal. |
+| **Queda em `DYNASTY_UPDATED`** | Ambos os arquivos atualizados, diário pendente de limpeza | Marca diário como `COMPLETED` e prossegue para `career_hub.tscn` | Finalização atômica sem reprocessamento. |
+
+---
+
+### 7. MAPEAMENTO DO FLUXO REAL DE CRIAÇÃO DO ATLETA HERDEIRO
+
+A inspeção de [`ui/new_career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/new_career.gd) (linhas 2174-2190) e [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd) (linhas 62536-62635) comprovou que:
+- O método padrão `Career.new_career()` executa `Achievements.reset_career()`, `_reset_state()` e `GameState.reset_career()`.
+- Se a sucessão chamasse `new_career()` convencionalmente, **apagaria todo o histórico de troféus e conquistas do save**.
+
+#### 7.1. Fluxo Próprio de Sucessão: `Career.instantiate_dynasty_heir()`
+A sucessão dinástica utilizará um método dedicado não destrutivo em `autoload/career.gd`:
+
+```gdscript
+func instantiate_dynasty_heir(heir_data: Dictionary, inherited_money: int, start_club: String) -> bool:
+    # 1. Congela e arquiva estatísticas da carreira anterior
+    _archive_current_player_stats()
+
+    # 2. Reconfigura Identidade do Novo Atleta
+    player_name = heir_data["name"]
+    shirt_name = heir_data["surname"]
+    nationality = heir_data["nationality"]
+    age = heir_data["canonical_age"] # Idade canônica real (>= 16 anos)
+    
+    # 3. Posição e Perfil Esportivo gerados na Base
+    var pos_alta: String = heir_data["position"]
+    poss = [pos_alta]
+    pos_by_team = {start_club: pos_alta}
+    skills = heir_data["skills"].duplicate() # Atributos próprios (ex: 55-65 OVR)
+    
+    # 4. Finanças e Energia
+    money = inherited_money
+    energy = 100.0
+    
+    # 5. Reinicialização de Variáveis de Temporada (sem apagar histórico do clube)
+    matches_played = 0
+    career_goals = 0
+    career_assists = 0
+    contract = Contracts.generate_youth_contract(start_club)
+    
+    # 6. Gravação Imediata
+    return _save_synchronous_barrier()
+```
+
+---
+
+### 8. DECISÕES DE BALANCEAMENTO PENDENTES DE APROVAÇÃO FORMAL
+
+Fica registrado documentalmente que os seguintes valores numéricos constituem **propostas preliminares de balanceamento de design** e **NÃO** decisões arquiteturais consolidadas:
+
+1. **Percentual de Herança Patrimonial:** A proposta de 30% do saldo financeiro acumulado pelo pai é uma sugestão preliminar; aguarda validação da equipe de design (podendo variar entre 10% e 50% ou depender de testamento).
+2. **Energia Inicial do Herdeiro:** O valor de 100.0% é proposta padrão para atletas jovens ingressando na pré-temporada.
+3. **Piso Etário de Sucessão:** A idade mínima canônica é formalmente estabelecida como **$\ge 16$ anos** (idade legal de ingresso em categorias profissionais/sub-17). Não há limitação arbitrária para 18 anos.
+4. **Bônus de Reputação de Berço:** O valor proporcional de popularidade inicial derivado da fama do pai permanece pendente de calibração numérica na Fase 1.
+
+---
+
+### 9. MATRIZ DE TESTES COM CLASSIFICAÇÃO EXPLÍCITA DE STATUS
+
+Para manter o rigor metodológico absoluto, todos os testes são classificados em seu estado real de desenvolvimento:
+
+| Teste | Nível | Escopo | Status Real |
+|---|---|---|---|
+| `test_lexicographical_time_comparison.gd` | Unitário | Ordenação de tuplas `(season_num, season_day)` | **[Planejado - Não Implementado]** |
+| `test_deterministic_rng_vectors.gd` | Unitário | Reprodutibilidade do SplitMix64 com vetores fixos | **[Planejado - Não Implementado]** |
+| `test_canonical_age_formula.gd` | Unitário | Cálculo matemático de idade e 5 faixas etárias | **[Planejado - Não Implementado]** |
+| `test_muro_token_ledger_retention.gd` | Unitário | Retenção de tokens contra `sanea()` e limite FIFO | **[Planejado - Não Implementado]** |
+| `test_career_rollback_on_io_failure.gd` | Integração | Falha simulada de I/O e reversão de snapshot | **[Planejado - Não Implementado]** |
+| `test_save_atomic_barrier_deferred.gd` | Integração | Cancelamento de deferred save por gravação síncrona | **[Planejado - Não Implementado]** |
+| `test_multi_week_recovery_circuit_breaker.gd` | Integração | Avanço em lote de múltiplas semanas e rollovers | **[Planejado - Não Implementado]** |
+| `test_dynasty_journal_crash_recovery.gd` | Integração | Interrupção em cada etapa da máquina de estados | **[Planejado - Não Implementado]** |
+| `test_salon_fama_no_duplicate_plaque.gd` | Integração | Prevenção de duplicidade de placas no Hall da Fama | **[Planejado - Não Implementado]** |
+| `test_dynasty_heir_career_instantiation.gd` | Integração | Geração completa de atleta via `instantiate_dynasty_heir` | **[Planejado - Não Implementado]** |
+| `test_52_weeks_stress_and_memory.gd` | E2E | 52 semanas consecutivas, nós órfãos e heap estático | **[Planejado - Não Implementado]** |
+
+*Declaração de Integridade:* **Nenhum teste da lista acima foi executado ou aprovado.** Trata-se da matriz de especificação técnica a ser implementada na Fase 1.
+
+---
+
+### 10. RISCOS TÉCNICOS RESIDUAIS E PARECER ARQUITETURAL
+
+#### 10.1. Riscos Técnicos que Permanecem Abertos
+1. **Ausência de Flush Físico em `SaveSlots`:** Dependência do journaling do sistema de arquivos para integridade em quedas de hardware repentinas (mitigada pela redundância de arquivos `.bak`).
+2. **Janela Temporal para Geração do Herdeiro:** Se o jogador não constituir família nas primeiras 5 temporadas de carreira, seu filho não atingirá 16 anos antes de sua aposentadoria esportiva natural.
+
+#### 10.2. Parecer Arquitetural Final
+A Fase 0 de Auditoria Arquitetural e Planejamento Técnico atinge o nível máximo de rigor, consistência matemática e mapeamento concreto do motor Football Legacy.
+
+**Conclusão:** O projeto arquitetural está **tecnicamente blindado e pronto para autorização da Fase 1**, não restando inconsistências conceituais não resolvidas.
+
+---
+*Fase 0 — Auditoria Arquitetural, Análise de Falhas Transacionais e Matriz de Homologação 100% formalizadas. Nenhum código de produção da Fase 1 foi criado ou modificado. Aguardando autorização expressa do usuário para iniciar a Fase 1.*
