@@ -4,6 +4,7 @@ extends RefCounted
 const LifeLegacyConditions = preload("res://features/life_legacy/life_legacy_conditions.gd")
 const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
 const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
+const LifeLegacyModifiers = preload("res://features/life_legacy/life_legacy_modifiers.gd")
 
 static var _registry: Array[Dictionary] = []
 
@@ -50,7 +51,7 @@ static func roll_event(ctx: Dictionary, rng: LifeLegacyRNG) -> Dictionary:
 	var s_day: int = int(ctx.get("season_day", 0))
 	var occ_id: String = "occ_s%02d_d%02d_%s_%x" % [s_num, s_day, chosen_evt.get("id", "evt"), rng.next_u32()]
 
-	return {
+	var res_dict: Dictionary = {
 		"event_id": chosen_evt.get("id", ""),
 		"occurrence_id": occ_id,
 		"title": chosen_evt.get("title", ""),
@@ -61,6 +62,11 @@ static func roll_event(ctx: Dictionary, rng: LifeLegacyRNG) -> Dictionary:
 		"selected_choice_id": "",
 		"created_at": Time.get_datetime_string_from_system()
 	}
+	if chosen_evt.has("arc_id"):
+		res_dict["arc_id"] = chosen_evt["arc_id"]
+		res_dict["arc_stage"] = chosen_evt.get("arc_stage", 1)
+		res_dict["arc_total_stages"] = chosen_evt.get("arc_total_stages", 1)
+	return res_dict
 
 # Resolve a escolha do jogador, garantindo protocolo estrito em 3 etapas com Intent-Log
 static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_data: Dictionary, ll_manager) -> bool:
@@ -222,6 +228,81 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 					"reason": "event:" + String(active_event.get("event_id", ""))
 				})
 		cand_event["internal_effects_applied"] = true
+
+		# 3.1. Processa Modificadores Temporais Ativos definidos na escolha
+		if chosen.has("modifier"):
+			var mod_def: Dictionary = chosen["modifier"]
+			var mod_id: String = String(mod_def.get("id", "%s_mod_%s" % [occ_id, choice_id]))
+			var mod_name: String = String(mod_def.get("name", "Modificador"))
+			var mod_drift: Dictionary = mod_def.get("stat_drift", {})
+			var mod_dur: int = int(mod_def.get("duration_ticks", 1))
+			var new_mod: Dictionary = LifeLegacyModifiers.create_modifier(mod_id, String(active_event.get("event_id", "")), mod_name, mod_drift, mod_dur, s_num, s_day)
+			var act_mods: Array = candidate.get("active_modifiers", []).duplicate(true)
+			LifeLegacyModifiers.add_modifier(act_mods, new_mod)
+			candidate["active_modifiers"] = act_mods
+
+		if chosen.has("modifiers"):
+			var act_mods: Array = candidate.get("active_modifiers", []).duplicate(true)
+			for m_def in chosen["modifiers"]:
+				if m_def is Dictionary:
+					var m_id: String = String(m_def.get("id", "%s_mod_%s" % [occ_id, choice_id]))
+					var m_name: String = String(m_def.get("name", "Modificador"))
+					var m_drift: Dictionary = m_def.get("stat_drift", {})
+					var m_dur: int = int(m_def.get("duration_ticks", 1))
+					var n_mod: Dictionary = LifeLegacyModifiers.create_modifier(m_id, String(active_event.get("event_id", "")), m_name, m_drift, m_dur, s_num, s_day)
+					LifeLegacyModifiers.add_modifier(act_mods, n_mod)
+			candidate["active_modifiers"] = act_mods
+
+		# 3.2. Processa Arcos Narrativos em Múltiplos Atos
+		if active_event.has("arc_id"):
+			var arc_id: String = String(active_event["arc_id"])
+			var arc_stage: int = int(active_event.get("arc_stage", 1))
+			var arc_total: int = int(active_event.get("arc_total_stages", arc_stage))
+			var story_arcs: Dictionary = candidate.get("story_arcs", {}).duplicate(true)
+			var active_arcs: Dictionary = story_arcs.get("active_arcs", {}).duplicate(true)
+			var completed_arcs: Array = story_arcs.get("completed_arcs", []).duplicate(true)
+
+			var arc_data: Dictionary = active_arcs.get(arc_id, {
+				"arc_id": arc_id,
+				"current_stage": 1,
+				"choices": {},
+				"status": "IN_PROGRESS",
+				"started_season": s_num,
+				"started_day": s_day
+			}).duplicate(true)
+
+			var choices_map: Dictionary = arc_data.get("choices", {}).duplicate()
+			choices_map[String(active_event.get("event_id", ""))] = choice_id
+			arc_data["choices"] = choices_map
+			arc_data["last_act_resolved_time"] = { "season_num": s_num, "season_day": s_day }
+
+			if arc_stage >= arc_total:
+				arc_data["status"] = "COMPLETED"
+				arc_data["current_stage"] = arc_stage
+				if not completed_arcs.has(arc_id):
+					completed_arcs.append(arc_id)
+				active_arcs.erase(arc_id)
+			else:
+				arc_data["current_stage"] = arc_stage + 1
+				active_arcs[arc_id] = arc_data
+
+			story_arcs["active_arcs"] = active_arcs
+			story_arcs["completed_arcs"] = completed_arcs
+			candidate["story_arcs"] = story_arcs
+
+		# 3.3. Registra no Histórico de Eventos Resolvidos (history.resolved_events)
+		var hist_dict: Dictionary = candidate.get("history", {}).duplicate(true)
+		var resolved_list: Array = hist_dict.get("resolved_events", []).duplicate(true)
+		resolved_list.append({
+			"event_id": String(active_event.get("event_id", "")),
+			"choice_id": choice_id,
+			"occurrence_id": occ_id,
+			"season_num": s_num,
+			"season_day": s_day,
+			"timestamp": Time.get_datetime_string_from_system()
+		})
+		hist_dict["resolved_events"] = resolved_list
+		candidate["history"] = hist_dict
 
 	# 4. Transita o evento candidato para RESOLVED
 	cand_event["status"] = "RESOLVED"

@@ -5,6 +5,10 @@ const LifeLegacyEvents = preload("res://features/life_legacy/life_legacy_events.
 
 static var _carregado: bool = false
 
+static func reset() -> void:
+	_carregado = false
+	LifeLegacyEvents.clear_registry()
+
 static func registrar_todos() -> void:
 	if _carregado:
 		return
@@ -24,6 +28,12 @@ static func registrar_todos() -> void:
 				"text": "Ir à festa e curtir a noite toda",
 				"internal_effects": { "discipline": -15.0, "popularity": 15.0, "emotional_stability": -5.0 },
 				"career_effects": { "energy": -40.0 },
+				"modifier": {
+					"id": "mod_ressaca_derby",
+					"name": "Ressaca e Fadiga Noturna",
+					"stat_drift": { "emotional_stability": -2.0, "discipline": -1.0 },
+					"duration_ticks": 2
+				},
 				"social_post": {
 					"hecho": "festa_derby",
 					"autor": "Prensa",
@@ -262,6 +272,191 @@ static func registrar_todos() -> void:
 				"id": "choice_manter_distancia",
 				"text": "Manter postura distante e focar em si",
 				"internal_effects": { "emotional_stability": 5.0 }
+			}
+		]
+	})
+
+	# 9. ARCO SOCIEDADE EMPRESARIAL — ATO 1: Abertura da Franquia
+	LifeLegacyEvents.register_event({
+		"id": "sociedade_amigo_ato1",
+		"title": "A Sociedade do Amigo de Infância (Ato 1)",
+		"category": "lifestyle",
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 1,
+		"arc_total_stages": 3,
+		"description": "Seu amigo de infância traz um plano detalhado para inaugurar uma rede de academias com a sua marca.",
+		"conditions": {
+			"min_money": 8000,
+			"not_completed_arc": "arc_sociedade_amigo"
+		},
+		"weight": 70,
+		"choices": [
+			{
+				"id": "choice_investir_pesado",
+				"text": "Aportar alto capital e assumir sociedade majoritária",
+				"internal_effects": { "personal_relationships": 15.0, "social_influence": 10.0 },
+				"career_effects": { "money": -7000 },
+				"modifier": {
+					"id": "mod_expectativa_sociedade",
+					"name": "Empolgação com Novos Negócios",
+					"stat_drift": { "emotional_stability": 1.5 },
+					"duration_ticks": 3
+				}
+			},
+			{
+				"id": "choice_investir_moderado",
+				"text": "Aporte inicial cauteloso como investidor anjo",
+				"internal_effects": { "personal_relationships": 10.0, "discipline": 5.0 },
+				"career_effects": { "money": -3000 }
+			},
+			{
+				"id": "choice_recusar_sociedade",
+				"text": "Recusar a proposta para preservar a amizade",
+				"internal_effects": { "discipline": 10.0, "personal_relationships": -10.0 }
+			}
+		]
+	})
+
+	# 10. ARCO SOCIEDADE EMPRESARIAL — ATO 2: Auditoria e Desafios
+	LifeLegacyEvents.register_event({
+		"id": "sociedade_amigo_ato2_auditoria",
+		"title": "A Auditoria da Empresa (Ato 2)",
+		"category": "lifestyle",
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 2,
+		"arc_total_stages": 3,
+		"description": "Após os primeiros meses de operação, a empresa precisa de estruturação financeira e auditoria externa.",
+		"conditions": {
+			"required_arc_stage": { "arc_id": "arc_sociedade_amigo", "stage": 2 },
+			"min_ticks_since_prior_act": 2
+		},
+		"weight": 85,
+		"choices": [
+			{
+				"id": "choice_profissionalizar",
+				"text": "Contratar CEO executivo e injetar fundos de modernização",
+				"internal_effects": { "discipline": 10.0, "social_influence": 10.0 },
+				"career_effects": { "money": -4000 },
+				"modifier": {
+					"id": "mod_gestao_profissional",
+					"name": "Controle Rigoroso de Gestão",
+					"stat_drift": { "discipline": 1.0, "emotional_stability": 1.0 },
+					"duration_ticks": 3
+				}
+			},
+			{
+				"id": "choice_deixar_amigo_gerir",
+				"text": "Confiar plenamente na intuição do seu amigo",
+				"internal_effects": { "personal_relationships": 10.0, "discipline": -5.0 }
+			}
+		]
+	})
+
+	# 11. ARCO SOCIEDADE EMPRESARIAL — ATO 3: O Desfecho e Dividendos
+	LifeLegacyEvents.register_event({
+		"id": "sociedade_amigo_ato3_desfecho",
+		"title": "Dividendos e Expansão (Ato 3 - Conclusão)",
+		"category": "lifestyle",
+		"arc_id": "arc_sociedade_amigo",
+		"arc_stage": 3,
+		"arc_total_stages": 3,
+		"description": "A empresa alcançou maturidade operacional e está pronta para distribuição de lucros expressivos aos sócios.",
+		"conditions": {
+			"required_arc_stage": { "arc_id": "arc_sociedade_amigo", "stage": 3 },
+			"min_ticks_since_prior_act": 2
+		},
+		"weight": 90,
+		"choices": [
+			{
+				"id": "choice_sacar_dividendos",
+				"text": "Receber dividendos integrais na conta pessoal",
+				"internal_effects": { "popularity": 10.0, "social_influence": 15.0 },
+				"career_effects": { "money": 18000 },
+				"modifier": {
+					"id": "mod_sucesso_empresarial",
+					"name": "Prestígio de Empresário Vitorioso",
+					"stat_drift": { "social_influence": 1.5, "popularity": 1.0 },
+					"duration_ticks": 4
+				}
+			},
+			{
+				"id": "choice_reinvestir_tudo",
+				"text": "Reinvestir 100% dos lucros na expansão internacional",
+				"internal_effects": { "reputation": 20.0, "discipline": 15.0 },
+				"career_effects": { "money": 3000 }
+			}
+		]
+	})
+
+	# 12. ARCO POLÊMICA NA IMPRENSA — ATO 1: Provocação
+	LifeLegacyEvents.register_event({
+		"id": "polemica_midia_ato1_boato",
+		"title": "Declarações Polêmicas na Mídia (Ato 1)",
+		"category": "media",
+		"arc_id": "arc_polemica_midia",
+		"arc_stage": 1,
+		"arc_total_stages": 2,
+		"description": "Um colunista influente insinuou que você não possui espírito de liderança e prioriza compromissos comerciais.",
+		"conditions": {
+			"min_stat": { "popularity": 30.0 },
+			"not_completed_arc": "arc_polemica_midia"
+		},
+		"weight": 65,
+		"choices": [
+			{
+				"id": "choice_contra_atacar_midia",
+				"text": "Rebater agressivamente em coletiva de imprensa",
+				"internal_effects": { "popularity": 15.0, "discipline": -10.0, "emotional_stability": -5.0 },
+				"modifier": {
+					"id": "mod_holofote_polemico",
+					"name": "Pressão Midiática Intensa",
+					"stat_drift": { "emotional_stability": -1.5, "discipline": -1.0 },
+					"duration_ticks": 2
+				},
+				"social_post": {
+					"hecho": "resposta_coletiva",
+					"autor": "Jogador",
+					"texto": "Críticos falam da sala climatizada, eu respondo com suor e títulos no campo!"
+				}
+			},
+			{
+				"id": "choice_ignorar_boato",
+				"text": "Manter postura nobre e ignorar comentários",
+				"internal_effects": { "reputation": 10.0, "discipline": 10.0, "emotional_stability": 5.0 }
+			}
+		]
+	})
+
+	# 13. ARCO POLÊMICA NA IMPRENSA — ATO 2: O Desfecho da Guerra de Mídia
+	LifeLegacyEvents.register_event({
+		"id": "polemica_midia_ato2_desfecho",
+		"title": "A Trégua ou o Escândalo Final (Ato 2 - Conclusão)",
+		"category": "media",
+		"arc_id": "arc_polemica_midia",
+		"arc_stage": 2,
+		"arc_total_stages": 2,
+		"description": "Após a repercussão da sua declaração, o canal de esportes convida você para um debate exclusivo de reconciliação.",
+		"conditions": {
+			"required_arc_stage": { "arc_id": "arc_polemica_midia", "stage": 2 },
+			"min_ticks_since_prior_act": 1,
+			"required_prior_choices": { "polemica_midia_ato1_boato": "choice_contra_atacar_midia" }
+		},
+		"weight": 85,
+		"choices": [
+			{
+				"id": "choice_entrevista_pacifica",
+				"text": "Conceder entrevista exclusiva e selar trégua pública",
+				"internal_effects": { "reputation": 15.0, "social_influence": 15.0, "emotional_stability": 10.0 },
+				"social_post": {
+					"hecho": "entrevista_paz",
+					"autor": "Prensa",
+					"texto": "Em entrevista franca, craque esclarece mal-entendidos e demonstra maturidade."
+				}
+			},
+			{
+				"id": "choice_vetar_emissora",
+				"text": "Vetar a emissora e reafirmar postura combativa",
+				"internal_effects": { "popularity": 10.0, "reputation": -5.0, "personal_relationships": -5.0 }
 			}
 		]
 	})
