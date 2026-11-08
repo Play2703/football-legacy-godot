@@ -211,7 +211,67 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco5.tscn`:
 
 ---
 
-## 4. CRONOGRAMA DE EXECUÇÃO DOS PRÓXIMOS MARCOS
+---
 
-- **Marco 6:** Homologação final, testes de estresse com 52 semanas consecutivas, verificação de consistência e auditoria de vazamento de memória.
+### 3.6. Marco 6 — Homologação Final e Teste de Estresse [CONCLUÍDO E HOMOLOGADO]
+Executado via `godot --headless res://tests/life_legacy/runner_marco6.tscn`:
+
+1. **Simulação Longitudinal Contínua de 52 Semanas Consecutivas:**
+   - Avanço progressivo semanal via emissões de `GameState.career_updated` do dia 1 ao 52 da temporada.
+   - Verificação em cada tick do alinhamento exato de `last_processed_time`.
+   - Validação da permanência estrita de todos os 6 indicadores no intervalo canônico $[0.0, 100.0]$.
+   - Resolução transacional com intenções na fila Outbox e despacho atômico para o Career (sem retenção de pendências órfãs).
+   - Status: **APROVADO (100% dos ticks validados)**.
+
+2. **Virada Anual Idempotente e Envelhecimento Canônico:**
+   - Transição temporal da Temporada 1 para a Temporada 2, Dia 1 via `_recover_temporal_gap`.
+   - Emissão de `annual_rollover_completed(2)` e arquivamento de snapshot no histórico anual.
+   - Envelhecimento preciso da prole: criança nascida no Dia 10 mantém 0 anos no Dia 1 e atinge 1 ano exatamente no Dia 10.
+   - Status: **APROVADO**.
+
+3. **Verificação de Não-Regressão dos Sistemas Originais:**
+   - `SaveSlots`: leitura, gravação atômica em três vias e chaveamento de slots intactos.
+   - `Career`: integridade total de variáveis de saldo (`money`), energia física (`energy`), rotas legadas e barreiras síncronas.
+   - `GameState`: preservação da rotina de partidas, calendário e temporadas.
+   - Status: **APROVADO**.
+
+4. **Auditoria de Performance e Nós Órfãos na Interface:**
+   - Instanciação e descarte repetido (10 ciclos) dos nós de interface (`LifeLegacyEventModal` e dashboard do `Celular`).
+   - Monitoramento via `Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)`: variação nula/negativa ($\Delta \le 0$).
+   - Ausência absoluta de vazamentos de nós de cena ou controles na memória do motor Godot.
+   - Status: **APROVADO**.
+
+---
+
+## 4. MATRIZ DE RASTREABILIDADE ARQUITETURAL (SEÇÕES A ATÉ R)
+
+| Seção | Requisito da Auditoria Fase 0 | Implementação na Fase 1 | Status |
+| :--- | :--- | :--- | :---: |
+| **A** | Isolamento modular e preservação do Autoload `Career` | Criado `features/life_legacy/` sem sobrescrever `career.gd` | **CONFORME** |
+| **B** | Persistência independente (`life_legacy.json`) por slot | `LifeLegacyPersistence` gerencia arquivo dedicado por slot | **CONFORME** |
+| **C** | Coordenador unificado de ciclo de vida | `LifeLegacyManager` registrado como Autoload `LifeLegacy` | **CONFORME** |
+| **D** | 6 Indicadores independentes com domínios normalizados | `LifeLegacyState` e `LifeLegacyEffects` ($0.0$ a $100.0$) | **CONFORME** |
+| **E** | Catálogo declarativo em GDScript puro | `LifeLegacyCatalogoEventos` com 8 eventos canônicos | **CONFORME** |
+| **F** | Fila de Despacho Outbox com Intent-Log | `LifeLegacyOutbox` com estados `PENDING` -> `COMMITTED` | **CONFORME** |
+| **G** | Barreira de persistência síncrona no Career | `Career._save_synchronous_barrier()` e `_save_epoch` | **CONFORME** |
+| **H** | Receptor Idempotente com Rollback no Career | `Career.apply_idempotent_effect()` e ledgers em `career_meta.cfg` | **CONFORME** |
+| **I** | Descarte de emissões espúrias de `career_updated` | Comparação lexicográfica `(season_num, season_day)` | **CONFORME** |
+| **J** | Tratamento de recuperação de lacunas temporais | `_recover_temporal_gap()` com loop simulado | **CONFORME** |
+| **K** | Circuit Breaker para lacunas $> 2$ temporadas | `_execute_fast_forward_circuit_breaker()` com amortização analítica | **CONFORME** |
+| **L** | Proteção contra retrocesso temporal (Safe Mode) | Bloqueio de gravação e preservação contra corrupção em regressão | **CONFORME** |
+| **M** | Sistema Dinástico e Hall da Fama sem mutação destrutiva | `SalonFama.colgar_dinastia()` idempotente e saga transacional | **CONFORME** |
+| **N** | Fórmula Canônica de Idade Familiar | `compute_canonical_age()` com 4 fases etárias | **CONFORME** |
+| **O** | Interface de Acesso Principal via Smartphone In-Game | App `"vida"` ("Minha Vida") integrado ao `Celular` | **CONFORME** |
+| **P** | Modal Narrativo Imersivo de Decisão | `LifeLegacyEventModal` com tema escuro e sinalização desacoplada | **CONFORME** |
+| **Q** | PRNG determinístico Knuth 64-bit LCG | `LifeLegacyRNG` validado com vetores exatos da Seção R | **CONFORME** |
+| **R** | Homologação Longitudinal e Zero Regressão | 52 semanas consecutivas simuladas e suite completa de testes aprovada | **CONFORME** |
+
+---
+
+## 5. CONCLUSÃO E HOMOLOGAÇÃO DA FASE 1
+
+A implementação da **Fase 1 do sistema LIFE & LEGACY** encontra-se **100% concluída, rigorosamente testada e integralmente homologada**.
+
+Todos os requisitos arquiteturais, transacionais, matemáticos e de integridade de dados estipulados na auditoria prévia foram implementados com absoluto respeito à proteção do código legado, garantindo confiabilidade no Godot 4.7.
+
 

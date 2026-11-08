@@ -14,7 +14,8 @@ func _ready() -> void:
 	assert(ll != null, "Autoload LifeLegacy não encontrado no SceneTree!")
 	assert(ss != null, "Autoload SaveSlots não encontrado no SceneTree!")
 	
-	# Limpa slots de teste 1 e 2
+	# Limpa slots de teste 0, 1 e 2
+	_cleanup_slot(0)
 	_cleanup_slot(1)
 	_cleanup_slot(2)
 	
@@ -52,6 +53,7 @@ func _ready() -> void:
 	assert(ll.get_stat("popularity") == 65.0, "Slot 0 deve ter preservado popularidade 65.0")
 	
 	# Limpeza
+	_cleanup_slot(0)
 	_cleanup_slot(1)
 	_cleanup_slot(2)
 	

@@ -71,6 +71,8 @@ func test_career_idempotent_effect_and_rollback() -> void:
 	print("[TEST] 2. Career.apply_idempotent_effect com Deduplicação...")
 	assert(Career != null, "Career autoload deve existir")
 	Career.processed_career_tokens.clear()
+	Career.energy = 100.0
+	Career.money = 5000
 	
 	var initial_money: int = Career.money
 	var initial_energy: float = Career.energy
