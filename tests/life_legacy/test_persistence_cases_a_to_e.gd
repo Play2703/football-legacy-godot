@@ -22,7 +22,7 @@ func _init() -> void:
 	assert(res_a["is_new_profile"] == true, "Caso A deve indicar is_new_profile = true")
 	assert(res_a["is_safe_mode"] == false, "Caso A não deve entrar em safe mode")
 	assert(FileAccess.file_exists(file_path), "Caso A deve criar o arquivo em disco")
-	assert(res_a["data"]["schema_version"] == 1, "Caso A deve ter schema_version = 1")
+	assert(res_a["data"]["schema_version"] == LifeLegacyPersistence.CURRENT_SUPPORTED_SCHEMA, "Caso A deve ter schema_version suportado")
 	assert(res_a["data"]["stats"]["popularity"] == 40.0, "Caso A deve ter stats padrão")
 	print("  -> Caso A aprovado!")
 	
