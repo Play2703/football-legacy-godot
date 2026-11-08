@@ -231,6 +231,8 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 
 	# 4. Abre a cena REAL ui/career_hub.tscn e confere instanciação automática do modal
 	if Career != null:
+		Career.birthday_day = 0
+		Career.birthday_month = 0
 		Career.pending_ceremonies.clear()
 		Career.pending_summary = {}
 		Career.pending_decision = ""
@@ -243,8 +245,11 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 
 	var hub_scene = load("res://ui/career_hub.tscn")
 	assert(hub_scene != null, "Cena ui/career_hub.tscn deve ser carregável")
+	var saved_team: String = GameState.player_team_id
+	GameState.player_team_id = ""
 	var hub = hub_scene.instantiate()
 	add_child(hub)
+	GameState.player_team_id = saved_team
 
 	var modal = hub.get_node_or_null("LifeLegacyEventModal")
 	assert(modal != null, "CareerHub deve criar automaticamente LifeLegacyEventModal perante evento pendente")
