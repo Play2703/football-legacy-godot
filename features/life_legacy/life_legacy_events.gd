@@ -62,7 +62,7 @@ static func roll_event(ctx: Dictionary, rng: LifeLegacyRNG) -> Dictionary:
 		"created_at": Time.get_datetime_string_from_system()
 	}
 
-# Resolve a escolha do jogador, garantindo Intent-Log e despacho Outbox
+# Resolve a escolha do jogador, garantindo protocolo estrito em 3 etapas com Intent-Log
 static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_data: Dictionary, ll_manager) -> bool:
 	if active_event.get("status", "") == "RESOLVED":
 		return true
@@ -78,61 +78,91 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 		push_error("[LifeLegacyEvents] Escolha %s não encontrada no evento %s" % [choice_id, active_event.get("event_id", "")])
 		return false
 
-	# Snapshots para rollback em caso de falha de persistência no pré-compromisso
-	var snap_active_status: String = active_event.get("status", "PENDING_RESOLUTION")
-	var snap_choice_id: String = active_event.get("selected_choice_id", "")
-	var snap_pending_dispatches: Array = (outbox_data.get("pending_dispatches", []) as Array).duplicate(true)
-
 	var occ_id: String = String(active_event.get("occurrence_id", "occ"))
-	var pending_dispatches: Array = snap_pending_dispatches.duplicate(true)
 
-	# 1. Cria intenção para Career Effects (Dinheiro / Energia)
-	if chosen.has("career_effects"):
-		var c_eff: Dictionary = chosen["career_effects"]
-		var tok_eff: String = "%s_%s_career" % [occ_id, choice_id]
-		var intent_eff: Dictionary = LifeLegacyOutbox.create_intent("career_effects", tok_eff, c_eff)
-		pending_dispatches.append(intent_eff)
+	# --- ETAPA A: Pré-compromisso (Pre-commitment) ---
+	var is_already_precommitted: bool = (active_event.get("status", "") == "PRE_COMMITMENT" and active_event.get("selected_choice_id", "") == choice_id)
 
-	# 2. Cria intenção para Social Post
-	if chosen.has("social_post"):
-		var s_post: Dictionary = chosen["social_post"]
-		var tok_post: String = "%s_%s_social" % [occ_id, choice_id]
-		var intent_post: Dictionary = LifeLegacyOutbox.create_intent("career_social", tok_post, {"post_data": s_post})
-		pending_dispatches.append(intent_post)
+	if not is_already_precommitted:
+		var snap_active_status: String = active_event.get("status", "PENDING_RESOLUTION")
+		var snap_choice_id: String = active_event.get("selected_choice_id", "")
+		var snap_pending_dispatches: Array = (outbox_data.get("pending_dispatches", []) as Array).duplicate(true)
 
-	outbox_data["pending_dispatches"] = pending_dispatches
-	active_event["selected_choice_id"] = choice_id
-	active_event["status"] = "PRE_COMMITMENT"
-	ll_manager.get_data()["active_event"] = active_event
-	ll_manager.get_data()["outbox"] = outbox_data
+		var pending_dispatches: Array = snap_pending_dispatches.duplicate(true)
 
-	# 3. Pré-compromisso: salva no disco antes do envio ao Career (Intent Log)
-	var pre_saved: bool = ll_manager.save_current_slot()
-	if not pre_saved:
-		# Rollback em memória se o save do pré-compromisso falhar
-		active_event["status"] = snap_active_status
-		active_event["selected_choice_id"] = snap_choice_id
-		outbox_data["pending_dispatches"] = snap_pending_dispatches
+		# 1. Cria intenção para Career Effects (Dinheiro / Energia)
+		if chosen.has("career_effects"):
+			var c_eff: Dictionary = chosen["career_effects"]
+			var tok_eff: String = "%s_%s_career" % [occ_id, choice_id]
+			var intent_eff: Dictionary = LifeLegacyOutbox.create_intent("career_effects", tok_eff, c_eff)
+			pending_dispatches.append(intent_eff)
+
+		# 2. Cria intenção para Social Post
+		if chosen.has("social_post"):
+			var s_post: Dictionary = chosen["social_post"]
+			var tok_post: String = "%s_%s_social" % [occ_id, choice_id]
+			var intent_post: Dictionary = LifeLegacyOutbox.create_intent("career_social", tok_post, {"post_data": s_post})
+			pending_dispatches.append(intent_post)
+
+		outbox_data["pending_dispatches"] = pending_dispatches
+		active_event["selected_choice_id"] = choice_id
+		active_event["status"] = "PRE_COMMITMENT"
+		active_event["internal_effects_applied"] = false
 		ll_manager.get_data()["active_event"] = active_event
 		ll_manager.get_data()["outbox"] = outbox_data
-		push_error("[LifeLegacyEvents] Falha ao persistir pré-compromisso do evento no disco. Despacho cancelado.")
+
+		var pre_saved: bool = ll_manager.save_current_slot()
+		if not pre_saved:
+			# Rollback em memória se o save do pré-compromisso falhar
+			active_event["status"] = snap_active_status
+			active_event["selected_choice_id"] = snap_choice_id
+			outbox_data["pending_dispatches"] = snap_pending_dispatches
+			ll_manager.get_data()["active_event"] = active_event
+			ll_manager.get_data()["outbox"] = outbox_data
+			push_error("[LifeLegacyEvents] Falha ao persistir pré-compromisso do evento no disco. Despacho cancelado.")
+			return false
+
+	# --- ETAPA B: Despacho Individual ---
+	for intent in outbox_data.get("pending_dispatches", []):
+		if String(intent.get("token", "")).begins_with(occ_id):
+			if intent.get("status", "") != LifeLegacyOutbox.STATUS_COMMITTED:
+				LifeLegacyOutbox.dispatch_intent(intent)
+
+	# --- ETAPA C: Confirmação com Validação ---
+	var all_committed: bool = true
+	for intent in outbox_data.get("pending_dispatches", []):
+		if String(intent.get("token", "")).begins_with(occ_id):
+			if intent.get("status", "") != LifeLegacyOutbox.STATUS_COMMITTED:
+				all_committed = false
+				break
+
+	if not all_committed:
+		# Persiste estado do outbox com intents pendentes para retentativa sem avançar evento
+		ll_manager.get_data()["active_event"] = active_event
+		ll_manager.get_data()["outbox"] = outbox_data
+		ll_manager.save_current_slot()
+		push_warning("[LifeLegacyEvents] Nem todas as intenções foram confirmadas pelo receptor. Evento permanece em PRE_COMMITMENT.")
 		return false
 
-	# 4. Aplica alterações de indicadores internos
-	if chosen.has("internal_effects"):
-		var in_eff: Dictionary = chosen["internal_effects"]
-		for stat_k in in_eff:
-			var delta: float = float(in_eff[stat_k])
-			ll_manager.apply_stat_change(stat_k, delta, "event:" + String(active_event.get("event_id", "")), occ_id)
+	# Aplica indicadores internos apenas uma vez
+	if not active_event.get("internal_effects_applied", false):
+		if chosen.has("internal_effects"):
+			var in_eff: Dictionary = chosen["internal_effects"]
+			for stat_k in in_eff:
+				var delta: float = float(in_eff[stat_k])
+				ll_manager.apply_stat_change(stat_k, delta, "event:" + String(active_event.get("event_id", "")), occ_id)
+		active_event["internal_effects_applied"] = true
 
-	# 5. Despacha ao Career imediatamente via Outbox
-	LifeLegacyOutbox.reconcile_outbox(outbox_data)
-
-	# 6. Avança evento para RESOLVED e salva confirmação final
+	# Transita evento para RESOLVED e salva confirmação final
 	active_event["status"] = "RESOLVED"
 	active_event["resolved_at"] = Time.get_datetime_string_from_system()
 	ll_manager.get_data()["active_event"] = active_event
 	ll_manager.get_data()["outbox"] = outbox_data
-	ll_manager.save_current_slot()
+	var final_saved: bool = ll_manager.save_current_slot()
+	if not final_saved:
+		active_event["status"] = "PRE_COMMITMENT"
+		ll_manager.get_data()["active_event"] = active_event
+		push_error("[LifeLegacyEvents] Falha ao persistir confirmação final do evento no disco.")
+		return false
 
 	return true

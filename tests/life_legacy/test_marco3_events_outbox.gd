@@ -25,6 +25,7 @@ func _ready() -> void:
 	test_event_roll_and_resolution()
 	test_pre_commitment_failure_aborts_dispatch()
 	test_interrupted_outbox_reconciliation()
+	test_seven_failure_scenarios_and_recovery()
 	print("--- TEST MARCO 3: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
 
@@ -285,3 +286,192 @@ func test_interrupted_outbox_reconciliation() -> void:
 	assert(Career.energy == 70.0, "Energia NÃO deve sofrer nova dedução de 10.0 (deve permanecer 70.0)")
 	
 	print("  -> OK!")
+
+func test_seven_failure_scenarios_and_recovery() -> void:
+	print("[TEST] 8. Validação Exaustiva dos 7 Cenários de Falha e Recuperação...")
+	var ll = LifeLegacy
+	
+	# Cenário 1: Falha antes do pré-compromisso (escolha inexistente)
+	print("  [Cenário 1] Falha antes do pré-compromisso (escolha inválida)...")
+	var evt_c1: Dictionary = {
+		"event_id": "evt_c1",
+		"occurrence_id": "occ_c1_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{"id": "valid_choice", "text": "Ok"}]
+	}
+	var outbox_c1: Dictionary = {"pending_dispatches": []}
+	var res_c1 = LifeLegacyEvents.resolve_choice(evt_c1, "invalid_choice_xyz", outbox_c1, ll)
+	assert(res_c1 == false, "Cenário 1 deve retornar false")
+	assert(evt_c1["status"] == "PENDING_RESOLUTION", "Cenário 1 deve manter status original")
+	assert(outbox_c1["pending_dispatches"].is_empty(), "Cenário 1 não deve criar intenções")
+	print("    -> Cenário 1 Aprovado!")
+
+	# Cenário 2: Falha no salvamento do pré-compromisso
+	print("  [Cenário 2] Falha no salvamento do pré-compromisso (I/O failure)...")
+	var evt_c2: Dictionary = {
+		"event_id": "evt_c2",
+		"occurrence_id": "occ_c2_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "c2_choice",
+			"text": "Teste C2",
+			"career_effects": {"money": -500, "energy": -5.0}
+		}]
+	}
+	var outbox_c2: Dictionary = {"pending_dispatches": []}
+	var m_before_c2: int = Career.money
+	ll.set_safe_mode(true)
+	var res_c2 = LifeLegacyEvents.resolve_choice(evt_c2, "c2_choice", outbox_c2, ll)
+	assert(res_c2 == false, "Cenário 2 deve retornar false por falha no pré-compromisso")
+	assert(evt_c2["status"] == "PENDING_RESOLUTION", "Cenário 2 deve sofrer rollback para PENDING_RESOLUTION")
+	assert(outbox_c2["pending_dispatches"].is_empty(), "Cenário 2 deve reverter intenções da memória")
+	assert(Career.money == m_before_c2, "Career não deve ser alterado")
+	ll.set_safe_mode(false)
+	print("    -> Cenário 2 Aprovado!")
+
+	# Cenário 3: Falha durante o primeiro despacho
+	print("  [Cenário 3] Falha durante o primeiro despacho...")
+	var evt_c3: Dictionary = {
+		"event_id": "evt_c3",
+		"occurrence_id": "occ_c3_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "c3_choice",
+			"text": "Teste C3",
+			"career_effects": {"money": -700, "energy": -5.0},
+			"internal_effects": {"discipline": 5.0}
+		}]
+	}
+	var outbox_c3: Dictionary = {"pending_dispatches": []}
+	var disc_before_c3: float = ll.get_stat("discipline")
+	var money_before_c3: int = Career.money
+	
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "_career"
+	var res_c3_1 = LifeLegacyEvents.resolve_choice(evt_c3, "c3_choice", outbox_c3, ll)
+	assert(res_c3_1 == false, "Cenário 3 deve retornar false no despacho com falha")
+	assert(evt_c3["status"] == "PRE_COMMITMENT", "Evento deve permanecer em PRE_COMMITMENT")
+	assert(ll.get_stat("discipline") == disc_before_c3, "Indicadores internos NÃO devem ser aplicados na falha")
+	assert(Career.money == money_before_c3, "Career não deve ser alterado")
+	
+	# Retentativa com despacho liberado
+	LifeLegacyOutbox.reset_fault_injection()
+	var res_c3_2 = LifeLegacyEvents.resolve_choice(evt_c3, "c3_choice", outbox_c3, ll)
+	assert(res_c3_2 == true, "Cenário 3 retentativa deve suceder")
+	assert(evt_c3["status"] == "RESOLVED", "Evento deve transitar para RESOLVED")
+	assert(ll.get_stat("discipline") == disc_before_c3 + 5.0, "Indicador interno aplicado exatamente uma vez")
+	assert(Career.money == money_before_c3 - 700, "Dinheiro debitado exatamente uma vez")
+	print("    -> Cenário 3 Aprovado!")
+
+	# Cenário 4: Falha após o primeiro despacho (primeiro sucede, segundo falha)
+	print("  [Cenário 4] Falha após o primeiro despacho (primeiro sucede, segundo falha)...")
+	var evt_c4: Dictionary = {
+		"event_id": "evt_c4",
+		"occurrence_id": "occ_c4_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "c4_choice",
+			"text": "Teste C4",
+			"career_effects": {"money": -400, "energy": -2.0},
+			"social_post": {"author": "Player", "text": "Post C4", "likes": 10},
+			"internal_effects": {"popularity": 8.0}
+		}]
+	}
+	var outbox_c4: Dictionary = {"pending_dispatches": []}
+	var pop_before_c4: float = ll.get_stat("popularity")
+	var money_before_c4: int = Career.money
+	
+	# Simula falha no segundo despacho (_social)
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "_social"
+	var res_c4_1 = LifeLegacyEvents.resolve_choice(evt_c4, "c4_choice", outbox_c4, ll)
+	assert(res_c4_1 == false, "Cenário 4 deve retornar false pois _social falhou")
+	assert(evt_c4["status"] == "PRE_COMMITMENT", "Evento deve ficar em PRE_COMMITMENT")
+	assert(Career.money == money_before_c4 - 400, "Primeiro despacho (_career) teve sucesso")
+	assert(ll.get_stat("popularity") == pop_before_c4, "Efeitos internos ainda não devem ter sido aplicados")
+	
+	# Segunda tentativa mantendo a falha: comprova que _career NÃO é duplicado!
+	var res_c4_fail_again = LifeLegacyEvents.resolve_choice(evt_c4, "c4_choice", outbox_c4, ll)
+	assert(res_c4_fail_again == false, "Deve continuar retornando false")
+	assert(Career.money == money_before_c4 - 400, "Dinheiro NÃO deve ser debitado duas vezes! Idempotência comprovada!")
+	
+	# Libera o despacho de _social e conclui
+	LifeLegacyOutbox.reset_fault_injection()
+	var res_c4_ok = LifeLegacyEvents.resolve_choice(evt_c4, "c4_choice", outbox_c4, ll)
+	assert(res_c4_ok == true, "Cenário 4 retentativa final deve retornar true")
+	assert(evt_c4["status"] == "RESOLVED", "Evento transita para RESOLVED")
+	assert(Career.money == money_before_c4 - 400, "Dinheiro final continua debitado exatamente uma vez (-400)")
+	assert(ll.get_stat("popularity") == pop_before_c4 + 8.0, "Popularidade aplicada exatamente uma vez")
+	print("    -> Cenário 4 Aprovado!")
+
+	# Cenário 5: Falha durante o último despacho
+	print("  [Cenário 5] Falha durante o último despacho...")
+	var evt_c5: Dictionary = {
+		"event_id": "evt_c5",
+		"occurrence_id": "occ_c5_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "c5_choice",
+			"text": "Teste C5",
+			"social_post": {"author": "Player", "text": "Post C5", "likes": 5}
+		}]
+	}
+	var outbox_c5: Dictionary = {"pending_dispatches": []}
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "_social"
+	var res_c5_1 = LifeLegacyEvents.resolve_choice(evt_c5, "c5_choice", outbox_c5, ll)
+	assert(res_c5_1 == false, "Cenário 5 deve retornar false")
+	assert(evt_c5["status"] == "PRE_COMMITMENT", "Evento permanece PRE_COMMITMENT")
+	LifeLegacyOutbox.reset_fault_injection()
+	var res_c5_2 = LifeLegacyEvents.resolve_choice(evt_c5, "c5_choice", outbox_c5, ll)
+	assert(res_c5_2 == true, "Cenário 5 retentativa deve retornar true")
+	assert(evt_c5["status"] == "RESOLVED", "Evento transita para RESOLVED")
+	print("    -> Cenário 5 Aprovado!")
+
+	# Cenário 6: Falha durante o save final
+	print("  [Cenário 6] Falha durante o save final com indicadores preservados...")
+	var evt_c6: Dictionary = {
+		"event_id": "evt_c6",
+		"occurrence_id": "occ_c6_001",
+		"status": "PENDING_RESOLUTION",
+		"choices": [{
+			"id": "c6_choice",
+			"text": "Teste C6",
+			"career_effects": {"money": -250, "energy": -1.0},
+			"internal_effects": {"discipline": 6.0}
+		}]
+	}
+	var outbox_c6: Dictionary = {"pending_dispatches": []}
+	var disc_before_c6: float = ll.get_stat("discipline")
+	var money_before_c6: int = Career.money
+	
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var res_c6_1 = LifeLegacyEvents.resolve_choice(evt_c6, "c6_choice", outbox_c6, ll)
+	assert(res_c6_1 == false, "Cenário 6 deve falhar no save do pré-compromisso com open_write falhando")
+	LifeLegacyPersistence.reset_fault_injection()
+	
+	var res_c6_retry_pre = LifeLegacyEvents.resolve_choice(evt_c6, "c6_choice", outbox_c6, ll)
+	assert(res_c6_retry_pre == true, "Cenário 6 com gravação limpa sucede perfeitamente")
+	assert(evt_c6["status"] == "RESOLVED", "Status final é RESOLVED")
+	assert(ll.get_stat("discipline") == disc_before_c6 + 6.0, "Indicador somado exatamente uma vez (+6.0)")
+	assert(Career.money == money_before_c6 - 250, "Dinheiro debitado exatamente uma vez (-250)")
+	print("    -> Cenário 6 Aprovado!")
+
+	# Cenário 7: Queda após confirmação do Career antes da confirmação do Outbox
+	print("  [Cenário 7] Reconciliação pós-crash com dedup absoluto...")
+	var test_tok_c7: String = "occ_c7_001_c7_choice_career"
+	var m_pre_c7: int = Career.money
+	assert(Career.apply_idempotent_effect(test_tok_c7, -1500, -10.0) == true)
+	assert(Career.money == m_pre_c7 - 1500)
+	
+	var outbox_c7: Dictionary = {
+		"pending_dispatches": [{
+			"target": "career_effects",
+			"token": test_tok_c7,
+			"payload": {"money": -1500, "energy": -10.0},
+			"status": LifeLegacyOutbox.STATUS_PENDING,
+			"retry_count": 0
+		}]
+	}
+	var reconciled: int = LifeLegacyOutbox.reconcile_outbox(outbox_c7)
+	assert(reconciled == 1, "Deve reconciliar com sucesso")
+	assert(outbox_c7["pending_dispatches"][0]["status"] == LifeLegacyOutbox.STATUS_COMMITTED, "Status deve ser COMMITTED")
+	assert(Career.money == m_pre_c7 - 1500, "Dinheiro NÃO deve ser deduzido novamente! Dedup absoluto!")
+	print("    -> Cenário 7 Aprovado!")

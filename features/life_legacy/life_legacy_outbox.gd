@@ -31,6 +31,12 @@ const STATUS_PENDING: String = "PENDING"
 const STATUS_COMMITTED: String = "COMMITTED"
 const STATUS_FAILED: String = "FAILED"
 
+# Hook controlável para testes de tolerância a falhas no despacho
+static var fault_inject_dispatch_fail_token: String = ""
+
+static func reset_fault_injection() -> void:
+	fault_inject_dispatch_fail_token = ""
+
 # Cria registro formal de intenção antes do envio (Pre-commitment Intent Log)
 static func create_intent(target: String, token: String, payload: Dictionary) -> Dictionary:
 	return {
@@ -56,6 +62,13 @@ static func dispatch_intent(intent: Dictionary) -> bool:
 	var target: String = String(intent.get("target", ""))
 	var token: String = String(intent.get("token", ""))
 	var payload: Dictionary = intent.get("payload", {})
+
+	if fault_inject_dispatch_fail_token != "" and token.contains(fault_inject_dispatch_fail_token):
+		intent["retry_count"] = int(intent.get("retry_count", 0)) + 1
+		intent["status"] = STATUS_PENDING
+		push_warning("[LifeLegacyOutbox] [FaultInjection] Falha simulada no despacho do token %s" % token)
+		return false
+
 	var ok: bool = false
 	var career = _get_career()
 
