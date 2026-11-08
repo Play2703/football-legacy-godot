@@ -14,7 +14,7 @@ func _ready() -> void:
 	print("=================================================================")
 	
 	test_system_isolation_and_setup()
-	test_full_52_weeks_stress_simulation()
+	test_full_52_weeks_synthetic_ticks_stress_simulation()
 	test_annual_rollover_and_aging()
 	test_non_regression_original_systems()
 	await test_orphan_nodes_and_memory_leak()
@@ -54,8 +54,13 @@ func test_system_isolation_and_setup() -> void:
 		
 	print("  -> Ambiente inicializado: Temporada 1, Dia 0, Cônjuge: Camila, Filho: Lucas.")
 
-func test_full_52_weeks_stress_simulation() -> void:
-	print("[Teste 2] Simulação Longitudinal de 52 Semanas Consecutivas...")
+func test_full_52_weeks_synthetic_ticks_stress_simulation() -> void:
+	print("[Teste 2] Simulação Sintética Longitudinal de 52 Ticks Temporais (Semanas)...")
+	# NOTA ARQUITETURAL: Este teste avalia o estresse sintético longitudinal de 52 ticks temporais
+	# (avanços de season_day via career_updated) para validação de drift acumulado, clamping dos
+	# 6 indicadores no domínio [0, 100], ausência de vazamento de pendências no outbox e estabilidade
+	# sob alta carga temporal. A simulação por partidas reais de calendário é coberta no Marco 5
+	# através de GameState.record_match() e CareerHub real. As duas modalidades permanecem separadas.
 	var ll_manager = get_node_or_null("/root/LifeLegacy")
 	
 	var total_events_triggered: int = 0
@@ -104,7 +109,7 @@ func test_full_52_weeks_stress_simulation() -> void:
 				"Semana %d: Intenção Outbox presa em estado não-COMMITTED" % week)
 				
 	ll_manager.life_event_ready.disconnect(on_event_ready)
-	print("  -> 52 semanas executadas. Eventos acionados: %d, Eventos resolvidos: %d. Integridade dos indicadores 100%%." % [total_events_triggered, total_events_resolved])
+	print("  -> 52 ticks temporais sintéticos executados. Eventos acionados: %d, Eventos resolvidos: %d. Integridade dos indicadores 100%%. (Avanço real de partidas validado no Marco 5)." % [total_events_triggered, total_events_resolved])
 
 func test_annual_rollover_and_aging() -> void:
 	print("[Teste 3] Teste de Virada Anual (Temporada 2, Dia 1) e Envelhecimento...")

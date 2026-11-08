@@ -216,12 +216,14 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco5.tscn`:
 ### 3.6. Marco 6 — Homologação Final e Teste de Estresse [CONCLUÍDO E HOMOLOGADO]
 Executado via `godot --headless res://tests/life_legacy/runner_marco6.tscn`:
 
-1. **Simulação Longitudinal Contínua de 52 Semanas Consecutivas:**
-   - Avanço progressivo semanal via emissões de `GameState.career_updated` do dia 1 ao 52 da temporada.
+1. **Simulação Sintética Longitudinal de 52 Ticks Temporais (Semanas):**
+   - Execução via método `test_full_52_weeks_synthetic_ticks_stress_simulation()`.
+   - Avanço progressivo semanal via emissões de `GameState.career_updated` do dia 1 ao 52 da temporada como teste sintético de estresse longitudinal para avaliar acúmulo de drift, saturação dos 6 indicadores no intervalo $[0.0, 100.0]$, ausência de vazamento de pendências no outbox e estabilidade do estado sob alta carga.
+   - *Nota de Isolamento de Modalidades:* O avanço real por partidas de calendário é validado de forma independente no Marco 5 (`test_marco5_ui_events.gd`) através de `GameState.record_match()` e cena real do `CareerHub`. As duas modalidades permanecem rigorosamente separadas.
    - Verificação em cada tick do alinhamento exato de `last_processed_time`.
    - Validação da permanência estrita de todos os 6 indicadores no intervalo canônico $[0.0, 100.0]$.
    - Resolução transacional com intenções na fila Outbox e despacho atômico para o Career (sem retenção de pendências órfãs).
-   - Status: **APROVADO (100% dos ticks validados)**.
+   - Status: **APROVADO (100% dos ticks sintéticos validados)**.
 
 2. **Virada Anual Idempotente e Envelhecimento Canônico:**
    - Transição temporal da Temporada 1 para a Temporada 2, Dia 1 via `_recover_temporal_gap`.
@@ -237,8 +239,8 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco6.tscn`:
 
 4. **Auditoria de Performance e Nós Órfãos na Interface:**
    - Instanciação e descarte repetido (10 ciclos) dos nós de interface (`LifeLegacyEventModal` e dashboard do `Celular`).
-   - Monitoramento via `Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)`: variação nula/negativa ($\Delta \le 0$).
-   - Ausência absoluta de vazamentos de nós de cena ou controles na memória do motor Godot.
+   - Monitoramento via `Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)`: variação dentro do limiar canônico de tolerância do teste ($\Delta \le 5$, conforme assert formal `assert(delta <= 5)` em `test_orphan_nodes_and_memory_leak()`).
+   - Ausência de vazamentos de nós de cena ou controles na memória do motor Godot.
    - Status: **APROVADO**.
 
 ---
@@ -264,7 +266,7 @@ Executado via `godot --headless res://tests/life_legacy/runner_marco6.tscn`:
 | **O** | Interface de Acesso Principal via Smartphone In-Game | App `"vida"` ("Minha Vida") integrado ao `Celular` | **CONFORME** |
 | **P** | Modal Narrativo Imersivo de Decisão | `LifeLegacyEventModal` com tema escuro e sinalização desacoplada | **CONFORME** |
 | **Q** | PRNG determinístico Knuth 64-bit LCG | `LifeLegacyRNG` validado com vetores exatos da Seção R | **CONFORME** |
-| **R** | Homologação Longitudinal e Zero Regressão | 52 semanas consecutivas simuladas e suite completa de testes aprovada | **CONFORME** |
+| **R** | Homologação Longitudinal e Zero Regressão | 52 ticks temporais sintéticos simulados e suite completa de testes aprovada (com avanço real de partidas coberto no Marco 5) | **CONFORME** |
 
 ---
 
@@ -361,7 +363,7 @@ Executada de forma independente, sequencial e limpa no ambiente do projeto:
 | **5** | `runner_marco3.tscn` | `godot --headless res://tests/life_legacy/runner_marco3.tscn` | `0` | **APROVADO** (Condições declarativas, deduplicação Career, Outbox Intent-Log, pre-commitment rollback e crash recovery) |
 | **6** | `runner_marco4.tscn` | `godot --headless res://tests/life_legacy/runner_marco4.tscn` | `0` | **APROVADO** (Idade canônica, ciclo familiar, placa SalonFama idempotente, instantiate_dynasty_heir e crash recovery em todas as etapas) |
 | **7** | `runner_marco5.tscn` | `godot --headless res://tests/life_legacy/runner_marco5.tscn` | `0` | **APROVADO** (Catálogo de 8 eventos, modal UI, dashboard Celular e integração ponta a ponta) |
-| **8** | `runner_marco6.tscn` | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** (Estresse de 52 semanas consecutivas, virada anual temporada 2, zero regressão e monitor de nós órfãos) |
+| **8** | `runner_marco6.tscn` | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** (Estresse sintético de 52 ticks temporais semanais, virada anual temporada 2, zero regressão e monitor de nós órfãos com $\Delta \le 5$) |
 
 ---
 
@@ -375,15 +377,16 @@ Em conformidade com a auditoria de bloqueadores residuais da Fase 1, foram imple
 | :--- | :--- | :--- |
 | `ff7c6a7` | **Bloqueadores 1 e 4** (Persistência & Recuperação de Backup) | 1. Implementado status `WARN_RECOVERED_MEMORY_ONLY`: se o arquivo `.bak` estiver íntegro mas a regravação do arquivo principal falhar, o jogo entra em Modo Seguro em memória sem tentar gravar nem corromper o disco.<br>2. Proteção contra destruição do backup íntegro: adicionado parâmetro `rotate_backup: bool = true` em `save_slot_data()`, desativando a rotação de backup durante a restauração do Caso B para que o `.bak` válido original permaneça intocado caso a gravação do principal falhe.<br>3. Suíte de injeção de falhas I/O reais controladas (`FaultInjection` em `LifeLegacyPersistence`): simulação de erro de abertura de escrita, truncamento de buffer, divergência de tamanho de arquivo, falha de staging e falha de renomeação na promoção atômica com comprovação de rollback. |
 | `0eaa88e` | **Bloqueador 2** (Protocolo Transacional de Eventos em 3 Estágios) | 1. Implementado protocolo transacional de 3 estágios em `LifeLegacyEvents.resolve_choice()`: Estágio 1 (`PRE_COMMITMENT`), Estágio 2 (Despacho atômico das intenções) e Estágio 3 (`RESOLVED` após confirmação completa do receptor).<br>2. Se o pré-compromisso no disco falhar, o despacho é cancelado e as mutações em memória são revertidas.<br>3. Se qualquer intenção falhar durante o despacho ou não for confirmada pelo receptor, o evento permanece estritamente em `PRE_COMMITMENT` e o status `RESOLVED` não é atribuído.<br>4. Implementação de 7 testes exaustivos de cenários de falha e recuperação em `test_marco3_events_outbox.gd`. |
-| `e8904a9` | **Bloqueador 3** (Monotonicidade e Unicidade Dinástica) | 1. Substituição do timestamp Unix volátil por gerador de sequência estritamente monotônico persistente `next_dynasty_tx_seq: int` no dicionário dinástico.<br>2. Formato do identificador transacional: `dyn_tx_s{slot}_seq{seq}_{father_id}_to_{heir_id}`.<br>3. Teste automatizado com 100 iterações em loop síncrono comprovando zero colisões e monotonicidade estrita. |
+| `e8904a9` | **Bloqueador 3** (Monotonicidade e Unicidade Dinástica) | 1. Substituição do timestamp Unix volátil isolado por gerador de sequência estritamente monotônico persistente `next_dynasty_tx_seq: int` no dicionário dinástico.<br>2. Formato canônico do identificador transacional: `dyn_tx_s{slot}_seq{seq}_{unix}_{usec}` (implementado em `LifeLegacyDynasty.generate_dynasty_tx_id()`), unindo monotonicidade estrita por slot e entropia temporal única.<br>3. Teste automatizado com 100 iterações em loop síncrono comprovando zero colisões e monotonicidade estrita. |
 | `1831f5a` | **Bloqueador 5** (Ciclo de Vida Real do CareerHub & Modal) | 1. Integração da cena real `ui/career_hub.tscn` com detecção de eventos pendentes e instanciação automática de `LifeLegacyEventModal`.<br>2. Suporte a troca reativa de slots (`reload_slot`) durante modal aberto: remoção limpa do modal anterior e instanciação do modal correspondente ao novo slot ativo sem re-exibição para eventos já resolvidos.<br>3. Resolução de escolhas via clique real de botões na UI, refletindo no `LifeLegacy` e persistindo em disco. |
-| `e0f9330` | **PRNG Canônico & Guardas de Domínio** | 1. Aplicação de `clampi` em todos os parâmetros canônicos de `LifeLegacyRNG.generate_seed()`: `slot` (0..9), `season` (1..999), `day` (0..365), `catalog_version` (1..9999), `rng_version` (1..999).<br>2. Tratamento explícito de aritmética inteira de 64 bits com sinal nativa do GDScript, constantes multiplicativas de Knuth (`6364136223846793005` e `1442695040888963407`) e máscara de 63 bits (`0x7FFFFFFFFFFFFFFF`) para evitar overflow negativo na semente inicial.<br>3. Testes formais de limites extremos e estabilidade determinística em `test_deterministic_rng.gd`. |
+| `e0f9330` | **PRNG Canônico & Guardas de Domínio** | 1. Aplicação de `clampi` em todos os parâmetros canônicos de `LifeLegacyRNG.generate_seed()`: `slot` (0..2), `season` (1..999), `day` (0..380), `catalog_version` (1..255), `rng_version` (1..255).<br>2. Tratamento explícito de aritmética inteira de 64 bits com sinal nativa do GDScript, constantes multiplicativas de Knuth (`6364136223846793005` e `1442695040888963407`) e máscara de 63 bits (`0x7FFFFFFFFFFFFFFF`) para evitar overflow negativo na semente inicial.<br>3. Testes formais de limites extremos e estabilidade determinística em `test_deterministic_rng.gd`. |
 | `666ae0c` | **Crash Recovery Transacional de Eventos (Cenários A-E)** | 1. Implementação de `LifeLegacyEvents.recover_precommitted_event()` e integração com `LifeLegacyManager.reload_slot()`.<br>2. Bloqueio de novos sorteios de eventos enquanto o ativo estiver em `PRE_COMMITMENT`.<br>3. Proteção contra troca de decisão durante `PRE_COMMITMENT`.<br>4. Implementação e aprovação dos Cenários A a E em `test_marco3_events_outbox.gd`. |
 | `74fc259` | **Consolidação de Backup e Staging Fallback** | 1. Tratamento formal de falha em `remove_absolute(bak_path)` e promoção do staging.<br>2. Preservação de `.bak_staging` em caso de erro na consolidação com emissão de `WARN_BACKUP_CONSOLIDATION_FAILED`.<br>3. Testes de injeção de falha 6.10, 6.11 e 6.12 em `test_persistence_cases_a_to_e.gd`. |
 | `496beb8` | **Integração Real de Partida GameState e CareerHub** | 1. Atualização do Marco 5 com avanço de calendário via chamada real de `GameState.record_match()`.<br>2. Verificação de sincronização temporal de `season_day = 1`, geração de evento pendente, abertura da cena real `ui/career_hub.tscn`, resolução via clique e persistência no disco. |
 | `3c38d7c` | **Prioridade de Recuperação do Backup Staging** | 1. Inversão da ordem de busca em `load_slot_data()`: prioridade estrita para `.bak_staging` (que contém a versão mais recente em falhas de promoção/rollback).<br>2. Somente busca `.bak` se staging estiver ausente ou corrompido.<br>3. Preservação do `.bak` da revisão 1 ao recuperar a revisão 2 a partir do staging.<br>4. Cenário 6.12 atualizado e aprovado com teste de prioridade de staging e fallback para `.bak`. |
 | `fc3808c` | **Integridade Transacional de Indicadores e Falha Final** | 1. Preparação de estatísticas, histórico e status `RESOLVED` em candidato isolado em `LifeLegacyEvents.recover_precommitted_event()`.<br>2. Persistência atômica antes de qualquer mutação de memória ou emissão de sinal.<br>3. Se a persistência falhar, nenhuma alteração em memória ocorre e zero sinais são emitidos.<br>4. Teste do Cenário D atualizado com injeção de falha real na gravação do `RESOLVED`, confirmação de retorno `false`, preservação de `PRE_COMMITMENT`, recuperação subsequente via `retry_precommitted_event()` e comprovação de não duplicação após reload. |
 | `d6c1b18` | **Recuperação Visível no CareerHub e Event Modal** | 1. Suporte a apresentação de eventos em `PRE_COMMITMENT` no `CareerHub`.<br>2. Bloqueio de fechamento prematuro do modal perante falha no despacho (`resolve_active_event() == false`).<br>3. Exibição de aviso claro indicando decisão salva e pendência de confirmação.<br>4. Desabilitação de todas as escolhas alternativas e bloqueio contra alteração de escolha.<br>5. Habilitação de botão de retentativa para a escolha original.<br>6. Teste automatizado 7 no Marco 5 validando o ciclo completo com injeção de falha, persistência e retentativa bem-sucedida. |
+| `aa1c798` | **Desacoplamento de Scripts Autônomos & Header Refresh** | 1. Desacoplamento da resolução de GameState via `_get_game_state()` em scripts autônomos (`test_deterministic_rng.gd` e `test_persistence_cases_a_to_e.gd`), permitindo compilação e execução direta via `godot -s`.<br>2. Guarda defensiva `_header.refresh()` em `ui/career_hub.gd` prevenindo chamadas em instâncias nulas ou durante liberação de nós. |
 
 ---
 
@@ -400,7 +403,7 @@ Todas as 8 suítes foram executadas sequencialmente via Godot Engine headless (`
 | **5** | `runner_marco3.tscn` | Integração Headless | `godot --headless res://tests/life_legacy/runner_marco3.tscn` | `0` | **APROVADO** | Protocolo transacional em 3 estágios, deduplicação Career por token, Outbox Intent-Log, isolamento transacional de indicadores em candidato, teste real de falha de gravação final e Cenários A a E de recuperação pós-crash. |
 | **6** | `runner_marco4.tscn` | Integração Headless | `godot --headless res://tests/life_legacy/runner_marco4.tscn` | `0` | **APROVADO** | Fórmula canônica de idade e fases, ciclo de vida familiar, placa SalonFama idempotente, ledger `processed_dynasty_txs`, monotonicidade do `next_dynasty_tx_seq` (100 iterações sem colisão) e crash recovery em todas as etapas da saga. |
 | **7** | `runner_marco5.tscn` | Integração Real Headless | `godot --headless res://tests/life_legacy/runner_marco5.tscn` | `0` | **APROVADO** | Partida real `GameState.record_match()`, avanço de calendário, cena real `CareerHub`, modal com recuperação visível em `PRE_COMMITMENT`, bloqueio de alternativas, retentativa aprovada, dashboard no smartphone Celular e troca de slots. |
-| **8** | `runner_marco6.tscn` | Estresse Headless | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** | Simulação longitudinal contínua de 52 semanas consecutivas, virada anual temporada 2, zero regressão em SaveSlots/Career/GameState e auditoria de nós órfãos na memória ($\Delta \le 0$). |
+| **8** | `runner_marco6.tscn` | Estresse Headless | `godot --headless res://tests/life_legacy/runner_marco6.tscn` | `0` | **APROVADO** | Simulação sintética longitudinal de 52 ticks temporais semanais, virada anual temporada 2, zero regressão em SaveSlots/Career/GameState e auditoria de nós órfãos na memória ($\Delta \le 5$, conforme assert do teste). |
 
 > **Nota sobre Homologação Visual:** Todos os testes acima foram executados e aprovados em modo automatizado headless (`--headless`), incluindo instanciação real das cenas gráficas `CareerHub`, `LifeLegacyEventModal` e do aplicativo `Celular`. A validação visual interativa com interface gráfica (janela aberta com viewport interativo e navegação por mouse/teclado pelo usuário) permanece como procedimento opcional a ser realizado durante o ciclo de playtesting se desejado.
 
