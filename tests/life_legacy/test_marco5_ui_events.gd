@@ -343,11 +343,23 @@ func test_career_hub_real_scene_integration_and_slot_switch() -> void:
 	ll.set_safe_mode(false)
 	ll.reload_slot(0)
 
+	if Career != null:
+		Career.birthday_day = 0
+		Career.birthday_month = 0
+		Career.pending_ceremonies.clear()
+		Career.pending_summary = {}
+		Career.pending_decision = ""
+		Career.week_event = ""
+		Career.week_event_pospuesto = ""
+
 	# 2. Instancia a cena REAL ui/career_hub.tscn
 	var hub_scene = load("res://ui/career_hub.tscn")
 	assert(hub_scene != null, "Cena ui/career_hub.tscn deve ser carregável")
+	var saved_t6: String = GameState.player_team_id
+	GameState.player_team_id = ""
 	var hub = hub_scene.instantiate()
 	add_child(hub)
+	GameState.player_team_id = saved_t6
 
 	# 3. Verifica que CareerHub detectou o evento pendente e instanciou automaticamente o LifeLegacyEventModal
 	var modal = hub.get_node_or_null("LifeLegacyEventModal")
@@ -428,9 +440,15 @@ func test_career_hub_modal_precommitment_failure_and_retry() -> void:
 	ll.reload_slot(0)
 
 	# 2. Abre a cena REAL ui/career_hub.tscn
+	if Career != null:
+		Career.birthday_day = 0
+		Career.birthday_month = 0
 	var hub_scene = load("res://ui/career_hub.tscn")
+	var saved_t7: String = GameState.player_team_id
+	GameState.player_team_id = ""
 	var hub = hub_scene.instantiate()
 	add_child(hub)
+	GameState.player_team_id = saved_t7
 
 	# 3. Verifica presença do modal
 	var modal = hub.get_node_or_null("LifeLegacyEventModal")
