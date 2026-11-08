@@ -5,6 +5,7 @@ const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catal
 const LifeLegacyEventModal = preload("res://features/life_legacy/ui/life_legacy_event_modal.gd")
 const LifeLegacyPersistence = preload("res://features/life_legacy/life_legacy_persistence.gd")
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
+const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
 const CelularScript = preload("res://ui/celular.gd")
 
 func _ready() -> void:
@@ -29,6 +30,7 @@ func _ready() -> void:
 	test_celular_vida_dashboard_ui()
 	test_end_to_end_advance_event_modal_celular()
 	test_career_hub_real_scene_integration_and_slot_switch()
+	test_career_hub_modal_precommitment_failure_and_retry()
 	
 	print("--- TODOS OS TESTES DO MARCO 5 FORAM APROVADOS COM SUCESSO! ---")
 	get_tree().quit(0)
@@ -373,6 +375,95 @@ func test_career_hub_real_scene_integration_and_slot_switch() -> void:
 	# Limpeza
 	hub.queue_free()
 	print("  -> Bloqueador 5 (Ciclo de Vida da Cena Real CareerHub e Modal) aprovado com sucesso!")
+
+func test_career_hub_modal_precommitment_failure_and_retry() -> void:
+	print("[Teste 7] Bloqueador: Recuperação Visível no CareerHub, Falha no Despacho e Retentativa...")
+	var ll = LifeLegacy
+	GameState.season_num = 1
+	GameState.season_day = 10
+	if Career != null:
+		Career.nat_retired = true
+		Career.pending_ceremonies.clear()
+		Career.pending_summary = {}
+		Career.pending_decision = ""
+		Career.week_event = ""
+		Career.last_summary = ""
+		Career.last_report = {}
+		Career.retired = false
+		Career._market_settled = true
+		Career._rehab_debido = -1
+		Career.birthday_year_seen = int(Time.get_date_dict_from_system().get("year", 0))
+
+	# 1. Configura slot 0 com evento pendente
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	var evt_festa = LifeLegacyEvents.get_event_by_id("festa_vespera_derby")
+	var occ = {
+		"event_id": "festa_vespera_derby",
+		"occurrence_id": "occ_ui_retry_001",
+		"title": evt_festa.get("title", ""),
+		"description": evt_festa.get("description", ""),
+		"category": "lifestyle",
+		"choices": evt_festa.get("choices", []),
+		"status": "PENDING_RESOLUTION"
+	}
+	prof["active_event"] = occ
+	LifeLegacyPersistence.save_slot_data(0, prof)
+	ll.set_safe_mode(false)
+	ll.reload_slot(0)
+
+	# 2. Abre a cena REAL ui/career_hub.tscn
+	var hub_scene = load("res://ui/career_hub.tscn")
+	var hub = hub_scene.instantiate()
+	add_child(hub)
+
+	# 3. Verifica presença do modal
+	var modal = hub.get_node_or_null("LifeLegacyEventModal")
+	assert(modal != null, "Modal deve estar visível no CareerHub")
+
+	# 4. Simula falha no despacho do receptor
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "occ_ui_retry_001"
+
+	# Coleta botões iniciais
+	var buttons: Array[Button] = []
+	_collect_buttons(modal, buttons)
+	assert(buttons.size() >= 2, "Modal deve possuir botões para as escolhas")
+
+	# Pressiona primeira escolha (choice_1_ir)
+	buttons[0].pressed.emit()
+
+	# 5. Verifica estado PRE_COMMITMENT
+	assert(ll.get_active_event()["status"] == "PRE_COMMITMENT", "Evento deve transitar para PRE_COMMITMENT após falha no despacho")
+	assert(ll.get_active_event()["selected_choice_id"] == "choice_1_ir", "Escolha pré-comprometida deve ser choice_1_ir")
+
+	# 6. Verifica que o modal continua visível
+	var modal_still = hub.get_node_or_null("LifeLegacyEventModal")
+	assert(modal_still != null and is_instance_valid(modal_still), "Modal deve continuar visível na tela após falha de despacho")
+
+	# 7. Verifica que somente a escolha original está habilitada e as demais desabilitadas
+	var buttons_pre: Array[Button] = []
+	_collect_buttons(modal_still, buttons_pre)
+	assert(buttons_pre.size() >= 2, "Modal deve conter botões atualizados")
+	assert(buttons_pre[0].disabled == false, "Botão da escolha original (choice_1_ir) deve estar HABILITADO para retentativa")
+	for i in range(1, buttons_pre.size()):
+		assert(buttons_pre[i].disabled == true, "Botões de escolhas alternativas devem estar DESABILITADOS durante recuperação")
+
+	# 8. Tenta uma alternativa diferente (botão 1) e comprova que não é aceita
+	buttons_pre[1].pressed.emit()
+	assert(ll.get_active_event()["status"] == "PRE_COMMITMENT", "Status deve permanecer PRE_COMMITMENT")
+	assert(ll.get_active_event()["selected_choice_id"] == "choice_1_ir", "Escolha NÃO pode ter sido alterada para alternativa")
+
+	# 9. Restaura o receptor e executa a retentativa pela interface
+	LifeLegacyOutbox.reset_fault_injection()
+	buttons_pre[0].pressed.emit()
+
+	# 10. Confirmar RESOLVED e persistência em disco
+	assert(ll.get_active_event()["status"] == "RESOLVED", "Evento ativo deve transitar para RESOLVED após retentativa bem-sucedida")
+	var on_disk = LifeLegacyPersistence.load_slot_data(0, 1, 10)
+	assert(on_disk["data"]["active_event"]["status"] == "RESOLVED", "Status RESOLVED deve ser persistido em disco")
+	assert(hub.get_node_or_null("LifeLegacyEventModal") == null, "Modal deve ter sido fechado após resolução bem-sucedida")
+
+	hub.queue_free()
+	print("  -> Recuperação visível no CareerHub (modal mantido, alternativas desabilitadas, retentativa aprovada) homologada com sucesso!")
 
 func _collect_labels(node: Node, acc: Array[String]) -> void:
 	if node is Label:

@@ -229,6 +229,8 @@ func _ready() -> void:
 		LifeLegacy.life_event_ready.connect(func(_evt: Dictionary) -> void: _present_life_legacy_event())
 	if LifeLegacy != null and LifeLegacy.has_signal("life_legacy_loaded"):
 		LifeLegacy.life_legacy_loaded.connect(_on_life_legacy_loaded)
+	if LifeLegacy != null and LifeLegacy.has_signal("life_event_resolved"):
+		LifeLegacy.life_event_resolved.connect(func(_evt_id: String, _choice_id: String) -> void: _refresh())
 
 
 

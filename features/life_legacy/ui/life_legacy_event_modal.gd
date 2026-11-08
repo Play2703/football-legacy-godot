@@ -12,8 +12,9 @@ func setup_event(evt: Dictionary) -> void:
 	_event_data = evt
 	_rebuild_ui()
 
-func _rebuild_ui() -> void:
+func _rebuild_ui(has_error: bool = false) -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 
 	custom_minimum_size = Vector2(500.0, 360.0)
@@ -49,17 +50,20 @@ func _rebuild_ui() -> void:
 
 	vbox.add_child(HSeparator.new())
 
-	# Botões de Escolha
-	var choices: Array = _event_data.get("choices", [])
+	# Status / Recuperação
 	var is_precommitment: bool = (_event_data.get("status", "") == "PRE_COMMITMENT")
 	var selected_id: String = String(_event_data.get("selected_choice_id", ""))
 
-	if is_precommitment:
+	if is_precommitment or has_error:
 		var retry_info: Label = Label.new()
-		retry_info.text = "Decisão pré-comprometida. Concluindo confirmação..."
-		retry_info.modulate = Color(0.9, 0.6, 0.2)
+		retry_info.name = "PreCommitmentNotice"
+		retry_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		retry_info.text = "A decisão está salva, mas a confirmação dos efeitos ainda está pendente. Disponível para retentativa."
+		retry_info.modulate = Color(1.0, 0.4, 0.3) if has_error else Color(0.9, 0.6, 0.2)
 		vbox.add_child(retry_info)
 
+	# Botões de Escolha
+	var choices: Array = _event_data.get("choices", [])
 	for ch in choices:
 		var btn: Button = Button.new()
 		var ch_id: String = String(ch.get("id", ""))
@@ -73,15 +77,33 @@ func _rebuild_ui() -> void:
 				btn.disabled = true
 		else:
 			btn.text = txt
+			btn.disabled = false
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.pressed.connect(_on_choice_pressed.bind(ch_id))
 		vbox.add_child(btn)
 
 func _on_choice_pressed(choice_id: String) -> void:
+	if _event_data.get("status", "") == "PRE_COMMITMENT":
+		var selected_id: String = String(_event_data.get("selected_choice_id", ""))
+		if not selected_id.is_empty() and choice_id != selected_id:
+			push_error("[LifeLegacyEventModal] Troca de decisão não permitida durante recuperação.")
+			return
+
 	var evt_id: String = String(_event_data.get("event_id", ""))
+	var ok: bool = true
 	if LifeLegacy != null:
 		var act = LifeLegacy.get_active_event()
 		if not act.is_empty():
-			LifeLegacy.resolve_active_event(choice_id)
+			ok = LifeLegacy.resolve_active_event(choice_id)
+
+	if not ok:
+		# Não fecha o modal se a resolução/despacho falhar
+		if LifeLegacy != null:
+			_event_data = LifeLegacy.get_active_event()
+		_rebuild_ui(true)
+		return
+
 	event_choice_selected.emit(evt_id, choice_id)
+	if get_parent() != null:
+		get_parent().remove_child(self)
 	queue_free()
