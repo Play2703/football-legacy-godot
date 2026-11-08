@@ -331,3 +331,310 @@ A arquitetura do **Football Legacy Godot** está **tecnicamente apta e pronta** 
 
 ---
 *Relatório finalizado em conformidade com o protocolo. Aguardando autorização para avançar.*
+
+
+---
+
+# L. ADENDO — VALIDAÇÃO DOS PONTOS DE INTEGRAÇÃO E PERSISTÊNCIA
+## COMPLEMENTAÇÃO TÉCNICA E DETALHAMENTO ARQUITETURAL
+
+Este adendo complementa formalmente a FASE 0 da auditoria arquitetural, respondendo aos requisitos de refinamento sobre o fluxo real de avanço semanal, contrato estrito de persistência (Single Writer), especificação completa dos seis indicadores independentes, desenho do núcleo coordenador e recuperação do escopo funcional integral da Fase 1.
+
+---
+
+### 1. FLUXO REAL DE AVANÇO DA SEMANA ESPORTIVA
+
+#### 1.1. Investigação de Sinais e Cadeia de Chamadas
+A auditoria preliminar constatou de forma inequívoca no código-fonte que **o sinal `calendar_advanced` NÃO EXISTE no projeto**. A busca literal por sinais declarados em [`autoload/game_state.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd) revelou unicamente:
+- `signal career_updated` (linha 4)
+- `signal season_advanced(result: Dictionary)` (linha 5)
+
+E em [`autoload/career.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd):
+- `signal changed` (linha 15)
+- `signal leveled_up(new_level: int)` (linha 16)
+- `signal season_summary(text: String)` (linha 17)
+- `signal skill_changed(skill: String, before: int, after: int)` (linha 23)
+
+#### 1.2. Sequência de Execução Real no Avanço Semanal
+O avanço efetivo de uma semana/rodada esportiva no Football Legacy ocorre sempre a partir da conclusão de uma partida (seja ela jogada em campo 3D via `features/match/match.gd` ou simulada via `Career.watch_match()`).
+
+A sequência exata de chamadas comprovada no código é:
+1. **Conclusão da Partida:**
+   - Em simulação: [`Career.watch_match()`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd#L35004) calcula o placar via `grada_sim()`.
+   - Em gameplay 3D: `features/match/match.gd` encerra o tempo regulamentar.
+2. **Processamento Esportivo e Rolagem de Decisões do Atleta:**
+   - É invocado [`Career.on_match_result(...)`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/career.gd#L35090).
+   - `Career._tick_jornada()` (linha 30852) avança os contadores de lesão, suspensão e prazos contratuais.
+   - `Career._roll_decisions(base_ctx)` (linha 30857) sorteia decisões pós-jogo e eventos de semana esportiva via `WeekEvents.roll(...)` (linha 17993).
+   - `Career._save()` (linha 30890) grava o arquivo `career_meta.cfg`.
+   - `Career.changed.emit()` (linha 30891) notifica ouvintes locais.
+3. **Avanço Efetivo do Calendário no Universo da Liga:**
+   - É invocado [`GameState.record_match(...)`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd#L14069).
+   - Se `team_goals >= 0 and rival_goals >= 0`, é chamada a função central de avanço:
+     👉 [`GameState._advance_calendar(team_goals, rival_goals)`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/game_state.gd#L7350 / L14144).
+   - Em `_advance_calendar()`:
+     * Incrementa `season_day = season_day + 1` (linha 7353).
+     * Simula as partidas dos outros clubes da rodada via `SimLeague`.
+     * Atualiza tabelas de classificação, artilharia e estados das copas/ligas.
+   - `GameState._save()` (linha 14145) grava atomicamente o arquivo `career.json`.
+   - `GameState.career_updated.emit()` (linha 14146) é emitido para todo o ecossistema.
+4. **Retorno à Interface Principal:**
+   - A cena faz transição para [`ui/career_hub.tscn`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/career_hub.tscn).
+   - `CareerHub._ready()` (linha 224) executa `_refresh()` (linha 890), que atualiza os dados visuais e os botões da semana.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Match as Match / watch_match()
+    participant CR as autoload/career.gd
+    participant GS as autoload/game_state.gd
+    participant LL as features/life_legacy/life_legacy_manager.gd
+    participant Hub as ui/career_hub.gd
+
+    Match->>CR: on_match_result(...)
+    CR->>CR: _tick_jornada() (linha 30852)
+    CR->>CR: _roll_decisions() (linha 30857)
+    CR->>CR: _save() [career_meta.cfg]
+    CR-->>CR: changed.emit()
+    Match->>GS: record_match(...) (linha 14069)
+    GS->>GS: _advance_calendar() [season_day++] (linha 7350)
+    GS->>GS: _save() [career.json]
+    GS-->>LL: career_updated.emit() (linha 14146)
+    Note over LL: Momento Seguro: Calendário e Carreira Estáveis
+    LL->>LL: on_week_advanced(season, season_day)
+    LL->>LL: Verifica Idempotência (last_processed_week)
+    LL->>LL: Processa Indicadores & Sorteia Evento de Vida
+    LL->>LL: save_state() [life_legacy.json]
+    GS->>Hub: SceneFade.to_scene(career_hub.tscn)
+    Hub->>Hub: _ready() -> _refresh() (Apenas leitura/exibição)
+```
+
+#### 1.3. Momento Seguro para Processar Eventos Life & Legacy
+O momento ideal e seguro é a recepção do sinal **`GameState.career_updated`** emitido na linha 14146 de `game_state.gd`. Nesse instante:
+- A partida anterior já foi completamente consolidada.
+- O calendário já avançou para a nova rodada (`season_day` atualizado).
+- As estatísticas atléticas já estão computadas e salvas em `career.json`.
+- O contexto da nova semana (próximo rival, mando de campo, se é clássico/derby) está 100% disponível para avaliação de condições de ativação.
+
+#### 1.4. Mecanismo de Idempotência e Prevenção de Duplicidade
+Para garantir que eventos e decaimentos de indicadores ocorram **rigorosamente uma única vez por semana**:
+1. O `LifeLegacyManager` mantém em sua estrutura a variável persistida `last_processed_week: Dictionary = {"season": -1, "day": -1}`.
+2. Ao receber `GameState.career_updated`:
+   ```gdscript
+   var current_season: int = GameState.season
+   var current_day: int = GameState.season_day
+   if last_processed_week.get("season", -1) == current_season and last_processed_week.get("day", -1) == current_day:
+       return # Semana já processada. Aborta para garantir execução única.
+   ```
+3. **Comportamento pós-Load:** Ao carregar um save existente, `last_processed_week` é restaurado do disco. Como `GameState.career_updated` só é emitido em partidas e trocas de calendário, a simples abertura do jogo ou troca de telas **jamais** reprocessa indicadores nem gera eventos duplicados.
+4. **Isolamento da UI:** Telas como `ui/career_hub.gd`, `ui/celular.gd` e `ui/decision_scene.gd` são projetadas estritamente como **apresentadoras passivas (read-only)**. Abrir, fechar, alternar abas ou pausar telas de interface não altera contadores nem consome eventos pendentes.
+
+---
+
+### 2. CONTRATO DE PERSISTÊNCIA E ARQUITETURA SINGLE-WRITER
+
+#### 2.1. O Problema da Concorrência de Arquivos
+No Football Legacy, `autoload/career.gd` (66k linhas) lê e grava `user://slot{N}/career_meta.cfg`. Se o subsistema Life & Legacy tentasse instanciar outro `ConfigFile`, ler `career_meta.cfg` paralelamente e gravá-lo no disco, haveria uma violação clássica do princípio **Single Writer**, resultando em condições de corrida e risco imediato de sobrescrever alterações feitas por `Career` (como atributos, inventário ou decisões).
+
+#### 2.2. Arquitetura Escolhida: Arquivo Isolado de Slot (`life_legacy.json`)
+Para erradicar qualquer risco de corrupção ou colisão, o Life & Legacy utilizará um **arquivo exclusivo e dedicado por slot de carreira**:
+📁 `user://slot{N}/life_legacy.json`
+
+Vantagens Arquiteturais Inequívocas:
+1. **Single Writer Absoluto:** O único script no projeto inteiro autorizado a gravar ou modificar `life_legacy.json` é [`features/life_legacy/core/life_persistence.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/features/life_legacy/core/life_persistence.gd) sob controle exclusivo do `LifeLegacyManager`.
+2. **Preservação de `career_meta.cfg` e `career.json`:** Ambos os arquivos originais permanecem intocados, sem injeção de chaves arbitrárias e sem concorrência de I/O.
+3. **Aproveitamento da Gravação Atômica do Motor:** O Life & Legacy utilizará diretamente a infraestrutura comprovada do [`autoload/save_slots.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/autoload/save_slots.gd):
+   - `SaveSlots.slot_path("life_legacy.json", slot_id)` garante isolamento automático entre os slots 1, 2, 3 e 4.
+   - `SaveSlots.write_text_atomic(path, json_str)` realiza a gravação em `.tmp` seguida de validação de tamanho e promoção atômica via `_promote()`.
+   - `SaveSlots.read_json_dict(path)` gerencia leitura segura com recuperação transparente do arquivo `.bak` em caso de interrupção abrupta.
+4. **Ciclo de Vida de Exclusão e Troca de Slots:** Ao trocar de slot via `SaveSlots.switch_to(slot)`, o `LifeLegacyManager` descarrega os dados em memória e carrega o arquivo do novo slot.
+
+```mermaid
+flowchart LR
+    subgraph UI_Controllers ["Controladores e Telas"]
+        CEL["Celular / Minha Vida"]
+        DEC["DecisionScene"]
+    end
+
+    subgraph Coordinator ["Núcleo Coordenador"]
+        LLM["LifeLegacyManager<br/>(Estado em Memória)"]
+        LP["LifePersistence<br/>(Single Writer)"]
+    end
+
+    subgraph Storage_Layer ["Camada de Disco Segura"]
+        SS["SaveSlots<br/>(write_text_atomic / read_json_dict)"]
+        TMP["user://slot{N}/life_legacy.json.tmp"]
+        JSON["user://slot{N}/life_legacy.json"]
+        BAK["user://slot{N}/life_legacy.json.bak"]
+    end
+
+    CEL -->|Consulta Dados| LLM
+    DEC -->|Envia Escolha| LLM
+    LLM -->|Atualiza Estado| LLM
+    LLM -->|Solicita Gravação| LP
+    LP -->|Serializa Schema v1| SS
+    SS -->|Grava com Segurança| TMP
+    TMP -->|Promove| JSON
+    JSON -.->|Cópia de Segurança| BAK
+```
+
+#### 2.3. Schema Versionado e Migração Retrocompatível
+O formato persistido em `life_legacy.json` seguirá rigorosamente o schema versionado:
+
+```json
+{
+  "schema_version": 1,
+  "last_processed_week": { "season": 1, "day": 12 },
+  "stats": {
+    "popularity": 40.0,
+    "reputation": 50.0,
+    "discipline": 70.0,
+    "emotional_stability": 60.0,
+    "personal_relationships": 50.0,
+    "social_influence": 20.0
+  },
+  "family": {
+    "spouse_extended": {},
+    "children": []
+  },
+  "events": {
+    "history": [],
+    "active_cooldowns": {},
+    "pending_choice": {}
+  }
+}
+```
+
+**Política de Migração para Saves Antigos (Zero-Crash Fallback):**
+Se o usuário carregar uma carreira iniciada antes da introdução do Life & Legacy (onde `life_legacy.json` inexiste no slot):
+1. `SaveSlots.read_json_dict()` detecta a ausência do arquivo sem travar o motor.
+2. `LifePersistence` detecta que os dados retornaram vazios e aplica a função `create_default_profile(slot_id)`.
+3. O perfil é inicializado com os valores basais neutros da tabela de indicadores, sincronizando a parceira existente em `Career.pareja` se já houver casamento no save antigo.
+4. A carreira continua rodando imediatamente com 100% de estabilidade e sem perda de histórico anterior.
+
+---
+
+### 3. ESPECIFICAÇÃO FORMAL DOS SEIS INDICADORES INDEPENDENTES
+
+Os indicadores Life & Legacy operam em uma escala contínua normalizada de **`0.0` a `100.0`**, com precisão decimal interna e apresentação arredondada em inteiros na interface. Eles são **completamente independentes** dos dicionários legados do jogo (`Career.rel`, `Career.morale`, etc.), preservando intacto todo o ecossistema esportivo.
+
+| Indicador | Significado Conceitual | Limites | Valor Inicial | Fatores de Aumento (Evolução) | Fatores de Redução (Queda) | Consequências Mecânicas | Relação e Coexistência com Sistemas Antigos |
+| :--- | :--- | :---: | :---: | :--- | :--- | :--- | :--- |
+| **1. Popularidade** | Reconhecimento público, apelo carismático e atração de fãs globais além do clube. | `[0, 100]` | **40** | Gols espetaculares, carisma em entrevistas, posts virais no `MuroRedes`, presença em eventos de gala. | Declarações arrogantes, períodos longos sem jogar, polêmicas criminais/éticas. | Multiplica velocidade de ganho de seguidores no `MuroRedes`; atrai contratos de marcas de prestígio. | Não substitui `rel["aficion"]` (que mede apenas a torcida do clube atual). Coexiste como fama extracampo. |
+| **2. Reputação** | Credibilidade moral, respeito da imprensa séria, ética profissional e postura pública. | `[0, 100]` | **50** | Doações beneficentes, fair play, postura madura em derrotas, cumprimento da palavra. | Baladas pré-jogo vazadas, processos judiciais, traições públicas, expulsões por indisciplina. | Níveis altos concedem 'presunção de inocência' na imprensa; níveis baixos geram manchetes ácidas. | Não substitui `rel["prensa"]` (que mede cobertura esportiva). Mede integridade de caráter. |
+| **3. Disciplina Profissional** | Foco na carreira de atleta de elite, pontualidade, rotina de sono e dieta regrada. | `[0, 100]` | **70** | Treinos extras, acompanhamento nutricional, recusa de convites para noitadas. | Festas na véspera de jogos, consumo excessivo de álcool, atrasos em concentrações. | Disciplina alta reduz risco de lesões musculares em partidas; disciplina baixa (<30) atrai multas e banco. | Sistema 100% inédito. Preenche a lacuna de atrito entre vida noturna e performance. |
+| **4. Estabilidade Emocional** | Firmeza psicológica, resiliência perante crises, autoconfiança e paz de espírito. | `[0, 100]` | **60** | Vida familiar estável, hobbies saudáveis, acompanhamento psicológico, vitórias épicas. | Divórcios litigiosos, cobrança tóxica de redes sociais, brigas de vestiário, vaias contínuas. | Afeta a frieza em pênaltis e chances claras; estabilidade baixa amplifica o impacto de derrotas. | Desvincula a mente do atleta do atrito com o treinador (`morale` legado lia apenas `rel["tecnico"]`). |
+| **5. Relações Pessoais** | Harmonia íntima dentro do círculo familiar (esposa, filhos, pais) e amizades leais. | `[0, 100]` | **50** | Tempo dedicado aos filhos e cônjuge, jantares em família, apoio a amigos de infância. | Ausência em aniversários familiares, traição conjugal, focar 100% no trabalho ignorando a casa. | Relações altas blindam contra tensão doméstica; relações baixas desencadeiam crises conjugais e divórcio. | Expande `features/career/pareja.gd`, agregando a camada de filhos e amigos íntimos. |
+| **6. Influência Social** | Poder de ditar tendências, prestígio nos bastidores do futebol, respeito dos pares. | `[0, 100]` | **20** | Títulos de grande porte, liderança de capitão, investimentos bem-sucedidos na `Shop`. | Perda de relevância atlética, rompimento com grandes patrocinadores, escândalos públicos. | Influência alta permite apadrinhar jovens talentos da base e obter respaldo imediato da diretoria. | Sistema novo que representa o peso político e a liderança de bastidores do jogador. |
+
+#### 3.1. Fórmulas de Amortecimento e Proteção contra Regressões
+Para assegurar estabilidade matemática:
+- **Resistência Não-Linear:** Aplica-se amortecimento parabólico `delta_ajustado = delta * (1.0 - (valor_atual / 100.0)^2)` para incrementos próximos de 100, impedindo saturação rápida.
+- **Isolamento de Atributos Atléticos:** Os indicadores Life & Legacy **jamais** alteram diretamente atributos físicos ou técnicos do jogador em `Career.skills`, respeitando com rigor a blindagem do declínio etário estabelecida na ETAPA 4e.15.
+
+---
+
+### 4. NÚCLEO COORDENADOR: `LifeLegacyManager`
+
+#### 4.1. Avaliação Arquitetural: Autoload Singleton vs Instância Gerenciada
+Analisou-se minuciosamente a estratégia de ciclo de vida do coordenador central:
+- **Abordagem de Instância Gerenciada (Componente filho de nós de cena):** Se o coordenador fosse um nó instanciado dentro de `ui/career_hub.tscn` ou `ui/celular.tscn`, ele seria destruído sempre que o jogador entrasse em uma partida 3D (`match.tscn`) ou navegasse para telas como a loja ou o mercado de transferências. Isso causaria perda de continuidade, impossibilitando que eventos rodassem de forma autônoma após partidas ou simulações.
+- **Abordagem de Autoload Singleton (Recomendada):** Registrando `LifeLegacy="*res://features/life_legacy/core/life_legacy_manager.gd"` em `project.godot`:
+  1. O coordenador permanece ativo durante todo o ciclo do jogo na raiz do `SceneTree`.
+  2. Inscreve-se nos sinais de avanço esportivo (`GameState.career_updated`) e de virada de temporada (`GameState.season_advanced`) imediatamente no `_ready()`.
+  3. Desacopla 100% o processamento de regras da exibição visual. A semana avança e os indicadores são processados mesmo que o jogador nunca abra o celular.
+  4. Disponibiliza uma API estática/global limpa para qualquer interface que necessite exibir dados (`LifeLegacy.get_stats()`, `LifeLegacy.has_pending_decision()`).
+
+#### 4.2. Estrutura e Responsabilidades do `LifeLegacyManager`
+```
+res://features/life_legacy/core/life_legacy_manager.gd
+```
+- **Ciclo de Inicialização (`_ready`):**
+  - Conecta-se a `GameState.career_updated` e `GameState.season_advanced`.
+  - Conecta-se aos eventos de troca de slot de `SaveSlots`.
+  - Invoca `LifePersistence.load_slot(SaveSlots.active)` para carregar os dados em memória.
+- **Processamento de Semana:**
+  - Verifica o mecanismo de idempotência `last_processed_week`.
+  - Atualiza indicadores de decaimento natural semanal (ex: leve perda de disciplina se o estilo de vida for relaxado).
+  - Consulta o catálogo declarativo via `LifeEventEngine.roll_event(ctx)`.
+  - Se um evento for sorteado, salva-o como `pending_event` e emite o sinal `life_event_ready(event)`.
+  - Se o evento demandar notificação de celular, despacha mensagem push ao `Celular.gd`.
+  - Salva atomicamente o estado via `LifePersistence.save_slot(SaveSlots.active)`.
+
+---
+
+### 5. PLANO TÉCNICO DETALHADO DA FASE 1 (RECUPERAÇÃO DO ESCOPO INTEGRAL)
+
+Para assegurar uma implementação sem riscos de quebra e com cobertura de 100% dos requisitos originais, a Fase 1 será executada através de **7 subetapas técnicas ordenadas**:
+
+```mermaid
+flowchart TD
+    S1["Fase 1.1: Core e Contrato de Persistência<br/>(Manager, Persistence, life_legacy.json)"]
+    S2["Fase 1.2: Subsistema dos 6 Indicadores<br/>(LifeStats, Fórmulas de Amortecimento e Clamps)"]
+    S3["Fase 1.3: Motor de Eventos Declarativos<br/>(Engine, Models de Evento e Consequências)"]
+    S4["Fase 1.4: Integração de Avanço e Idempotência<br/>(GameState.career_updated, Verificação de Semana)"]
+    S5["Fase 1.5: Catálogo dos 8 Eventos Jogáveis<br/>(Festa no Clássico + 7 Eventos Reais com Ramificações)"]
+    S6["Fase 1.6: Interfaces Visuais do Jogador<br/>(Minha Vida no Celular.gd, Telas Narrativas 3D)"]
+    S7["Fase 1.7: Bateria de Homologação e Testes<br/>(Simulação 52 Semanas, Persistência, 0 Leaks)"]
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+```
+
+#### Subetapa 1.1: Core e Persistência Atômica Isolada
+- Criação de `features/life_legacy/core/life_persistence.gd`.
+- Criação de `features/life_legacy/core/life_legacy_manager.gd`.
+- Implementação de gravação e leitura de `user://slot{N}/life_legacy.json` com fail-safe e schema v1.
+
+#### Subetapa 1.2: Subsistema dos Seis Indicadores Independentes
+- Criação de `features/life_legacy/core/life_stats.gd`.
+- Implementação das funções de consulta, ajuste amortecido, limites [0, 100] e disparos de alerta emocional.
+
+#### Subetapa 1.3: Motor de Eventos e Classes de Modelo
+- Criação de `features/life_legacy/models/life_event.gd` (id, título, contexto, pesos, cooldown, escolhas).
+- Criação de `features/life_legacy/models/life_choice.gd` (rótulo, descrição, custos, efeitos imediatos, riscos).
+- Criação de `features/life_legacy/core/life_event_engine.gd` (avaliação de filtros e seleção estocástica).
+
+#### Subetapa 1.4: Integração com Avanço Semanal e Cooldowns
+- Escuta estrita do sinal `GameState.career_updated`.
+- Garantia de execução única semanal por registro de `last_processed_week`.
+- Gestão de memória recente para evitar repetição de eventos no curto prazo.
+
+#### Subetapa 1.5: Implementação dos Oito Eventos Jogáveis Reais
+Implementação no catálogo declarativo `features/life_legacy/data/`:
+1. **`festa_vespera_derby` (Cenário de Referência):**
+   - *Contexto:* Véspera de jogo contra rival direto (`is_derby == true`).
+   - *Escolha 1:* Ir à festa e curtir intensamente (Energia -40, Disciplina -15, Popularidade +15, Risco 35% de flagrante).
+   - *Escolha 2:* Recusar categoricamente (Disciplina +10, Estabilidade +5, Relações Pessoais -5).
+   - *Escolha 3:* Comparecer por 1 hora e sair discretamente (Energia -5, Relações Pessoais +10, Disciplina neutra).
+   - *Escolha 4:* Camarote fechado sem fotos (Dinheiro -2.500, Disciplina -5, Popularidade +5, Risco 15% de post no feed).
+2. **`patrocinio_polemico`:** Marca de apostas oferece contrato milionário; aceitar eleva dinheiro e influência, mas reduz reputação moral perante a torcida tradicional.
+3. **`paparazzi_crise_pareja`:** Fotos vazadas na saída de um restaurante geram atrito doméstico; exige escolher entre dar satisfações públicas ou blindar a vida íntima.
+4. **`emprestimo_amigo_infancia`:** Amigo de infância em dificuldade financeira pede quantia expressiva; escolher entre ajudar, recusar ou condicionar apoio gera desdobramentos de longo prazo.
+5. **`pique_rival_redes`:** Estrela do time rival publica provocação no `MuroRedes`; opções de rebater publicamente, responder com ironia ou silenciar e prometer resposta em campo.
+6. **`gala_benefica_descanso`:** Convite para gala de caridade na véspera de viagem; equilibrar desgaste físico com ganho de influência social e prestígio de liderança.
+7. **`anuncio_primeiro_filho`:** Transição familiar decisiva; requer planejar o quarto do bebê, gerenciar noites sem dormir (queda temporária de energia) e salto na estabilidade pessoal.
+8. **`compra_mansao_festas`:** Aquisição de imóvel de alto padrão com área de lazer; desbloqueia a capacidade de realizar encontros particulares, exigindo dosagem na disciplina do elenco.
+
+#### Subetapa 1.6: Interfaces do Usuário e Visual
+- **Tela "Minha Vida" no Smartphone (`ui/celular.gd`):** Adição do ícone de aplicativo `vida` exibindo as 6 barras de indicadores, status do cônjuge e dependentes.
+- **Apresentação de Escolhas:** Conexão com [`ui/decision_scene.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/decision_scene.gd) reutilizando os cenários 3D de [`DecisionSets`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/features/career/decision_sets.gd).
+- **Atalho no Hub:** Exibição de indicador de novidades na barra semanal de [`ui/career_hub.gd`](file:///home/pedro/.gemini/antigravity/scratch/football-legacy-godot/ui/career_hub.gd).
+
+#### Subetapa 1.7: Bateria de Homologação Automatizada
+- Teste de estabilidade simulando **52 semanas consecutivas** (1 temporada completa).
+- Verificação de persistência com fechamento e reabertura do motor (Save/Load idempotente).
+- Teste de ausência de nós órfãos (`Performance.OBJECT_ORPHAN_NODE_COUNT` estável).
+- Teste de isolamento de saves antigos (compatibilidade retroativa confirmada).
+
+---
+
+### 6. CRITÉRIOS OBJETIVOS DE ACEITE DA FASE 1
+
+1. **Integridade de Compilação:** O projeto deve compilar e rodar sem nenhum aviso ou erro de script (`0 SCRIPT ERROR`).
+2. **Coexistência Pacífica:** Nenhuma funcionalidade de carreira, partida física, ligas ou declínio de habilidades sofre alteração de comportamento.
+3. **Idempotência Comprovada:** Avançar uma semana processa os eventos estritamente 1 vez; reabrir o jogo ou navegar na UI não duplica efeitos.
+4. **Persistência Limpa:** O arquivo `user://slot{N}/life_legacy.json` é gravado atomicamente com schema v1 e recuperado com precisão integral.
+5. **Completude Funcional:** Os 8 eventos declarativos rodam com sucesso, com suas 4 escolhas no evento do clássico gerando impactos calculados e visíveis nas barras de indicadores.
+
+---
+*Adendo incorporado e formalizado. Arquitetura 100% blindada e documentada. Aguardando autorização expressa para iniciar a Fase 1.*
