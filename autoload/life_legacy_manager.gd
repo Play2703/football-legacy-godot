@@ -9,6 +9,7 @@ const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.
 const LifeLegacyFamily = preload("res://features/life_legacy/life_legacy_family.gd")
 const LifeLegacyDynasty = preload("res://features/life_legacy/life_legacy_dynasty.gd")
 const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
+const LifeLegacyModifiers = preload("res://features/life_legacy/life_legacy_modifiers.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -27,6 +28,7 @@ signal weekly_tick_completed(season_num: int, season_day: int, is_latest: bool)
 signal annual_rollover_completed(season_num: int)
 signal life_event_ready(event_data: Dictionary)
 signal life_event_resolved(event_id: String, choice_id: String)
+signal modifier_expired(mod_id: String, mod_name: String)
 
 var _current_slot: int = 0
 var _data: Dictionary = {}
@@ -131,7 +133,7 @@ func save_current_slot() -> bool:
 		push_error("[LifeLegacyManager] Falha ao persistir slot %d." % _current_slot)
 	return ok
 
-func _commit_temporal_candidate(candidate: Dictionary, target_s: int, target_d: int, rollovers_to_emit: Array[int], new_event_to_emit: Dictionary, stat_changes_to_emit: Array[Dictionary]) -> bool:
+func _commit_temporal_candidate(candidate: Dictionary, target_s: int, target_d: int, rollovers_to_emit: Array[int], new_event_to_emit: Dictionary, stat_changes_to_emit: Array[Dictionary], expired_mods_to_emit: Array = []) -> bool:
 	if _is_safe_mode:
 		push_warning("[LifeLegacyManager] Commit temporal bloqueado em Modo Seguro.")
 		return false
@@ -156,6 +158,10 @@ func _commit_temporal_candidate(candidate: Dictionary, target_s: int, target_d: 
 	
 	for s_roll in rollovers_to_emit:
 		annual_rollover_completed.emit(s_roll)
+
+	for exp_mod in expired_mods_to_emit:
+		if exp_mod is Dictionary:
+			modifier_expired.emit(String(exp_mod.get("id", "")), String(exp_mod.get("name", "")))
 	
 	week_processed.emit(target_s, target_d)
 	weekly_tick_completed.emit(target_s, target_d, true)
@@ -210,12 +216,14 @@ func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) 
 		# Tick semanal individual padrão
 		var candidate: Dictionary = _data.duplicate(true)
 		var stat_changes: Array[Dictionary] = []
+		var expired_mods: Array = []
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
+		_apply_active_modifiers_on_candidate(candidate, stat_changes, expired_mods)
 		
 		var new_event: Dictionary = {}
 		_maybe_roll_event_on_candidate(candidate, cur_s, cur_d, new_event)
 		
-		_commit_temporal_candidate(candidate, cur_s, cur_d, [], new_event, stat_changes)
+		_commit_temporal_candidate(candidate, cur_s, cur_d, [], new_event, stat_changes, expired_mods)
 	else:
 		# Recuperação de lacuna / virada de temporada
 		_recover_temporal_gap(proc_s, proc_d, cur_s, cur_d)
@@ -229,6 +237,7 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 	var candidate: Dictionary = _data.duplicate(true)
 	var stat_changes: Array[Dictionary] = []
 	var rollovers: Array[int] = []
+	var expired_mods: Array = []
 	
 	var iter_s: int = from_s
 	var iter_d: int = from_d
@@ -251,10 +260,11 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 		
 		var is_latest: bool = (iter_s == to_s and iter_d == to_d)
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
+		_apply_active_modifiers_on_candidate(candidate, stat_changes, expired_mods)
 		if is_latest:
 			_maybe_roll_event_on_candidate(candidate, iter_s, iter_d, new_event)
 	
-	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, new_event, stat_changes)
+	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, new_event, stat_changes, expired_mods)
 
 func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
 	var candidate: Dictionary = _data.duplicate(true)
@@ -314,6 +324,28 @@ func _apply_weekly_drift_on_candidate(candidate: Dictionary, stat_changes: Array
 			})
 	candidate["stats"] = stats
 
+func _apply_active_modifiers_on_candidate(candidate: Dictionary, stat_changes: Array[Dictionary], expired_mods: Array) -> void:
+	var act_mods: Array = candidate.get("active_modifiers", [])
+	if act_mods.is_empty():
+		return
+	var stats: Dictionary = candidate.get("stats", {})
+	var mod_res: Dictionary = LifeLegacyModifiers.process_weekly_modifiers(act_mods, stats)
+	candidate["stats"] = mod_res["new_stats"]
+	candidate["active_modifiers"] = mod_res["remaining"]
+	for exp_mod in mod_res["expired"]:
+		expired_mods.append(exp_mod)
+	for stat_id in mod_res["new_stats"]:
+		var old_v: float = float(stats.get(stat_id, LifeLegacyState.STAT_DEFAULTS.get(stat_id, 50.0)))
+		var new_v: float = float(mod_res["new_stats"][stat_id])
+		if absf(new_v - old_v) > 0.0001:
+			stat_changes.append({
+				"stat_id": stat_id,
+				"old_val": old_v,
+				"new_val": new_v,
+				"delta": new_v - old_v,
+				"reason": "active_modifier"
+			})
+
 func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_event: Dictionary) -> void:
 	var act_evt: Dictionary = candidate.get("active_event", {})
 	var act_status: String = String(act_evt.get("status", ""))
@@ -327,7 +359,10 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 			"energy": Career.energy if Career != null else 100.0,
 			"is_derby": GameState.is_derby if (GameState != null and "is_derby" in GameState) else false,
 			"has_spouse": not candidate.get("family", {}).get("spouse", {}).is_empty(),
-			"has_children": not candidate.get("family", {}).get("children", []).is_empty()
+			"has_children": not candidate.get("family", {}).get("children", []).is_empty(),
+			"active_modifiers": candidate.get("active_modifiers", []),
+			"story_arcs": candidate.get("story_arcs", {}),
+			"history": candidate.get("history", {})
 		}
 		var cat_v: int = int(candidate.get("catalog_version", 1))
 		var rng_v: int = int(candidate.get("rng_version", 1))
@@ -345,6 +380,12 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 
 func get_active_event() -> Dictionary:
 	return _data.get("active_event", {}).duplicate()
+
+func get_active_modifiers() -> Array:
+	return _data.get("active_modifiers", []).duplicate(true)
+
+func get_story_arcs() -> Dictionary:
+	return _data.get("story_arcs", {}).duplicate(true)
 
 func retry_precommitted_event() -> bool:
 	if _is_safe_mode:

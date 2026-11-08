@@ -3,7 +3,7 @@ extends RefCounted
 
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
 
-const CURRENT_SUPPORTED_SCHEMA: int = 1
+const CURRENT_SUPPORTED_SCHEMA: int = 2
 const FILE_NAME: String = "life_legacy.json"
 const TMP_SUFFIX: String = ".tmp"
 const BAK_SUFFIX: String = ".bak"
@@ -378,7 +378,15 @@ static func _read_and_parse_json(file_path: String) -> Dictionary:
 		return {"ok": false, "error_type": "json_invalid", "data": null}
 	return {"ok": true, "error_type": "", "data": parsed}
 
-static func _migrate(data: Dictionary, _from_v: int, to_v: int) -> Dictionary:
+static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 	var d: Dictionary = data.duplicate(true)
+	if from_v < 2 and to_v >= 2:
+		if not d.has("active_modifiers"):
+			d["active_modifiers"] = []
+		if not d.has("story_arcs"):
+			d["story_arcs"] = {
+				"active_arcs": {},
+				"completed_arcs": []
+			}
 	d["schema_version"] = to_v
 	return d

@@ -1,8 +1,8 @@
 class_name LifeLegacyState
 extends RefCounted
 
-const CURRENT_SUPPORTED_SCHEMA: int = 1
-const DEFAULT_CATALOG_VERSION: int = 1
+const CURRENT_SUPPORTED_SCHEMA: int = 2
+const DEFAULT_CATALOG_VERSION: int = 2
 const RNG_VERSION: int = 1
 
 # Os 6 Indicadores Independentes do Life & Legacy
@@ -36,6 +36,11 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 		},
 		"stats": STAT_DEFAULTS.duplicate(),
 		"stats_history": [],
+		"active_modifiers": [],
+		"story_arcs": {
+			"active_arcs": {},
+			"completed_arcs": []
+		},
 		"family": {
 			"spouse": {},
 			"children": []
@@ -65,6 +70,9 @@ static func validate_schema(data: Dictionary) -> bool:
 		return false
 	if not (data["schema_version"] is int or (data["schema_version"] is float and data["schema_version"] == int(data["schema_version"]))):
 		return false
+	var sv: int = int(data["schema_version"])
+	if sv < 1 or sv > CURRENT_SUPPORTED_SCHEMA:
+		return false
 	if not data.has("stats") or not (data["stats"] is Dictionary):
 		return false
 	for k in STAT_KEYS:
@@ -75,4 +83,9 @@ static func validate_schema(data: Dictionary) -> bool:
 	var pt: Dictionary = data["last_processed_time"]
 	if not pt.has("season_num") or not pt.has("season_day"):
 		return false
+	if sv >= 2:
+		if data.has("active_modifiers") and not (data["active_modifiers"] is Array):
+			return false
+		if data.has("story_arcs") and not (data["story_arcs"] is Dictionary):
+			return false
 	return true
