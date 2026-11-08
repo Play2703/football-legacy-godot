@@ -174,45 +174,86 @@ func test_celular_vida_dashboard_ui() -> void:
 	print("  -> App 'Minha Vida' no Celular renderiza os 6 indicadores, família e dinastia perfeitamente.")
 
 func test_end_to_end_advance_event_modal_celular() -> void:
-	print("[Teste 5] Teste de Integração Fim a Fim (Avanço -> Evento -> Modal -> Resolução -> Smartphone)...")
+	print("[Teste 5] Teste de Integração Real: Partida GameState -> Avanço de Calendário -> Evento -> CareerHub Modal -> Resolução -> Smartphone...")
 	var ll = LifeLegacy
 	GameState.season_num = 1
 	GameState.season_day = 0
 	Career.processed_career_tokens.clear()
 	Career.processed_muro_tokens.clear()
+	Career.injury_weeks = 0
+	Career.injury_dias = 0
+	Career.injury_peak_weeks = 0
+	Career.injury_matches_lost = 0
+	Career._rehab_debido = -1
+	Career._market_settled = true
+	Career.birthday_year_seen = int(Time.get_date_dict_from_system().get("year", 0))
+	Career.pending_ceremonies.clear()
+	Career.pending_summary = {}
+	Career.pending_decision = ""
+	Career.week_event = ""
+	Career.last_summary = ""
+	Career.last_report = {}
+	Career.retired = false
+
 	LifeLegacyPersistence.save_slot_data(0, LifeLegacyState.get_default_profile(1, 0))
 	ll.set_safe_mode(false)
 	ll.reload_slot(0)
 	
 	LifeLegacyCatalogoEventos.registrar_todos()
+	GameState._ensure_season()
+	assert(GameState.season_day == 0, "Dia inicial da temporada deve ser 0")
+
+	# 1. Executa o método REAL de partida do GameState (avanço de calendário efetivo)
+	GameState.record_match(
+		1,     # goals
+		0,     # assists
+		2,     # shots
+		7.5,   # rating
+		1,     # result (win)
+		2,     # team_goals
+		1,     # rival_goals
+		false  # is_nat
+	)
 	
-	# 1. Simula avanço de partida semanal no GameState
-	GameState.season_num = 1
-	GameState.season_day = 1
-	GameState.career_updated.emit()
-	
-	# 2. Confere que um evento pendente foi gerado
+	# 2. Confere que GameState avançou o calendário de fato
+	assert(GameState.season_day == 1, "record_match() deve avançar season_day para 1 via calendário real")
+
+	# 3. Confere que LifeLegacy recebeu o avanço temporal real e gerou evento pendente
+	var act_time = ll.get_data().get("last_processed_time", {})
+	assert(int(act_time.get("season_day", 0)) == 1, "LifeLegacy deve ter sincronizado season_day = 1")
 	var active_evt: Dictionary = ll.get_active_event()
-	assert(not active_evt.is_empty(), "Avanço semanal deve gerar um evento")
+	assert(not active_evt.is_empty(), "Avanço de partida real deve gerar um evento")
 	assert(active_evt.get("status", "") == "PENDING_RESOLUTION", "Evento gerado deve estar em PENDING_RESOLUTION")
-	
-	# 3. Simula exibição do LifeLegacyEventModal no CareerHub
-	var modal: LifeLegacyEventModal = LifeLegacyEventModal.new()
-	add_child(modal)
-	modal.setup_event(active_evt)
-	
+	var file_data_pre = LifeLegacyPersistence.load_slot_data(0, 1, 1)
+	assert(file_data_pre["data"]["active_event"]["status"] == "PENDING_RESOLUTION", "Evento gerado deve estar persistido no disco")
+
+	# 4. Abre a cena REAL ui/career_hub.tscn e confere instanciação automática do modal
+	var hub_scene = load("res://ui/career_hub.tscn")
+	assert(hub_scene != null, "Cena ui/career_hub.tscn deve ser carregável")
+	var hub = hub_scene.instantiate()
+	add_child(hub)
+
+	var modal = hub.get_node_or_null("LifeLegacyEventModal")
+	assert(modal != null, "CareerHub deve criar automaticamente LifeLegacyEventModal perante evento pendente")
+	assert(modal is LifeLegacyEventModal, "Nó criado deve ser da classe LifeLegacyEventModal")
+
+	# 5. Seleciona alternativa via clique no botão real da interface
 	var buttons: Array[Button] = []
 	_collect_buttons(modal, buttons)
-	assert(buttons.size() >= 2, "Modal deve renderizar botões para as opções do evento gerado")
-	
-	# 4. Jogador escolhe e resolve através da UI
+	assert(buttons.size() >= 2, "Modal deve renderizar botões para as opções do evento")
 	buttons[0].pressed.emit()
-	
-	# 5. Confere resolução do evento
+
+	# 6. Confere resolução do evento no LifeLegacy e persistência em disco
 	var resolved_evt: Dictionary = ll.get_active_event()
 	assert(resolved_evt.get("status", "") == "RESOLVED", "Evento ativo deve transitar para RESOLVED")
-	
-	# 6. Renderiza ecossistema do celular in-game e valida persistência visual no app 'Minha Vida'
+	var file_data_post = LifeLegacyPersistence.load_slot_data(0, 1, 1)
+	assert(file_data_post["data"]["active_event"]["status"] == "RESOLVED", "Status RESOLVED deve ser persistido em disco")
+
+	# 7. Confere que o evento resolvido não reaparece perante reload
+	var showed_again: bool = hub._present_life_legacy_event()
+	assert(showed_again == false, "Modal não deve ser reaberto para evento já RESOLVED")
+
+	# 8. Renderiza ecossistema do celular in-game e valida persistência visual no app 'Minha Vida'
 	var phone_box: VBoxContainer = VBoxContainer.new()
 	add_child(phone_box)
 	CelularScript.monta_minha_vida(phone_box, 300.0)
@@ -222,7 +263,8 @@ func test_end_to_end_advance_event_modal_celular() -> void:
 	assert(phone_labels.has("INDICADORES LIFE & LEGACY"), "Smartphone deve exibir dashboard atualizado")
 	
 	phone_box.queue_free()
-	print("  -> Integração fim a fim homologada com sucesso absoluto!")
+	hub.queue_free()
+	print("  -> Fluxo real (Partida GameState -> CareerHub Modal -> Persistência -> Celular) homologado com sucesso!")
 
 func test_career_hub_real_scene_integration_and_slot_switch() -> void:
 	print("[Teste 6] Bloqueador 5: Integração Real da Cena CareerHub, Ciclo de Vida do Modal e Troca de Slot...")
