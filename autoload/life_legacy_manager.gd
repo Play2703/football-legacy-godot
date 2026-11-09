@@ -216,6 +216,8 @@ func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) 
 		# Tick semanal individual padrão
 		var candidate: Dictionary = _data.duplicate(true)
 		candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + 1
+		_record_season_calendar_length_on_candidate(candidate, cur_s)
+		
 		var stat_changes: Array[Dictionary] = []
 		var expired_mods: Array = []
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
@@ -242,9 +244,8 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 	
 	var iter_s: int = from_s
 	var iter_d: int = from_d
-	var calendar_len: int = 38
-	if GameState != null and GameState.calendar is Array and not GameState.calendar.is_empty():
-		calendar_len = GameState.calendar.size()
+	
+	_record_season_calendar_length_on_candidate(candidate, to_s)
 	
 	var new_event: Dictionary = {}
 	
@@ -252,8 +253,10 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 		iter_d += 1
 		candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + 1
 		
-		# Virada de temporada dinâmica
-		if iter_s < to_s and (iter_d >= calendar_len or iter_d > 50):
+		var season_len: int = _get_season_calendar_length(candidate, iter_s)
+		
+		# Virada de temporada dinâmica baseada na extensão real da temporada iter_s
+		if iter_s < to_s and iter_d >= season_len:
 			_record_annual_rollover_on_candidate(candidate, iter_s + 1)
 			if not rollovers.has(iter_s + 1):
 				rollovers.append(iter_s + 1)
@@ -270,16 +273,32 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 
 func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
 	var candidate: Dictionary = _data.duplicate(true)
-	var delta_ticks: int = (to_s - from_s) * 38 + (to_d - from_d)
-	candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + max(delta_ticks, 1)
-	var rollovers: Array[int] = []
+	_record_season_calendar_length_on_candidate(candidate, to_s)
 	
+	# Semântica temporal do Fast Forward Circuit Breaker (> 2 temporadas):
+	# Calcula os ticks reais decorridos somando:
+	# 1. Ticks restantes da temporada inicial from_s: (season_len(from_s) - from_d)
+	# 2. Ticks completos de cada temporada intermediária s in [from_s + 1, to_s - 1]: season_len(s)
+	# 3. Ticks decorridos na temporada destino to_s: to_d
+	var delta_ticks: int = 0
+	var len_from: int = _get_season_calendar_length(candidate, from_s)
+	delta_ticks += max(0, len_from - from_d)
+	
+	for s in range(from_s + 1, to_s):
+		var len_s: int = _get_season_calendar_length(candidate, s)
+		delta_ticks += len_s
+		
+	delta_ticks += max(0, to_d)
+	candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + max(delta_ticks, 1)
+	
+	var rollovers: Array[int] = []
 	var gap_log: Array = candidate.get("recovery_gap_log", [])
 	gap_log.append({
 		"gap_type": "FAST_FORWARD_CIRCUIT_BREAKER",
 		"from": [from_s, from_d],
 		"to": [to_s, to_d],
-		"reason": "Defasagem superior a 2 temporadas"
+		"delta_ticks": delta_ticks,
+		"reason": "Defasagem temporal superior a 2 temporadas"
 	})
 	candidate["recovery_gap_log"] = gap_log
 	
@@ -294,6 +313,20 @@ func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, 
 	candidate["stats"] = amortized
 	
 	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, {}, [])
+
+func _get_season_calendar_length(candidate: Dictionary, s: int) -> int:
+	var cal_lengths: Dictionary = candidate.get("season_calendar_lengths", {})
+	if cal_lengths.has(str(s)):
+		return max(int(cal_lengths[str(s)]), 1)
+	if GameState != null and GameState.calendar is Array and not GameState.calendar.is_empty():
+		return GameState.calendar.size()
+	return 38
+
+func _record_season_calendar_length_on_candidate(candidate: Dictionary, s: int) -> void:
+	if GameState != null and GameState.calendar is Array and not GameState.calendar.is_empty():
+		var cal_lengths: Dictionary = candidate.get("season_calendar_lengths", {}).duplicate()
+		cal_lengths[str(s)] = GameState.calendar.size()
+		candidate["season_calendar_lengths"] = cal_lengths
 
 func _record_annual_rollover_on_candidate(candidate: Dictionary, season: int) -> void:
 	var processed_seasons: Array = candidate.get("processed_annual_rollovers", [])

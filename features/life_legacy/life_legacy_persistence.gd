@@ -3,7 +3,7 @@ extends RefCounted
 
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
 
-const CURRENT_SUPPORTED_SCHEMA: int = 2
+const CURRENT_SUPPORTED_SCHEMA: int = 3
 const FILE_NAME: String = "life_legacy.json"
 const TMP_SUFFIX: String = ".tmp"
 const BAK_SUFFIX: String = ".bak"
@@ -391,6 +391,8 @@ static func _read_and_parse_json(file_path: String) -> Dictionary:
 
 static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 	var d: Dictionary = data.duplicate(true)
+	
+	# Migração V1 -> V2
 	if from_v < 2 and to_v >= 2:
 		if not d.has("active_modifiers") or not (d["active_modifiers"] is Array):
 			d["active_modifiers"] = []
@@ -406,5 +408,35 @@ static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 				d["story_arcs"]["completed_arcs"] = []
 		if not d.has("total_ticks_processed"):
 			d["total_ticks_processed"] = 0
+
+	# Migração V2 -> V3 (Contador Temporal Monotônico, Normalização de Arcos e Histórico de Calendário)
+	if from_v < 3 and to_v >= 3:
+		if not d.has("total_ticks_processed"):
+			d["total_ticks_processed"] = 0
+		else:
+			d["total_ticks_processed"] = int(d["total_ticks_processed"])
+
+		if not d.has("season_calendar_lengths") or not (d["season_calendar_lengths"] is Dictionary):
+			d["season_calendar_lengths"] = {}
+
+		if not d.has("story_arcs") or not (d["story_arcs"] is Dictionary):
+			d["story_arcs"] = {
+				"active_arcs": {},
+				"completed_arcs": []
+			}
+		else:
+			var act_arcs: Dictionary = d["story_arcs"].get("active_arcs", {}).duplicate(true)
+			for arc_id in act_arcs:
+				var arc_data = act_arcs[arc_id]
+				if arc_data is Dictionary:
+					# Normaliza arcos ativos que ainda não possuam last_act_resolved_ticks
+					# Política: ancorar no valor atual de total_ticks_processed para impedir elegibilidade prematura
+					if not arc_data.has("last_act_resolved_ticks"):
+						arc_data["last_act_resolved_ticks"] = int(d["total_ticks_processed"])
+					act_arcs[arc_id] = arc_data
+			d["story_arcs"]["active_arcs"] = act_arcs
+			if not d["story_arcs"].has("completed_arcs") or not (d["story_arcs"]["completed_arcs"] is Array):
+				d["story_arcs"]["completed_arcs"] = []
+
 	d["schema_version"] = to_v
 	return d

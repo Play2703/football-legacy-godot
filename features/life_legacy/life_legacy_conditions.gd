@@ -119,19 +119,12 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 
 		if not check_arc_id.is_empty() and active_arcs.has(check_arc_id):
 			var arc_info: Dictionary = active_arcs[check_arc_id]
-			var elapsed: int = 0
-			if ctx.has("total_ticks_processed") and arc_info.has("last_act_resolved_ticks"):
-				var cur_ticks: int = int(ctx.get("total_ticks_processed", 0))
-				var last_ticks: int = int(arc_info.get("last_act_resolved_ticks", 0))
-				elapsed = cur_ticks - last_ticks
-			else:
-				# Fallback seguro para perfis legados sem total_ticks_processed
-				var last_time: Dictionary = arc_info.get("last_act_resolved_time", {})
-				var last_s: int = int(last_time.get("season_num", 1))
-				var last_d: int = int(last_time.get("season_day", 0))
-				var cur_s: int = int(ctx.get("season_num", 1))
-				var cur_d: int = int(ctx.get("season_day", 0))
-				elapsed = (cur_s - last_s) * 52 + (cur_d - last_d)
+			if not arc_info.has("last_act_resolved_ticks") or not ctx.has("total_ticks_processed"):
+				# Falta de informação histórica confiável: impede elegibilidade prematura
+				return false
+			var cur_ticks: int = int(ctx.get("total_ticks_processed", 0))
+			var last_ticks: int = int(arc_info.get("last_act_resolved_ticks", 0))
+			var elapsed: int = cur_ticks - last_ticks
 			if elapsed < min_ticks:
 				return false
 

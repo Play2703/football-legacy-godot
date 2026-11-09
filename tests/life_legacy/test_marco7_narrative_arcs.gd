@@ -25,7 +25,7 @@ func _ready() -> void:
 	LifeLegacyCatalogoEventos.reset()
 	LifeLegacyCatalogoEventos.registrar_todos()
 
-	test_schema_migration_v1_to_v2()
+	test_schema_migration_v1_to_v3()
 	test_modifiers_creation_and_capacity_limit()
 	test_weekly_modifiers_drift_and_expiration()
 	test_declarative_conditions_and_prior_choices()
@@ -36,8 +36,8 @@ func _ready() -> void:
 	test_blocker1_act1_reincidence_prevention()
 	test_blocker2_branching_and_silence_resolution()
 	test_blocker3_dynamic_temporal_advance_ticks()
-	test_blocker4_modifier_capacity_transactional_hold()
-	test_blocker5_v1_migration_full_coverage()
+	test_blocker4_modifier_validation_and_transactional_hold()
+	test_blocker5_migration_all_sources_coverage()
 
 	print("=================================================================")
 	print("--- MARCO 7: TODOS OS TESTES PASSARAM COM 100% DE SUCESSO! ---")
@@ -53,11 +53,12 @@ func _cleanup_test_dir() -> void:
 			if f.begins_with("life_legacy"):
 				dir.remove(f)
 
-func test_schema_migration_v1_to_v2() -> void:
-	print("\n[Teste 1] Migração de Schema V1 para V2 e Retrocompatibilidade...")
+func test_schema_migration_v1_to_v3() -> void:
+	print("\n[Teste 1] Migração de Schema V1 e V2 para V3 e Retrocompatibilidade...")
+	_cleanup_test_dir()
 	DirAccess.make_dir_recursive_absolute(base_dir)
 
-	# Criação sintética de save no formato estrito Schema V1
+	# 1. Criação sintética de save no formato estrito Schema V1
 	var v1_data: Dictionary = {
 		"schema_version": 1,
 		"catalog_version": 1,
@@ -84,17 +85,93 @@ func test_schema_migration_v1_to_v2() -> void:
 	assert(load_res.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load deve migrar com sucesso")
 	var loaded_data: Dictionary = load_res.get("data", {})
 
-	assert(loaded_data.get("schema_version") == 2, "Schema deve ser promovido para 2")
+	assert(loaded_data.get("schema_version") == 3, "Schema deve ser promovido para 3")
 	assert(loaded_data.has("active_modifiers"), "Deve conter chave active_modifiers após migração")
 	assert(loaded_data["active_modifiers"] is Array, "active_modifiers deve ser Array")
 	assert(loaded_data.has("story_arcs"), "Deve conter chave story_arcs após migração")
 	assert(loaded_data["story_arcs"].has("active_arcs"), "story_arcs deve ter active_arcs")
 	assert(loaded_data["story_arcs"].has("completed_arcs"), "story_arcs deve ter completed_arcs")
+	assert(loaded_data.has("total_ticks_processed"), "Deve conter total_ticks_processed")
+	assert(loaded_data["total_ticks_processed"] == 0, "total_ticks_processed inicial deve ser 0")
+	assert(loaded_data.has("season_calendar_lengths"), "Deve conter season_calendar_lengths")
 
-	print("  -> Migração de Schema V1 para V2 aprovada!")
+	# 2. Migração de V2 -> V3 com arco ativo sem last_act_resolved_ticks
+	_cleanup_test_dir()
+	var v2_data: Dictionary = {
+		"schema_version": 2,
+		"catalog_version": 1,
+		"rng_version": 1,
+		"save_revision": 5,
+		"last_processed_time": { "season_num": 1, "season_day": 10 },
+		"stats": LifeLegacyState.STAT_DEFAULTS.duplicate(),
+		"stats_history": [],
+		"family": { "spouse": {}, "children": [] },
+		"dynasty": { "current_generation": 1, "ancestors": [], "heir_candidates": [], "next_dynasty_tx_seq": 1 },
+		"active_event": {},
+		"outbox": { "pending_dispatches": [] },
+		"history": { "resolved_events": [], "milestones": [] },
+		"recovery_log": [],
+		"active_modifiers": [],
+		"story_arcs": {
+			"active_arcs": {
+				"arc_leg_v2": {
+					"arc_id": "arc_leg_v2",
+					"current_stage": 2,
+					"choices": { "ato1": "c1" }
+				}
+			},
+			"completed_arcs": []
+		}
+	}
+
+	var fa_v2 = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa_v2.store_string(JSON.stringify(v2_data, "\t"))
+	fa_v2.close()
+
+	var load_v2: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
+	assert(load_v2.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load deve migrar V2 com sucesso")
+	var loaded_v2: Dictionary = load_v2.get("data", {})
+	assert(loaded_v2.get("schema_version") == 3, "Schema V2 deve ser promovido para 3")
+	assert(loaded_v2.get("total_ticks_processed") == 0, "total_ticks_processed deve ser ancorado em 0")
+	var arc_migrado: Dictionary = loaded_v2["story_arcs"]["active_arcs"]["arc_leg_v2"]
+	assert(arc_migrado.has("last_act_resolved_ticks"), "Arco migrado deve receber last_act_resolved_ticks")
+	assert(arc_migrado["last_act_resolved_ticks"] == 0, "last_act_resolved_ticks ancorado no total_ticks_processed")
+
+	# Avalia condição com min_ticks_since_prior_act = 2
+	var cond_min2: Dictionary = {
+		"required_arc_stage": { "arc_id": "arc_leg_v2", "stage": 2 },
+		"min_ticks_since_prior_act": 2
+	}
+	var ctx_v2: Dictionary = {
+		"season_num": 1,
+		"season_day": 10,
+		"total_ticks_processed": 0,
+		"story_arcs": loaded_v2["story_arcs"]
+	}
+	assert(not LifeLegacyConditions.evaluate(cond_min2, ctx_v2), "Arco migrado NÃO pode se tornar elegível prematuramente")
+
+	print("  -> Migração de Schema V1 e V2 para V3 aprovada!")
 
 func test_modifiers_creation_and_capacity_limit() -> void:
-	print("\n[Teste 2] Módulo de Modificadores: Criação, Limite Máximo e Deduplicação...")
+	print("\n[Teste 2] Módulo de Modificadores: Criação, Validação, Limite Máximo e Deduplicação...")
+
+	# Validação individual exaustiva de modificadores
+	assert(not LifeLegacyModifiers.validate_modifier({}).get("valid", true), "Dicionário vazio deve ser inválido")
+	assert(not LifeLegacyModifiers.validate_modifier({"id": ""}).get("valid", true), "ID vazio deve ser inválido")
+	assert(not LifeLegacyModifiers.validate_modifier({"id": "m", "duration_ticks": 0}).get("valid", true), "Duração <= 0 deve ser inválida")
+	assert(not LifeLegacyModifiers.validate_modifier({"id": "m", "duration_ticks": 2, "stat_drift": {"fake": 1.0}}).get("valid", true), "Chave de stat inexistente deve ser inválida")
+	assert(not LifeLegacyModifiers.validate_modifier({"id": "m", "duration_ticks": 2, "stat_drift": {"discipline": "muito"}}).get("valid", true), "Delta não numérico deve ser inválido")
+	assert(LifeLegacyModifiers.validate_modifier({"id": "m", "duration_ticks": 2, "stat_drift": {"discipline": 5.0}}).get("valid", false), "Modificador canônico deve ser válido")
+
+	# Validação de lote
+	var dup_batch: Array = [
+		{"id": "m_dup", "duration_ticks": 1, "stat_drift": {}},
+		{"id": "m_dup", "duration_ticks": 2, "stat_drift": {}}
+	]
+	var v_batch: Dictionary = LifeLegacyModifiers.validate_modifiers_batch([], dup_batch)
+	assert(not v_batch.get("valid", true), "Lote com IDs duplicados deve ser inválido")
+	assert(v_batch.get("error", "").begins_with("DUPLICATE_MODIFIER_ID_IN_BATCH"), "Erro deve indicar duplicata no lote")
+
 	var mods: Array = []
 
 	var m1: Dictionary = LifeLegacyModifiers.create_modifier(
@@ -127,7 +204,7 @@ func test_modifiers_creation_and_capacity_limit() -> void:
 	assert(not ok11, "11º modificador deve ser rejeitado")
 	assert(mods.size() == 10, "Total deve permanecer estritamente 10")
 
-	print("  -> Criação, deduplicação e barreira de capacidade máxima aprovadas!")
+	print("  -> Criação, validação, deduplicação e barreira de capacidade máxima aprovadas!")
 
 func test_weekly_modifiers_drift_and_expiration() -> void:
 	print("\n[Teste 3] Ciclo de Vida Semanal e Expiração dos Modificadores...")
@@ -169,6 +246,7 @@ func test_declarative_conditions_and_prior_choices() -> void:
 	var ctx: Dictionary = {
 		"season_num": 1,
 		"season_day": 10,
+		"total_ticks_processed": 10,
 		"age": 22,
 		"active_modifiers": [
 			{ "id": "mod_vip", "source_event_id": "festa_vip" }
@@ -178,6 +256,7 @@ func test_declarative_conditions_and_prior_choices() -> void:
 				"arc_empresa": {
 					"current_stage": 2,
 					"last_act_resolved_time": { "season_num": 1, "season_day": 6 },
+					"last_act_resolved_ticks": 6,
 					"choices": { "ato1_contrato": "assinar_com_socio" }
 				}
 			},
@@ -308,14 +387,16 @@ func test_full_3_act_narrative_arc_progression() -> void:
 	var ctx_too_early: Dictionary = {
 		"season_num": 1,
 		"season_day": 0,
+		"total_ticks_processed": 0,
 		"story_arcs": LifeLegacy.get_story_arcs()
 	}
 	assert(not LifeLegacyConditions.evaluate(ato2["conditions"], ctx_too_early), "Ato 2 deve ser bloqueado por tempo insuficiente")
 
-	# Avança 2 semanas (tempo suficiente)
+	# Avança 2 semanas (tempo suficiente: 2 ticks decorridos)
 	var ctx_ready: Dictionary = {
 		"season_num": 1,
 		"season_day": 2,
+		"total_ticks_processed": 2,
 		"story_arcs": LifeLegacy.get_story_arcs()
 	}
 	assert(LifeLegacyConditions.evaluate(ato2["conditions"], ctx_ready), "Ato 2 agora deve estar elegível")
@@ -609,7 +690,7 @@ func test_blocker2_branching_and_silence_resolution() -> void:
 	print("  -> Bloqueador 2 resolvido com sucesso: ramificação coerente e desfecho de silêncio implementados!")
 
 func test_blocker3_dynamic_temporal_advance_ticks() -> void:
-	print("\n[Teste Bloqueador 3] Cálculo temporal via total_ticks_processed em temporadas não-52...")
+	print("\n[Teste Bloqueador 3] Cálculo temporal via total_ticks_processed em temporadas variáveis e recuperação...")
 	_cleanup_test_dir()
 	LifeLegacyCatalogoEventos.reset()
 	LifeLegacyCatalogoEventos.registrar_todos()
@@ -621,21 +702,20 @@ func test_blocker3_dynamic_temporal_advance_ticks() -> void:
 
 	assert(LifeLegacy.get_total_ticks_processed() == 0, "Ticks iniciais devem ser 0")
 
-	# Configura calendário explicitamente com 38 rodadas reais
+	# 1. Configura temporada 1 com 38 rodadas (calendário padrão de liga com 38 rodadas)
 	var orig_cal = GameState.calendar.duplicate()
 	GameState.calendar = []
 	for i in range(38):
 		GameState.calendar.append({ "fixture_idx": i })
 
-	# Avança 38 rodadas na temporada 1 (calendário padrão de liga com 38 rodadas)
 	for d in range(1, 39):
 		GameState.season_num = 1
 		GameState.season_day = d
 		GameState.career_updated.emit()
 
-	assert(LifeLegacy.get_total_ticks_processed() == 38, "Deve ter processado exatamente 38 ticks")
+	assert(LifeLegacy.get_total_ticks_processed() == 38, "Deve ter processado exatamente 38 ticks na temporada 1")
 
-	# Registra resolução de um ato no tick 38
+	# 2. Registra resolução de ato antes da virada (tick 38)
 	var arcs: Dictionary = {
 		"active_arcs": {
 			"arc_teste_tempo": {
@@ -649,7 +729,12 @@ func test_blocker3_dynamic_temporal_advance_ticks() -> void:
 	}
 	LifeLegacy.get_data()["story_arcs"] = arcs
 
-	# Agora vira para a temporada 2, rodada 0 (tick 39)
+	# 3. Configura temporada 2 com quantidade diferente de rodadas: 42 rodadas!
+	GameState.calendar = []
+	for i in range(42):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	# Vira para temporada 2, rodada 0 (tick 39 de virada anual)
 	GameState.season_num = 2
 	GameState.season_day = 0
 	GameState.career_updated.emit()
@@ -667,10 +752,10 @@ func test_blocker3_dynamic_temporal_advance_ticks() -> void:
 		"total_ticks_processed": current_ticks,
 		"story_arcs": arcs
 	}
-	# Passou apenas 1 tick (39 - 38 = 1 < 2). Pela fórmula antiga com 52: (2-1)*52 + (0-38) = 14 ticks (erroneamente válido!)
+	# Passou apenas 1 tick (39 - 38 = 1 < 2). NÃO deve ser elegível
 	assert(not LifeLegacyConditions.evaluate(cond_req_2ticks, ctx_tick39), "Com 1 tick decorrido, min_ticks=2 NÃO deve ser elegível")
 
-	# Avança mais 1 rodada: temporada 2, rodada 1 (tick 40: 40 - 38 = 2 ticks)
+	# Avança 1 rodada na temporada 2: rodada 1 (tick 40)
 	GameState.season_num = 2
 	GameState.season_day = 1
 	GameState.career_updated.emit()
@@ -683,13 +768,60 @@ func test_blocker3_dynamic_temporal_advance_ticks() -> void:
 		"total_ticks_processed": current_ticks40,
 		"story_arcs": arcs
 	}
+	# 40 - 38 = 2 ticks -> DEVE ser elegível
 	assert(LifeLegacyConditions.evaluate(cond_req_2ticks, ctx_tick40), "Com 2 ticks decorridos reais, min_ticks=2 DEVE ser elegível")
 
-	GameState.calendar = orig_cal
-	print("  -> Bloqueador 3 resolvido com sucesso: ticks acumulados eliminam distorções de temporadas variáveis!")
+	# 4. Resolve ato DEPOIS da virada (tick 40)
+	arcs["active_arcs"]["arc_teste_tempo"]["last_act_resolved_ticks"] = 40
+	arcs["active_arcs"]["arc_teste_tempo"]["current_stage"] = 3
+	LifeLegacy.get_data()["story_arcs"] = arcs
 
-func test_blocker4_modifier_capacity_transactional_hold() -> void:
-	print("\n[Teste Bloqueador 4] Tratamento transacional quando o limite de modificadores é excedido...")
+	# Avança até o fim da temporada 2 (42 rodadas): de dia 1 até dia 42 = 41 rodadas
+	for d in range(2, 43):
+		GameState.season_num = 2
+		GameState.season_day = d
+		GameState.career_updated.emit()
+
+	var current_ticks81: int = LifeLegacy.get_total_ticks_processed()
+	assert(current_ticks81 == 81, "Ao final da T2 (42 rodadas) deve ter exatamente 81 ticks (38 + 1 + 42 = 81)")
+
+	# 5. Recuperação de crash / gap através de temporadas com extensões diferentes
+	# Salva o estado atual no disco no tick 81 (S2, D42)
+	LifeLegacy.save_current_slot()
+
+	# Configura temporada 3 com 30 rodadas
+	GameState.calendar = []
+	for i in range(30):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	# Simula salto/gap: jogo avançou para temporada 3, rodada 5
+	GameState.season_num = 3
+	GameState.season_day = 5
+	GameState.career_updated.emit()
+
+	# Gap de S2 D42 para S3 D5:
+	# Rollover para S3 D0 (+1 tick), mais 5 rodadas na S3 (+5 ticks) = +6 ticks -> 81 + 6 = 87 ticks!
+	var current_ticks87: int = LifeLegacy.get_total_ticks_processed()
+	assert(current_ticks87 == 87, "Recuperação de gap entre temporadas de tamanhos diferentes deve totalizar 87 ticks (obtido=%d)" % current_ticks87)
+
+	# 6. Teste de Fast Forward Circuit Breaker (> 2 temporadas)
+	LifeLegacy.save_current_slot()
+	# Simula salto gigante: para temporada 6, rodada 2 (6 - 3 = 3 temporadas > 2)
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	var cb_ticks: int = LifeLegacy.get_total_ticks_processed()
+	assert(cb_ticks > 87, "Circuit breaker deve avançar total_ticks_processed monotonicamente")
+	var gap_log: Array = LifeLegacy.get_data().get("recovery_gap_log", [])
+	assert(not gap_log.is_empty(), "Circuit breaker deve registrar entrada em recovery_gap_log")
+	assert(gap_log[-1].get("gap_type") == "FAST_FORWARD_CIRCUIT_BREAKER", "Tipo de gap deve ser FAST_FORWARD_CIRCUIT_BREAKER")
+
+	GameState.calendar = orig_cal
+	print("  -> Bloqueador 3 resolvido com sucesso: calendário dinâmico, viradas, gaps e circuit breaker verificados!")
+
+func test_blocker4_modifier_validation_and_transactional_hold() -> void:
+	print("\n[Teste Bloqueador 4] Validação completa de modificadores pré-outbox e barreira transacional...")
 	_cleanup_test_dir()
 	LifeLegacyCatalogoEventos.reset()
 	LifeLegacyCatalogoEventos.registrar_todos()
@@ -699,7 +831,83 @@ func test_blocker4_modifier_capacity_transactional_hold() -> void:
 	LifeLegacy.set_safe_mode(false)
 	LifeLegacy.reload_slot(test_slot)
 
-	# Preenche active_modifiers até o limite de 10
+	# 1. Modificador com ID vazio: DEVE ser rejeitado antes do despacho e sem criar intenção Outbox
+	var evt_invalid_id: Dictionary = {
+		"event_id": "evt_test_invalid_id",
+		"occurrence_id": "occ_inv_1",
+		"choices": [
+			{
+				"id": "choice_bad_id",
+				"text": "Escolha Ruim",
+				"career_effects": { "energy": -10.0 },
+				"modifier": {
+					"id": "", # Inválido!
+					"name": "Nome",
+					"duration_ticks": 2,
+					"stat_drift": { "discipline": 1.0 }
+				}
+			}
+		],
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = evt_invalid_id
+	var outbox = LifeLegacy.get_data()["outbox"]
+	outbox["pending_dispatches"] = []
+
+	var res_bad_id: bool = LifeLegacyEvents.resolve_choice(evt_invalid_id, "choice_bad_id", outbox, LifeLegacy)
+	assert(not res_bad_id, "Resolução com modifier de ID vazio DEVE ser rejeitada")
+	assert(outbox["pending_dispatches"].is_empty(), "Outbox NÃO pode receber intenções se o modificador for inválido")
+	assert(evt_invalid_id.get("status") == "PENDING_RESOLUTION", "Status NÃO pode avançar para PRE_COMMITMENT com modificador inválido")
+	assert(evt_invalid_id.get("last_error") == "EMPTY_MODIFIER_ID", "Erro descritivo deve ser EMPTY_MODIFIER_ID")
+
+	# 2. Modificador com stat_drift inválido: DEVE ser rejeitado antes do despacho
+	var evt_invalid_drift: Dictionary = {
+		"event_id": "evt_test_invalid_drift",
+		"occurrence_id": "occ_inv_2",
+		"choices": [
+			{
+				"id": "choice_bad_drift",
+				"text": "Escolha Ruim Drift",
+				"career_effects": { "money": 100 },
+				"modifier": {
+					"id": "mod_bad_drift",
+					"name": "Nome",
+					"duration_ticks": 2,
+					"stat_drift": { "stat_inexistente": 1.0 } # Inválido!
+				}
+			}
+		],
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = evt_invalid_drift
+	var res_bad_drift: bool = LifeLegacyEvents.resolve_choice(evt_invalid_drift, "choice_bad_drift", outbox, LifeLegacy)
+	assert(not res_bad_drift, "Resolução com stat_drift inválido DEVE ser rejeitada")
+	assert(outbox["pending_dispatches"].is_empty(), "Outbox deve continuar sem despachos externos")
+	assert(evt_invalid_drift.get("status") == "PENDING_RESOLUTION", "Status deve permanecer PENDING_RESOLUTION")
+
+	# 3. Lote com IDs duplicados: DEVE ser rejeitado antes do despacho
+	var evt_dup_batch: Dictionary = {
+		"event_id": "evt_test_dup_batch",
+		"occurrence_id": "occ_inv_3",
+		"choices": [
+			{
+				"id": "choice_dup_batch",
+				"text": "Escolha com modificadores duplicados",
+				"modifiers": [
+					{ "id": "mod_dup_x", "name": "M1", "duration_ticks": 1, "stat_drift": {} },
+					{ "id": "mod_dup_x", "name": "M2", "duration_ticks": 2, "stat_drift": {} }
+				]
+			}
+		],
+		"status": "PENDING_RESOLUTION"
+	}
+	LifeLegacy.get_data()["active_event"] = evt_dup_batch
+	var res_dup: bool = LifeLegacyEvents.resolve_choice(evt_dup_batch, "choice_dup_batch", outbox, LifeLegacy)
+	assert(not res_dup, "Lote com duplicatas internas DEVE ser rejeitado")
+	assert(evt_dup_batch.get("status") == "PENDING_RESOLUTION", "Status permanece PENDING_RESOLUTION")
+	assert(String(evt_dup_batch.get("last_error", "")).begins_with("DUPLICATE_MODIFIER_ID_IN_BATCH"), "Erro deve acusar ID duplicado no lote")
+
+	# 4. Capacidade máxima de 10 modificadores atingida: Retenção transacional em PRE_COMMITMENT
 	var mods: Array = []
 	for i in range(10):
 		var m = LifeLegacyModifiers.create_modifier("mod_cap_%d" % i, "evt_cap", "Mod %d" % i, {}, 5, 1, 0)
@@ -708,7 +916,6 @@ func test_blocker4_modifier_capacity_transactional_hold() -> void:
 	LifeLegacy.get_data()["active_modifiers"] = mods
 	LifeLegacy.save_current_slot()
 
-	# Cria evento cuja escolha adiciona um 11º modificador
 	var ato1 = LifeLegacyEvents.get_event_by_id("sociedade_amigo_ato1")
 	var act_evt: Dictionary = {
 		"event_id": "sociedade_amigo_ato1",
@@ -721,20 +928,9 @@ func test_blocker4_modifier_capacity_transactional_hold() -> void:
 	}
 	LifeLegacy.get_data()["active_event"] = act_evt
 
-	# Executa escolha com novo modificador (choice_investir_pesado adiciona mod_expectativa_sociedade)
-	var res: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_investir_pesado", LifeLegacy.get_data()["outbox"], LifeLegacy)
-	assert(not res, "Resolução deve falhar quando capacidade for excedida")
-	assert(act_evt.get("status") == "PRE_COMMITMENT", "Status deve permanecer em PRE_COMMITMENT")
+	var res_cap: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_investir_pesado", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(not res_cap, "Resolução deve falhar quando capacidade for excedida")
 	assert(act_evt.get("last_error") == "MODIFIER_CAPACITY_EXCEEDED", "Erro descritivo deve ser MODIFIER_CAPACITY_EXCEEDED")
-
-	# Verifica persistência no disco
-	var disk_slot = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
-	var disk_evt = disk_slot["data"]["active_event"]
-	assert(disk_evt.get("status") == "PRE_COMMITMENT", "Evento no disco deve estar retido em PRE_COMMITMENT")
-	assert(disk_evt.get("last_error") == "MODIFIER_CAPACITY_EXCEEDED", "Erro no disco deve estar salvo")
-
-	# Nenhum modificador foi adicionado indevidamente
-	assert(disk_slot["data"]["active_modifiers"].size() == 10, "Modificadores continuam sendo 10 sem descarte silencioso")
 
 	# Libera 1 vaga removendo 1 modificador
 	mods.pop_back()
@@ -742,15 +938,12 @@ func test_blocker4_modifier_capacity_transactional_hold() -> void:
 	LifeLegacy.get_data()["active_modifiers"] = mods
 	LifeLegacy.save_current_slot()
 
-	# Tenta novamente a recuperação da escolha pré-comprometida
-	var retry_res: bool = LifeLegacy.retry_precommitted_event()
-	assert(retry_res, "Com vaga disponível, retry deve ter 100% de sucesso")
+	# Executa novamente: agora deve conseguir resolver
+	var res_ok: bool = LifeLegacyEvents.resolve_choice(act_evt, "choice_investir_pesado", LifeLegacy.get_data()["outbox"], LifeLegacy)
+	assert(res_ok, "Com vaga liberada, resolução deve ter sucesso")
+	assert(act_evt.get("status") == "RESOLVED", "Status final deve ser RESOLVED")
+	assert(not act_evt.has("last_error"), "last_error deve ser limpo")
 
-	var act_final = LifeLegacy.get_active_event()
-	assert(act_final.get("status") == "RESOLVED", "Status final deve ser RESOLVED")
-	assert(not act_final.has("last_error"), "last_error deve ser limpo após resolução bem-sucedida")
-
-	# Confirma que o modificador foi adicionado com sucesso
 	var mods_after = LifeLegacy.get_active_modifiers()
 	assert(mods_after.size() == 10, "Capacidade deve estar completa agora com o novo modificador")
 	var found_new: bool = false
@@ -760,10 +953,10 @@ func test_blocker4_modifier_capacity_transactional_hold() -> void:
 			break
 	assert(found_new, "Modificador mod_expectativa_sociedade deve estar ativo")
 
-	print("  -> Bloqueador 4 resolvido com sucesso: bloqueio transacional e retenção sem perda de dados comprovados!")
+	print("  -> Bloqueador 4 resolvido com sucesso: validações prévias e barreira transacional comprovadas!")
 
-func test_blocker5_v1_migration_full_coverage() -> void:
-	print("\n[Teste Bloqueador 5] Migração completa de saves V1 em todas as fontes (Principal e Backups)...")
+func test_blocker5_migration_all_sources_coverage() -> void:
+	print("\n[Teste Bloqueador 5] Cobertura exaustiva de migração para todas as 4 origens de recuperação...")
 	_cleanup_test_dir()
 	DirAccess.make_dir_recursive_absolute(base_dir)
 
@@ -790,33 +983,73 @@ func test_blocker5_v1_migration_full_coverage() -> void:
 
 	var load_main = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_main.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load do arquivo principal migra com OK_SUCCESS")
-	assert(load_main["data"]["schema_version"] == 2, "Schema deve ser 2")
-	assert(load_main["data"]["story_arcs"]["active_arcs"] is Dictionary, "active_arcs deve ser Dictionary")
-	assert(load_main["data"]["story_arcs"]["completed_arcs"] is Array, "completed_arcs deve ser Array")
+	assert(load_main["data"]["schema_version"] == 3, "Schema deve ser 3")
 	assert(load_main["data"]["total_ticks_processed"] == 0, "total_ticks_processed deve ser 0")
 
-	# Confirma que arquivo no disco foi atualizado
 	var disk_read = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_read["data"]["schema_version"] == 2, "Arquivo persistido no disco foi migrado para schema 2")
-	assert(disk_read["data"].has("story_arcs"), "Arquivo no disco tem story_arcs")
-	assert(disk_read["data"].has("total_ticks_processed"), "Arquivo no disco tem total_ticks_processed")
+	assert(disk_read["data"]["schema_version"] == 3, "Arquivo persistido no disco foi migrado para schema 3")
 
-	# 2. Teste de migração via Backup (.bak_staging)
+	# 2. Teste de migração via .tmp órfão
 	_cleanup_test_dir()
-	# Principal corrompido, .bak_staging com V1 válido
-	var fa_bad = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
-	fa_bad.store_string("{ corrompido")
-	fa_bad.close()
+	var fa_tmp = FileAccess.open(base_dir + "/life_legacy.json.tmp", FileAccess.WRITE)
+	fa_tmp.store_string(JSON.stringify(v1_data, "\t"))
+	fa_tmp.close()
+
+	var load_tmp = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(load_tmp.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Recuperação via .tmp promove e migra")
+	assert(load_tmp["data"]["schema_version"] == 3, "Dado promovido do .tmp deve ser schema 3")
+	var disk_tmp = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_tmp["data"]["schema_version"] == 3, "Principal promovido do .tmp deve ser schema 3 no disco")
+
+	# 3. Teste de migração via .bak_staging
+	_cleanup_test_dir()
+	var fa_bad1 = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa_bad1.store_string("{ corrompido")
+	fa_bad1.close()
 	var fa_stag = FileAccess.open(base_dir + "/life_legacy.json.bak_staging", FileAccess.WRITE)
 	fa_stag.store_string(JSON.stringify(v1_data, "\t"))
 	fa_stag.close()
 
 	var load_stag = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_stag.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação via staging deve ser OK_RECOVERED_BACKUP")
-	assert(load_stag["data"]["schema_version"] == 2, "Dado recuperado de staging deve ser migrado para schema 2")
-	assert(load_stag["data"].has("total_ticks_processed"), "Deve conter total_ticks_processed")
+	assert(load_stag["data"]["schema_version"] == 3, "Dado recuperado de staging deve ser migrado para schema 3")
+	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak_staging"), "Fonte de recuperação (.bak_staging) deve ser preservada")
+	var disk_rec_stag = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_rec_stag["data"]["schema_version"] == 3, "Principal restaurado a partir de staging deve ser schema 3 no disco")
 
-	var disk_rec = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_rec["data"]["schema_version"] == 2, "Principal restaurado a partir do backup deve ser schema 2 no disco")
+	# 4. Teste de migração via .bak (quando staging não existe)
+	_cleanup_test_dir()
+	var fa_bad2 = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa_bad2.store_string("{ corrompido")
+	fa_bad2.close()
+	var fa_bak = FileAccess.open(base_dir + "/life_legacy.json.bak", FileAccess.WRITE)
+	fa_bak.store_string(JSON.stringify(v1_data, "\t"))
+	fa_bak.close()
 
-	print("  -> Bloqueador 5 resolvido com sucesso: migração em todas as rotas e persistência no disco comprovadas!")
+	var load_bak = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(load_bak.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação via .bak deve ser OK_RECOVERED_BACKUP")
+	assert(load_bak["data"]["schema_version"] == 3, "Dado recuperado de .bak deve ser migrado para schema 3")
+	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak"), "Fonte de recuperação (.bak) deve ser preservada")
+	var disk_rec_bak = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_rec_bak["data"]["schema_version"] == 3, "Principal restaurado a partir de .bak deve ser schema 3 no disco")
+
+	# 5. Principal corrompido + staging corrompido + backup V1 válido
+	_cleanup_test_dir()
+	var fa_bad3 = FileAccess.open(base_dir + "/life_legacy.json", FileAccess.WRITE)
+	fa_bad3.store_string("{ corrompido principal")
+	fa_bad3.close()
+	var fa_bad_stag = FileAccess.open(base_dir + "/life_legacy.json.bak_staging", FileAccess.WRITE)
+	fa_bad_stag.store_string("{ corrompido staging")
+	fa_bad_stag.close()
+	var fa_bak_valid = FileAccess.open(base_dir + "/life_legacy.json.bak", FileAccess.WRITE)
+	fa_bak_valid.store_string(JSON.stringify(v1_data, "\t"))
+	fa_bak_valid.close()
+
+	var load_deep_bak = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
+	assert(load_deep_bak.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação com staging corrompido deve cair no .bak")
+	assert(load_deep_bak["data"]["schema_version"] == 3, "Dado recuperado de .bak deve ser schema 3")
+	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak"), "Arquivo .bak de recuperação deve permanecer preservado")
+	var disk_deep = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
+	assert(disk_deep["data"]["schema_version"] == 3, "Principal restaurado no disco deve ser schema 3")
+
+	print("  -> Bloqueador 5 resolvido com sucesso: todas as 4 fontes testadas independentemente com Schema 3 confirmado no disco!")

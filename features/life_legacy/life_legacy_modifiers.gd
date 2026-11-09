@@ -21,6 +21,62 @@ static func create_modifier(id: String, source_event_id: String, name: String, s
 		}
 	}
 
+# Valida integridade e regras de negócio de um dicionário de modificador
+static func validate_modifier(mod_dict: Dictionary) -> Dictionary:
+	if mod_dict.is_empty():
+		return { "valid": false, "error": "EMPTY_MODIFIER_DICT" }
+	
+	if not mod_dict.has("id"):
+		return { "valid": false, "error": "MISSING_MODIFIER_ID" }
+	var mid: String = String(mod_dict["id"]).strip_edges()
+	if mid.is_empty():
+		return { "valid": false, "error": "EMPTY_MODIFIER_ID" }
+	
+	# Validação de duração (aceita duration_ticks ou duration_ticks_remaining)
+	var dur: int = 0
+	if mod_dict.has("duration_ticks"):
+		dur = int(mod_dict["duration_ticks"])
+	elif mod_dict.has("duration_ticks_remaining"):
+		dur = int(mod_dict["duration_ticks_remaining"])
+	else:
+		return { "valid": false, "error": "MISSING_DURATION_TICKS" }
+	if dur <= 0:
+		return { "valid": false, "error": "INVALID_DURATION_TICKS" }
+	
+	# Validação de stat_drift
+	if mod_dict.has("stat_drift"):
+		if not (mod_dict["stat_drift"] is Dictionary):
+			return { "valid": false, "error": "INVALID_STAT_DRIFT_TYPE" }
+		var drift: Dictionary = mod_dict["stat_drift"]
+		for k in drift:
+			var stat_name: String = String(k)
+			if not LifeLegacyState.STAT_KEYS.has(stat_name):
+				return { "valid": false, "error": "INVALID_STAT_KEY: " + stat_name }
+			var v = drift[k]
+			if not (v is int or v is float):
+				return { "valid": false, "error": "INVALID_STAT_DELTA_TYPE: " + stat_name }
+	
+	return { "valid": true, "error": "" }
+
+# Valida um lote de modificadores verificando validade individual, unicidade no lote e capacidade disponível
+static func validate_modifiers_batch(active_modifiers: Array, modifiers_to_add: Array) -> Dictionary:
+	var seen_ids: Array[String] = []
+	for m in modifiers_to_add:
+		if not (m is Dictionary):
+			return { "valid": false, "error": "MODIFIER_NOT_A_DICTIONARY" }
+		var v_res: Dictionary = validate_modifier(m)
+		if not v_res.get("valid", false):
+			return v_res
+		var mid: String = String(m["id"]).strip_edges()
+		if seen_ids.has(mid):
+			return { "valid": false, "error": "DUPLICATE_MODIFIER_ID_IN_BATCH: " + mid }
+		seen_ids.append(mid)
+
+	if not can_add_modifiers(active_modifiers, modifiers_to_add):
+		return { "valid": false, "error": "MODIFIER_CAPACITY_EXCEEDED" }
+
+	return { "valid": true, "error": "" }
+
 # Verifica se há capacidade disponível para um conjunto de modificadores sem exceder o limite
 static func can_add_modifiers(active_modifiers: Array, modifiers_to_add: Array) -> bool:
 	var existing_ids: Array[String] = []

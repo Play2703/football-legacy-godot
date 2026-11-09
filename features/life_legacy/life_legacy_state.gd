@@ -1,7 +1,7 @@
 class_name LifeLegacyState
 extends RefCounted
 
-const CURRENT_SUPPORTED_SCHEMA: int = 2
+const CURRENT_SUPPORTED_SCHEMA: int = 3
 const DEFAULT_CATALOG_VERSION: int = 2
 const RNG_VERSION: int = 1
 
@@ -35,6 +35,7 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 			"season_day": season_day
 		},
 		"total_ticks_processed": 0,
+		"season_calendar_lengths": {},
 		"stats": STAT_DEFAULTS.duplicate(),
 		"stats_history": [],
 		"active_modifiers": [],
@@ -84,11 +85,37 @@ static func validate_schema(data: Dictionary) -> bool:
 	var pt: Dictionary = data["last_processed_time"]
 	if not pt.has("season_num") or not pt.has("season_day"):
 		return false
-	if sv >= 2:
+
+	if sv == 2:
 		if data.has("active_modifiers") and not (data["active_modifiers"] is Array):
 			return false
 		if data.has("story_arcs") and not (data["story_arcs"] is Dictionary):
 			return false
 		if data.has("total_ticks_processed") and not (data["total_ticks_processed"] is int or (data["total_ticks_processed"] is float and data["total_ticks_processed"] == int(data["total_ticks_processed"]))):
 			return false
+
+	if sv >= 3:
+		if not data.has("active_modifiers") or not (data["active_modifiers"] is Array):
+			return false
+		if not data.has("story_arcs") or not (data["story_arcs"] is Dictionary):
+			return false
+		var story_arcs: Dictionary = data["story_arcs"]
+		if not story_arcs.has("active_arcs") or not (story_arcs["active_arcs"] is Dictionary):
+			return false
+		if not story_arcs.has("completed_arcs") or not (story_arcs["completed_arcs"] is Array):
+			return false
+		var active_arcs: Dictionary = story_arcs["active_arcs"]
+		for aid in active_arcs:
+			var ainfo = active_arcs[aid]
+			if not (ainfo is Dictionary):
+				return false
+			if not ainfo.has("last_act_resolved_ticks") or not (ainfo["last_act_resolved_ticks"] is int or (ainfo["last_act_resolved_ticks"] is float and ainfo["last_act_resolved_ticks"] == int(ainfo["last_act_resolved_ticks"]))):
+				return false
+		if not data.has("total_ticks_processed") or not (data["total_ticks_processed"] is int or (data["total_ticks_processed"] is float and data["total_ticks_processed"] == int(data["total_ticks_processed"]))):
+			return false
+		if int(data["total_ticks_processed"]) < 0:
+			return false
+		if data.has("season_calendar_lengths") and not (data["season_calendar_lengths"] is Dictionary):
+			return false
+
 	return true
