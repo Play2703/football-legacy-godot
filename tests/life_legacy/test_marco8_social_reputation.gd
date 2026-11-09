@@ -277,14 +277,33 @@ func test_scenario_c_press_agent_hiring_and_expiration() -> void:
 	assert(ag_expired["level"] == 0, "Assessoria após expiração deve reverter para nível 0")
 	assert(ag_expired["remaining_ticks"] == 0, "Duração da assessoria expirada deve ser 0")
 
-	# 3. Teste de Equivalência Temporal Monotônica (20 chamadas de 1 tick == 1 chamada de 20 ticks)
+	# 3. Teste de Equivalência Temporal Monotônica Ampliada
+	# Simultaneamente:
+	# - Assessoria de imprensa com duração inferior ao salto (Nível 1, 8 semanas restantes)
+	# - Campanha de caridade ativa com 3 semanas restantes (mitigação 1.0/semana)
+	# - Cooldown de retratação (4 semanas)
+	# - Cooldown de post promocional (2 semanas)
+	# - Calor inicial idêntico (95.0)
+	# Comparar: 20 avanços sequenciais de 1 tick vs 1 avanço único de 20 ticks.
+	var charity_camp_data: Dictionary = {
+		"campaign_id": "camp_equiv_test",
+		"name": "Campanha Solidária Comunitária",
+		"ticks_remaining": 3,
+		"remaining_ticks": 3,
+		"weekly_mitigation": LifeLegacySocial.CHARITY_WEEKLY_HEAT_MITIGATION,
+		"season_num": 1,
+		"season_day": 0
+	}
 	var prof_step: Dictionary = {
 		"social_reputation": {
 			"scandal_heat": 95.0,
 			"press_agent_level": 1,
 			"press_agent_ticks_remaining": 8,
-			"active_campaigns": [],
-			"cooldowns": {},
+			"active_campaigns": [charity_camp_data.duplicate(true)],
+			"cooldowns": {
+				LifeLegacySocial.ACTION_RETRACTION: 4,
+				LifeLegacySocial.ACTION_TRAINING_POST: 2
+			},
 			"history": []
 		}
 	}
@@ -293,8 +312,11 @@ func test_scenario_c_press_agent_hiring_and_expiration() -> void:
 			"scandal_heat": 95.0,
 			"press_agent_level": 1,
 			"press_agent_ticks_remaining": 8,
-			"active_campaigns": [],
-			"cooldowns": {},
+			"active_campaigns": [charity_camp_data.duplicate(true)],
+			"cooldowns": {
+				LifeLegacySocial.ACTION_RETRACTION: 4,
+				LifeLegacySocial.ACTION_TRAINING_POST: 2
+			},
 			"history": []
 		}
 	}
@@ -306,9 +328,38 @@ func test_scenario_c_press_agent_hiring_and_expiration() -> void:
 	var heat_step: float = LifeLegacySocial.get_heat(prof_step)
 	var heat_jump: float = LifeLegacySocial.get_heat(prof_jump)
 	assert(is_equal_approx(heat_step, heat_jump), "Calor após 20x1 tick (%.4f) deve ser rigorosamente igual a 1x20 ticks (%.4f)" % [heat_step, heat_jump])
-	assert(is_equal_approx(heat_step, 5.0), "Calor final esperado deve ser exatamente 5.0 (foi %.4f)" % heat_step)
-	assert(prof_step["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado em prof_step")
-	assert(prof_jump["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado em prof_jump")
+	# Cálculo analítico exato:
+	# Ticks 1..3 (3 ticks): decaimento base (3.5) + assessoria (2.5) + caridade (1.0) = 7.0/tick => 3 * 7.0 = 21.0 (calor 74.0)
+	# Ticks 4..8 (5 ticks): decaimento base (3.5) + assessoria (2.5) = 6.0/tick => 5 * 6.0 = 30.0 (calor 44.0)
+	# Ticks 9..20 (12 ticks): decaimento base (3.5) = 3.5/tick => 12 * 3.5 = 42.0 (calor 2.0)
+	# Total decaimento: 21.0 + 30.0 + 42.0 = 93.0 => Calor final esperado = 95.0 - 93.0 = 2.0
+	assert(is_equal_approx(heat_step, 2.0), "Calor final esperado deve ser exatamente 2.0 (foi %.4f)" % heat_step)
+
+	# Verificar esgotamento do contrato da assessoria
+	assert(prof_step["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado (nível 0) em prof_step")
+	assert(prof_jump["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado (nível 0) em prof_jump")
+	assert(prof_step["social_reputation"]["press_agent_ticks_remaining"] == 0, "Ticks de assessoria devem ser 0 em prof_step")
+	assert(prof_jump["social_reputation"]["press_agent_ticks_remaining"] == 0, "Ticks de assessoria devem ser 0 em prof_jump")
+
+	# Verificar conclusão da campanha de caridade
+	assert(prof_step["social_reputation"]["active_campaigns"].is_empty(), "Campanhas ativas devem estar vazias em prof_step")
+	assert(prof_jump["social_reputation"]["active_campaigns"].is_empty(), "Campanhas ativas devem estar vazias em prof_jump")
+
+	# Verificar expiração integral de todos os cooldowns
+	assert(prof_step["social_reputation"]["cooldowns"].is_empty(), "Cooldowns devem estar esgotados e vazios em prof_step")
+	assert(prof_jump["social_reputation"]["cooldowns"].is_empty(), "Cooldowns devem estar esgotados e vazios em prof_jump")
+
+	# Verificar histórico cronológico de expiração em ambos os perfis
+	var hist_step: Array = prof_step["social_reputation"]["history"]
+	var hist_jump: Array = prof_jump["social_reputation"]["history"]
+	assert(hist_step.size() == 2, "prof_step deve conter exatamente 2 registros de expiração")
+	assert(hist_jump.size() == 2, "prof_jump deve conter exatamente 2 registros de expiração")
+	assert(hist_step[0]["type"] == "campaign_completed", "Primeiro registro em prof_step deve ser campaign_completed")
+	assert(hist_jump[0]["type"] == "campaign_completed", "Primeiro registro em prof_jump deve ser campaign_completed")
+	assert(hist_step[1]["type"] == "press_agent_expired", "Segundo registro em prof_step deve ser press_agent_expired")
+	assert(hist_jump[1]["type"] == "press_agent_expired", "Segundo registro em prof_jump deve ser press_agent_expired")
+	assert(hist_step[1]["previous_level"] == 1, "previous_level em prof_step deve ser 1")
+	assert(hist_jump[1]["previous_level"] == 1, "previous_level em prof_jump deve ser 1")
 
 	print("  -> Cenário C aprovado com sucesso! Contratação, aceleração de resfriamento e expiração verificadas.")
 
@@ -447,6 +498,11 @@ func test_scenario_g_fault_injection_and_idempotency() -> void:
 	Career.money = 30000
 	LifeLegacy.apply_scandal("sc_g", 50.0, "Polemica teste G")
 
+	var muro_count_before: int = Career.muro_redes.size()
+	var pop_before: float = LifeLegacy.get_stat("popularity")
+	var rep_before: float = LifeLegacy.get_stat("reputation")
+	var disc_before: float = LifeLegacy.get_stat("discipline")
+
 	# Injetar falha de despacho no Outbox especificamente para o post (rp_post_)
 	# enquanto o débito financeiro (rp_cost_) é despachado com sucesso
 	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "rp_post_"
@@ -456,6 +512,11 @@ func test_scenario_g_fault_injection_and_idempotency() -> void:
 	assert(res.get("success") == false, "Execução deve reportar falha com despacho pendente")
 	assert(res.get("status") == "PENDING_DISPATCH", "Status deve ser PENDING_DISPATCH")
 	assert(Career.money == 29500, "Dinheiro DEVE ter sido debitado ($500 debitados, saldo $29.500) pois rp_cost_ passou")
+	assert(Career.muro_redes.size() == muro_count_before, "Post NÃO deve ser publicado no MuroRedes antes da recuperação")
+	assert(is_equal_approx(LifeLegacy.get_stat("popularity"), pop_before), "Popularidade não deve ser alterada durante falha de despacho")
+	assert(is_equal_approx(LifeLegacy.get_stat("reputation"), rep_before), "Reputação não deve ser alterada durante falha de despacho")
+	assert(is_equal_approx(LifeLegacy.get_stat("discipline"), disc_before), "Disciplina não deve ser alterada durante falha de despacho")
+	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 50.0), "Calor não deve ser alterado antes da confirmação da transação")
 
 	var profile: Dictionary = LifeLegacy.get_data()
 	assert(profile["social_reputation"].has("pending_rp_transaction"), "Deve persistir pending_rp_transaction")
@@ -469,12 +530,29 @@ func test_scenario_g_fault_injection_and_idempotency() -> void:
 	var profile_recovered: Dictionary = LifeLegacy.get_data()
 	assert(not profile_recovered["social_reputation"].has("pending_rp_transaction"), "Transação pendente deve ter sido consumida")
 	assert(Career.money == 29500, "Dinheiro debitado exatamente uma vez ($29.500 mantido)")
+	assert(Career.muro_redes.size() == muro_count_before + 1, "Exatamente uma publicação no MuroRedes após recuperação")
+	var top_post: Dictionary = Career.muro_redes[0]
+	assert(top_post.get("autor") == "yo", "Autor da publicação no MuroRedes deve ser 'yo'")
+	assert(top_post.get("tipo") == "comunicado_perdon" or top_post.get("hecho") == "comunicado_perdon", "Tipo da publicação deve ser comunicado_perdon")
+	assert(is_equal_approx(LifeLegacy.get_stat("reputation"), rep_before + 4.0), "Reputação deve subir exatamente +4 uma única vez")
+	assert(is_equal_approx(LifeLegacy.get_stat("popularity"), pop_before - 2.0), "Popularidade deve cair exatamente -2 uma única vez")
+	assert(is_equal_approx(LifeLegacy.get_stat("discipline"), disc_before + 1.0), "Disciplina deve subir exatamente +1 uma única vez")
 	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 27.5), "Calor reduzido de 50 para 27.5 com sucesso")
 
-	# Recarregar novamente não deve debitar outra vez (idempotência perfeita)
+	# Recarregar novamente não deve debitar outra vez (idempotência perfeita - segundo reload)
 	LifeLegacy.reload_slot(test_slot)
 	assert(Career.money == 29500, "Reload subsequente não pode debitar novamente (deve manter $29.500)")
+	assert(Career.muro_redes.size() == muro_count_before + 1, "Segundo reload não pode duplicar post no MuroRedes")
+	assert(is_equal_approx(LifeLegacy.get_stat("reputation"), rep_before + 4.0), "Segundo reload não pode alterar reputação")
+	assert(is_equal_approx(LifeLegacy.get_stat("popularity"), pop_before - 2.0), "Segundo reload não pode alterar popularidade")
+	assert(is_equal_approx(LifeLegacy.get_stat("discipline"), disc_before + 1.0), "Segundo reload não pode alterar disciplina")
 	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 27.5), "Calor subsequente deve manter 27.5")
+
+	# Terceiro recarregamento (estabilidade adicional pós-recuperação)
+	LifeLegacy.reload_slot(test_slot)
+	assert(Career.money == 29500, "Terceiro reload mantém estritamente $29.500")
+	assert(Career.muro_redes.size() == muro_count_before + 1, "Terceiro reload mantém estritamente 1 post")
+	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 27.5), "Terceiro reload mantém calor em 27.5")
 
 	print("  -> Cenário G aprovado com sucesso! Recuperação idempotente comprovada com zero duplicidade.")
 
@@ -532,6 +610,18 @@ func test_scenario_i_ui_and_sponsorship_impact() -> void:
 	assert(sp_leve["reputation_penalty"] == 5, "Penalidade de reputação deve ser 5")
 	assert(is_equal_approx(sp_leve["offer_value_multiplier"], 0.95), "Multiplicador deve ser 0.95")
 
+	var sp_mod: Dictionary = LifeLegacySocial.calculate_sponsorship_impact(50.0)
+	assert(sp_mod["active"] == true, "Faixa moderada tem impacto ativo")
+	assert(sp_mod["reputation_penalty"] == 10, "Penalidade deve ser 10")
+	assert(is_equal_approx(sp_mod["offer_value_multiplier"], 0.85), "Multiplicador deve ser 0.85")
+	assert(sp_mod["top_tier_blocked"] == false, "Grade 4 não deve ser bloqueado na faixa moderada")
+
+	var sp_crise: Dictionary = LifeLegacySocial.calculate_sponsorship_impact(70.0)
+	assert(sp_crise["active"] == true, "Faixa crise tem impacto ativo")
+	assert(sp_crise["reputation_penalty"] == 20, "Penalidade deve ser 20")
+	assert(is_equal_approx(sp_crise["offer_value_multiplier"], 0.70), "Multiplicador deve ser 0.70")
+	assert(sp_crise["top_tier_blocked"] == true, "Patrocínio master deve ser bloqueado na crise")
+
 	var sp_grave: Dictionary = LifeLegacySocial.calculate_sponsorship_impact(85.0)
 	assert(sp_grave["active"] == true, "Faixa grave tem impacto ativo")
 	assert(sp_grave["reputation_penalty"] == 35, "Penalidade deve ser 35")
@@ -556,9 +646,26 @@ func test_scenario_i_ui_and_sponsorship_impact() -> void:
 	var off_85: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 85.0)
 
 	assert(off_30["pay"] == roundi(float(off_0["pay"]) * 0.95), "Calor 30 deve aplicar deságio de 5% no pay")
+	assert(off_30["per_goal"] == roundi(float(off_0["per_goal"]) * 0.95), "Calor 30 deve aplicar deságio de 5% no per_goal")
+	assert(off_30["reward"] == roundi(float(off_0["reward"]) * 0.95), "Calor 30 deve aplicar deságio de 5% no reward")
+
 	assert(off_50["pay"] == roundi(float(off_0["pay"]) * 0.85), "Calor 50 deve aplicar deságio de 15% no pay")
+	assert(off_50["per_goal"] == roundi(float(off_0["per_goal"]) * 0.85), "Calor 50 deve aplicar deságio de 15% no per_goal")
+	assert(off_50["reward"] == roundi(float(off_0["reward"]) * 0.85), "Calor 50 deve aplicar deságio de 15% no reward")
+
 	assert(off_70["pay"] == roundi(float(off_0["pay"]) * 0.70), "Calor 70 deve aplicar deságio de 30% no pay")
+	assert(off_70["per_goal"] == roundi(float(off_0["per_goal"]) * 0.70), "Calor 70 deve aplicar deságio de 30% no per_goal")
+	assert(off_70["reward"] == roundi(float(off_0["reward"]) * 0.70), "Calor 70 deve aplicar deságio de 30% no reward")
+
 	assert(off_85["pay"] == roundi(float(off_0["pay"]) * 0.50), "Calor 85 deve aplicar deságio de 50% no pay")
+	assert(off_85["per_goal"] == roundi(float(off_0["per_goal"]) * 0.50), "Calor 85 deve aplicar deságio de 50% no per_goal")
+	assert(off_85["reward"] == roundi(float(off_0["reward"]) * 0.50), "Calor 85 deve aplicar deságio de 50% no reward")
+
+	# Preservação estrita dos objetivos contratuais independentemente do calor
+	for off_tested in [off_30, off_50, off_70, off_85]:
+		assert(off_tested["target"] == off_0["target"], "Objetivo target não pode ser afetado pelo calor")
+		assert(off_tested["min_matches"] == off_0["min_matches"], "min_matches não pode ser afetado pelo calor")
+		assert(off_tested["min_rating"] == off_0["min_rating"], "min_rating não pode ser afetado pelo calor")
 
 	# Bloqueio estrito de Grade 4 em crise (calor 70) e grave (calor 85)
 	var el_70: Array = Sponsors.eligible(99, 99, 50, [], true, 70.0)
@@ -568,6 +675,70 @@ func test_scenario_i_ui_and_sponsorship_impact() -> void:
 	var el_85: Array = Sponsors.eligible(99, 99, 50, [], true, 85.0)
 	for s in el_85:
 		assert(int(s.get("grade", 1)) < 4, "Patrocinador Grade 4 %s não pode estar elegível em calor 85" % s.get("id"))
+
+	# Testar fluxo completo de geração com Sponsors.offers_for()
+	var full_offers_0: Array = Sponsors.offers_for(99, 99, 50, [], {}, 0.0, "", true, 0.0)
+	assert(full_offers_0.size() > 0, "Sponsors.offers_for com calor 0 deve produzir propostas")
+
+	var full_offers_30: Array = Sponsors.offers_for(99, 99, 50, [], {}, 0.0, "", true, 30.0)
+	assert(full_offers_30.size() > 0, "Sponsors.offers_for com calor 30 deve produzir propostas")
+	for o in full_offers_30:
+		var base_ref: Dictionary = Sponsors.scaled_offer(Sponsors.by_id(o["id"]), 50, 0.0, "", 0.0)
+		assert(o["pay"] == roundi(float(base_ref["pay"]) * 0.95), "offers_for calor 30 deve aplicar deságio de 5% no pay")
+		assert(o["per_goal"] == roundi(float(base_ref["per_goal"]) * 0.95), "offers_for calor 30 deve aplicar deságio de 5% no per_goal")
+		assert(o["reward"] == roundi(float(base_ref["reward"]) * 0.95), "offers_for calor 30 deve aplicar deságio de 5% no reward")
+		assert(o["target"] == base_ref["target"], "target preservado em offers_for calor 30")
+
+	var full_offers_50: Array = Sponsors.offers_for(99, 99, 50, [], {}, 0.0, "", true, 50.0)
+	assert(full_offers_50.size() > 0, "Sponsors.offers_for com calor 50 deve produzir propostas")
+	for o in full_offers_50:
+		var base_ref: Dictionary = Sponsors.scaled_offer(Sponsors.by_id(o["id"]), 50, 0.0, "", 0.0)
+		assert(o["pay"] == roundi(float(base_ref["pay"]) * 0.85), "offers_for calor 50 deve aplicar deságio de 15% no pay")
+		assert(o["per_goal"] == roundi(float(base_ref["per_goal"]) * 0.85), "offers_for calor 50 deve aplicar deságio de 15% no per_goal")
+		assert(o["reward"] == roundi(float(base_ref["reward"]) * 0.85), "offers_for calor 50 deve aplicar deságio de 15% no reward")
+		assert(o["target"] == base_ref["target"], "target preservado em offers_for calor 50")
+
+	var full_offers_70: Array = Sponsors.offers_for(99, 99, 50, [], {}, 0.0, "", true, 70.0)
+	assert(full_offers_70.size() > 0, "Sponsors.offers_for com calor 70 deve produzir propostas")
+	for o in full_offers_70:
+		assert(int(o["grade"]) < 4, "offers_for calor 70 NÃO pode incluir ofertas de grade 4")
+		var base_ref: Dictionary = Sponsors.scaled_offer(Sponsors.by_id(o["id"]), 50, 0.0, "", 0.0)
+		assert(o["pay"] == roundi(float(base_ref["pay"]) * 0.70), "offers_for calor 70 deve aplicar deságio de 30% no pay")
+		assert(o["per_goal"] == roundi(float(base_ref["per_goal"]) * 0.70), "offers_for calor 70 deve aplicar deságio de 30% no per_goal")
+		assert(o["reward"] == roundi(float(base_ref["reward"]) * 0.70), "offers_for calor 70 deve aplicar deságio de 30% no reward")
+		assert(o["target"] == base_ref["target"], "target preservado em offers_for calor 70")
+
+	var full_offers_85: Array = Sponsors.offers_for(99, 99, 50, [], {}, 0.0, "", true, 85.0)
+	assert(full_offers_85.size() > 0, "Sponsors.offers_for com calor 85 deve produzir propostas")
+	for o in full_offers_85:
+		assert(int(o["grade"]) < 4, "offers_for calor 85 NÃO pode incluir ofertas de grade 4")
+		var base_ref: Dictionary = Sponsors.scaled_offer(Sponsors.by_id(o["id"]), 50, 0.0, "", 0.0)
+		assert(o["pay"] == roundi(float(base_ref["pay"]) * 0.50), "offers_for calor 85 deve aplicar deságio de 50% no pay")
+		assert(o["per_goal"] == roundi(float(base_ref["per_goal"]) * 0.50), "offers_for calor 85 deve aplicar deságio de 50% no per_goal")
+		assert(o["reward"] == roundi(float(base_ref["reward"]) * 0.50), "offers_for calor 85 deve aplicar deságio de 50% no reward")
+		assert(o["target"] == base_ref["target"], "target preservado em offers_for calor 85")
+
+	# Testar integração de ponta a ponta com Career._refresh_sponsor_offers() e SceneTree
+	Career.level = 50
+	Career.season_matches = 0
+	LifeLegacy.get_data()["social_reputation"]["scandal_heat"] = 0.0
+	Career._refresh_sponsor_offers()
+	assert(Career.sponsor_offers.size() > 0, "Career._refresh_sponsor_offers deve gerar ofertas em calor 0")
+
+	# Aplicar escândalo de crise no LifeLegacy e verificar consumo real do SceneTree
+	LifeLegacy.apply_scandal("sc_career_audit", 72.0, "Escandalo de crise para auditoria")
+	assert(LifeLegacy.get_scandal_heat() == 72.0, "LifeLegacy deve estar com calor 72.0")
+	Career._refresh_sponsor_offers()
+	assert(Career.sponsor_offers.size() > 0, "Career._refresh_sponsor_offers deve gerar ofertas sob crise")
+	var j_bonus: float = Career.jersey_share_norm() * Career.JERSEY_SPONSOR_BONUS
+	var pos_str: String = Career._sponsor_pos()
+	for o in Career.sponsor_offers:
+		assert(int(o["grade"]) < 4, "Chamador real Career._refresh_sponsor_offers deve bloquear grade 4 sob crise do LifeLegacy")
+		var base_ref: Dictionary = Sponsors.scaled_offer(Sponsors.by_id(o["id"]), Career.level, j_bonus, pos_str, 0.0)
+		var expected_pay: int = roundi(float(base_ref["pay"]) * 0.70)
+		if o.has("puja_rival"):
+			expected_pay = roundi(float(expected_pay) * Sponsors.PUJA_MULT)
+		assert(o["pay"] == expected_pay, "Oferta em Career deve refletir 30%% de deságio propagado do LifeLegacy (esperado %d, obtido %d)" % [expected_pay, o["pay"]])
 
 	# 2. Testar UI do Celular
 	Career.money = 30000
