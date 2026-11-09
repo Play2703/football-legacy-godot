@@ -18,9 +18,10 @@ Esta intervenção conclui a auditoria e homologação definitiva da **Etapa 1 d
 3. **Conversão de Namoro em Casamento:** Atletas com relacionamento ativo não casado são formalizados e prometidos antes do casamento sem duplicar a parceira e sem gerar registros concorrentes em `family.spouse`.
 4. **Divórcio e Separação Distintos:** Separação de não-casados via `Career.dejarla()` (sem perda patrimonial) vs. divórcio oficial de casados via `Career.divorciarse()` (cálculo e partilha patrimonial de `divorcio_cuenta()`).
 5. **Rollback Transacional Atômico e Auditoria de Efeitos Colaterais:** Captura e restauração de todos os efeitos colaterais de `Career` (`pareja`, `rel`, `rel_frac`, `money`, `pareja_prenup`, `pareja_boda_season`, `pareja_pago`, `pareja_frio`, `pareja_rechazadas`, `citas_hechas`, `citas_cuenta`, `citas_aciertos`, `world_news`, `world_news_total`, `pending_ceremonies`) e `Achievements` (`_unlocked`, `progress`, `_seen`, `pending`, `rasgos_vistos`, `parejas_vistas`).
-6. **Verificação de Barreira Síncrona e Compensação Transacional:** Avaliação estrita do retorno de `_save_synchronous_barrier()`. Em caso de falha de gravação do Career após a gravação do LifeLegacy, compensação transacional automática restaura ambos os subsistemas. Se a própria gravação de rollback falhar, o Modo Seguro é imediatamente ativado para evitar divergência de estados.
-7. **Preservação da Identidade Canônica de `Career.pareja`:** Proibição de inserção ou mutação arbitrária de chaves não-canônicas (`career_obj.pareja["nombre"] = ...`). O nome canônico é resolvido dinamicamente via `Career.pareja_nombre()`, e eventuais apelidos informados pelo LifeLegacy são mantidos isolados em metadados externos (`_data["family"]["spouse_alias"]`).
-8. **Persistência Real Comprovada em Disco:** Validação com recarregamento físico de arquivos (`Career.reload_active_slot()`, `Achievements._load()` e `LifeLegacy.reload_slot()`), eliminando qualquer dependência exclusiva de estado volátil em memória.
+6. **Verificação de Barreira Síncrona, Ordem de Persistência e Compensação Transacional:** Avaliação estrita da ordem síncrona de gravação: executa-se primeiro `Achievements._save()`, que pode invocar `quiza_estatua()` e enfileirar a cerimônia `ESTATUA` em `Career.pending_ceremonies`, e logo em seguida `Career._save_synchronous_barrier()`, garantindo que a nova cerimônia seja gravada no disco sem defasagem. Em caso de falha em qualquer das gravações pós-commit do LifeLegacy, a compensação transacional automática restaura ambos os subsistemas em memória e em disco. Se a própria restauração falhar, o Modo Seguro é imediatamente ativado.
+7. **Atualização Fidedigna de `last_save_ok` em Achievements:** O método `save_raw()` foi corrigido para atualizar `last_save_ok = ok` em todas as tentativas (sucesso e falha), eliminando retenção indevida de erros de tentativas anteriores e preservando o suporte aos hooks de injeção de falhas.
+8. **Preservação da Identidade Canônica de `Career.pareja`:** Proibição de inserção ou mutação arbitrária de chaves não-canônicas (`career_obj.pareja["nombre"] = ...`). O nome canônico é resolvido dinamicamente via `Career.pareja_nombre()`, e eventuais apelidos informados pelo LifeLegacy são mantidos isolados em metadados externos (`_data["family"]["spouse_alias"]`).
+9. **Persistência Real Comprovada em Disco:** Validação com recarregamento físico de arquivos (`Career.reload_active_slot()`, `Achievements._load()` e `LifeLegacy.reload_slot()`), eliminando qualquer dependência exclusiva de estado volátil em memória.
 
 ---
 
@@ -54,17 +55,21 @@ Durante a auditoria profunda de `Career.casarse()`, `Career.dejarla()`, `Career.
 - `Career.pending_ceremonies` (fila persistida de cerimônias oficiais, incluindo cerimônias enfileiradas por desbloqueio de conquistas);
 - `Achievements._unlocked`, `Achievements.progress`, `Achievements._seen`, `Achievements.pending`, `Achievements.rasgos_vistos` e `Achievements.parejas_vistas` (todos os 6 campos persistidos de conquistas e perfis vistos).
 
-### Compensação Transacional Bidirecional
+### Compensação Transacional Bidirecional e Ordem de Persistência
 - `_capture_career_snapshot(career_obj)`: extrai cópias profundas e imutáveis de todos os campos listados acima.
 - `_restore_career_snapshot(career_obj, snap) -> bool`: repõe todos os campos originais, executa `ach.save_raw()`, invoca `_save_synchronous_barrier()` e retorna o status de sucesso da gravação física de ambos (`career_write_ok and ach_write_ok`).
-- `marry()` e `divorce()` avaliam o retorno da barreira síncrona do Career e a gravação de Achievements (`ach._save()` e `last_save_ok`). Caso ocorra falha no salvamento do Career ou de Achievements após o commit do LifeLegacy, a compensação transacional restaura o backup do LifeLegacy (`save_current_slot()`) e reverte o Career e Achievements (`_restore_career_snapshot()`). Se a própria restauração falhar, o sistema aciona Modo Seguro com push_error crítico.
+- **Ordem de persistência corrigida:** Em `marry()` e `divorce()`, a ordem estrita de salvamento foi ajustada para:
+  1. Executar e verificar `Achievements._save()`. Esta rotina dispara internamente `quiza_estatua()`, que ao atingir os requisitos de `SECRETAS_DE_SECCION` pode invocar `Career.queue_ceremony(Ceremonies.ESTATUA)`.
+  2. Executar e verificar `Career._save_synchronous_barrier()`. Ao rodar imediatamente após Achievements, a barreira síncrona garante que a nova cerimônia recém-adicionada à fila do Career seja gravada duravelmente no arquivo físico `career.json`.
+  3. Se qualquer uma das duas gravações falhar, a compensação transacional restaura o backup do LifeLegacy (`save_current_slot()`) e reverte o Career e Achievements (`_restore_career_snapshot()`). Se a própria restauração falhar, o sistema aciona Modo Seguro com `push_error` crítico.
+- **Isolamento transacional contra saves intermediários (`_bulk`):** Durante o fluxo de `marry()` e `divorce()`, o contador reentrante `_bulk` de `Achievements` é ativado (`_bulk = 1`), impedindo que chamadas intermediárias (`formalizar_relacion()` -> `ingest_pareja()`, `casarse()` -> `check()`, `divorciarse()` -> `romper_relacion()`) realizem gravações parciais no disco antes da barreira final de commit.
 
 ---
 
 ## 4. SUÍTE DE TESTES E RESULTADOS DE HOMOLOGAÇÃO
 
 ### 4.1. Cenários de Integração Oficial (Marco 9 — `test_marco9_family_deep.gd`)
-A suíte conta com 18 cenários de alta precisão:
+A suíte conta com 19 cenários de alta precisão:
 1. **Cenário 1 — Casamento via fluxo oficial de Career:** Criação de casamento oficial quando solteiro, validação de transição, temporada de casamento e projeção no LifeLegacy.
 2. **Cenário 2 — Conversão sem duplicidade:** Conversão de namoro existente em casamento oficial, garantindo que o ID da parceira é mantido e nenhum registro concorrente é criado.
 3. **Cenário 3 — Preservação dos custos oficiais:** Validação de que `Career.money` é debitado exatamente pelo retorno de `Career.boda_coste()`.
@@ -82,12 +87,13 @@ A suíte conta com 18 cenários de alta precisão:
 15. **Cenário 16 — Rollback completo de Achievements e cerimônias:** Condição controlada disparando desbloqueio de conquista (`media_naranja`) e fila de cerimônias (`Career.pending_ceremonies`). Injeção de falha de persistência no LifeLegacy. Comprovação de que todos os 6 campos persistidos de Achievements (`_unlocked`, `progress`, `_seen`, `pending`, `rasgos_vistos` e `parejas_vistas`) e `pending_ceremonies` retornam integralmente ao snapshot anterior em memória e após recarregamento real de disco (`Career.reload_active_slot()`, `Achievements._load()`, `LifeLegacy.reload_slot()`).
 16. **Cenário 17 — Falha na barreira síncrona do Career e compensação transacional:** Injeção de falha controlada em `Career._save_synchronous_barrier()` (`fault_inject_save_barrier_once = true`). Comprovação de que casamento e divórcio abortam com retorno `false`, compensam o LifeLegacy gravado em disco, restauram o Career e Achievements em disco e memória, eliminam qualquer divergência e, sob falha persistente de compensação (`fault_inject_save_barrier = true`), acionam o Modo Seguro do sistema.
 17. **Cenário 18 — Falha na gravação de Achievements e compensação transacional:** Injeção de falha controlada em `Achievements.save_raw()` (`fault_inject_save_once = true`). Comprovação de que casamento e divórcio abortam com retorno `false` sob falha em Achievements, compensam e restauram integralmente Career, LifeLegacy e Achievements em memória e em disco. Sob falha permanente na própria restauração (`fault_inject_save = true`), comprovação de transição obrigatória para Modo Seguro.
+18. **Cenário 19 — Ordem correta de persistência, `quiza_estatua()` e durabilidade de cerimônias:** Preparação dos 6 requisitos secretos de `SECRETAS_DE_SECCION` (`"museo_ego"`, `"clase_baile"`, `"estreno"`, `"terapia"`, `"cena_ex"`, `"barbacoa"` = true) com `progress["estatua"] = false` e fila sem a cerimônia correspondente. Execução de casamento oficial via `LifeLegacy.marry()`. Comprovação de que `Achievements._save()` disparou `quiza_estatua()`, enfileirando a cerimônia em `Career.pending_ceremonies`. Comprovação em disco, após recarregamento total físico (`Career.reload_active_slot()` e `Achievements._load()`), de que a conquista e a cerimônia persistem duravelmente graças à ordem síncrona corrigida (`Achievements._save()` -> `Career._save_synchronous_barrier()`).
 
 ### 4.2. Matriz de Execução da Regressão Completa
 
 | Runner | Arquivo de Teste | Itens Testados | Código de Saída | Resultado |
 |---|---|---|:---:|:---:|
-| **Runner Marco 9** | `test_marco9_family_deep.gd` | 9 blocos de testes (Schema V5, normalização, migrações V1-V5, durabilidade, 18 cenários de Career) | `0` | **PASS (100%)** |
+| **Runner Marco 9** | `test_marco9_family_deep.gd` | 9 blocos de testes (Schema V5, normalização, migrações V1-V5, durabilidade, 19 cenários de Career) | `0` | **PASS (100%)** |
 | **Runner Marco 4** | `test_marco4_family_dynasty.gd` | Ciclo de vida familiar, elegibilidade de herdeiros, SalonFama e sucessão dinástica | `0` | **PASS (100%)** |
 | **Runner Marco 8** | `test_marco8_social_reputation.gd` | 10 cenários de reputação, scandal heat, assessoria, retratação, patrocínios e outbox RP | `0` | **PASS (100%)** |
 | **Runner Marco 2** | `test_marco2_integration.gd` | Avanço temporal, comparação lexicográfica, circuit breaker e barreiras transacionais | `0` | **PASS (100%)** |

@@ -511,10 +511,10 @@ func test_deep_copy_protection() -> void:
 	print("  -> OK!")
 
 # =============================================================================
-# 9. INTEGRAÇÃO DEFINITIVA COM O FLUXO OFICIAL DO CAREER (18 CENÁRIOS)
+# 9. INTEGRAÇÃO DEFINITIVA COM O FLUXO OFICIAL DO CAREER (19 CENÁRIOS)
 # =============================================================================
 func test_career_official_relationship_flow_integration() -> void:
-	print("[TEST] 9. Integração Definitiva com o Fluxo Oficial de Relacionamentos do Career (18 cenários)...")
+	print("[TEST] 9. Integração Definitiva com o Fluxo Oficial de Relacionamentos do Career (19 cenários)...")
 	var ll = LifeLegacy
 	_cleanup_test_dir()
 	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
@@ -1010,12 +1010,77 @@ func test_career_official_relationship_flow_integration() -> void:
 	assert(ll.is_safe_mode() == true, "Modo Seguro DEVE ser ativado quando a restauração de Achievements falha")
 	ll.set_safe_mode(false)
 
-	# Limpeza final definitiva
+	# Limpeza intermediária pós-Cenário 18
 	ach_node.fault_inject_save = false
 	ach_node.fault_inject_save_once = false
+	ach_node.fault_inject_save_count = 0
 	Career.fault_inject_save_barrier = false
 	Career.fault_inject_save_barrier_once = false
 	Career.fault_inject_save_barrier_count = 0
+	ll.divorce()
+	Career.reload_active_slot()
+	ach_node._load()
+	ll.reload_slot(test_slot)
+
+	# --- Cenário 19: Ordem de persistência síncrona (Achievements._save -> Career._save_synchronous_barrier) ---
+	print("  -> Cenário 19: Ordem correta de persistência, quiza_estatua() e durabilidade da cerimônia...")
+	# 1. Preparar os seis requisitos de SECRETAS_DE_SECCION como verdadeiros
+	for k in ["museo_ego", "clase_baile", "estreno", "terapia", "cena_ex", "barbacoa"]:
+		ach_node.progress[k] = true
+	
+	# 2. Garantir que progress["estatua"] esteja falso
+	ach_node.progress["estatua"] = false
+	
+	# 3. Garantir que a cerimônia correspondente não esteja previamente enfileirada
+	Career.pending_ceremonies = Career.pending_ceremonies.filter(func(c): return c.get("kind", "") != "estatua")
+	
+	# 4. Preparar os dados sem disparar antecipadamente quiza_estatua()
+	ach_node.save_raw()
+	Career._save_synchronous_barrier()
+	assert(ach_node.progress.get("estatua", false) == false, "Pré-condição: estatua deve estar false")
+	var has_estatua_pre: bool = false
+	for c in Career.pending_ceremonies:
+		if c.get("kind", "") == "estatua":
+			has_estatua_pre = true
+			break
+	assert(has_estatua_pre == false, "Pré-condição: cerimônia estatua não deve estar na fila")
+
+	# 5. Executar uma operação de casamento pelo fluxo oficial
+	Career.money = 250000
+	var ok_m19 = ll.marry({"candidate_id": "casera"})
+	assert(ok_m19 == true, "Casamento oficial deve ter sucesso")
+
+	# 6. Verificar se Achievements._save() executou quiza_estatua()
+	assert(ach_node.progress.get("estatua", false) == true, "Achievements._save() deve ter executado quiza_estatua() e definido estatua como true")
+
+	# 7. Confirmar que Career.pending_ceremonies recebeu a cerimônia
+	var has_estatua_mem: bool = false
+	for c in Career.pending_ceremonies:
+		if c.get("kind", "") == "estatua":
+			has_estatua_mem = true
+			break
+	assert(has_estatua_mem == true, "Career.pending_ceremonies em memória deve conter a cerimônia estatua")
+
+	# 8. Recarregar efetivamente Career e Achievements do disco
+	Career.reload_active_slot()
+	ach_node._load()
+	ll.reload_slot(test_slot)
+
+	# 9. Comprovar que a conquista e a cerimônia continuam consistentes em disco
+	assert(ach_node.progress.get("estatua", false) == true, "Em disco: Achievements.progress['estatua'] deve ser true")
+	var has_estatua_disk: bool = false
+	for c in Career.pending_ceremonies:
+		if c.get("kind", "") == "estatua":
+			has_estatua_disk = true
+			break
+	assert(has_estatua_disk == true, "Em disco: Career.pending_ceremonies DEVE conter a cerimônia estatua graças à nova ordem de gravação")
+	assert(Career.pareja_casada() == true, "Em disco: Career deve permanecer casado")
+
+	# Limpeza final definitiva pós-Cenário 19
+	for k in ["museo_ego", "clase_baile", "estreno", "terapia", "cena_ex", "barbacoa", "estatua"]:
+		ach_node.progress.erase(k)
+	Career.pending_ceremonies = Career.pending_ceremonies.filter(func(c): return c.get("kind", "") != "estatua")
+	ach_node.save_raw()
 	ll.divorce()
 	Career.reload_active_slot()
 	ach_node._load()

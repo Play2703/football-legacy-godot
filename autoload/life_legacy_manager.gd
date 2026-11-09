@@ -669,9 +669,9 @@ func marry(spouse_data: Dictionary) -> bool:
 
 		# Snapshot completo do Career e Achievements para rollback transacional atômico
 		var career_snapshot: Dictionary = _capture_career_snapshot(career_obj)
-		var ach_init: Object = _get_achievements()
-		if ach_init != null and "last_save_ok" in ach_init:
-			ach_init.last_save_ok = true
+		var ach_obj: Object = _get_achievements()
+		if ach_obj != null and "_bulk" in ach_obj:
+			ach_obj._bulk = 1
 
 		var prenup: bool = bool(spouse_data.get("prenup", false))
 		var titular: String = String(spouse_data.get("titular", ""))
@@ -686,9 +686,13 @@ func marry(spouse_data: Dictionary) -> bool:
 					cand_id = "casera"
 			if cand_id.is_empty() or ParejaClass.by_id(cand_id).is_empty():
 				# Informações insuficientes para executar legitimamente o casamento
+				if ach_obj != null and "_bulk" in ach_obj:
+					ach_obj._bulk = 0
 				return false
 			var ok_start: bool = career_obj.empezar_relacion(cand_id)
 			if not ok_start:
+				if ach_obj != null and "_bulk" in ach_obj:
+					ach_obj._bulk = 0
 				return false
 
 		# Transiciona pelos estágios oficiais existentes em Career
@@ -735,20 +739,23 @@ func marry(spouse_data: Dictionary) -> bool:
 				set_safe_mode(true)
 			return false
 
+		if ach_obj != null and "_bulk" in ach_obj:
+			ach_obj._bulk = 0
+
+		# 1. Executa e verifica Achievements._save()
+		ach_obj = _get_achievements()
+		var ach_save_ok: bool = true
+		if ach_obj != null and ach_obj.has_method("_save"):
+			ach_save_ok = ach_obj._save()
+
+		# 2. Executa e verifica Career._save_synchronous_barrier()
 		var career_save_ok: bool = true
 		if career_obj.has_method("_save_synchronous_barrier"):
 			career_save_ok = career_obj._save_synchronous_barrier()
 
-		var ach_obj: Object = _get_achievements()
-		var ach_save_ok: bool = true
-		if ach_obj != null:
-			if ach_obj.has_method("_save"):
-				ach_save_ok = ach_obj._save()
-			if "last_save_ok" in ach_obj and not bool(ach_obj.last_save_ok):
-				ach_save_ok = false
-
-		if not career_save_ok or not ach_save_ok:
-			push_error("[LifeLegacyManager] Falha ao persistir Career/Achievements pós-LifeLegacy. Executando compensação transacional...")
+		# 3. Se qualquer uma das duas gravações falhar, executar compensação transacional
+		if not ach_save_ok or not career_save_ok:
+			push_error("[LifeLegacyManager] Falha ao persistir Achievements/Career pós-LifeLegacy. Executando compensação transacional...")
 			_data["family"] = backup_fam
 			var ll_comp_ok: bool = save_current_slot()
 			var career_comp_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
@@ -783,9 +790,9 @@ func divorce() -> bool:
 
 	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var career_snapshot: Dictionary = _capture_career_snapshot(career_obj) if career_obj != null else {}
-	var ach_init_d: Object = _get_achievements()
-	if ach_init_d != null and "last_save_ok" in ach_init_d:
-		ach_init_d.last_save_ok = true
+	var ach_obj: Object = _get_achievements()
+	if ach_obj != null and "_bulk" in ach_obj:
+		ach_obj._bulk = 1
 
 	if has_career_partner:
 		var is_married: bool = career_obj.pareja_casada()
@@ -803,6 +810,8 @@ func divorce() -> bool:
 	_data["family"] = fam
 	var save_ok: bool = save_current_slot()
 	if not save_ok:
+		if ach_obj != null and "_bulk" in ach_obj:
+			ach_obj._bulk = 0
 		_data["family"] = backup_fam
 		if career_obj != null:
 			var rest_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
@@ -811,20 +820,22 @@ func divorce() -> bool:
 				set_safe_mode(true)
 		return false
 
+	if ach_obj != null and "_bulk" in ach_obj:
+		ach_obj._bulk = 0
+
+	# 1. Executa e verifica Achievements._save()
+	var ach_save_ok: bool = true
+	if ach_obj != null and ach_obj.has_method("_save"):
+		ach_save_ok = ach_obj._save()
+
+	# 2. Executa e verifica Career._save_synchronous_barrier()
 	var career_save_ok: bool = true
 	if career_obj != null and career_obj.has_method("_save_synchronous_barrier"):
 		career_save_ok = career_obj._save_synchronous_barrier()
 
-	var ach_obj: Object = _get_achievements()
-	var ach_save_ok: bool = true
-	if ach_obj != null:
-		if ach_obj.has_method("_save"):
-			ach_save_ok = ach_obj._save()
-		if "last_save_ok" in ach_obj and not bool(ach_obj.last_save_ok):
-			ach_save_ok = false
-
-	if not career_save_ok or not ach_save_ok:
-		push_error("[LifeLegacyManager] Falha ao persistir Career/Achievements durante divórcio. Executando compensação transacional...")
+	# 3. Se qualquer uma das duas gravações falhar, executar compensação transacional
+	if not ach_save_ok or not career_save_ok:
+		push_error("[LifeLegacyManager] Falha ao persistir Achievements/Career durante divórcio. Executando compensação transacional...")
 		_data["family"] = backup_fam
 		var ll_comp_ok: bool = save_current_slot()
 		var career_comp_ok: bool = _restore_career_snapshot(career_obj, career_snapshot) if career_obj != null else true
@@ -901,6 +912,8 @@ func _restore_career_snapshot(career_obj: Object, snap: Dictionary) -> bool:
 	var ach_write_ok: bool = true
 	var ach = _get_achievements()
 	if ach != null:
+		if "_bulk" in ach:
+			ach._bulk = 0
 		if "_unlocked" in ach:
 			ach._unlocked = snap.get("ach_unlocked", {}).duplicate(true)
 		if "progress" in ach:

@@ -1068,7 +1068,7 @@ var fault_inject_save_count: int = 0
 var last_save_ok: bool = true
 
 
-var _bulk: bool = false
+var _bulk: int = 0
 
 
 
@@ -1515,7 +1515,8 @@ func ingest_pareja(id: String, nombre: String) -> bool:
 				and parejas_vistas_count() >= Pareja.all().size():
 			progress["cena_ex"] = true
 			Career.queue_ceremony(Ceremonies.CENA_EX)
-	_save()
+	if _bulk == 0:
+		_save()
 	return nueva
 
 
@@ -2146,7 +2147,7 @@ func unlock(id: String) -> bool:
 		progress["barbacoa"] = true
 		Career.queue_ceremony(Ceremonies.BARBACOA)
 	_quiza_museo_ego()
-	if not _bulk:
+	if _bulk == 0:
 		_save()
 	unlocked.emit(id)
 	return true
@@ -2175,14 +2176,14 @@ func revisar_simulador() -> Array[String]:
 	var nuevos: Array[String] = []
 	if _en_la_escuela():
 		return nuevos
-	_bulk = true
+	_bulk += 1
 	for e in CATALOG:
 		var id: String = String(e["id"])
 		if String(e.get("kind", "")).begins_with("simulador") and not _unlocked.has(id) \
 				and _meets(e) and unlock(id):
 			nuevos.append(id)
-	_bulk = false
-	if not nuevos.is_empty():
+	_bulk = max(0, _bulk - 1)
+	if _bulk == 0 and not nuevos.is_empty():
 		_save()
 	return nuevos
 
@@ -2196,14 +2197,14 @@ func check() -> Array:
 	var fresh: Array = []
 
 
-	_bulk = true
+	_bulk += 1
 	for e in CATALOG:
 		var id: String = String(e["id"])
 		if not _unlocked.has(id) and _meets(e):
 			if unlock(id):
 				fresh.append(id)
-	_bulk = false
-	if not fresh.is_empty():
+	_bulk = max(0, _bulk - 1)
+	if _bulk == 0 and not fresh.is_empty():
 		_save()
 	return fresh
 
@@ -4264,8 +4265,7 @@ func save_raw() -> bool:
 	cfg.set_value("logros", "rasgos", rasgos_vistos)
 	cfg.set_value("logros", "parejas", parejas_vistas)
 	var ok: bool = SaveSlotsScript.escribe_atomico(save_path, cfg.encode_to_text())
-	if not ok:
-		last_save_ok = false
+	last_save_ok = ok
 	return ok
 
 
