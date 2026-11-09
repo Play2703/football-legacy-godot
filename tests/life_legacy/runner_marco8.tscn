@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://testmarco8runner01"]
+
+[ext_resource type="Script" path="res://tests/life_legacy/test_marco8_social_reputation.gd" id="1_test"]
+
+[node name="RunnerMarco8" type="Node"]
+script = ExtResource("1_test")

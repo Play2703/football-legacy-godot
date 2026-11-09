@@ -1,7 +1,7 @@
 class_name LifeLegacyState
 extends RefCounted
 
-const CURRENT_SUPPORTED_SCHEMA: int = 3
+const CURRENT_SUPPORTED_SCHEMA: int = 4
 const DEFAULT_CATALOG_VERSION: int = 2
 const RNG_VERSION: int = 1
 
@@ -64,7 +64,16 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 		"annual_history": [],
 		"processed_annual_rollovers": [],
 		"expired_modifiers_log": [],
-		"recovery_log": []
+		"recovery_log": [],
+		"social_reputation": {
+			"scandal_heat": 0.0,
+			"press_agent_level": 0,
+			"press_agent_ticks_remaining": 0,
+			"active_campaigns": [],
+			"cooldowns": {},
+			"history": [],
+			"last_processed_tick": 0
+		}
 	}
 
 static func clamp_stat(stat_name: String, val: float) -> float:
@@ -119,6 +128,24 @@ static func validate_schema(data: Dictionary) -> bool:
 		if int(data["total_ticks_processed"]) < 0:
 			return false
 		if data.has("season_calendar_lengths") and not (data["season_calendar_lengths"] is Dictionary):
+			return false
+
+	if sv >= 4:
+		if not data.has("social_reputation") or not (data["social_reputation"] is Dictionary):
+			return false
+		var sr: Dictionary = data["social_reputation"]
+		if not sr.has("scandal_heat") or not (sr["scandal_heat"] is float or sr["scandal_heat"] is int):
+			return false
+		var sh: float = float(sr["scandal_heat"])
+		if sh < 0.0 or sh > 100.0:
+			return false
+		if not sr.has("press_agent_level") or not (sr["press_agent_level"] is int or (sr["press_agent_level"] is float and sr["press_agent_level"] == int(sr["press_agent_level"]))):
+			return false
+		if not sr.has("active_campaigns") or not (sr["active_campaigns"] is Array):
+			return false
+		if not sr.has("cooldowns") or not (sr["cooldowns"] is Dictionary):
+			return false
+		if not sr.has("history") or not (sr["history"] is Array):
 			return false
 
 	return true

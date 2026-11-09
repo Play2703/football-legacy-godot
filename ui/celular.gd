@@ -1014,5 +1014,186 @@ static func monta_minha_vida(padre: Container, ancho: float) -> Control:
 			anc_lbl.text = "  · %s (Aposentado na T%d - Museu: %s)" % [anc.get("name", ""), int(anc.get("retired_season", 1)), anc.get("plaque_id", "")]
 			vb_dyn.add_child(anc_lbl)
 
+	# 4. Painel de Gestão de Imagem & Polêmicas (Marco 8)
+	var pnl_social: PanelContainer = PanelContainer.new()
+	pnl_social.name = "PainelGestaoImagem"
+	var sf_social: StyleBoxFlat = StyleBoxFlat.new()
+	sf_social.bg_color = Color(0.12, 0.14, 0.18, 0.95)
+	sf_social.set_corner_radius_all(12)
+	sf_social.set_content_margin_all(14.0)
+	pnl_social.add_theme_stylebox_override("panel", sf_social)
+	box.add_child(pnl_social)
+
+	var vb_social: VBoxContainer = VBoxContainer.new()
+	vb_social.add_theme_constant_override("separation", 8)
+	pnl_social.add_child(vb_social)
+
+	var tit_social: Label = Label.new()
+	tit_social.text = "GESTÃO DE IMAGEM & POLÊMICAS"
+	tit_social.modulate = Color(0.95, 0.45, 0.3)
+	vb_social.add_child(tit_social)
+
+	# Calor de Escândalos
+	var hb_heat: HBoxContainer = HBoxContainer.new()
+	var lbl_heat_title: Label = Label.new()
+	lbl_heat_title.text = "Calor de Escândalos:"
+	lbl_heat_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb_heat.add_child(lbl_heat_title)
+
+	var lbl_heat_val: Label = Label.new()
+	lbl_heat_val.name = "CalorValorLabel"
+	lbl_heat_val.custom_minimum_size = Vector2(100.0, 0.0)
+	hb_heat.add_child(lbl_heat_val)
+
+	var bar_heat: ProgressBar = ProgressBar.new()
+	bar_heat.name = "CalorBarra"
+	bar_heat.min_value = 0.0
+	bar_heat.max_value = 100.0
+	bar_heat.custom_minimum_size = Vector2(100.0, 16.0)
+	bar_heat.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hb_heat.add_child(bar_heat)
+	vb_social.add_child(hb_heat)
+
+	var lbl_crisis_desc: Label = Label.new()
+	lbl_crisis_desc.name = "CriseDescLabel"
+	lbl_crisis_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb_social.add_child(lbl_crisis_desc)
+
+	var lbl_sp_impact: Label = Label.new()
+	lbl_sp_impact.name = "ImpactoComercialLabel"
+	lbl_sp_impact.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb_social.add_child(lbl_sp_impact)
+
+	var lbl_agent_status: Label = Label.new()
+	lbl_agent_status.name = "AssessoriaStatusLabel"
+	lbl_agent_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb_social.add_child(lbl_agent_status)
+
+	var lbl_campaigns: Label = Label.new()
+	lbl_campaigns.name = "CampanhasLabel"
+	lbl_campaigns.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb_social.add_child(lbl_campaigns)
+
+	# Rótulo de ações e feedback
+	var lbl_actions_title: Label = Label.new()
+	lbl_actions_title.text = "Ações de Relações Públicas (RP):"
+	lbl_actions_title.modulate = Color(0.85, 0.85, 0.95)
+	vb_social.add_child(lbl_actions_title)
+
+	var lbl_feedback: Label = Label.new()
+	lbl_feedback.name = "FeedbackLabel"
+	lbl_feedback.text = ""
+	lbl_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb_social.add_child(lbl_feedback)
+
+	# Grid de Ações RP
+	var grid_actions: GridContainer = GridContainer.new()
+	grid_actions.name = "GridAcoesRP"
+	grid_actions.columns = 1
+	grid_actions.add_theme_constant_override("v_separation", 6)
+	grid_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb_social.add_child(grid_actions)
+
+	var actions_meta: Array = [
+		{ "id": "hire_press_agent", "base_label": "Contratar Assessoria ($15.000 / 10 sem)" },
+		{ "id": "public_retraction", "base_label": "Retratação Pública ($5.000 / -15 Calor)" },
+		{ "id": "charity_campaign", "base_label": "Campanha de Caridade ($25.000 / -25 Calor)" },
+		{ "id": "training_promo_post", "base_label": "Post Treino e Foco ($0 / +Foco)" }
+	]
+
+	var action_buttons: Dictionary = {}
+	for ameta in actions_meta:
+		var act_id: String = ameta["id"]
+		var btn: Button = Button.new()
+		btn.name = "BtnAction_" + act_id
+		btn.text = ameta["base_label"]
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid_actions.add_child(btn)
+		action_buttons[act_id] = btn
+
+	var refresh_social_panel: Callable = func() -> void:
+		var cur_heat: float = LifeLegacy.get_scandal_heat() if LifeLegacy != null else 0.0
+		var b_info: Dictionary = LifeLegacy.get_heat_band_info() if LifeLegacy != null else {}
+		var b_name: String = String(b_info.get("name", "Tranquilo"))
+		var b_idx: int = int(b_info.get("band", 0))
+
+		var band_colors: Array = [
+			Color(0.2, 0.8, 0.3),
+			Color(0.9, 0.85, 0.2),
+			Color(0.95, 0.55, 0.1),
+			Color(0.95, 0.25, 0.2),
+			Color(0.85, 0.1, 0.3)
+		]
+		var b_col: Color = band_colors[clampi(b_idx, 0, 4)]
+
+		lbl_heat_val.text = "%.1f%% [%s]" % [cur_heat, b_name]
+		lbl_heat_val.modulate = b_col
+		bar_heat.value = cur_heat
+		bar_heat.modulate = b_col
+
+		lbl_crisis_desc.text = "Status: %s" % String(b_info.get("description", "Situação pública sob controle."))
+		lbl_crisis_desc.modulate = b_col
+
+		var sp: Dictionary = LifeLegacy.get_sponsorship_impact() if LifeLegacy != null else {}
+		if sp.get("active", false):
+			var top_txt: String = " | Nível Master Bloqueado" if sp.get("top_tier_blocked", false) else ""
+			lbl_sp_impact.text = "Impacto Comercial: Multa Reputação -%.0f | Valor de Ofertas x%.2f%s" % [sp.get("reputation_penalty", 0.0), sp.get("offer_value_multiplier", 1.0), top_txt]
+			lbl_sp_impact.modulate = Color(0.95, 0.35, 0.2)
+		else:
+			lbl_sp_impact.text = "Impacto Comercial: Imagem comercial limpa (sem penalidades)."
+			lbl_sp_impact.modulate = Color(0.6, 0.8, 0.6)
+
+		var ag: Dictionary = LifeLegacy.get_press_agent_info() if LifeLegacy != null else {}
+		var ag_lvl: int = int(ag.get("level", 0))
+		if ag_lvl > 0:
+			lbl_agent_status.text = "Assessoria: %s (Nível %d) — Ativa por %d semanas restantes." % [ag.get("name", ""), ag_lvl, int(ag.get("remaining_ticks", 0))]
+			lbl_agent_status.modulate = Color(0.4, 0.8, 1.0)
+		else:
+			lbl_agent_status.text = "Assessoria: Nenhuma assessoria contratada."
+			lbl_agent_status.modulate = Color(0.7, 0.7, 0.7)
+
+		var s_state: Dictionary = LifeLegacy.get_social_state() if LifeLegacy != null else {}
+		var camps: Array = s_state.get("active_campaigns", [])
+		if camps.is_empty():
+			lbl_campaigns.text = "Campanhas Institucionais: Nenhuma em andamento."
+			lbl_campaigns.modulate = Color(0.6, 0.6, 0.6)
+		else:
+			var c_strs: Array = []
+			for c in camps:
+				c_strs.append("%s (%d sem)" % [c.get("name", "Campanha"), int(c.get("remaining_ticks", 0))])
+			lbl_campaigns.text = "Campanhas Ativas: %s" % ", ".join(c_strs)
+			lbl_campaigns.modulate = Color(0.5, 0.9, 0.5)
+
+		for ameta in actions_meta:
+			var a_id: String = ameta["id"]
+			var b_btn: Button = action_buttons[a_id]
+			var avail: Dictionary = LifeLegacy.is_social_action_available(a_id) if LifeLegacy != null else { "available": true }
+			if not avail.get("available", true):
+				b_btn.disabled = true
+				b_btn.text = "%s [%s]" % [ameta["base_label"], String(avail.get("reason", "Indisponível"))]
+			else:
+				b_btn.disabled = false
+				b_btn.text = ameta["base_label"]
+
+	refresh_social_panel.call()
+
+	for ameta in actions_meta:
+		var a_id: String = ameta["id"]
+		var b_btn: Button = action_buttons[a_id]
+		b_btn.pressed.connect(func() -> void:
+			if LifeLegacy == null:
+				lbl_feedback.text = "Módulo LifeLegacy não inicializado."
+				lbl_feedback.modulate = Color(0.95, 0.3, 0.3)
+				return
+			var res: Dictionary = LifeLegacy.execute_social_action(a_id)
+			if res.get("success", false):
+				lbl_feedback.text = "Sucesso: Ação RP concluída e publicada!"
+				lbl_feedback.modulate = Color(0.3, 0.9, 0.4)
+			else:
+				lbl_feedback.text = "Não permitido: %s" % String(res.get("reason", "Erro desconhecido"))
+				lbl_feedback.modulate = Color(0.95, 0.3, 0.3)
+			refresh_social_panel.call()
+		)
+
 	padre.add_child(scroll)
 	return scroll

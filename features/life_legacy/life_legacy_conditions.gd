@@ -144,6 +144,18 @@ static func evaluate(conditions: Dictionary, ctx: Dictionary) -> bool:
 			if resolved_map_forb.has(ev_id) and resolved_map_forb[ev_id] == forb_choices[ev_id]:
 				return false
 
+	# 13. Condições de Gestão de Imagem e Escândalos (Marco 8)
+	var social_state: Dictionary = ctx.get("social_reputation", {})
+	var cur_heat: float = float(ctx.get("scandal_heat", social_state.get("scandal_heat", 0.0)))
+	if conditions.has("min_scandal_heat") and cur_heat < float(conditions["min_scandal_heat"]):
+		return false
+	if conditions.has("max_scandal_heat") and cur_heat > float(conditions["max_scandal_heat"]):
+		return false
+	if conditions.has("min_press_agent_level"):
+		var cur_lvl: int = int(ctx.get("press_agent_level", social_state.get("press_agent_level", 0)))
+		if cur_lvl < int(conditions["min_press_agent_level"]):
+			return false
+
 	return true
 
 static func _extract_resolved_choices_map(ctx: Dictionary) -> Dictionary:

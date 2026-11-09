@@ -10,6 +10,7 @@ const LifeLegacyFamily = preload("res://features/life_legacy/life_legacy_family.
 const LifeLegacyDynasty = preload("res://features/life_legacy/life_legacy_dynasty.gd")
 const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
 const LifeLegacyModifiers = preload("res://features/life_legacy/life_legacy_modifiers.gd")
+const LifeLegacySocial = preload("res://features/life_legacy/life_legacy_social.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -29,6 +30,8 @@ signal annual_rollover_completed(season_num: int)
 signal life_event_ready(event_data: Dictionary)
 signal life_event_resolved(event_id: String, choice_id: String)
 signal modifier_expired(mod_id: String, mod_name: String)
+signal scandal_heat_changed(old_heat: float, new_heat: float, reason: String)
+signal rp_action_completed(action_id: String, tx_id: String)
 
 var _current_slot: int = 0
 var _data: Dictionary = {}
@@ -115,6 +118,9 @@ func reload_slot(slot: int) -> void:
 	
 	# Reconciliação de Saga Dinástica no Boot/Reload
 	LifeLegacyDynasty.recover_or_resume_succession(self)
+	
+	# Reconciliação de Ação de RP no Boot/Reload
+	LifeLegacySocial.recover_pending_rp_transaction(self)
 	
 	life_legacy_loaded.emit(slot)
 
@@ -222,6 +228,7 @@ func _handle_temporal_advance(proc_s: int, proc_d: int, cur_s: int, cur_d: int) 
 		var expired_mods: Array = []
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
 		_apply_active_modifiers_on_candidate(candidate, stat_changes, expired_mods)
+		LifeLegacySocial.advance_social_ticks(candidate, 1)
 		
 		var new_event: Dictionary = {}
 		_maybe_roll_event_on_candidate(candidate, cur_s, cur_d, new_event)
@@ -269,6 +276,7 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 		var is_latest: bool = (iter_s == to_s and iter_d == to_d)
 		_apply_weekly_drift_on_candidate(candidate, stat_changes)
 		_apply_active_modifiers_on_candidate(candidate, stat_changes, expired_mods)
+		LifeLegacySocial.advance_social_ticks(candidate, 1)
 		if is_latest:
 			_maybe_roll_event_on_candidate(candidate, iter_s, iter_d, new_event)
 	
@@ -302,6 +310,7 @@ func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, 
 	var ticks_dest: int = max(0, to_d)
 	delta_ticks += 1 + ticks_dest
 	candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + delta_ticks
+	LifeLegacySocial.advance_social_ticks(candidate, delta_ticks)
 	
 	var rollovers: Array[int] = []
 	var gap_log: Array = candidate.get("recovery_gap_log", [])
@@ -492,6 +501,9 @@ func _maybe_roll_event_on_candidate(candidate: Dictionary, s: int, d: int, out_e
 			"has_children": not candidate.get("family", {}).get("children", []).is_empty(),
 			"active_modifiers": candidate.get("active_modifiers", []),
 			"story_arcs": candidate.get("story_arcs", {}),
+			"social_reputation": candidate.get("social_reputation", {}),
+			"scandal_heat": float(candidate.get("social_reputation", {}).get("scandal_heat", 0.0)),
+			"press_agent_level": int(candidate.get("social_reputation", {}).get("press_agent_level", 0)),
 			"history": candidate.get("history", {})
 		}
 		var cat_v: int = int(candidate.get("catalog_version", 1))
@@ -652,3 +664,40 @@ func start_succession(heir_child: Dictionary, inheritance_percent: float, start_
 	if _is_safe_mode:
 		return false
 	return LifeLegacyDynasty.start_succession(heir_child, inheritance_percent, start_club, self)
+
+# API de Gestão de Imagem e Relações Públicas (Marco 8)
+func get_social_state() -> Dictionary:
+	return LifeLegacySocial.get_social_state(_data)
+
+func get_scandal_heat() -> float:
+	return LifeLegacySocial.get_heat(_data)
+
+func get_heat_band_info() -> Dictionary:
+	return LifeLegacySocial.get_heat_band_info(get_scandal_heat())
+
+func get_press_agent_info() -> Dictionary:
+	return LifeLegacySocial.get_press_agent_info(_data)
+
+func is_social_action_available(action_id: String, params: Dictionary = {}) -> Dictionary:
+	var career = LifeLegacyOutbox._get_career()
+	var career_money: int = career.money if career != null else 0
+	return LifeLegacySocial.is_action_available(_data, action_id, career_money, params)
+
+func execute_social_action(action_id: String, params: Dictionary = {}) -> Dictionary:
+	var res = LifeLegacySocial.execute_rp_action(self, action_id, params)
+	if res.get("ok", false):
+		rp_action_completed.emit(action_id, res.get("tx_id", ""))
+	return res
+
+func apply_scandal(scandal_id: String, raw_heat: float, reason: String) -> Dictionary:
+	var old_h = get_scandal_heat()
+	var time_info = get_last_observed_time()
+	var s_num = int(time_info.get("season_num", 1))
+	var s_day = int(time_info.get("season_day", 0))
+	var res = LifeLegacySocial.apply_scandal(_data, scandal_id, raw_heat, reason, s_num, s_day)
+	save_current_slot()
+	scandal_heat_changed.emit(old_h, res["new_heat"], reason)
+	return res
+
+func get_sponsorship_impact() -> Dictionary:
+	return LifeLegacySocial.calculate_sponsorship_impact(get_scandal_heat())

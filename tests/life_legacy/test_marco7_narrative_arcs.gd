@@ -91,7 +91,7 @@ func test_schema_migration_v1_to_v3() -> void:
 	assert(load_res.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load deve migrar com sucesso")
 	var loaded_data: Dictionary = load_res.get("data", {})
 
-	assert(loaded_data.get("schema_version") == 3, "Schema deve ser promovido para 3")
+	assert(loaded_data.get("schema_version") >= 3, "Schema deve ser promovido para 3 ou superior")
 	assert(loaded_data.has("active_modifiers"), "Deve conter chave active_modifiers após migração")
 	assert(loaded_data["active_modifiers"] is Array, "active_modifiers deve ser Array")
 	assert(loaded_data.has("story_arcs"), "Deve conter chave story_arcs após migração")
@@ -137,7 +137,7 @@ func test_schema_migration_v1_to_v3() -> void:
 	var load_v2: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 10)
 	assert(load_v2.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load deve migrar V2 com sucesso")
 	var loaded_v2: Dictionary = load_v2.get("data", {})
-	assert(loaded_v2.get("schema_version") == 3, "Schema V2 deve ser promovido para 3")
+	assert(loaded_v2.get("schema_version") >= 3, "Schema V2 deve ser promovido para 3 ou superior")
 	assert(loaded_v2.get("total_ticks_processed") == 0, "total_ticks_processed deve ser ancorado em 0")
 	var arc_migrado: Dictionary = loaded_v2["story_arcs"]["active_arcs"]["arc_leg_v2"]
 	assert(arc_migrado.has("last_act_resolved_ticks"), "Arco migrado deve receber last_act_resolved_ticks")
@@ -1251,10 +1251,10 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_main = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_main.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load do arquivo principal V1 migra com OK_SUCCESS")
-	assert(load_main["data"]["schema_version"] == 3, "Schema deve ser 3")
+	assert(load_main["data"]["schema_version"] >= 3, "Schema deve ser 3 ou superior")
 	assert(load_main["data"]["total_ticks_processed"] == 0, "total_ticks_processed deve ser 0")
 	var disk_read = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_read["data"]["schema_version"] == 3, "Arquivo persistido no disco foi migrado para schema 3")
+	assert(disk_read["data"]["schema_version"] >= 3, "Arquivo persistido no disco foi migrado para schema 3 ou superior")
 
 	# 2. V1 via .tmp órfão
 	_cleanup_test_dir()
@@ -1264,9 +1264,9 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_tmp = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_tmp.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Recuperação via .tmp promove e migra V1")
-	assert(load_tmp["data"]["schema_version"] == 3, "Dado promovido do .tmp deve ser schema 3")
+	assert(load_tmp["data"]["schema_version"] >= 3, "Dado promovido do .tmp deve ser schema 3 ou superior")
 	var disk_tmp = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_tmp["data"]["schema_version"] == 3, "Principal promovido do .tmp deve ser schema 3 no disco")
+	assert(disk_tmp["data"]["schema_version"] >= 3, "Principal promovido do .tmp deve ser schema 3 ou superior no disco")
 
 	# 3. V1 via .bak_staging
 	_cleanup_test_dir()
@@ -1279,10 +1279,10 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_stag = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_stag.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação via staging deve ser OK_RECOVERED_BACKUP")
-	assert(load_stag["data"]["schema_version"] == 3, "Dado recuperado de staging deve ser migrado para schema 3")
+	assert(load_stag["data"]["schema_version"] >= 3, "Dado recuperado de staging deve ser migrado para schema 3 ou superior")
 	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak_staging"), "Fonte de recuperação (.bak_staging) deve ser preservada")
 	var disk_rec_stag = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_rec_stag["data"]["schema_version"] == 3, "Principal restaurado a partir de staging deve ser schema 3 no disco")
+	assert(disk_rec_stag["data"]["schema_version"] >= 3, "Principal restaurado a partir de staging deve ser schema 3 ou superior no disco")
 
 	# 4. V1 via .bak (quando staging não existe)
 	_cleanup_test_dir()
@@ -1295,10 +1295,10 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_bak = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_bak.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação via .bak deve ser OK_RECOVERED_BACKUP")
-	assert(load_bak["data"]["schema_version"] == 3, "Dado recuperado de .bak deve ser migrado para schema 3")
+	assert(load_bak["data"]["schema_version"] >= 3, "Dado recuperado de .bak deve ser migrado para schema 3 ou superior")
 	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak"), "Fonte de recuperação (.bak) deve ser preservada")
 	var disk_rec_bak = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_rec_bak["data"]["schema_version"] == 3, "Principal restaurado a partir de .bak deve ser schema 3 no disco")
+	assert(disk_rec_bak["data"]["schema_version"] >= 3, "Principal restaurado a partir de .bak deve ser schema 3 ou superior no disco")
 
 	# --- TESTES DE V2 NAS 4 FONTES COM VALIDAÇÃO DE PRESERVAÇÃO DE DADOS ---
 	# 5. V2 via Arquivo Principal
@@ -1310,7 +1310,7 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 	var load_v2_main = LifeLegacyPersistence.load_slot_data(test_slot, 2, 15)
 	assert(load_v2_main.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load do arquivo principal V2 deve ser OK_SUCCESS")
 	var d_v2 = load_v2_main["data"]
-	assert(d_v2["schema_version"] == 3, "V2 deve migrar para schema 3")
+	assert(d_v2["schema_version"] >= 3, "V2 deve migrar para schema 3 ou superior")
 	assert(d_v2["family"]["spouse"]["name"] == "Camila", "Preservação da família: cônjuge")
 	assert(d_v2["family"]["children"][0]["name"] == "Lucas", "Preservação da família: filho")
 	assert(d_v2["dynasty"]["current_generation"] == 2, "Preservação da dinastia: geração 2")
@@ -1321,7 +1321,7 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 	assert(d_v2["story_arcs"]["active_arcs"]["arc_sociedade_amigo"].has("last_act_resolved_ticks"), "Ancoragem conservadora de last_act_resolved_ticks em arcos legados")
 	assert(d_v2["total_ticks_processed"] == 0, "Normalização de total_ticks_processed em V2 ausente")
 	var disk_v2_main = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_v2_main["data"]["schema_version"] == 3, "Disco deve refletir schema 3")
+	assert(disk_v2_main["data"]["schema_version"] >= 3, "Disco deve refletir schema 3 ou superior")
 
 	# 6. V2 via .tmp órfão
 	_cleanup_test_dir()
@@ -1331,10 +1331,10 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_v2_tmp = LifeLegacyPersistence.load_slot_data(test_slot, 2, 15)
 	assert(load_v2_tmp.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Promoção e migração de .tmp V2")
-	assert(load_v2_tmp["data"]["schema_version"] == 3, "Schema 3 promovido do .tmp")
+	assert(load_v2_tmp["data"]["schema_version"] >= 3, "Schema 3 ou superior promovido do .tmp")
 	assert(load_v2_tmp["data"]["family"]["spouse"]["name"] == "Camila", "Família preservada via .tmp")
 	var disk_v2_tmp = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_v2_tmp["data"]["schema_version"] == 3, "Schema 3 gravado no disco a partir do .tmp")
+	assert(disk_v2_tmp["data"]["schema_version"] >= 3, "Schema 3 ou superior gravado no disco a partir do .tmp")
 
 	# 7. V2 via .bak_staging
 	_cleanup_test_dir()
@@ -1347,11 +1347,11 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_v2_stag = LifeLegacyPersistence.load_slot_data(test_slot, 2, 15)
 	assert(load_v2_stag.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação V2 via staging")
-	assert(load_v2_stag["data"]["schema_version"] == 3, "Schema 3 recuperado de staging")
+	assert(load_v2_stag["data"]["schema_version"] >= 3, "Schema 3 ou superior recuperado de staging")
 	assert(load_v2_stag["data"]["dynasty"]["ancestors"][0]["name"] == "Pai Fundador", "Dinastia preservada via staging")
 	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak_staging"), "Arquivo .bak_staging deve permanecer preservado")
 	var disk_v2_stag = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_v2_stag["data"]["schema_version"] == 3, "Schema 3 gravado no disco a partir do staging")
+	assert(disk_v2_stag["data"]["schema_version"] >= 3, "Schema 3 ou superior gravado no disco a partir do staging")
 
 	# 8. V2 via .bak
 	_cleanup_test_dir()
@@ -1364,11 +1364,11 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 
 	var load_v2_bak = LifeLegacyPersistence.load_slot_data(test_slot, 2, 15)
 	assert(load_v2_bak.get("status") == LifeLegacyPersistence.LoadStatus.OK_RECOVERED_BACKUP, "Recuperação V2 via .bak")
-	assert(load_v2_bak["data"]["schema_version"] == 3, "Schema 3 recuperado de .bak")
+	assert(load_v2_bak["data"]["schema_version"] >= 3, "Schema 3 ou superior recuperado de .bak")
 	assert(load_v2_bak["data"]["history"]["milestones"].has("casamento"), "Histórico preservado via .bak")
 	assert(FileAccess.file_exists(base_dir + "/life_legacy.json.bak"), "Arquivo .bak de recuperação deve permanecer preservado")
 	var disk_v2_bak = LifeLegacyPersistence._read_and_parse_json(base_dir + "/life_legacy.json")
-	assert(disk_v2_bak["data"]["schema_version"] == 3, "Schema 3 gravado no disco a partir de .bak")
+	assert(disk_v2_bak["data"]["schema_version"] >= 3, "Schema 3 ou superior gravado no disco a partir de .bak")
 
 	print("  -> Bloqueador 5 resolvido com sucesso: todas as 4 fontes testadas para V1 e V2 com Schema 3 confirmado no disco!")
 

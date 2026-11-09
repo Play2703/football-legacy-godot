@@ -3,7 +3,7 @@ extends RefCounted
 
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
 
-const CURRENT_SUPPORTED_SCHEMA: int = 3
+const CURRENT_SUPPORTED_SCHEMA: int = 4
 const FILE_NAME: String = "life_legacy.json"
 const TMP_SUFFIX: String = ".tmp"
 const BAK_SUFFIX: String = ".bak"
@@ -437,6 +437,38 @@ static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 			d["story_arcs"]["active_arcs"] = act_arcs
 			if not d["story_arcs"].has("completed_arcs") or not (d["story_arcs"]["completed_arcs"] is Array):
 				d["story_arcs"]["completed_arcs"] = []
+
+	# Migração V3 -> V4 (Gestão de Imagem, Escândalos e Ações de RP)
+	if from_v < 4 and to_v >= 4:
+		if not d.has("social_reputation") or not (d["social_reputation"] is Dictionary):
+			d["social_reputation"] = {
+				"scandal_heat": 0.0,
+				"press_agent_level": 0,
+				"press_agent_ticks_remaining": 0,
+				"active_campaigns": [],
+				"cooldowns": {},
+				"history": [],
+				"last_processed_tick": int(d.get("total_ticks_processed", 0))
+			}
+		else:
+			var sr: Dictionary = d["social_reputation"]
+			if not sr.has("scandal_heat"):
+				sr["scandal_heat"] = 0.0
+			else:
+				sr["scandal_heat"] = clampf(float(sr["scandal_heat"]), 0.0, 100.0)
+			if not sr.has("press_agent_level"):
+				sr["press_agent_level"] = 0
+			if not sr.has("press_agent_ticks_remaining"):
+				sr["press_agent_ticks_remaining"] = 0
+			if not sr.has("active_campaigns") or not (sr["active_campaigns"] is Array):
+				sr["active_campaigns"] = []
+			if not sr.has("cooldowns") or not (sr["cooldowns"] is Dictionary):
+				sr["cooldowns"] = {}
+			if not sr.has("history") or not (sr["history"] is Array):
+				sr["history"] = []
+			if not sr.has("last_processed_tick"):
+				sr["last_processed_tick"] = int(d.get("total_ticks_processed", 0))
+			d["social_reputation"] = sr
 
 	d["schema_version"] = to_v
 	return d

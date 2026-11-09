@@ -28,6 +28,7 @@ static func registrar_todos() -> void:
 				"text": "Ir à festa e curtir a noite toda",
 				"internal_effects": { "discipline": -15.0, "popularity": 15.0, "emotional_stability": -5.0 },
 				"career_effects": { "energy": -40.0 },
+				"scandal_heat_delta": 30.0,
 				"modifier": {
 					"id": "mod_ressaca_derby",
 					"name": "Ressaca e Fadiga Noturna",
@@ -409,6 +410,7 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_contra_atacar_midia",
 				"text": "Rebater agressivamente em coletiva de imprensa",
+				"scandal_heat_delta": 25.0,
 				"internal_effects": { "popularity": 15.0, "discipline": -10.0, "emotional_stability": -5.0 },
 				"modifier": {
 					"id": "mod_holofote_polemico",
@@ -425,6 +427,7 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_ignorar_boato",
 				"text": "Manter postura nobre e ignorar comentários",
+				"scandal_heat_delta": -5.0,
 				"internal_effects": { "reputation": 10.0, "discipline": 10.0, "emotional_stability": 5.0 }
 			}
 		]
@@ -449,6 +452,7 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_entrevista_pacifica",
 				"text": "Conceder entrevista exclusiva e selar trégua pública",
+				"scandal_heat_delta": -20.0,
 				"internal_effects": { "reputation": 15.0, "social_influence": 15.0, "emotional_stability": 10.0 },
 				"social_post": {
 					"hecho": "entrevista_paz",
@@ -459,6 +463,7 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_vetar_emissora",
 				"text": "Vetar a emissora e reafirmar postura combativa",
+				"scandal_heat_delta": 15.0,
 				"internal_effects": { "popularity": 10.0, "reputation": -5.0, "personal_relationships": -5.0 }
 			}
 		]
@@ -483,6 +488,7 @@ static func registrar_todos() -> void:
 			{
 				"id": "choice_colher_elogios",
 				"text": "Comentar discretamente sobre o valor do foco profissional",
+				"scandal_heat_delta": -15.0,
 				"internal_effects": { "reputation": 10.0, "discipline": 5.0, "emotional_stability": 5.0 },
 				"social_post": {
 					"hecho": "silencio_vitorioso",

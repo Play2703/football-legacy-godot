@@ -5,6 +5,7 @@ const LifeLegacyConditions = preload("res://features/life_legacy/life_legacy_con
 const LifeLegacyRNG = preload("res://features/life_legacy/life_legacy_rng.gd")
 const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
 const LifeLegacyModifiers = preload("res://features/life_legacy/life_legacy_modifiers.gd")
+const LifeLegacySocial = preload("res://features/life_legacy/life_legacy_social.gd")
 
 static var _registry: Array[Dictionary] = []
 
@@ -331,6 +332,27 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 		})
 		hist_dict["resolved_events"] = resolved_list
 		candidate["history"] = hist_dict
+
+		# 3.4. Processa Efeitos Sociais Declarativos (Marco 8)
+		if chosen.has("scandal_heat_delta"):
+			var sh_delta: float = float(chosen["scandal_heat_delta"])
+			var sr: Dictionary = LifeLegacySocial.get_social_state(candidate)
+			var old_heat: float = float(sr.get("scandal_heat", 0.0))
+			var new_heat: float = clampf(old_heat + sh_delta, 0.0, 100.0)
+			sr["scandal_heat"] = new_heat
+			var hist_sr: Array = sr.get("history", [])
+			hist_sr.append({
+				"type": "event_choice_social_effect",
+				"event_id": String(active_event.get("event_id", "")),
+				"choice_id": choice_id,
+				"delta": sh_delta,
+				"new_heat": new_heat,
+				"season_num": s_num,
+				"season_day": s_day,
+				"timestamp": Time.get_datetime_string_from_system()
+			})
+			sr["history"] = hist_sr
+			candidate["social_reputation"] = sr
 
 	# 4. Transita o evento candidato para RESOLVED
 	cand_event["status"] = "RESOLVED"

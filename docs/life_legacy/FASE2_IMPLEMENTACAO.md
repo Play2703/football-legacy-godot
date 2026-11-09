@@ -186,3 +186,55 @@ Todas as 9 suítes foram executadas sequencialmente em modo headless (`godot --h
    - Re-emissão de `career_updated` no mesmo ponto temporal não processa ticks duplicados (`total_ticks_processed = 186` inalterado).
    - Recarga completa do slot a partir do disco (`reload_slot`) mantém total de ticks, indicadores, modificadores ativos e histórico anual (5 registros) estritamente idênticos.
    - Nenhuma duplicação de sinais de expiração.
+
+---
+
+### 6. Marco 8 — Redes Sociais, Polêmicas e Gestão de Imagem
+
+#### 6.1. Visão Geral e Arquitetura
+O Marco 8 implementa a Frente 2 da Fase 2 de Life & Legacy, introduzindo a gestão de imagem pública do atleta, controle de calor de escândalos, assessoria de imprensa profissional, ações de relações públicas (RP), integração com o ecossistema de redes sociais (`MuroRedes`) e impacto comercial sobre contratos de patrocínio.
+
+A arquitetura foi concentrada no novo módulo dedicado:
+- `features/life_legacy/life_legacy_social.gd`
+- Integração no `autoload/life_legacy_manager.gd`
+- Condições em `features/life_legacy/life_legacy_conditions.gd`
+- Integração com eventos em `features/life_legacy/life_legacy_events.gd` e `features/life_legacy/data/catalogo_eventos.gd`
+- Painel visual em `ui/celular.gd` (`monta_minha_vida`)
+- Schema V4 com migração automática e durabilidade em `features/life_legacy/life_legacy_state.gd` e `features/life_legacy/life_legacy_persistence.gd`.
+
+#### 6.2. Mecânica de Calor de Escândalos (`scandal_heat`)
+- **Escala e Limites:** Valor contínuo de `0.0` a `100.0` com limites estritos (`HEAT_MIN = 0.0`, `HEAT_MAX = 100.0`).
+- **5 Faixas de Crise:**
+  1. `Tranquilo` (0.0 a 19.9): Relação pública estável, imagem limpa, sem impacto comercial.
+  2. `Leve` (20.0 a 39.9): Comentários extracampo pontuais, penalidade de reputação comercial (-5) e deságio de 5% nas propostas.
+  3. `Moderado` (40.0 a 59.9): Noticiário e redes repercutem conduta, deságio comercial de 15% e penalidade de reputação (-10).
+  4. `Crise` (60.0 a 79.9): Pressão pública intensa, deságio comercial de 30%, penalidade de reputação (-20) e marcas Master bloqueadas.
+  5. `Grave` (80.0 a 100.0): Risco comercial crítico, deságio comercial de 50%, penalidade de reputação (-35) e marcas Master bloqueadas.
+- **Resfriamento Semanal Básico:** Taxa de `3.5` pontos por semana/tick processado, avançada durante `_handle_temporal_advance()`, `_recover_temporal_gap()` e no Circuit Breaker.
+- **Contenção Dinâmica:** Quando um escândalo é registrado e o jogador possui assessoria de imprensa ativa, o calor bruto é multiplicado pelo fator de contenção do nível contratado, amortecendo a crise no momento do impacto.
+
+#### 6.3. Assessoria de Imprensa (`press_agent`)
+Quatro níveis contratuais configurados:
+- **Nível 0 (Sem Assessoria):** Custo $0, Bônus 0.0, Contenção 1.0 (100% de impacto).
+- **Nível 1 (Assessoria Regional):** Custo $2.500, Duração 12 semanas, Bônus +2.5/sem, Contenção 0.85 (reduz 15% do impacto bruto).
+- **Nível 2 (Nacional Especializada):** Custo $7.500, Duração 16 semanas, Bônus +5.0/sem, Contenção 0.70 (reduz 30% do impacto bruto).
+- **Nível 3 (Elite Internacional):** Custo $18.000, Duração 20 semanas, Bônus +8.0/sem, Contenção 0.50 (reduz 50% do impacto bruto).
+- **Ciclo de Vida:** Duração decresce a cada semana avançada. Ao atingir 0, o contrato expira e reverte graciosamente para o nível 0 sem efeitos colaterais.
+
+#### 6.4. Ações de Relações Públicas (RP)
+Ações gerenciadas com validação prévia de saldo e cooldown:
+1. **Contratar/Renovar Assessoria:** Consome saldo do Career via Outbox, ativa nível e duração.
+2. **Retratação Oficial:** Custo $500, cooldown 4 semanas, reduz calor (-20% proporcional + flat), aplica deltas estatísticos e publica comunicado oficial no `MuroRedes`. Requer calor mínimo de 15.0 para evitar retratações desnecessárias.
+3. **Campanha de Caridade:** Custo $6.000, cooldown 8 semanas, reduz calor (-12 flat), eleva popularidade (+8), influência (+6) e reputação (+4), criando campanha ativa por 4 semanas e publicação comunitária no `MuroRedes`.
+4. **Post Promocional de Treino:** Custo $0, cooldown 2 semanas, melhora disciplina (+1), popularidade (+3), influência (+2), leve alívio de calor (-1.5) e post focado em preparação física no `MuroRedes`.
+
+#### 6.5. Garantias Transacionais e Filosofia Arcade
+- **Protocolo de Pré-Compromisso Idempotente:** Toda ação RP grava um registro `pending_rp_transaction` no perfil antes de emitir as intenções financeiras e sociais no `LifeLegacyOutbox`.
+- **Deduplicação de Efeitos e Posts:** Uso de tokens exclusivos (`rp_cost_*` e `rp_post_*`) que se integram com `Career.apply_idempotent_effect()` e `Career.apply_idempotent_social_post()`.
+- **Recuperação de Falhas:** Em caso de interrupção ou falha de despacho no receptor, o slot recarrega e completa a transação pendente sem debitar duas vezes e sem duplicar posts.
+- **Proteção Contra Saldo Negativo:** Rejeição preventiva de ações se o saldo financeiro do jogador for insuficiente, respeitando a decisão de design de não gerar dívida negativa involuntária.
+- **Modelo Estritamente Extracampo:** Escândalos afetam reputação, patrocínios e finanças, mas **nunca** geram suspensão de partidas, afastamento de elenco ou modificação do motor esportivo.
+
+#### 6.6. Interface do Celular e Schema V4
+- **Painel "GESTÃO DE IMAGEM & POLÊMICAS":** Inserido em `ui/celular.gd` (`monta_minha_vida`), exibindo barra visual com coloração dinâmica por faixa, diagnósticos de crise, status da assessoria, campanhas ativas, impacto comercial e grid com os 4 botões de ações RP com labels de custo, cooldown e feedback reativo.
+- **Schema V4:** Suporte a saves legados (V1, V2, V3) com migração automática para a versão 4, inicializando a estrutura `social_reputation` com valores padrão íntegros e preservando 100% dos dados pré-existentes.
