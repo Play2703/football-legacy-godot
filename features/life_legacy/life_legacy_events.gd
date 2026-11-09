@@ -105,24 +105,15 @@ static func resolve_choice(active_event: Dictionary, choice_id: String, outbox_d
 	var occ_id: String = String(active_event.get("occurrence_id", "occ"))
 
 	# Validação prévia exaustiva de modificadores (Bloqueador 4)
-	# Todas as validações que possam impedir a aplicação de uma consequência obrigatória devem acontecer antes do despacho externo
-	var mods_to_add: Array = []
-	if chosen.has("modifier") and chosen["modifier"] is Dictionary:
-		mods_to_add.append(chosen["modifier"])
-	if chosen.has("modifiers") and chosen["modifiers"] is Array:
-		for m in chosen["modifiers"]:
-			if m is Dictionary:
-				mods_to_add.append(m)
-
-	if not mods_to_add.is_empty():
-		var cur_mods: Array = ll_manager.get_data().get("active_modifiers", [])
-		var batch_val: Dictionary = LifeLegacyModifiers.validate_modifiers_batch(cur_mods, mods_to_add)
-		if not batch_val.get("valid", false):
-			var err_code: String = String(batch_val.get("error", "INVALID_MODIFIERS"))
-			push_error("[LifeLegacyEvents] Escolha rejeitada por modificador inválido antes do despacho externo: %s" % err_code)
-			active_event["last_error"] = err_code
-			ll_manager.get_data()["active_event"] = active_event
-			return false
+	# Toda validação que possa impedir a aplicação de uma consequência obrigatória deve acontecer antes do despacho externo
+	var cur_mods: Array = ll_manager.get_data().get("active_modifiers", [])
+	var mod_val: Dictionary = LifeLegacyModifiers.validate_choice_modifiers(chosen, cur_mods)
+	if not mod_val.get("valid", false):
+		var err_code: String = String(mod_val.get("error", "INVALID_MODIFIERS"))
+		push_error("[LifeLegacyEvents] Escolha rejeitada por modificador inválido antes do despacho externo: %s" % err_code)
+		active_event["last_error"] = err_code
+		ll_manager.get_data()["active_event"] = active_event
+		return false
 
 	if active_event.has("last_error"):
 		active_event.erase("last_error")
@@ -191,24 +182,15 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 		return false
 
 	# 0. Verificação transacional prévia de modificadores (Bloqueador 4)
-	var mods_to_add: Array = []
-	if chosen.has("modifier") and chosen["modifier"] is Dictionary:
-		mods_to_add.append(chosen["modifier"])
-	if chosen.has("modifiers") and chosen["modifiers"] is Array:
-		for m in chosen["modifiers"]:
-			if m is Dictionary:
-				mods_to_add.append(m)
-
-	if not mods_to_add.is_empty():
-		var cur_mods: Array = ll_manager.get_data().get("active_modifiers", [])
-		var batch_val: Dictionary = LifeLegacyModifiers.validate_modifiers_batch(cur_mods, mods_to_add)
-		if not batch_val.get("valid", false):
-			var err_code: String = String(batch_val.get("error", "INVALID_MODIFIERS"))
-			push_error("[LifeLegacyEvents] Falha na validação de modificadores em PRE_COMMITMENT: %s" % err_code)
-			active_event["last_error"] = err_code
-			ll_manager.get_data()["active_event"] = active_event
-			ll_manager.save_current_slot()
-			return false
+	var cur_mods: Array = ll_manager.get_data().get("active_modifiers", [])
+	var mod_val: Dictionary = LifeLegacyModifiers.validate_choice_modifiers(chosen, cur_mods)
+	if not mod_val.get("valid", false):
+		var err_code: String = String(mod_val.get("error", "INVALID_MODIFIERS"))
+		push_error("[LifeLegacyEvents] Falha na validação de modificadores em PRE_COMMITMENT: %s" % err_code)
+		active_event["last_error"] = err_code
+		ll_manager.get_data()["active_event"] = active_event
+		ll_manager.save_current_slot()
+		return false
 
 	if active_event.has("last_error"):
 		active_event.erase("last_error")
@@ -279,39 +261,22 @@ static func recover_precommitted_event(active_event: Dictionary, outbox_data: Di
 		cand_event["internal_effects_applied"] = true
 
 		# 3.1. Processa Modificadores Temporais Ativos definidos na escolha
-		if chosen.has("modifier"):
-			var mod_def: Dictionary = chosen["modifier"]
-			var mod_id: String = String(mod_def.get("id", "%s_mod_%s" % [occ_id, choice_id]))
-			var mod_name: String = String(mod_def.get("name", "Modificador"))
-			var mod_drift: Dictionary = mod_def.get("stat_drift", {})
-			var mod_dur: int = int(mod_def.get("duration_ticks", 1))
-			var new_mod: Dictionary = LifeLegacyModifiers.create_modifier(mod_id, String(active_event.get("event_id", "")), mod_name, mod_drift, mod_dur, s_num, s_day)
+		var mods_to_add: Array = mod_val.get("modifiers", [])
+		if not mods_to_add.is_empty():
 			var act_mods: Array = candidate.get("active_modifiers", []).duplicate(true)
-			var add_ok: bool = LifeLegacyModifiers.add_modifier(act_mods, new_mod)
-			if not add_ok:
-				push_error("[LifeLegacyEvents] Falha crítica ao adicionar modificador '%s'. Abortando resolução." % mod_id)
-				active_event["last_error"] = "FAILED_TO_ADD_MODIFIER"
-				ll_manager.get_data()["active_event"] = active_event
-				ll_manager.save_current_slot()
-				return false
-			candidate["active_modifiers"] = act_mods
-
-		if chosen.has("modifiers"):
-			var act_mods: Array = candidate.get("active_modifiers", []).duplicate(true)
-			for m_def in chosen["modifiers"]:
-				if m_def is Dictionary:
-					var m_id: String = String(m_def.get("id", "%s_mod_%s" % [occ_id, choice_id]))
-					var m_name: String = String(m_def.get("name", "Modificador"))
-					var m_drift: Dictionary = m_def.get("stat_drift", {})
-					var m_dur: int = int(m_def.get("duration_ticks", 1))
-					var n_mod: Dictionary = LifeLegacyModifiers.create_modifier(m_id, String(active_event.get("event_id", "")), m_name, m_drift, m_dur, s_num, s_day)
-					var add_ok: bool = LifeLegacyModifiers.add_modifier(act_mods, n_mod)
-					if not add_ok:
-						push_error("[LifeLegacyEvents] Falha crítica ao adicionar modificador em lote '%s'. Abortando resolução." % m_id)
-						active_event["last_error"] = "FAILED_TO_ADD_MODIFIER"
-						ll_manager.get_data()["active_event"] = active_event
-						ll_manager.save_current_slot()
-						return false
+			for mod_def in mods_to_add:
+				var mod_id: String = String(mod_def.get("id", "%s_mod_%s" % [occ_id, choice_id]))
+				var mod_name: String = String(mod_def.get("name", "Modificador"))
+				var mod_drift: Dictionary = mod_def.get("stat_drift", {})
+				var mod_dur: int = int(mod_def.get("duration_ticks", mod_def.get("duration_ticks_remaining", 1)))
+				var new_mod: Dictionary = LifeLegacyModifiers.create_modifier(mod_id, String(active_event.get("event_id", "")), mod_name, mod_drift, mod_dur, s_num, s_day)
+				var add_ok: bool = LifeLegacyModifiers.add_modifier(act_mods, new_mod)
+				if not add_ok:
+					push_error("[LifeLegacyEvents] Falha crítica ao adicionar modificador '%s'. Abortando resolução." % mod_id)
+					active_event["last_error"] = "FAILED_TO_ADD_MODIFIER"
+					ll_manager.get_data()["active_event"] = active_event
+					ll_manager.save_current_slot()
+					return false
 			candidate["active_modifiers"] = act_mods
 
 		# 3.2. Processa Arcos Narrativos em Múltiplos Atos

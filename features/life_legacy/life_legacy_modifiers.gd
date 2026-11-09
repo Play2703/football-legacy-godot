@@ -77,6 +77,35 @@ static func validate_modifiers_batch(active_modifiers: Array, modifiers_to_add: 
 
 	return { "valid": true, "error": "" }
 
+# Valida rigorosamente as declarações de modificadores de uma escolha ('modifier' e 'modifiers')
+# Rejeita tipos incorretos (não ignora silenciosamente), valida campos internos e verifica capacidade.
+static func validate_choice_modifiers(chosen: Dictionary, active_modifiers: Array) -> Dictionary:
+	var mods_to_add: Array = []
+	
+	if chosen.has("modifier"):
+		var raw_mod = chosen["modifier"]
+		if not (raw_mod is Dictionary):
+			return { "valid": false, "error": "INVALID_MODIFIER_TYPE: expected Dictionary, got %s" % typeof(raw_mod) }
+		mods_to_add.append(raw_mod)
+	
+	if chosen.has("modifiers"):
+		var raw_mods = chosen["modifiers"]
+		if not (raw_mods is Array):
+			return { "valid": false, "error": "INVALID_MODIFIERS_ARRAY_TYPE: expected Array, got %s" % typeof(raw_mods) }
+		for elem in raw_mods:
+			if not (elem is Dictionary):
+				return { "valid": false, "error": "INVALID_MODIFIERS_ELEMENT_TYPE: expected Dictionary, got %s" % typeof(elem) }
+			mods_to_add.append(elem)
+	
+	if mods_to_add.is_empty():
+		return { "valid": true, "error": "", "modifiers": [] }
+	
+	var batch_res: Dictionary = validate_modifiers_batch(active_modifiers, mods_to_add)
+	if not batch_res.get("valid", false):
+		return batch_res
+	
+	return { "valid": true, "error": "", "modifiers": mods_to_add }
+
 # Verifica se há capacidade disponível para um conjunto de modificadores sem exceder o limite
 static func can_add_modifiers(active_modifiers: Array, modifiers_to_add: Array) -> bool:
 	var existing_ids: Array[String] = []
