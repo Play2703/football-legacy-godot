@@ -2,8 +2,9 @@ class_name LifeLegacyPersistence
 extends RefCounted
 
 const LifeLegacyState = preload("res://features/life_legacy/life_legacy_state.gd")
+const LifeLegacyFamily = preload("res://features/life_legacy/life_legacy_family.gd")
 
-const CURRENT_SUPPORTED_SCHEMA: int = 4
+const CURRENT_SUPPORTED_SCHEMA: int = 5
 const FILE_NAME: String = "life_legacy.json"
 const TMP_SUFFIX: String = ".tmp"
 const BAK_SUFFIX: String = ".bak"
@@ -469,6 +470,28 @@ static func _migrate(data: Dictionary, from_v: int, to_v: int) -> Dictionary:
 			if not sr.has("last_processed_tick"):
 				sr["last_processed_tick"] = int(d.get("total_ticks_processed", 0))
 			d["social_reputation"] = sr
+
+	# Migração V4 -> V5 (Modelo Familiar e Trilha de Formação dos Filhos)
+	if from_v < 5 and to_v >= 5:
+		if not d.has("family") or not (d["family"] is Dictionary):
+			d["family"] = {
+				"spouse": {},
+				"children": []
+			}
+		else:
+			var fam: Dictionary = d["family"]
+			if not fam.has("spouse") or not (fam["spouse"] is Dictionary):
+				fam["spouse"] = {}
+			if not fam.has("children") or not (fam["children"] is Array):
+				fam["children"] = []
+			else:
+				var children: Array = fam["children"]
+				var norm_children: Array = []
+				for ch in children:
+					if ch is Dictionary:
+						norm_children.append(LifeLegacyFamily.normalize_child(ch, norm_children))
+				fam["children"] = norm_children
+			d["family"] = fam
 
 	d["schema_version"] = to_v
 	return d

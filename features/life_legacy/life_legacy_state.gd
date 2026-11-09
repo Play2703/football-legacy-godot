@@ -1,7 +1,7 @@
 class_name LifeLegacyState
 extends RefCounted
 
-const CURRENT_SUPPORTED_SCHEMA: int = 4
+const CURRENT_SUPPORTED_SCHEMA: int = 5
 const DEFAULT_CATALOG_VERSION: int = 2
 const RNG_VERSION: int = 1
 
@@ -147,5 +147,26 @@ static func validate_schema(data: Dictionary) -> bool:
 			return false
 		if not sr.has("history") or not (sr["history"] is Array):
 			return false
+
+	if sv >= 5:
+		if not data.has("family") or not (data["family"] is Dictionary):
+			return false
+		var fam: Dictionary = data["family"]
+		if not fam.has("spouse") or not (fam["spouse"] is Dictionary):
+			return false
+		if not fam.has("children") or not (fam["children"] is Array):
+			return false
+		for ch in fam["children"]:
+			if not (ch is Dictionary):
+				return false
+			if not ch.has("id") or not ch.has("name"):
+				return false
+			if not ch.has("formation_path") or not (ch["formation_path"] is String):
+				return false
+			var fp: String = String(ch["formation_path"])
+			if fp != "basic" and fp != "elite" and fp != "football":
+				return false
+			if ch.has("affinity") and not (ch["affinity"] is float or ch["affinity"] is int):
+				return false
 
 	return true

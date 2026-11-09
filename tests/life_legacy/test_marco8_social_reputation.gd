@@ -83,7 +83,7 @@ func test_scenario_a_save_migration_v1_v2_v3_to_v4() -> void:
 	var load_res_v1: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_res_v1.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load V1 deve ter status OK")
 	var loaded_v1: Dictionary = load_res_v1["data"]
-	assert(loaded_v1.get("schema_version") == 4, "Save V1 deve ser promovido para V4")
+	assert(loaded_v1.get("schema_version") >= 4, "Save V1 deve ser promovido para V4+")
 	assert(loaded_v1.has("social_reputation"), "Save V1 promovido deve conter social_reputation")
 	var soc_v1: Dictionary = loaded_v1["social_reputation"]
 	assert(soc_v1.get("scandal_heat") == 0.0, "Scandal heat default deve ser 0.0")
@@ -118,7 +118,7 @@ func test_scenario_a_save_migration_v1_v2_v3_to_v4() -> void:
 	var load_res_v2: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_res_v2.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load V2 deve ter status OK")
 	var loaded_v2: Dictionary = load_res_v2["data"]
-	assert(loaded_v2.get("schema_version") == 4, "Save V2 deve ser promovido para V4")
+	assert(loaded_v2.get("schema_version") >= 4, "Save V2 deve ser promovido para V4+")
 	assert(loaded_v2.has("social_reputation"), "Save V2 promovido deve conter social_reputation")
 	assert(loaded_v2["active_modifiers"].size() == 1, "Modificador V2 deve ser preservado")
 	assert(loaded_v2["stats"]["reputation"] == 80.0, "Reputação V2 deve ser preservada")
@@ -153,7 +153,7 @@ func test_scenario_a_save_migration_v1_v2_v3_to_v4() -> void:
 	var load_res_v3: Dictionary = LifeLegacyPersistence.load_slot_data(test_slot, 1, 0)
 	assert(load_res_v3.get("status") == LifeLegacyPersistence.LoadStatus.OK_SUCCESS, "Load V3 deve ter status OK")
 	var loaded_v3: Dictionary = load_res_v3["data"]
-	assert(loaded_v3.get("schema_version") == 4, "Save V3 deve ser promovido para V4")
+	assert(loaded_v3.get("schema_version") >= 4, "Save V3 deve ser promovido para V4+")
 	assert(loaded_v3.has("social_reputation"), "Save V3 promovido deve conter social_reputation")
 	assert(loaded_v3["story_arcs"]["active_arcs"].has("arc_polemica"), "Arcos V3 devem ser preservados")
 	assert(loaded_v3["prior_choices"]["ev_1"] == "ch_1", "Escolhas prévias V3 devem ser preservadas")
