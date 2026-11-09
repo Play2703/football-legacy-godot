@@ -56,15 +56,15 @@ Durante a auditoria profunda de `Career.casarse()`, `Career.dejarla()`, `Career.
 
 ### Compensação Transacional Bidirecional
 - `_capture_career_snapshot(career_obj)`: extrai cópias profundas e imutáveis de todos os campos listados acima.
-- `_restore_career_snapshot(career_obj, snap) -> bool`: repõe todos os campos originais, executa `ach._save()`, invoca `_save_synchronous_barrier()` e retorna o status de sucesso da gravação física.
-- `marry()` e `divorce()` avaliam o retorno da barreira síncrona. Caso ocorra falha no salvamento do Career após o commit do LifeLegacy, a compensação transacional restaura o backup do LifeLegacy (`save_current_slot()`) e reverte o Career (`_restore_career_snapshot()`). Se a própria restauração falhar, o sistema aciona Modo Seguro com push_error crítico.
+- `_restore_career_snapshot(career_obj, snap) -> bool`: repõe todos os campos originais, executa `ach.save_raw()`, invoca `_save_synchronous_barrier()` e retorna o status de sucesso da gravação física de ambos (`career_write_ok and ach_write_ok`).
+- `marry()` e `divorce()` avaliam o retorno da barreira síncrona do Career e a gravação de Achievements (`ach._save()` e `last_save_ok`). Caso ocorra falha no salvamento do Career ou de Achievements após o commit do LifeLegacy, a compensação transacional restaura o backup do LifeLegacy (`save_current_slot()`) e reverte o Career e Achievements (`_restore_career_snapshot()`). Se a própria restauração falhar, o sistema aciona Modo Seguro com push_error crítico.
 
 ---
 
 ## 4. SUÍTE DE TESTES E RESULTADOS DE HOMOLOGAÇÃO
 
 ### 4.1. Cenários de Integração Oficial (Marco 9 — `test_marco9_family_deep.gd`)
-A suíte conta com 17 cenários de alta precisão:
+A suíte conta com 18 cenários de alta precisão:
 1. **Cenário 1 — Casamento via fluxo oficial de Career:** Criação de casamento oficial quando solteiro, validação de transição, temporada de casamento e projeção no LifeLegacy.
 2. **Cenário 2 — Conversão sem duplicidade:** Conversão de namoro existente em casamento oficial, garantindo que o ID da parceira é mantido e nenhum registro concorrente é criado.
 3. **Cenário 3 — Preservação dos custos oficiais:** Validação de que `Career.money` é debitado exatamente pelo retorno de `Career.boda_coste()`.
@@ -79,14 +79,15 @@ A suíte conta com 17 cenários de alta precisão:
 12. **Cenário 13 — Rollback de separação de namoro sob falha de persistência:** Injeção de erro durante separação de namoro; restauração exata em memória e disco do namoro ativo.
 13. **Cenário 14 — Teste real de persistência do Career em disco pós-reload:** Casamento real persistido em disco e revalidado via recarga de arquivo; divórcio subsequente persistido e comprovado em disco via `Career.reload_active_slot()`, atestando ausência de qualquer cônjuge fantasma.
 14. **Cenário 15 — Identidade canônica da parceira e alias fora do Career:** Comprovação de que `Career.pareja` permanece limpo (sem chave `nombre`), o nome oficial provém de `Career.pareja_nombre()`, e alias de apresentação é mantido estritamente em metadados do LifeLegacy.
-15. **Cenário 16 — Rollback de Achievements e cerimônias:** Condição controlada disparando desbloqueio de conquista (`media_naranja`) e fila de cerimônias (`Career.pending_ceremonies`). Injeção de falha de persistência no LifeLegacy. Comprovação de que `_unlocked`, `parejas_vistas`, `pending`, `progress` e `pending_ceremonies` retornam integralmente ao snapshot anterior em memória e após recarregamento real de disco (`Career.reload_active_slot()`, `Achievements._load()`, `LifeLegacy.reload_slot()`).
+15. **Cenário 16 — Rollback completo de Achievements e cerimônias:** Condição controlada disparando desbloqueio de conquista (`media_naranja`) e fila de cerimônias (`Career.pending_ceremonies`). Injeção de falha de persistência no LifeLegacy. Comprovação de que todos os 6 campos persistidos de Achievements (`_unlocked`, `progress`, `_seen`, `pending`, `rasgos_vistos` e `parejas_vistas`) e `pending_ceremonies` retornam integralmente ao snapshot anterior em memória e após recarregamento real de disco (`Career.reload_active_slot()`, `Achievements._load()`, `LifeLegacy.reload_slot()`).
 16. **Cenário 17 — Falha na barreira síncrona do Career e compensação transacional:** Injeção de falha controlada em `Career._save_synchronous_barrier()` (`fault_inject_save_barrier_once = true`). Comprovação de que casamento e divórcio abortam com retorno `false`, compensam o LifeLegacy gravado em disco, restauram o Career e Achievements em disco e memória, eliminam qualquer divergência e, sob falha persistente de compensação (`fault_inject_save_barrier = true`), acionam o Modo Seguro do sistema.
+17. **Cenário 18 — Falha na gravação de Achievements e compensação transacional:** Injeção de falha controlada em `Achievements.save_raw()` (`fault_inject_save_once = true`). Comprovação de que casamento e divórcio abortam com retorno `false` sob falha em Achievements, compensam e restauram integralmente Career, LifeLegacy e Achievements em memória e em disco. Sob falha permanente na própria restauração (`fault_inject_save = true`), comprovação de transição obrigatória para Modo Seguro.
 
 ### 4.2. Matriz de Execução da Regressão Completa
 
 | Runner | Arquivo de Teste | Itens Testados | Código de Saída | Resultado |
 |---|---|---|:---:|:---:|
-| **Runner Marco 9** | `test_marco9_family_deep.gd` | 9 blocos de testes (Schema V5, normalização, migrações V1-V5, durabilidade, 17 cenários de Career) | `0` | **PASS (100%)** |
+| **Runner Marco 9** | `test_marco9_family_deep.gd` | 9 blocos de testes (Schema V5, normalização, migrações V1-V5, durabilidade, 18 cenários de Career) | `0` | **PASS (100%)** |
 | **Runner Marco 4** | `test_marco4_family_dynasty.gd` | Ciclo de vida familiar, elegibilidade de herdeiros, SalonFama e sucessão dinástica | `0` | **PASS (100%)** |
 | **Runner Marco 8** | `test_marco8_social_reputation.gd` | 10 cenários de reputação, scandal heat, assessoria, retratação, patrocínios e outbox RP | `0` | **PASS (100%)** |
 | **Runner Marco 2** | `test_marco2_integration.gd` | Avanço temporal, comparação lexicográfica, circuit breaker e barreiras transacionais | `0` | **PASS (100%)** |

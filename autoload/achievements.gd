@@ -1062,6 +1062,11 @@ var rasgos_vistos: Dictionary = {}
 
 var parejas_vistas: Dictionary = {}
 
+var fault_inject_save: bool = false
+var fault_inject_save_once: bool = false
+var fault_inject_save_count: int = 0
+var last_save_ok: bool = true
+
 
 var _bulk: bool = false
 
@@ -4227,14 +4232,30 @@ func quiza_estatua() -> void:
 	Career.queue_ceremony(Ceremonies.ESTATUA)
 
 
-func _save() -> void:
+func _save() -> bool:
 	quiza_estatua()
+	return save_raw()
+
+func save_raw() -> bool:
+	if fault_inject_save:
+		last_save_ok = false
+		return false
+	if fault_inject_save_once:
+		fault_inject_save_once = false
+		last_save_ok = false
+		return false
+	if fault_inject_save_count > 0:
+		fault_inject_save_count -= 1
+		last_save_ok = false
+		return false
 
 	if GameState.readonly_save and save_path == SAVE_PATH:
-		return
+		last_save_ok = false
+		return false
 
 	if not _cargado:
-		return
+		last_save_ok = false
+		return false
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.set_value("logros", "unlocked", _unlocked)
 	cfg.set_value("logros", "progress", progress)
@@ -4242,7 +4263,10 @@ func _save() -> void:
 	cfg.set_value("logros", "pending", pending)
 	cfg.set_value("logros", "rasgos", rasgos_vistos)
 	cfg.set_value("logros", "parejas", parejas_vistas)
-	SaveSlotsScript.escribe_atomico(save_path, cfg.encode_to_text())
+	var ok: bool = SaveSlotsScript.escribe_atomico(save_path, cfg.encode_to_text())
+	if not ok:
+		last_save_ok = false
+	return ok
 
 
 func _load() -> void:
