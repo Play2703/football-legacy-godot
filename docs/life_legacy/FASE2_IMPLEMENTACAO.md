@@ -77,7 +77,7 @@ Todas as 9 suítes foram executadas sequencialmente em modo headless (`godot --h
 | 6 | **Marco 4: Dinastia & Sucessão** | `godot --headless tests/life_legacy/runner_marco4.tscn` | **APROVADO** | `0` |
 | 7 | **Marco 5: Partida Real & Modal** | `godot --headless tests/life_legacy/runner_marco5.tscn` | **APROVADO** | `0` |
 | 8 | **Marco 6: Estresse 52 Ticks** | `godot --headless tests/life_legacy/runner_marco6.tscn` | **APROVADO** | `0` |
-| 9 | **Marco 7: Arcos Narrativos e Modificadores** | `godot --headless tests/life_legacy/runner_marco7.tscn` | **APROVADO (14/14 testes)** | `0` |
+| 9 | **Marco 7: Arcos Narrativos e Modificadores** | `godot --headless tests/life_legacy/runner_marco7.tscn` | **APROVADO (19/19 testes)** | `0` |
 
 ---
 
@@ -139,3 +139,50 @@ Todas as 9 suítes foram executadas sequencialmente em modo headless (`godot --h
     - Preservação integral de dados: cônjuge e filhos (`family`), geração e ancestrais (`dynasty`), marcos e eventos resolvidos (`history`), e arcos narrativos ativos e concluídos (`story_arcs`).
     - Normalização de `total_ticks_processed` e ancoragem conservadora de `last_act_resolved_ticks` em arcos legados.
     - Preservação estrita dos arquivos de backup (`.bak_staging` e `.bak`) no disco após recuperação.
+
+### 5.6. Homologação Final: Modificadores Temporais e Histórico Anual no Circuit Breaker
+
+#### 5.6.1. Semântica Temporal de Modificadores no Circuit Breaker
+- **Implementação:** Método `LifeLegacyModifiers.advance_modifiers_ticks(active_modifiers, current_stats, ticks_to_advance)`.
+- **Processamento Cronológico:**
+  1. Aplica `advance_modifiers_ticks` para as rodadas restantes da temporada de origem ($\max(0, \text{len}_{\text{from}} - \text{from\_d})$).
+  2. Para cada temporada intermediária e destino $s \in [\text{from\_s} + 1, \text{to\_s}]$:
+     - 1 tick da virada anual aplicado nos modificadores ativos.
+     - Amortização anual dos indicadores (1 temporada por virada) via `compute_amortized_stats(..., 1)`.
+     - Registro de snapshot cronológico progressivo em `annual_history` com proteção de dupla idempotência (`processed_annual_rollovers` e checagem de `season_num`).
+     - Se $s < \text{to\_s}$, avança $\text{len}_s$ ticks de partidas da temporada intermediária.
+  3. Aplica `advance_modifiers_ticks` para as rodadas decorridas na temporada de destino ($\max(0, \text{to\_d})$).
+  4. Total de ticks avançados nos modificadores é rigorosamente idêntico a $\Delta_{\text{ticks}}$ do Circuit Breaker.
+  5. Registro persistido em `expired_modifiers_log` com emissão transacional do sinal `modifier_expired` após durabilidade em disco.
+
+#### 5.6.2. Cinco Cenários Obrigatórios Homologados (Testes A–E)
+1. **Teste A — Modificador curto (3 ticks em salto de 176 ticks):**
+   - Modificador aplicado por exatamente 3 ticks (`applied_ticks == 3`).
+   - Removido de `active_modifiers` (lista fica vazia).
+   - Registrado em `expired_modifiers_log` com `duration_ticks_remaining == 0`.
+   - Sinal `modifier_expired` emitido com sucesso.
+2. **Teste B — Modificador parcialmente consumido (200 ticks em salto de 176 ticks):**
+   - Consumiu 176 ticks (`applied_ticks == 176`).
+   - Restam exatamente 24 ticks (`duration_ticks_remaining == 24`).
+   - Permanece ativo em `active_modifiers`.
+   - Nenhum sinal indevido de expiração emitido.
+3. **Teste C — Múltiplos modificadores simultâneos (<176, ==176, >176 ticks):**
+   - Modificadores com 50 ticks, 176 ticks e 250 ticks submetidos conjuntamente ao salto de 176 ticks.
+   - `mod_menor_50t`: expirado, `applied_ticks == 50`, registrado no log.
+   - `mod_igual_176t`: expirado, `applied_ticks == 176`, registrado no log.
+   - `mod_maior_250t`: permanece ativo com 74 ticks restantes (250 - 176) e `applied_ticks == 176`.
+   - Capacidade $\le 10$ preservada sem perda de efeitos.
+4. **Teste D — Histórico anual progressivo (5 temporadas):**
+   - Perfil inicial com indicadores acima do baseline neutro 50.0 (`reputation = 90.0`).
+   - Salto de 5 temporadas pelo Circuit Breaker gera 5 snapshots em `annual_history` (temporadas 2, 3, 4, 5, 6).
+   - Decaimento cronológico monotônico demonstrado matematicamente:
+     - S2: 80.0
+     - S3: 72.5
+     - S4: 66.875
+     - S5: 62.65625
+     - S6: 59.4921875
+   - Comprovado que não são cópias estáticas do estado inicial.
+5. **Teste E — Idempotência pós-recuperação:**
+   - Re-emissão de `career_updated` no mesmo ponto temporal não processa ticks duplicados (`total_ticks_processed = 186` inalterado).
+   - Recarga completa do slot a partir do disco (`reload_slot`) mantém total de ticks, indicadores, modificadores ativos e histórico anual (5 registros) estritamente idênticos.
+   - Nenhuma duplicação de sinais de expiração.

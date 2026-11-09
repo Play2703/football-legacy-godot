@@ -39,6 +39,11 @@ func _ready() -> void:
 	test_blocker3_temporal_gap_exact_boundary_ticks()
 	test_blocker4_modifier_validation_and_transactional_hold()
 	test_blocker5_migration_all_sources_coverage()
+	test_circuit_breaker_test_a_short_modifier()
+	test_circuit_breaker_test_b_partially_consumed_modifier()
+	test_circuit_breaker_test_c_multiple_modifiers()
+	test_circuit_breaker_test_d_annual_history()
+	test_circuit_breaker_test_e_idempotence()
 
 	print("=================================================================")
 	print("--- MARCO 7: TODOS OS TESTES PASSARAM COM 100% DE SUCESSO! ---")
@@ -1366,3 +1371,291 @@ func test_blocker5_migration_all_sources_coverage() -> void:
 	assert(disk_v2_bak["data"]["schema_version"] == 3, "Schema 3 gravado no disco a partir de .bak")
 
 	print("  -> Bloqueador 5 resolvido com sucesso: todas as 4 fontes testadas para V1 e V2 com Schema 3 confirmado no disco!")
+
+func test_circuit_breaker_test_a_short_modifier() -> void:
+	print("\n[Circuit Breaker - Teste A] Modificador curto (3 ticks em salto de 176 ticks)...")
+	var orig_cal = GameState.calendar.duplicate()
+	_cleanup_test_dir()
+
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	prof["total_ticks_processed"] = 10
+	prof["season_calendar_lengths"] = { "1": 38, "2": 42, "3": 30, "4": 35, "5": 34, "6": 40 }
+	prof["stats"]["energy"] = 80.0
+
+	var mod_short = LifeLegacyModifiers.create_modifier("mod_short_3t", "evt_a", "Mod Curto 3 Ticks", { "energy": -2.0 }, 3, 1, 10)
+	prof["active_modifiers"] = [mod_short]
+	LifeLegacyPersistence.save_slot_data(test_slot, prof)
+	LifeLegacy.reload_slot(test_slot)
+
+	var expired_events: Array = []
+	var sig_callable = func(mid: String, mname: String) -> void:
+		expired_events.append({ "id": mid, "name": mname })
+	LifeLegacy.modifier_expired.connect(sig_callable)
+
+	GameState.calendar = []
+	for i in range(40):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	LifeLegacy.modifier_expired.disconnect(sig_callable)
+
+	assert(LifeLegacy.get_total_ticks_processed() == 186, "Circuit breaker deve saltar 176 ticks (10 + 176 = 186)")
+	var active_mods = LifeLegacy.get_active_modifiers()
+	assert(active_mods.is_empty(), "Modificador curto de 3 ticks deve ser removido após salto de 176 ticks")
+
+	var expired_log = LifeLegacy.get_expired_modifiers_log()
+	assert(not expired_log.is_empty(), "Registro de expiração deve conter modificador expirado")
+	var found_log: bool = false
+	for m in expired_log:
+		if m.get("id") == "mod_short_3t":
+			found_log = true
+			assert(m.get("applied_ticks") == 3, "Modificador de 3 ticks deve ter aplicado exatamente 3 ticks (obtido=%s)" % str(m.get("applied_ticks")))
+			assert(m.get("duration_ticks_remaining") == 0, "Duração restante deve ser 0")
+	assert(found_log, "Modificador curto deve estar registrado no log de expirados")
+
+	var found_sig: bool = false
+	for s in expired_events:
+		if s.get("id") == "mod_short_3t":
+			found_sig = true
+	assert(found_sig, "Sinal modifier_expired deve ter sido emitido para mod_short_3t")
+
+	GameState.calendar = orig_cal
+	print("  -> Teste A aprovado: Modificador curto aplicado por 3 ticks, removido e registrado com sucesso!")
+
+func test_circuit_breaker_test_b_partially_consumed_modifier() -> void:
+	print("\n[Circuit Breaker - Teste B] Modificador parcialmente consumido (200 ticks em salto de 176 ticks)...")
+	var orig_cal = GameState.calendar.duplicate()
+	_cleanup_test_dir()
+
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	prof["total_ticks_processed"] = 10
+	prof["season_calendar_lengths"] = { "1": 38, "2": 42, "3": 30, "4": 35, "5": 34, "6": 40 }
+	prof["stats"]["energy"] = 80.0
+
+	var mod_long = LifeLegacyModifiers.create_modifier("mod_long_200t", "evt_b", "Mod Longo 200 Ticks", { "energy": -0.05 }, 200, 1, 10)
+	prof["active_modifiers"] = [mod_long]
+	LifeLegacyPersistence.save_slot_data(test_slot, prof)
+	LifeLegacy.reload_slot(test_slot)
+
+	var expired_events: Array = []
+	var sig_callable = func(mid: String, mname: String) -> void:
+		expired_events.append({ "id": mid, "name": mname })
+	LifeLegacy.modifier_expired.connect(sig_callable)
+
+	GameState.calendar = []
+	for i in range(40):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	LifeLegacy.modifier_expired.disconnect(sig_callable)
+
+	assert(LifeLegacy.get_total_ticks_processed() == 186, "Circuit breaker deve processar 176 ticks")
+	var active_mods = LifeLegacy.get_active_modifiers()
+	assert(active_mods.size() == 1, "Modificador parcialmente consumido deve permanecer ativo")
+	assert(active_mods[0]["id"] == "mod_long_200t", "ID do modificador ativo deve coincidir")
+	assert(active_mods[0]["applied_ticks"] == 176, "applied_ticks deve ser exatamente 176 (obtido=%d)" % active_mods[0]["applied_ticks"])
+	assert(active_mods[0]["duration_ticks_remaining"] == 24, "duration_ticks_remaining deve ser exatamente 24 (200 - 176 = 24, obtido=%d)" % active_mods[0]["duration_ticks_remaining"])
+	assert(expired_events.is_empty(), "Nenhum sinal de expiração deve ser emitido para modificador ainda ativo")
+
+	GameState.calendar = orig_cal
+	print("  -> Teste B aprovado: Modificador com 200 ticks consumiu 176 ticks e restam 24 ticks!")
+
+func test_circuit_breaker_test_c_multiple_modifiers() -> void:
+	print("\n[Circuit Breaker - Teste C] Vários modificadores simultâneos (<176, ==176, >176 ticks)...")
+	var orig_cal = GameState.calendar.duplicate()
+	_cleanup_test_dir()
+
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	prof["total_ticks_processed"] = 10
+	prof["season_calendar_lengths"] = { "1": 38, "2": 42, "3": 30, "4": 35, "5": 34, "6": 40 }
+
+	var m_menor = LifeLegacyModifiers.create_modifier("mod_menor_50t", "evt_c", "Mod Menor 50t", { "popularity": 0.1 }, 50, 1, 10)
+	var m_igual = LifeLegacyModifiers.create_modifier("mod_igual_176t", "evt_c", "Mod Igual 176t", { "happiness": -0.05 }, 176, 1, 10)
+	var m_maior = LifeLegacyModifiers.create_modifier("mod_maior_250t", "evt_c", "Mod Maior 250t", { "discipline": 0.05 }, 250, 1, 10)
+	prof["active_modifiers"] = [m_menor, m_igual, m_maior]
+	LifeLegacyPersistence.save_slot_data(test_slot, prof)
+	LifeLegacy.reload_slot(test_slot)
+
+	var expired_events: Array = []
+	var sig_callable = func(mid: String, mname: String) -> void:
+		expired_events.append({ "id": mid, "name": mname })
+	LifeLegacy.modifier_expired.connect(sig_callable)
+
+	GameState.calendar = []
+	for i in range(40):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	LifeLegacy.modifier_expired.disconnect(sig_callable)
+
+	var active_mods = LifeLegacy.get_active_modifiers()
+	assert(active_mods.size() == 1, "Apenas o modificador com duração > 176 deve restar ativo")
+	assert(active_mods[0]["id"] == "mod_maior_250t", "Modificador remanescente deve ser mod_maior_250t")
+	assert(active_mods[0]["applied_ticks"] == 176, "applied_ticks deve ser 176")
+	assert(active_mods[0]["duration_ticks_remaining"] == 74, "duration_ticks_remaining deve ser 74 (250 - 176 = 74, obtido=%d)" % active_mods[0]["duration_ticks_remaining"])
+
+	var exp_log = LifeLegacy.get_expired_modifiers_log()
+	var ids_expired = []
+	for em in exp_log:
+		ids_expired.append(em.get("id"))
+	assert(ids_expired.has("mod_menor_50t"), "mod_menor_50t deve constar em expired_modifiers_log")
+	assert(ids_expired.has("mod_igual_176t"), "mod_igual_176t deve constar em expired_modifiers_log")
+
+	for em in exp_log:
+		if em.get("id") == "mod_menor_50t":
+			assert(em.get("applied_ticks") == 50, "mod_menor_50t deve registrar applied_ticks == 50")
+		elif em.get("id") == "mod_igual_176t":
+			assert(em.get("applied_ticks") == 176, "mod_igual_176t deve registrar applied_ticks == 176")
+
+	var sig_ids = []
+	for se in expired_events:
+		sig_ids.append(se.get("id"))
+	assert(sig_ids.has("mod_menor_50t"), "Sinal emitido para mod_menor_50t")
+	assert(sig_ids.has("mod_igual_176t"), "Sinal emitido para mod_igual_176t")
+
+	GameState.calendar = orig_cal
+	print("  -> Teste C aprovado: Múltiplos modificadores processados e verificados individualmente sem perdas!")
+
+func test_circuit_breaker_test_d_annual_history() -> void:
+	print("\n[Circuit Breaker - Teste D] Histórico anual progressivo (5 temporadas com decaimento cronológico)...")
+	var orig_cal = GameState.calendar.duplicate()
+	_cleanup_test_dir()
+
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	prof["total_ticks_processed"] = 10
+	prof["season_calendar_lengths"] = { "1": 38, "2": 42, "3": 30, "4": 35, "5": 34, "6": 40 }
+	# Define indicadores bem acima do ponto neutro 50.0
+	prof["stats"]["reputation"] = 90.0
+	prof["stats"]["emotional_stability"] = 90.0
+	prof["stats"]["discipline"] = 90.0
+
+	LifeLegacyPersistence.save_slot_data(test_slot, prof)
+	LifeLegacy.reload_slot(test_slot)
+
+	GameState.calendar = []
+	for i in range(40):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	var history = LifeLegacy.get_annual_history()
+	assert(history.size() == 5, "Histórico anual deve conter exatamente 5 temporadas intermediárias/destinos (obtido=%d)" % history.size())
+
+	var expected_seasons = [2, 3, 4, 5, 6]
+	for idx in range(5):
+		var entry = history[idx]
+		assert(entry.get("season_num") == expected_seasons[idx], "Temporada da entrada %d deve ser %d" % [idx, expected_seasons[idx]])
+		assert(entry.has("stats"), "Entrada do histórico deve conter snapshot de stats")
+		assert(entry.has("timestamp"), "Entrada do histórico deve conter timestamp")
+
+	# Verifica decaimento cronológico e progressivo:
+	# Valor inicial = 90.0, neutro = 50.0. A cada temporada: stat = 50 + (prev - 50) * 0.75
+	# S2: 80.0, S3: 72.5, S4: 66.875, S5: 62.65625, S6: 59.4921875
+	var prev_rep = 90.0
+	for idx in range(5):
+		var cur_rep = float(history[idx]["stats"]["reputation"])
+		assert(cur_rep < prev_rep, "Snapshots devem apresentar decaimento estritamente progressivo (%f < %f no idx %d)" % [cur_rep, prev_rep, idx])
+		assert(cur_rep > 50.0, "Decaimento amortizado assintótico nunca cruza o valor neutro 50.0")
+		prev_rep = cur_rep
+
+	# Comprova que não são cópias idênticas do estado inicial
+	assert(abs(float(history[0]["stats"]["reputation"]) - 80.0) < 0.01, "S2 reputation deve ser ~80.0")
+	assert(abs(float(history[1]["stats"]["reputation"]) - 72.5) < 0.01, "S3 reputation deve ser ~72.5")
+	assert(abs(float(history[2]["stats"]["reputation"]) - 66.875) < 0.01, "S4 reputation deve ser ~66.875")
+	assert(abs(float(history[3]["stats"]["reputation"]) - 62.65625) < 0.01, "S5 reputation deve ser ~62.65625")
+	assert(abs(float(history[4]["stats"]["reputation"]) - 59.4921875) < 0.01, "S6 reputation deve ser ~59.4921875")
+
+	GameState.calendar = orig_cal
+	print("  -> Teste D aprovado: Histórico anual com 5 temporadas com decaimento cronológico comprovado matematicamente!")
+
+func test_circuit_breaker_test_e_idempotence() -> void:
+	print("\n[Circuit Breaker - Teste E] Idempotência pós-recuperação (re-chamada e recarga de slot)...")
+	var orig_cal = GameState.calendar.duplicate()
+	_cleanup_test_dir()
+
+	GameState.season_num = 1
+	GameState.season_day = 10
+	var prof = LifeLegacyState.get_default_profile(1, 10)
+	prof["total_ticks_processed"] = 10
+	prof["season_calendar_lengths"] = { "1": 38, "2": 42, "3": 30, "4": 35, "5": 34, "6": 40 }
+	prof["stats"]["reputation"] = 80.0
+
+	var m_long = LifeLegacyModifiers.create_modifier("mod_idem_200t", "evt_e", "Mod Idempotente", { "reputation": -0.05 }, 200, 1, 10)
+	prof["active_modifiers"] = [m_long]
+	LifeLegacyPersistence.save_slot_data(test_slot, prof)
+	LifeLegacy.reload_slot(test_slot)
+
+	GameState.calendar = []
+	for i in range(40):
+		GameState.calendar.append({ "fixture_idx": i })
+
+	GameState.season_num = 6
+	GameState.season_day = 2
+	GameState.career_updated.emit()
+
+	# Captura estado pós-salto
+	var ticks_1 = LifeLegacy.get_total_ticks_processed()
+	var stats_1 = LifeLegacy.get_stats().duplicate(true)
+	var mods_1 = LifeLegacy.get_active_modifiers().duplicate(true)
+	var hist_1 = LifeLegacy.get_annual_history().duplicate(true)
+
+	assert(ticks_1 == 186, "Ticks pós-salto deve ser 186")
+	assert(mods_1[0]["applied_ticks"] == 176, "applied_ticks deve ser 176")
+	assert(mods_1[0]["duration_ticks_remaining"] == 24, "duration_ticks_remaining deve ser 24")
+	assert(hist_1.size() == 5, "Histórico anual deve ter 5 registros")
+
+	var expired_events_again: Array = []
+	var sig_callable = func(mid: String, mname: String) -> void:
+		expired_events_again.append({ "id": mid, "name": mname })
+	LifeLegacy.modifier_expired.connect(sig_callable)
+
+	# 1. Re-emissão do sinal sem avanço temporal adicional
+	GameState.career_updated.emit()
+
+	assert(LifeLegacy.get_total_ticks_processed() == ticks_1, "Ticks não podem sofrer incremento em re-emissão idêntica")
+	assert(LifeLegacy.get_stats() == stats_1, "Stats não podem sofrer decaimento duplicado")
+	assert(LifeLegacy.get_active_modifiers() == mods_1, "Modificadores não podem sofrer alteração")
+	assert(LifeLegacy.get_annual_history() == hist_1, "Histórico anual não pode receber entradas duplicadas")
+	assert(expired_events_again.is_empty(), "Nenhum sinal novo pode ser emitido em re-emissão")
+
+	# 2. Recarga do slot a partir do disco e nova emissão
+	LifeLegacy.reload_slot(test_slot)
+	GameState.career_updated.emit()
+
+	LifeLegacy.modifier_expired.disconnect(sig_callable)
+
+	assert(LifeLegacy.get_total_ticks_processed() == ticks_1, "Ticks permanecem 186 após reload")
+	var reloaded_stats = LifeLegacy.get_stats()
+	for k in LifeLegacyState.STAT_KEYS:
+		assert(absf(float(reloaded_stats.get(k, 0.0)) - float(stats_1.get(k, 0.0))) < 0.001, "Stat %s idêntico após reload" % k)
+	
+	var reloaded_mods = LifeLegacy.get_active_modifiers()
+	assert(reloaded_mods.size() == mods_1.size(), "Quantidade de modificadores idêntica após reload")
+	assert(reloaded_mods[0]["id"] == mods_1[0]["id"], "ID do modificador idêntico após reload")
+	assert(int(reloaded_mods[0]["applied_ticks"]) == int(mods_1[0]["applied_ticks"]), "applied_ticks idêntico após reload")
+	assert(int(reloaded_mods[0]["duration_ticks_remaining"]) == int(mods_1[0]["duration_ticks_remaining"]), "duration_ticks_remaining idêntico após reload")
+	
+	assert(LifeLegacy.get_annual_history().size() == 5, "Histórico anual permanece com exatamente 5 registros após reload")
+	assert(expired_events_again.is_empty(), "Nenhum sinal emitido após reload")
+
+	GameState.calendar = orig_cal
+	print("  -> Teste E aprovado: Idempotência absoluta comprovada em re-chamada e reload!")

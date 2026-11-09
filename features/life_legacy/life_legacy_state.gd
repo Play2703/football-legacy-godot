@@ -61,6 +61,9 @@ static func get_default_profile(season_num: int = 1, season_day: int = 0) -> Dic
 			"resolved_events": [],
 			"milestones": []
 		},
+		"annual_history": [],
+		"processed_annual_rollovers": [],
+		"expired_modifiers_log": [],
 		"recovery_log": []
 	}
 

@@ -275,6 +275,9 @@ func _recover_temporal_gap(from_s: int, from_d: int, to_s: int, to_d: int) -> vo
 	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, new_event, stat_changes, expired_mods)
 
 func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, to_d: int) -> void:
+	if from_s > to_s or (from_s == to_s and from_d >= to_d):
+		return
+
 	var candidate: Dictionary = _data.duplicate(true)
 	_record_season_calendar_length_on_candidate(candidate, to_s)
 	
@@ -289,13 +292,15 @@ func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, 
 	#    - max(0, to_d) ticks para as partidas decorridas até to_d
 	var delta_ticks: int = 0
 	var len_from: int = _get_season_calendar_length(candidate, from_s)
-	delta_ticks += max(0, len_from - from_d)
+	var ticks_from: int = max(0, len_from - from_d)
+	delta_ticks += ticks_from
 	
 	for s in range(from_s + 1, to_s):
 		var len_s: int = _get_season_calendar_length(candidate, s)
 		delta_ticks += 1 + len_s
 		
-	delta_ticks += 1 + max(0, to_d)
+	var ticks_dest: int = max(0, to_d)
+	delta_ticks += 1 + ticks_dest
 	candidate["total_ticks_processed"] = int(candidate.get("total_ticks_processed", 0)) + delta_ticks
 	
 	var rollovers: Array[int] = []
@@ -309,17 +314,81 @@ func _execute_fast_forward_circuit_breaker(from_s: int, from_d: int, to_s: int, 
 	})
 	candidate["recovery_gap_log"] = gap_log
 	
-	# Processa virada anual de cada temporada omitida
+	var expired_mods: Array = []
+	var initial_stats: Dictionary = candidate.get("stats", {}).duplicate()
+	
+	# 1. Avança modificadores ativos durante as rodadas restantes da temporada inicial from_s
+	if ticks_from > 0:
+		var adv_from: Dictionary = LifeLegacyModifiers.advance_modifiers_ticks(candidate.get("active_modifiers", []), candidate.get("stats", {}), ticks_from)
+		candidate["stats"] = adv_from["new_stats"]
+		candidate["active_modifiers"] = adv_from["remaining"]
+		for m in adv_from["expired"]:
+			expired_mods.append(m)
+	
+	# 2. Percorre as viradas anuais e temporadas intermediárias cronologicamente
 	for s in range(from_s + 1, to_s + 1):
+		# 1 tick de virada anual para a temporada s sobre os modificadores ativos
+		var adv_roll: Dictionary = LifeLegacyModifiers.advance_modifiers_ticks(candidate.get("active_modifiers", []), candidate.get("stats", {}), 1)
+		candidate["stats"] = adv_roll["new_stats"]
+		candidate["active_modifiers"] = adv_roll["remaining"]
+		for m in adv_roll["expired"]:
+			expired_mods.append(m)
+		
+		# Aplica a amortização anual dos indicadores (1 temporada por virada)
+		candidate["stats"] = LifeLegacyEffects.compute_amortized_stats(candidate.get("stats", {}), 1)
+		
+		# Registra snapshot cronológico e coerente no histórico anual
 		_record_annual_rollover_on_candidate(candidate, s)
 		rollovers.append(s)
+		
+		# Se s for intermediária (s < to_s), avança as rodadas de partidas daquela temporada
+		if s < to_s:
+			var len_s: int = _get_season_calendar_length(candidate, s)
+			if len_s > 0:
+				var adv_mid: Dictionary = LifeLegacyModifiers.advance_modifiers_ticks(candidate.get("active_modifiers", []), candidate.get("stats", {}), len_s)
+				candidate["stats"] = adv_mid["new_stats"]
+				candidate["active_modifiers"] = adv_mid["remaining"]
+				for m in adv_mid["expired"]:
+					expired_mods.append(m)
 	
-	# Amortização analítica dos indicadores pessoais
-	var stats: Dictionary = candidate.get("stats", {})
-	var amortized: Dictionary = LifeLegacyEffects.compute_amortized_stats(stats, to_s - from_s)
-	candidate["stats"] = amortized
+	# 3. Avança modificadores durante as rodadas decorridas na temporada de destino to_s
+	if ticks_dest > 0:
+		var adv_dest: Dictionary = LifeLegacyModifiers.advance_modifiers_ticks(candidate.get("active_modifiers", []), candidate.get("stats", {}), ticks_dest)
+		candidate["stats"] = adv_dest["new_stats"]
+		candidate["active_modifiers"] = adv_dest["remaining"]
+		for m in adv_dest["expired"]:
+			expired_mods.append(m)
 	
-	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, {}, [])
+	# Registra os modificadores expirados no log persistido
+	if not expired_mods.is_empty():
+		var exp_log: Array = candidate.get("expired_modifiers_log", [])
+		for exp_m in expired_mods:
+			if exp_m is Dictionary:
+				exp_log.append({
+					"id": exp_m.get("id", ""),
+					"name": exp_m.get("name", ""),
+					"applied_ticks": exp_m.get("applied_ticks", 0),
+					"duration_ticks_remaining": exp_m.get("duration_ticks_remaining", 0),
+					"expired_at_season": to_s,
+					"expired_at_day": to_d
+				})
+		candidate["expired_modifiers_log"] = exp_log
+	
+	# Computa alterações nos indicadores para emissão de sinais
+	var stat_changes: Array[Dictionary] = []
+	for stat_k in LifeLegacyState.STAT_KEYS:
+		var old_v: float = float(initial_stats.get(stat_k, LifeLegacyState.STAT_DEFAULTS.get(stat_k, 50.0)))
+		var new_v: float = float(candidate["stats"].get(stat_k, LifeLegacyState.STAT_DEFAULTS.get(stat_k, 50.0)))
+		if absf(new_v - old_v) > 0.0001:
+			stat_changes.append({
+				"stat_id": stat_k,
+				"old_val": old_v,
+				"new_val": new_v,
+				"delta": new_v - old_v,
+				"reason": "circuit_breaker_fast_forward"
+			})
+	
+	_commit_temporal_candidate(candidate, to_s, to_d, rollovers, {}, stat_changes, expired_mods)
 
 func _get_season_calendar_length(candidate: Dictionary, s: int) -> int:
 	var cal_lengths: Dictionary = candidate.get("season_calendar_lengths", {})
@@ -347,14 +416,20 @@ func _record_season_calendar_length_on_candidate(candidate: Dictionary, s: int) 
 
 func _record_annual_rollover_on_candidate(candidate: Dictionary, season: int) -> void:
 	var processed_seasons: Array = candidate.get("processed_annual_rollovers", [])
+	var annual_hist: Array = candidate.get("annual_history", [])
+	
 	if processed_seasons.has(season):
 		return
+	for entry in annual_hist:
+		if entry is Dictionary and entry.get("season_num") == season:
+			return
+			
 	processed_seasons.append(season)
 	candidate["processed_annual_rollovers"] = processed_seasons
 	
-	var annual_hist: Array = candidate.get("annual_history", [])
 	annual_hist.append({
 		"season_num": season,
+		"stats": candidate.get("stats", {}).duplicate(),
 		"stats_snapshot": candidate.get("stats", {}).duplicate(),
 		"timestamp": Time.get_datetime_string_from_system()
 	})
@@ -445,6 +520,12 @@ func get_story_arcs() -> Dictionary:
 func get_total_ticks_processed() -> int:
 	return int(_data.get("total_ticks_processed", 0))
 
+func get_annual_history() -> Array:
+	return _data.get("annual_history", []).duplicate(true)
+
+func get_expired_modifiers_log() -> Array:
+	return _data.get("expired_modifiers_log", []).duplicate(true)
+
 func set_season_calendar_length(season: int, length: int) -> void:
 	if not _data.has("season_calendar_lengths") or not (_data["season_calendar_lengths"] is Dictionary):
 		_data["season_calendar_lengths"] = {}
@@ -488,6 +569,9 @@ func get_stat(stat_name: String) -> float:
 
 func get_all_stats() -> Dictionary:
 	return _data.get("stats", {}).duplicate()
+
+func get_stats() -> Dictionary:
+	return get_all_stats()
 
 # API de Modificação de Indicadores com Log de Auditoria
 func apply_stat_change(stat_id: String, delta: float, reason: String, occurrence_id: String = "") -> bool:

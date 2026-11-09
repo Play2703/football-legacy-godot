@@ -172,7 +172,7 @@ static func process_weekly_modifiers(active_modifiers: Array, current_stats: Dic
 				var old_v: float = float(new_stats.get(stat_k, LifeLegacyState.STAT_DEFAULTS.get(stat_k, 50.0)))
 				new_stats[stat_k] = LifeLegacyState.clamp_stat(stat_k, old_v + delta)
 
-		var rem_ticks: int = int(mod_dict.get("duration_ticks_remaining", 1)) - 1
+		var rem_ticks: int = int(mod_dict.get("duration_ticks_remaining", mod_dict.get("duration_ticks", 1))) - 1
 		mod_dict["duration_ticks_remaining"] = rem_ticks
 		mod_dict["applied_ticks"] = int(mod_dict.get("applied_ticks", 0)) + 1
 
@@ -185,6 +185,43 @@ static func process_weekly_modifiers(active_modifiers: Array, current_stats: Dic
 		"new_stats": new_stats,
 		"expired": expired,
 		"remaining": remaining
+	}
+
+# Avança modificadores ativos por uma quantidade arbitrária de ticks (suporte ao Circuit Breaker e saltos temporais)
+# Aplica os efeitos periódicos passo a passo respeitando saturação e clamping, atualiza applied_ticks e remove expirados
+static func advance_modifiers_ticks(active_modifiers: Array, current_stats: Dictionary, ticks_to_advance: int) -> Dictionary:
+	var expired: Array = []
+	var cur_stats: Dictionary = current_stats.duplicate(true)
+	var cur_mods: Array = active_modifiers.duplicate(true)
+	
+	if ticks_to_advance <= 0 or cur_mods.is_empty():
+		return {
+			"new_stats": cur_stats,
+			"expired": expired,
+			"remaining": cur_mods
+		}
+
+	# Determina o teto máximo de iterações necessárias (nenhum modificador permanece ativo após sua duração máxima restante)
+	var max_dur: int = 0
+	for mod in cur_mods:
+		if mod is Dictionary:
+			var d: int = int(mod.get("duration_ticks_remaining", mod.get("duration_ticks", 0)))
+			max_dur = maxi(max_dur, d)
+	
+	var loops: int = mini(ticks_to_advance, max_dur)
+	for t in range(loops):
+		if cur_mods.is_empty():
+			break
+		var step_res: Dictionary = process_weekly_modifiers(cur_mods, cur_stats)
+		cur_stats = step_res["new_stats"]
+		cur_mods = step_res["remaining"]
+		for exp_m in step_res["expired"]:
+			expired.append(exp_m)
+	
+	return {
+		"new_stats": cur_stats,
+		"expired": expired,
+		"remaining": cur_mods
 	}
 
 static func has_modifier(active_modifiers: Array, mod_id: String) -> bool:
