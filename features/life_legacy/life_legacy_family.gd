@@ -75,32 +75,90 @@ static func generate_child_id(child_name: String, birth_s: int, birth_d: int, ex
 # Normalização de dados de filho para garantir Schema V5
 static func normalize_child(child_dict: Dictionary, existing_children: Array = []) -> Dictionary:
 	var normalized: Dictionary = child_dict.duplicate(true)
-	var c_name: String = String(normalized.get("name", "filho"))
-	var b_s: int = int(normalized.get("birth_season_num", 1))
-	var b_d: int = int(normalized.get("birth_season_day", 0))
-	if not normalized.has("id") or String(normalized.get("id", "")).strip_edges().is_empty():
-		normalized["id"] = generate_child_id(c_name, b_s, b_d, existing_children)
-	if not normalized.has("formation_path") or not is_valid_formation(String(normalized.get("formation_path", ""))):
+	
+	# Nome seguro
+	var raw_name: Variant = normalized.get("name")
+	var c_name: String = ""
+	if raw_name is String:
+		c_name = (raw_name as String).strip_edges()
+	if c_name.is_empty():
+		c_name = "Filho"
+	normalized["name"] = c_name
+	
+	# Temporada / dia de nascimento seguros
+	var raw_s: Variant = normalized.get("birth_season_num")
+	var b_s: int = int(raw_s) if (raw_s is int or raw_s is float) else 1
+	normalized["birth_season_num"] = b_s
+	
+	var raw_d: Variant = normalized.get("birth_season_day")
+	var b_d: int = int(raw_d) if (raw_d is int or raw_d is float) else 0
+	normalized["birth_season_day"] = b_d
+	
+	# Extração de IDs existentes para garantir unicidade
+	var existing_ids: Array = []
+	for existing in existing_children:
+		if existing is Dictionary and existing.has("id"):
+			existing_ids.append(String(existing["id"]))
+			
+	var raw_id: Variant = normalized.get("id")
+	var c_id: String = ""
+	if raw_id is String:
+		c_id = (raw_id as String).strip_edges()
+		
+	if c_id.is_empty():
+		c_id = generate_child_id(c_name, b_s, b_d, existing_children)
+	elif existing_ids.has(c_id):
+		# Colisão de ID em dados legados: resolver determinísticamente com sufixo
+		var seq: int = 2
+		var disambiguated: String = "%s_%d" % [c_id, seq]
+		while existing_ids.has(disambiguated):
+			seq += 1
+			disambiguated = "%s_%d" % [c_id, seq]
+		c_id = disambiguated
+	normalized["id"] = c_id
+	
+	# Trilha de formação
+	var raw_fp: Variant = normalized.get("formation_path")
+	if not (raw_fp is String) or not is_valid_formation(raw_fp as String):
 		normalized["formation_path"] = FORMATION_BASIC
-	if not normalized.has("affinity"):
-		normalized["affinity"] = 50.0
 	else:
-		normalized["affinity"] = clampf(float(normalized["affinity"]), 0.0, 100.0)
+		normalized["formation_path"] = raw_fp as String
+		
+	# Afinidade obrigatória e com clamp
+	var raw_aff: Variant = normalized.get("affinity")
+	if raw_aff is float or raw_aff is int:
+		normalized["affinity"] = clampf(float(raw_aff), 0.0, 100.0)
+	else:
+		normalized["affinity"] = 50.0
+		
 	return normalized
 
 # Registro de nascimento de filho
 static func register_child(child_name: String, gender: String, birth_s: int, birth_d: int, family_dict: Dictionary, custom_id: String = "", formation_path: String = FORMATION_BASIC) -> Dictionary:
 	var children: Array = family_dict.get("children", [])
 	
-	var child_id: String = custom_id
+	var clean_name: String = child_name.strip_edges()
+	if clean_name.is_empty():
+		clean_name = "Filho"
+		
+	var child_id: String = custom_id.strip_edges()
+	if not child_id.is_empty():
+		# Se foi fornecido custom_id, validar que não existe duplicidade!
+		for existing in children:
+			if existing is Dictionary and String(existing.get("id", "")) == child_id:
+				push_error("[LifeLegacyFamily] custom_id '%s' já existe na lista de filhos. Registro rejeitado." % child_id)
+				return {}
+	else:
+		child_id = generate_child_id(clean_name, birth_s, birth_d, children)
+	
 	if child_id.is_empty():
-		child_id = generate_child_id(child_name, birth_s, birth_d, children)
+		return {}
 	
 	var path: String = formation_path if is_valid_formation(formation_path) else FORMATION_BASIC
 	
 	var new_child: Dictionary = {
 		"id": child_id,
-		"name": child_name,
+		"name": clean_name,
 		"gender": gender,
 		"birth_season_num": birth_s,
 		"birth_season_day": birth_d,

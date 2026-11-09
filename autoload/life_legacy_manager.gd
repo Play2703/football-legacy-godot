@@ -622,37 +622,64 @@ func _get_career() -> Object:
 func get_family() -> Dictionary:
 	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var career_obj: Object = _get_career()
-	if career_obj != null and career_obj.has_method("pareja_activa") and career_obj.pareja_activa():
-		var p: Dictionary = career_obj.get("pareja") if "pareja" in career_obj else {}
-		var rel_dict: Dictionary = career_obj.get("rel") if "rel" in career_obj else {}
-		var aff: float = float(rel_dict.get("pareja", 50.0))
-		var is_married: bool = career_obj.pareja_casada() if career_obj.has_method("pareja_casada") else (String(p.get("estado", "")) == "casado")
-		var p_name: String = String(p.get("nombre", p.get("name", "")))
-		if p_name.is_empty() and career_obj.has_method("pareja_nombre"):
-			p_name = career_obj.pareja_nombre()
-		if p_name.is_empty():
-			p_name = "Pareja"
-		fam["spouse"] = {
-			"id": String(p.get("id", "career_spouse")),
-			"name": p_name,
-			"state": String(p.get("estado", "")),
-			"married": is_married,
-			"affinity": aff,
-			"source": "career_projection"
-		}
+	if career_obj != null and career_obj.has_method("pareja_activa"):
+		if career_obj.pareja_activa():
+			var p: Dictionary = career_obj.get("pareja") if "pareja" in career_obj else {}
+			var rel_dict: Dictionary = career_obj.get("rel") if "rel" in career_obj else {}
+			var aff: float = float(rel_dict.get("pareja", 50.0))
+			var is_married: bool = career_obj.pareja_casada() if career_obj.has_method("pareja_casada") else (String(p.get("estado", "")) == "casado")
+			var p_name: String = String(p.get("nombre", p.get("name", "")))
+			if p_name.is_empty() and career_obj.has_method("pareja_nombre"):
+				p_name = career_obj.pareja_nombre()
+			if p_name.is_empty():
+				p_name = "Pareja"
+			fam["spouse"] = {
+				"id": String(p.get("id", "career_spouse")),
+				"name": p_name,
+				"state": String(p.get("estado", "")),
+				"married": is_married,
+				"affinity": aff,
+				"source": "career_projection"
+			}
+		else:
+			# Career disponível mas sem relacionamento ativo: a autoridade oficial é Career!
+			# Não utilizar family.spouse legado como fallback para relacionamento encerrado.
+			fam["spouse"] = {}
 	return fam
 
 func marry(spouse_data: Dictionary) -> bool:
 	if _is_safe_mode:
 		return false
 	var career_obj: Object = _get_career()
-	if career_obj != null and career_obj.has_method("pareja_activa") and career_obj.pareja_activa():
-		return false
-	var fam: Dictionary = _data.get("family", {})
+	if career_obj != null and career_obj.has_method("pareja_activa"):
+		if career_obj.pareja_activa():
+			# Já existe relacionamento no Career: impede bigamia e relacionamentos concorrentes!
+			return false
+		# Sincroniza com Career para que não existam dois relacionamentos concorrentes/independentes
+		if "pareja" in career_obj and "rel" in career_obj:
+			var sp_name: String = String(spouse_data.get("name", "Elena"))
+			var sp_id: String = String(spouse_data.get("id", "spouse_" + sp_name.to_lower().replace(" ", "_")))
+			var sp_aff: float = float(spouse_data.get("affinity", 70.0))
+			career_obj.pareja = {
+				"id": sp_id,
+				"nombre": sp_name,
+				"estado": "casado",
+				"desde": GameState.season_num if GameState != null else 1
+			}
+			career_obj.rel["pareja"] = int(round(sp_aff))
+
+	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+	var fam: Dictionary = _data.get("family", {}).duplicate(true)
+	fam["spouse"] = {}
 	var ok: bool = LifeLegacyFamily.marry(spouse_data, fam)
 	if ok:
 		_data["family"] = fam
-		save_current_slot()
+		var save_ok: bool = save_current_slot()
+		if not save_ok:
+			_data["family"] = backup_fam
+			if career_obj != null and "pareja" in career_obj:
+				career_obj.pareja = {}
+			return false
 	return ok
 
 func divorce() -> bool:
@@ -660,36 +687,54 @@ func divorce() -> bool:
 		return false
 	var career_obj: Object = _get_career()
 	var has_career_partner: bool = (career_obj != null and career_obj.has_method("pareja_activa") and career_obj.pareja_activa())
-	var fam: Dictionary = _data.get("family", {})
+	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var has_fam_spouse: bool = not fam.get("spouse", {}).is_empty()
 	if not has_career_partner and not has_fam_spouse:
 		return false
 
-	var ok: bool = false
-	if has_career_partner:
-		if career_obj.has_method("dejarla"):
-			career_obj.dejarla()
-		elif career_obj.has_method("romper_relacion"):
-			career_obj.romper_relacion()
-		fam["spouse"] = {}
-		ok = true
-	if has_fam_spouse:
-		ok = LifeLegacyFamily.divorce(fam) or ok
+	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+	var backup_career_pareja = career_obj.pareja.duplicate(true) if (career_obj != null and "pareja" in career_obj and career_obj.pareja is Dictionary) else {}
+	var backup_career_rel = career_obj.rel["pareja"] if (career_obj != null and "rel" in career_obj and career_obj.rel.has("pareja")) else 0
 
-	if ok:
-		_data["family"] = fam
-		save_current_slot()
-	return ok
+	if has_career_partner:
+		if career_obj.has_method("romper_relacion"):
+			career_obj.romper_relacion()
+		elif career_obj.has_method("dejarla"):
+			career_obj.dejarla()
+		if career_obj.has_method("pareja_activa") and career_obj.pareja_activa():
+			career_obj.pareja = {}
+		fam["spouse"] = {}
+	else:
+		LifeLegacyFamily.divorce(fam)
+
+	_data["family"] = fam
+	var save_ok: bool = save_current_slot()
+	if not save_ok:
+		_data["family"] = backup_fam
+		if career_obj != null:
+			if "pareja" in career_obj:
+				career_obj.pareja = backup_career_pareja
+			if "rel" in career_obj:
+				career_obj.rel["pareja"] = backup_career_rel
+		return false
+	return true
 
 func register_child(name: String, gender: String, formation_path: String = LifeLegacyFamily.FORMATION_BASIC, custom_id: String = "") -> Dictionary:
 	if _is_safe_mode:
 		return {}
-	var fam: Dictionary = _data.get("family", {})
+	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var s_num: int = GameState.season_num if GameState != null else 1
 	var s_day: int = GameState.season_day if GameState != null else 0
 	var ch: Dictionary = LifeLegacyFamily.register_child(name, gender, s_num, s_day, fam, custom_id, formation_path)
+	if ch.is_empty():
+		return {}
 	_data["family"] = fam
-	save_current_slot()
+	var save_ok: bool = save_current_slot()
+	if not save_ok:
+		_data["family"] = backup_fam
+		push_error("[LifeLegacyManager] Falha ao persistir registro de filho. Rollback executado.")
+		return {}
 	return ch
 
 func get_child_by_id(child_id: String) -> Dictionary:
@@ -702,23 +747,34 @@ func get_family_child(child_id: String) -> Dictionary:
 func set_child_formation(child_id: String, formation_path: String) -> bool:
 	if _is_safe_mode:
 		return false
-	var fam: Dictionary = _data.get("family", {})
+	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var ok: bool = LifeLegacyFamily.set_child_formation(child_id, formation_path, fam)
-	if ok:
-		_data["family"] = fam
-		save_current_slot()
-	return ok
+	if not ok:
+		return false
+	_data["family"] = fam
+	var save_ok: bool = save_current_slot()
+	if not save_ok:
+		_data["family"] = backup_fam
+		push_error("[LifeLegacyManager] Falha ao persistir trilha de formação. Rollback executado.")
+		return false
+	return true
 
 func update_child_affinity(child_id: String, delta: float) -> bool:
 	if _is_safe_mode:
 		return false
-	var fam: Dictionary = _data.get("family", {})
+	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var res: float = LifeLegacyFamily.update_child_affinity(child_id, delta, fam)
-	if res >= 0.0:
-		_data["family"] = fam
-		save_current_slot()
-		return true
-	return false
+	if res < 0.0:
+		return false
+	_data["family"] = fam
+	var save_ok: bool = save_current_slot()
+	if not save_ok:
+		_data["family"] = backup_fam
+		push_error("[LifeLegacyManager] Falha ao persistir afinidade do filho. Rollback executado.")
+		return false
+	return true
 
 func get_eligible_heirs() -> Array[Dictionary]:
 	var fam: Dictionary = _data.get("family", {})

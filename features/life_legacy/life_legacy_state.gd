@@ -156,17 +156,27 @@ static func validate_schema(data: Dictionary) -> bool:
 			return false
 		if not fam.has("children") or not (fam["children"] is Array):
 			return false
+		var seen_child_ids: Dictionary = {}
 		for ch in fam["children"]:
 			if not (ch is Dictionary):
 				return false
-			if not ch.has("id") or not ch.has("name"):
+			if not ch.has("id") or not (ch["id"] is String) or String(ch["id"]).strip_edges().is_empty():
+				return false
+			var ch_id: String = String(ch["id"])
+			if seen_child_ids.has(ch_id):
+				return false # ID duplicado na lista de filhos
+			seen_child_ids[ch_id] = true
+			if not ch.has("name") or not (ch["name"] is String) or String(ch["name"]).strip_edges().is_empty():
 				return false
 			if not ch.has("formation_path") or not (ch["formation_path"] is String):
 				return false
 			var fp: String = String(ch["formation_path"])
 			if fp != "basic" and fp != "elite" and fp != "football":
 				return false
-			if ch.has("affinity") and not (ch["affinity"] is float or ch["affinity"] is int):
+			if not ch.has("affinity") or not (ch["affinity"] is float or ch["affinity"] is int):
+				return false
+			var aff: float = float(ch["affinity"])
+			if aff < 0.0 or aff > 100.0:
 				return false
 
 	return true
