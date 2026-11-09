@@ -19,6 +19,7 @@ func _ready() -> void:
 	test_single_source_of_truth_and_pareja_projection()
 	test_canonical_age_and_phase_boundaries()
 	test_deep_copy_protection()
+	test_career_official_relationship_flow_integration()
 	
 	print("--- TEST MARCO 9 ETAPA 1 CORREÇÕES: TODOS OS TESTES PASSARAM COM SUCESSO! ---")
 	get_tree().quit(0)
@@ -506,5 +507,178 @@ func test_deep_copy_protection() -> void:
 	var child_check = ll.get_child_by_id(ch_id)
 	assert(child_check["formation_path"] == "basic", "Trilha original mantida")
 	assert(child_check["affinity"] == 50.0, "Afinidade original mantida")
+	
+	print("  -> OK!")
+
+# =============================================================================
+# 9. INTEGRAÇÃO DEFINITIVA COM O FLUXO OFICIAL DO CAREER (11 CENÁRIOS)
+# =============================================================================
+func test_career_official_relationship_flow_integration() -> void:
+	print("[TEST] 9. Integração Definitiva com o Fluxo Oficial de Relacionamentos do Career (11 cenários)...")
+	var ll = LifeLegacy
+	_cleanup_test_dir()
+	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
+	ll.set_safe_mode(false)
+	ll.reload_slot(test_slot)
+	
+	# Cenário 1: Casamento via fluxo oficial de Career (iniciando do zero quando solteiro)
+	print("  -> Cenário 1: Casamento via fluxo oficial de Career...")
+	Career.pareja = {}
+	Career.rel["pareja"] = 0
+	Career.money = 150000
+	Career.contract = {"wage": 10000}
+	var ok_m1 = ll.marry({"candidate_id": "casera", "name": "Valentina"})
+	assert(ok_m1 == true, "Casamento com candidate_id válido deve ter sucesso")
+	assert(Career.pareja_activa() == true, "Career deve ter parceira ativa")
+	assert(Career.pareja_casada() == true, "Career deve estar no estado casado")
+	assert(Career.pareja.get("estado", "") == "casado", "Estado deve ser casado")
+	assert(Career.pareja.get("id", "") == "casera", "ID da candidata deve ser casera")
+	assert(Career.pareja_boda_season == GameState.season_num, "Temporada de casamento deve ser registrada")
+	var fam1 = ll.get_family()
+	assert(fam1["spouse"]["married"] == true, "LifeLegacy deve projetar cônjuge casado")
+	assert(fam1["spouse"]["source"] == "career_projection", "Origem deve ser career_projection")
+	assert(fam1["spouse"]["id"] == "casera", "ID projetado deve ser casera")
+	
+	# Limpa para próximo teste
+	Career.romper_relacion()
+	Career.pareja = {}
+	ll.reload_slot(test_slot)
+	
+	# Cenário 2: Conversão de relacionamento não casado em casamento sem criar parceira duplicada
+	print("  -> Cenário 2: Conversão de relacionamento não casado sem duplicidade...")
+	Career.money = 200000
+	var ok_s2 = Career.empezar_relacion("companera")
+	assert(ok_s2 == true, "Início de namoro no Career deve suceder")
+	var ok_form = Career.formalizar_relacion()
+	assert(ok_form == true, "Formalização no Career deve suceder")
+	assert(Career.pareja.get("estado", "") == "pareja", "Estado antes de casar deve ser pareja")
+	assert(Career.pareja.get("id", "") == "companera", "ID deve ser companera")
+	
+	var ok_m2 = ll.marry({})
+	assert(ok_m2 == true, "Conversão em casamento deve ter sucesso")
+	assert(Career.pareja.get("id", "") == "companera", "ID deve permanecer companera sem substituição ou duplicação")
+	assert(Career.pareja_casada() == true, "Estado no Career deve ter progredido para casado")
+	assert(Career.pareja_historial().size() == 0, "Historial de términos não deve ter sido incrementado")
+	
+	# Limpa
+	Career.romper_relacion()
+	Career.pareja = {}
+	ll.reload_slot(test_slot)
+	
+	# Cenário 3: Preservação dos custos oficiais de casamento (boda_coste deduzido de Career.money)
+	print("  -> Cenário 3: Preservação dos custos oficiais de casamento...")
+	Career.money = 300000
+	Career.empezar_relacion("casera")
+	Career.formalizar_relacion()
+	Career.comprometerse()
+	var expected_cost: int = Career.boda_coste()
+	assert(expected_cost >= 40000, "Custo oficial mínimo deve ser >= 40.000")
+	var money_before_m3: int = Career.money
+	var ok_m3 = ll.marry({})
+	assert(ok_m3 == true, "Casamento deve ter sucesso")
+	assert(Career.money == money_before_m3 - expected_cost, "Career.money deve ser debitado exatamente pelo custo oficial")
+	
+	# Limpa
+	Career.romper_relacion()
+	Career.pareja = {}
+	ll.reload_slot(test_slot)
+	
+	# Cenário 4: Preservação de pacto antenupcial (prenup) e titularidade
+	print("  -> Cenário 4: Preservação de pacto antenupcial e titularidade...")
+	Career.money = 250000
+	var ok_m4 = ll.marry({"candidate_id": "cazafortunas", "prenup": true, "titular": "madre"})
+	assert(ok_m4 == true, "Casamento com prenup deve ter sucesso")
+	assert(Career.pareja_prenup == true, "pareja_prenup no Career deve ser true")
+	assert(Career.pareja.get("titular", "") == "madre", "Titularidade mãe deve ser preservada")
+	
+	# Limpa
+	Career.romper_relacion()
+	Career.pareja = {}
+	ll.reload_slot(test_slot)
+	
+	# Cenário 5: Encerramento de relacionamento não casado sem partilha de divórcio
+	print("  -> Cenário 5: Encerramento de namoro sem partilha de divórcio...")
+	Career.money = 120000
+	Career.empezar_relacion("fiestera")
+	Career.formalizar_relacion()
+	assert(Career.pareja_casada() == false, "Não deve estar casado")
+	var money_before_s5: int = Career.money
+	var ok_d5 = ll.divorce()
+	assert(ok_d5 == true, "Encerramento de relacionamento não casado via divorce() deve ter sucesso")
+	assert(Career.pareja_activa() == false, "Career não deve mais ter parceira ativa")
+	assert(Career.money == money_before_s5, "Dinheiro não deve ser deduzido em separação de não casados")
+	assert(ll.get_family()["spouse"].is_empty() == true, "LifeLegacy spouse deve ser vazio")
+	
+	# Cenário 6 & 7: Divórcio de casamento com partilha patrimonial correta e verificação de saldo
+	print("  -> Cenários 6 & 7: Divórcio de casamento com partilha patrimonial e verificação de saldo...")
+	Career.money = 100000
+	Career.empezar_relacion("casera")
+	Career.formalizar_relacion()
+	Career.comprometerse()
+	Career.casarse(false)
+	Career.money = 100000 # Fixa saldo pré-divórcio conhecido
+	var cuenta_div: Dictionary = Career.divorcio_cuenta()
+	var expected_div_total: int = int(cuenta_div["total"])
+	assert(expected_div_total > 0, "Partilha deve calcular valor > 0")
+	var money_before_div: int = Career.money
+	
+	var ok_d6 = ll.divorce()
+	assert(ok_d6 == true, "Divórcio oficial deve ter sucesso")
+	assert(Career.pareja_activa() == false, "Career parceira não deve mais estar ativa")
+	assert(Career.money == money_before_div - expected_div_total, "Career.money deve ser debitado exatamente pelo total da partilha")
+	assert(ll.get_family()["spouse"].is_empty() == true, "Projeção de cônjuge no LifeLegacy deve estar vazia")
+	
+	# Cenário 8: Falha de persistência sem divergência entre Career e Life & Legacy
+	print("  -> Cenário 8: Falha de persistência e rollback transacional sem divergência...")
+	Career.money = 200000
+	Career.empezar_relacion("casera")
+	Career.formalizar_relacion()
+	Career.comprometerse()
+	var pre_m_pareja = Career.pareja.duplicate(true)
+	var pre_m_money = Career.money
+	var pre_m_rel = Career.rel["pareja"]
+	var pre_fam = ll.get_family()
+	
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var ok_fail_m = ll.marry({})
+	LifeLegacyPersistence.fault_inject_open_write = false
+	
+	assert(ok_fail_m == false, "marry() deve retornar false sob falha de gravação")
+	assert(Career.pareja.get("estado", "") == pre_m_pareja.get("estado", ""), "Career.pareja deve sofrer rollback")
+	assert(Career.money == pre_m_money, "Career.money deve sofrer rollback idêntico")
+	assert(Career.rel["pareja"] == pre_m_rel, "Career.rel deve sofrer rollback idêntico")
+	assert(ll.get_family()["spouse"]["state"] == pre_fam["spouse"]["state"], "LifeLegacy family deve sofrer rollback")
+	
+	# Cenário 9: Projeção íntegra após recarga de save de casamento oficial
+	print("  -> Cenário 9: Projeção íntegra após reload de casamento oficial...")
+	var ok_m9 = ll.marry({})
+	assert(ok_m9 == true, "Casamento oficial deve ter sucesso")
+	assert(Career.pareja_casada() == true, "Career casado")
+	ll.reload_slot(test_slot)
+	var fam9 = ll.get_family()
+	assert(fam9["spouse"]["married"] == true, "Após reload do save, projeção mantém married = true")
+	assert(fam9["spouse"]["source"] == "career_projection", "Após reload, mantém source = career_projection")
+	
+	# Cenário 10: Projeção vazia após recarga de save de divórcio oficial
+	print("  -> Cenário 10: Projeção vazia após reload de divórcio oficial...")
+	var ok_d10 = ll.divorce()
+	assert(ok_d10 == true, "Divórcio deve ter sucesso")
+	assert(Career.pareja_activa() == false, "Career inativo")
+	ll.reload_slot(test_slot)
+	var fam10 = ll.get_family()
+	assert(fam10["spouse"].is_empty() == true, "Após reload do save após divórcio, spouse deve ser estritamente vazio")
+	
+	# Cenário 11: Ausência de ressurgimento de cônjuge legado após divórcio
+	print("  -> Cenário 11: Ausência de ressurgimento de cônjuge legado após divórcio...")
+	# Simula injeção de cônjuge legado em dados brutos do save (como se fosse save V4)
+	var corrupt_legacy = LifeLegacyState.get_default_profile(1, 0)
+	corrupt_legacy["family"]["spouse"] = {"name": "Esposa Fantasma", "affinity": 100.0}
+	LifeLegacyPersistence.save_slot_data(test_slot, corrupt_legacy)
+	
+	# Garante que Career continua divorciado / sem parceira
+	assert(Career.pareja_activa() == false, "Career está sem parceira ativa")
+	ll.reload_slot(test_slot)
+	var fam11 = ll.get_family()
+	assert(fam11["spouse"].is_empty() == true, "Esposa fantasma legada NUNCA deve ressurgir quando Career não tem parceira ativa")
 	
 	print("  -> OK!")

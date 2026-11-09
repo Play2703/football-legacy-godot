@@ -11,6 +11,7 @@ const LifeLegacyDynasty = preload("res://features/life_legacy/life_legacy_dynast
 const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
 const LifeLegacyModifiers = preload("res://features/life_legacy/life_legacy_modifiers.gd")
 const LifeLegacySocial = preload("res://features/life_legacy/life_legacy_social.gd")
+const ParejaClass = preload("res://features/career/pareja.gd")
 
 enum TimeRelation {
 	EQUAL,
@@ -652,22 +653,77 @@ func marry(spouse_data: Dictionary) -> bool:
 		return false
 	var career_obj: Object = _get_career()
 	if career_obj != null and career_obj.has_method("pareja_activa"):
-		if career_obj.pareja_activa():
-			# Já existe relacionamento no Career: impede bigamia e relacionamentos concorrentes!
+		# Se já está casado no Career, rejeita a operação (impede bigamia)
+		if career_obj.pareja_activa() and career_obj.pareja_casada():
 			return false
-		# Sincroniza com Career para que não existam dois relacionamentos concorrentes/independentes
-		if "pareja" in career_obj and "rel" in career_obj:
-			var sp_name: String = String(spouse_data.get("name", "Elena"))
-			var sp_id: String = String(spouse_data.get("id", "spouse_" + sp_name.to_lower().replace(" ", "_")))
-			var sp_aff: float = float(spouse_data.get("affinity", 70.0))
-			career_obj.pareja = {
-				"id": sp_id,
-				"nombre": sp_name,
-				"estado": "casado",
-				"desde": GameState.season_num if GameState != null else 1
-			}
-			career_obj.rel["pareja"] = int(round(sp_aff))
 
+		# Snapshot completo do Career para rollback transacional atômico
+		var backup_career_pareja = career_obj.pareja.duplicate(true) if ("pareja" in career_obj and career_obj.pareja is Dictionary) else {}
+		var backup_career_rel = career_obj.rel["pareja"] if ("rel" in career_obj and career_obj.rel is Dictionary and career_obj.rel.has("pareja")) else 0
+		var backup_career_money = career_obj.money if "money" in career_obj else 0
+		var backup_career_prenup = career_obj.pareja_prenup if "pareja_prenup" in career_obj else false
+		var backup_career_boda = career_obj.pareja_boda_season if "pareja_boda_season" in career_obj else -1
+
+		var prenup: bool = bool(spouse_data.get("prenup", false))
+		var titular: String = String(spouse_data.get("titular", ""))
+
+		# Se não tem parceira ativa, inicia o relacionamento pelo fluxo oficial do Career
+		if not career_obj.pareja_activa():
+			var cand_id: String = String(spouse_data.get("candidate_id", spouse_data.get("id", "")))
+			if cand_id.is_empty() or ParejaClass.by_id(cand_id).is_empty():
+				if career_obj.has_method("pareja_candidata"):
+					cand_id = career_obj.pareja_candidata()
+				if cand_id.is_empty() and not String(spouse_data.get("name", "")).is_empty():
+					cand_id = "casera"
+			if cand_id.is_empty() or ParejaClass.by_id(cand_id).is_empty():
+				# Informações insuficientes para executar legitimamente o casamento
+				return false
+			var ok_start: bool = career_obj.empezar_relacion(cand_id)
+			if not ok_start:
+				return false
+
+		# Transiciona pelos estágios oficiais existentes em Career
+		var st: String = String(career_obj.pareja.get("estado", ""))
+		if st == "saliendo":
+			var ok_form: bool = career_obj.formalizar_relacion()
+			if not ok_form:
+				_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+				return false
+			st = String(career_obj.pareja.get("estado", ""))
+		if st == "pareja":
+			var ok_comp: bool = career_obj.comprometerse()
+			if not ok_comp:
+				_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+				return false
+			st = String(career_obj.pareja.get("estado", ""))
+
+		if st != "prometido":
+			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			return false
+
+		# Executa o casamento oficial respeitando parâmetros, custos, prenup e titularidade
+		career_obj.casarse(prenup, titular)
+		if not career_obj.pareja_casada():
+			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			return false
+
+		# Preserva alias de nome/metadados se informados expressamente
+		if spouse_data.has("name") and not String(spouse_data["name"]).is_empty():
+			career_obj.pareja["nombre"] = String(spouse_data["name"])
+
+		# Persistência LifeLegacy (não grava family.spouse concorrente)
+		var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
+		var fam: Dictionary = _data.get("family", {}).duplicate(true)
+		fam["spouse"] = {}
+		_data["family"] = fam
+		var save_ok: bool = save_current_slot()
+		if not save_ok:
+			_data["family"] = backup_fam
+			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			return false
+		return true
+
+	# Fallback isolado (quando Career não está presente na SceneTree)
 	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var fam: Dictionary = _data.get("family", {}).duplicate(true)
 	fam["spouse"] = {}
@@ -677,8 +733,6 @@ func marry(spouse_data: Dictionary) -> bool:
 		var save_ok: bool = save_current_slot()
 		if not save_ok:
 			_data["family"] = backup_fam
-			if career_obj != null and "pareja" in career_obj:
-				career_obj.pareja = {}
 			return false
 	return ok
 
@@ -694,15 +748,19 @@ func divorce() -> bool:
 
 	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
 	var backup_career_pareja = career_obj.pareja.duplicate(true) if (career_obj != null and "pareja" in career_obj and career_obj.pareja is Dictionary) else {}
-	var backup_career_rel = career_obj.rel["pareja"] if (career_obj != null and "rel" in career_obj and career_obj.rel.has("pareja")) else 0
+	var backup_career_rel = career_obj.rel["pareja"] if (career_obj != null and "rel" in career_obj and career_obj.rel is Dictionary and career_obj.rel.has("pareja")) else 0
+	var backup_career_money = career_obj.money if (career_obj != null and "money" in career_obj) else 0
+	var backup_career_prenup = career_obj.pareja_prenup if (career_obj != null and "pareja_prenup" in career_obj) else false
+	var backup_career_boda = career_obj.pareja_boda_season if (career_obj != null and "pareja_boda_season" in career_obj) else -1
 
 	if has_career_partner:
-		if career_obj.has_method("romper_relacion"):
-			career_obj.romper_relacion()
-		elif career_obj.has_method("dejarla"):
+		var is_married: bool = career_obj.pareja_casada()
+		if is_married:
+			# Casados: operação oficial de divórcio com partilha patrimonial e custos
+			career_obj.divorciarse()
+		else:
+			# Não casados: encerramento oficial de relacionamento sem partilha de divórcio
 			career_obj.dejarla()
-		if career_obj.has_method("pareja_activa") and career_obj.pareja_activa():
-			career_obj.pareja = {}
 		fam["spouse"] = {}
 	else:
 		LifeLegacyFamily.divorce(fam)
@@ -712,12 +770,25 @@ func divorce() -> bool:
 	if not save_ok:
 		_data["family"] = backup_fam
 		if career_obj != null:
-			if "pareja" in career_obj:
-				career_obj.pareja = backup_career_pareja
-			if "rel" in career_obj:
-				career_obj.rel["pareja"] = backup_career_rel
+			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
 		return false
 	return true
+
+func _rollback_career(career_obj: Object, b_pareja: Dictionary, b_rel: int, b_money: int, b_prenup: bool, b_boda: int) -> void:
+	if career_obj == null:
+		return
+	if "pareja" in career_obj:
+		career_obj.pareja = b_pareja.duplicate(true)
+	if "rel" in career_obj and career_obj.rel is Dictionary:
+		career_obj.rel["pareja"] = b_rel
+	if "money" in career_obj:
+		career_obj.money = b_money
+	if "pareja_prenup" in career_obj:
+		career_obj.pareja_prenup = b_prenup
+	if "pareja_boda_season" in career_obj:
+		career_obj.pareja_boda_season = b_boda
+	if career_obj.has_method("_save"):
+		career_obj._save()
 
 func register_child(name: String, gender: String, formation_path: String = LifeLegacyFamily.FORMATION_BASIC, custom_id: String = "") -> Dictionary:
 	if _is_safe_mode:
