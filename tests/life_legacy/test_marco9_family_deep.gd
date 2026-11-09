@@ -681,4 +681,144 @@ func test_career_official_relationship_flow_integration() -> void:
 	var fam11 = ll.get_family()
 	assert(fam11["spouse"].is_empty() == true, "Esposa fantasma legada NUNCA deve ressurgir quando Career não tem parceira ativa")
 	
+	# Cenário 12: Rollback completo de divórcio sob falha de persistência (memória e disco)
+	print("  -> Cenário 12: Rollback completo de divórcio sob injeção de falha (memória e disco)...")
+	SaveSlots.set_active(test_slot)
+	Career.save_path = SaveSlots.slot_path("career_meta.cfg", test_slot)
+	Career.pareja = {}
+	Career.rel["pareja"] = 0
+	Career.money = 180000
+	Career._save()
+	
+	var ok_setup_m = ll.marry({"candidate_id": "casera", "prenup": true})
+	assert(ok_setup_m == true, "Preparação do casamento oficial deve suceder")
+	assert(Career.pareja_casada() == true, "Deve estar casado antes do teste de divórcio")
+	
+	# Snapshot pré-divórcio
+	var snap_pareja = Career.pareja.duplicate(true)
+	var snap_rel = Career.rel["pareja"]
+	var snap_money = Career.money
+	var snap_prenup = Career.pareja_prenup
+	var snap_boda = Career.pareja_boda_season
+	var snap_news_count = Career.world_news.size()
+	
+	# Injeção de falha de persistência
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var ok_div_fail = ll.divorce()
+	LifeLegacyPersistence.fault_inject_open_write = false
+	
+	# Verificação em memória: operação abortada e restaurada
+	assert(ok_div_fail == false, "divorce() deve falhar sob erro de persistência")
+	assert(Career.pareja_casada() == true, "Career deve permanecer casado após rollback")
+	assert(Career.pareja.get("estado", "") == "casado", "Estado deve ser casado")
+	assert(Career.money == snap_money, "Saldo financeiro não deve ser debitado após rollback")
+	assert(Career.rel["pareja"] == snap_rel, "Afinidade deve ser restaurada")
+	assert(Career.pareja_prenup == snap_prenup, "Pacto antenupcial deve ser preservado")
+	assert(Career.pareja_boda_season == snap_boda, "Temporada de casamento deve ser preservada")
+	assert(Career.world_news.size() == snap_news_count, "Notícia de divórcio não deve vazar após rollback")
+	assert(ll.get_family()["spouse"]["married"] == true, "LifeLegacy.get_family() deve continuar projetando cônjuge casado")
+	
+	# Verificação em disco: recarregamento real de Career e LifeLegacy
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	assert(Career.pareja_casada() == true, "Em disco: Career deve permanecer casado após reload real")
+	assert(Career.money == snap_money, "Em disco: Career.money deve ser idêntico ao pré-divórcio")
+	assert(ll.get_family()["spouse"]["married"] == true, "Em disco: Projeção de LifeLegacy após reload deve manter casado")
+	
+	# Cenário 13: Rollback de separação de namoro sob falha de persistência (memória e disco)
+	print("  -> Cenário 13: Rollback de separação de namoro sob falha de persistência...")
+	# Limpa casamento anterior
+	ll.divorce()
+	Career.reload_active_slot()
+	assert(Career.pareja_activa() == false, "Career sem parceira")
+	
+	# Prepara namoro
+	Career.empezar_relacion("companera")
+	Career.formalizar_relacion()
+	Career._save_synchronous_barrier()
+	ll.save_current_slot()
+	assert(Career.pareja.get("estado", "") == "pareja", "Deve estar no estado pareja")
+	assert(Career.pareja_casada() == false, "Não é casado")
+	
+	var snap_dating_pareja = Career.pareja.duplicate(true)
+	var snap_dating_money = Career.money
+	
+	# Injeção de falha
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var ok_sep_fail = ll.divorce()
+	LifeLegacyPersistence.fault_inject_open_write = false
+	
+	assert(ok_sep_fail == false, "divorce() deve falhar sob falha de gravação")
+	assert(Career.pareja.get("estado", "") == "pareja", "Namoro deve sofrer rollback em memória")
+	assert(Career.money == snap_dating_money, "Dinheiro preservado em memória")
+	
+	# Recarregamento real do disco
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	assert(Career.pareja.get("estado", "") == "pareja", "Em disco: namoro deve permanecer ativo após reload")
+	assert(Career.pareja.get("id", "") == "companera", "Em disco: ID da parceira deve ser companera")
+	
+	# Cenário 14: Teste real de persistência do Career (recarga via Career.reload_active_slot())
+	print("  -> Cenário 14: Teste real de persistência do Career após casamento e divórcio...")
+	ll.divorce()
+	Career.reload_active_slot()
+	assert(Career.pareja_activa() == false, "Deve estar solteiro antes do casamento no Cenário 14")
+	# 1. Casamento com prenup
+	Career.money = 250000
+	var ok_m14 = ll.marry({"candidate_id": "casera", "prenup": true})
+	assert(ok_m14 == true, "Casamento oficial deve suceder")
+	var expected_m14_money = Career.money
+	
+	# Recarga real do Career a partir do disco
+	Career.reload_active_slot()
+	assert(Career.pareja_casada() == true, "Career real pós-reload: casado = true")
+	assert(Career.pareja.get("id", "") == "casera", "Career real pós-reload: id = casera")
+	assert(Career.pareja_prenup == true, "Career real pós-reload: prenup = true")
+	assert(Career.money == expected_m14_money, "Career real pós-reload: saldo debitado persistido no disco")
+	
+	# 2. Divórcio oficial
+	var ok_d14 = ll.divorce()
+	assert(ok_d14 == true, "Divórcio oficial deve suceder")
+	var expected_d14_money = Career.money
+	
+	# Recarga real do Career a partir do disco
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	assert(Career.pareja_activa() == false, "Career real pós-reload: sem parceira ativa")
+	assert(Career.pareja.get("estado", "") == "roto", "Career real pós-reload: estado = roto")
+	assert(Career.money == expected_d14_money, "Career real pós-reload: saldo após partilha mantido no disco")
+	assert(ll.get_family()["spouse"].is_empty() == true, "LifeLegacy real pós-reload: zero cônjuge fantasma")
+	
+	# Cenário 15: Identidade e nome canônico do perfil oficial vs. apresentação
+	print("  -> Cenário 15: Identidade oficial da parceira e alias fora do Career...")
+	Career.pareja = {}
+	Career.money = 200000
+	# Caso A: Casamento informando alias de nome
+	var ok_m15_a = ll.marry({"candidate_id": "casera", "name": "Apelido Especial"})
+	assert(ok_m15_a == true, "Casamento com alias deve suceder")
+	# Canonical state do Career NUNCA deve conter a chave arbitrária 'nombre'
+	assert(Career.pareja.has("nombre") == false, "Career.pareja NÃO deve ter 'nombre' atribuído arbitrariamente")
+	# Nome oficial do perfil da candidata deve ser retornado por Career.pareja_nombre()
+	var official_name = Career.pareja_nombre()
+	assert(official_name.is_empty() == false, "Career.pareja_nombre() deve retornar o nome do perfil oficial")
+	# LifeLegacy get_family() projeta o alias mantido fora do Career
+	assert(ll.get_family()["spouse"]["name"] == "Apelido Especial", "LifeLegacy projeta alias de apresentação mantido fora do Career")
+	assert(ll.get_family()["spouse"]["id"] == "casera", "ID deve ser o perfil oficial casera")
+	
+	# Caso B: Divórcio e novo casamento sem alias
+	ll.divorce()
+	Career.money = 200000
+	var ok_m15_b = ll.marry({"candidate_id": "casera"})
+	assert(ok_m15_b == true, "Casamento sem alias deve suceder")
+	assert(Career.pareja.has("nombre") == false, "Career.pareja continua limpo sem 'nombre'")
+	# Sem alias, LifeLegacy get_family() projeta diretamente o nome oficial da candidata
+	var current_official_name = Career.pareja_nombre()
+	assert(current_official_name.is_empty() == false, "Career.pareja_nombre() deve retornar nome válido para o novo relacionamento")
+	assert(ll.get_family()["spouse"]["name"] == current_official_name, "LifeLegacy projeta diretamente o nome oficial quando sem alias")
+	
+	# Limpeza final
+	ll.divorce()
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	
 	print("  -> OK!")

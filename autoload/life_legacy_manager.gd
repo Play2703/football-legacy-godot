@@ -619,6 +619,12 @@ func apply_stat_change(stat_id: String, delta: float, reason: String, occurrence
 func _get_career() -> Object:
 	return LifeLegacyOutbox._get_career()
 
+func _get_achievements() -> Object:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		return tree.root.get_node_or_null("Achievements")
+	return null
+
 # API de Família
 func get_family() -> Dictionary:
 	var fam: Dictionary = _data.get("family", {}).duplicate(true)
@@ -629,8 +635,12 @@ func get_family() -> Dictionary:
 			var rel_dict: Dictionary = career_obj.get("rel") if "rel" in career_obj else {}
 			var aff: float = float(rel_dict.get("pareja", 50.0))
 			var is_married: bool = career_obj.pareja_casada() if career_obj.has_method("pareja_casada") else (String(p.get("estado", "")) == "casado")
-			var p_name: String = String(p.get("nombre", p.get("name", "")))
-			if p_name.is_empty() and career_obj.has_method("pareja_nombre"):
+			var p_name: String = ""
+			if _data.get("family", {}).has("spouse_alias") and not String(_data["family"]["spouse_alias"]).is_empty():
+				p_name = String(_data["family"]["spouse_alias"])
+			elif not String(p.get("nombre", p.get("name", ""))).is_empty():
+				p_name = String(p.get("nombre", p.get("name", "")))
+			elif career_obj.has_method("pareja_nombre"):
 				p_name = career_obj.pareja_nombre()
 			if p_name.is_empty():
 				p_name = "Pareja"
@@ -657,12 +667,8 @@ func marry(spouse_data: Dictionary) -> bool:
 		if career_obj.pareja_activa() and career_obj.pareja_casada():
 			return false
 
-		# Snapshot completo do Career para rollback transacional atômico
-		var backup_career_pareja = career_obj.pareja.duplicate(true) if ("pareja" in career_obj and career_obj.pareja is Dictionary) else {}
-		var backup_career_rel = career_obj.rel["pareja"] if ("rel" in career_obj and career_obj.rel is Dictionary and career_obj.rel.has("pareja")) else 0
-		var backup_career_money = career_obj.money if "money" in career_obj else 0
-		var backup_career_prenup = career_obj.pareja_prenup if "pareja_prenup" in career_obj else false
-		var backup_career_boda = career_obj.pareja_boda_season if "pareja_boda_season" in career_obj else -1
+		# Snapshot completo do Career e Achievements para rollback transacional atômico
+		var career_snapshot: Dictionary = _capture_career_snapshot(career_obj)
 
 		var prenup: bool = bool(spouse_data.get("prenup", false))
 		var titular: String = String(spouse_data.get("titular", ""))
@@ -687,40 +693,43 @@ func marry(spouse_data: Dictionary) -> bool:
 		if st == "saliendo":
 			var ok_form: bool = career_obj.formalizar_relacion()
 			if not ok_form:
-				_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+				_restore_career_snapshot(career_obj, career_snapshot)
 				return false
 			st = String(career_obj.pareja.get("estado", ""))
 		if st == "pareja":
 			var ok_comp: bool = career_obj.comprometerse()
 			if not ok_comp:
-				_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+				_restore_career_snapshot(career_obj, career_snapshot)
 				return false
 			st = String(career_obj.pareja.get("estado", ""))
 
 		if st != "prometido":
-			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			_restore_career_snapshot(career_obj, career_snapshot)
 			return false
 
 		# Executa o casamento oficial respeitando parâmetros, custos, prenup e titularidade
 		career_obj.casarse(prenup, titular)
 		if not career_obj.pareja_casada():
-			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			_restore_career_snapshot(career_obj, career_snapshot)
 			return false
 
-		# Preserva alias de nome/metadados se informados expressamente
-		if spouse_data.has("name") and not String(spouse_data["name"]).is_empty():
-			career_obj.pareja["nombre"] = String(spouse_data["name"])
-
-		# Persistência LifeLegacy (não grava family.spouse concorrente)
+		# Persistência LifeLegacy (não grava family.spouse concorrente e preserva alias apenas fora do Career)
 		var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
 		var fam: Dictionary = _data.get("family", {}).duplicate(true)
 		fam["spouse"] = {}
+		if spouse_data.has("name") and not String(spouse_data["name"]).is_empty():
+			fam["spouse_alias"] = String(spouse_data["name"])
+		else:
+			fam.erase("spouse_alias")
 		_data["family"] = fam
+
 		var save_ok: bool = save_current_slot()
 		if not save_ok:
 			_data["family"] = backup_fam
-			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			_restore_career_snapshot(career_obj, career_snapshot)
 			return false
+		if career_obj.has_method("_save_synchronous_barrier"):
+			career_obj._save_synchronous_barrier()
 		return true
 
 	# Fallback isolado (quando Career não está presente na SceneTree)
@@ -747,11 +756,7 @@ func divorce() -> bool:
 		return false
 
 	var backup_fam: Dictionary = _data.get("family", {}).duplicate(true)
-	var backup_career_pareja = career_obj.pareja.duplicate(true) if (career_obj != null and "pareja" in career_obj and career_obj.pareja is Dictionary) else {}
-	var backup_career_rel = career_obj.rel["pareja"] if (career_obj != null and "rel" in career_obj and career_obj.rel is Dictionary and career_obj.rel.has("pareja")) else 0
-	var backup_career_money = career_obj.money if (career_obj != null and "money" in career_obj) else 0
-	var backup_career_prenup = career_obj.pareja_prenup if (career_obj != null and "pareja_prenup" in career_obj) else false
-	var backup_career_boda = career_obj.pareja_boda_season if (career_obj != null and "pareja_boda_season" in career_obj) else -1
+	var career_snapshot: Dictionary = _capture_career_snapshot(career_obj) if career_obj != null else {}
 
 	if has_career_partner:
 		var is_married: bool = career_obj.pareja_casada()
@@ -762,6 +767,7 @@ func divorce() -> bool:
 			# Não casados: encerramento oficial de relacionamento sem partilha de divórcio
 			career_obj.dejarla()
 		fam["spouse"] = {}
+		fam.erase("spouse_alias")
 	else:
 		LifeLegacyFamily.divorce(fam)
 
@@ -770,25 +776,95 @@ func divorce() -> bool:
 	if not save_ok:
 		_data["family"] = backup_fam
 		if career_obj != null:
-			_rollback_career(career_obj, backup_career_pareja, backup_career_rel, backup_career_money, backup_career_prenup, backup_career_boda)
+			_restore_career_snapshot(career_obj, career_snapshot)
 		return false
+	if career_obj != null and career_obj.has_method("_save_synchronous_barrier"):
+		career_obj._save_synchronous_barrier()
 	return true
 
-func _rollback_career(career_obj: Object, b_pareja: Dictionary, b_rel: int, b_money: int, b_prenup: bool, b_boda: int) -> void:
+func _capture_career_snapshot(career_obj: Object) -> Dictionary:
 	if career_obj == null:
+		return {}
+	var snap: Dictionary = {
+		"pareja": career_obj.pareja.duplicate(true) if ("pareja" in career_obj and career_obj.pareja is Dictionary) else {},
+		"rel_pareja": career_obj.rel["pareja"] if ("rel" in career_obj and career_obj.rel is Dictionary and career_obj.rel.has("pareja")) else 0,
+		"rel_frac_pareja": career_obj.rel_frac["pareja"] if ("rel_frac" in career_obj and career_obj.rel_frac is Dictionary and career_obj.rel_frac.has("pareja")) else 0.0,
+		"money": career_obj.money if "money" in career_obj else 0,
+		"pareja_prenup": career_obj.pareja_prenup if "pareja_prenup" in career_obj else false,
+		"pareja_boda_season": career_obj.pareja_boda_season if "pareja_boda_season" in career_obj else -1,
+		"pareja_pago": career_obj.pareja_pago if "pareja_pago" in career_obj else 0.0,
+		"pareja_frio": career_obj.pareja_frio if "pareja_frio" in career_obj else 0,
+		"pareja_rechazadas": career_obj.pareja_rechazadas.duplicate(true) if ("pareja_rechazadas" in career_obj and career_obj.pareja_rechazadas is Dictionary) else {},
+		"citas_hechas": career_obj.citas_hechas if "citas_hechas" in career_obj else 0,
+		"citas_cuenta": career_obj.citas_cuenta.duplicate(true) if ("citas_cuenta" in career_obj and career_obj.citas_cuenta is Dictionary) else {},
+		"citas_aciertos": career_obj.citas_aciertos if "citas_aciertos" in career_obj else 0,
+		"world_news": career_obj.world_news.duplicate(true) if "world_news" in career_obj else [],
+		"world_news_total": career_obj.world_news_total if "world_news_total" in career_obj else 0,
+	}
+	var ach = _get_achievements()
+	if ach != null:
+		snap["ach_parejas_vistas"] = ach.parejas_vistas.duplicate(true) if "parejas_vistas" in ach else {}
+		snap["ach_pending"] = ach.pending.duplicate(true) if "pending" in ach else []
+		snap["ach_progress"] = ach.progress.duplicate(true) if "progress" in ach else {}
+	return snap
+
+func _restore_career_snapshot(career_obj: Object, snap: Dictionary) -> void:
+	if career_obj == null or snap.is_empty():
 		return
 	if "pareja" in career_obj:
-		career_obj.pareja = b_pareja.duplicate(true)
+		career_obj.pareja = snap.get("pareja", {}).duplicate(true)
 	if "rel" in career_obj and career_obj.rel is Dictionary:
-		career_obj.rel["pareja"] = b_rel
+		career_obj.rel["pareja"] = snap.get("rel_pareja", 0)
+	if "rel_frac" in career_obj and career_obj.rel_frac is Dictionary:
+		career_obj.rel_frac["pareja"] = snap.get("rel_frac_pareja", 0.0)
 	if "money" in career_obj:
-		career_obj.money = b_money
+		career_obj.money = snap.get("money", 0)
 	if "pareja_prenup" in career_obj:
-		career_obj.pareja_prenup = b_prenup
+		career_obj.pareja_prenup = snap.get("pareja_prenup", false)
 	if "pareja_boda_season" in career_obj:
-		career_obj.pareja_boda_season = b_boda
-	if career_obj.has_method("_save"):
+		career_obj.pareja_boda_season = snap.get("pareja_boda_season", -1)
+	if "pareja_pago" in career_obj:
+		career_obj.pareja_pago = snap.get("pareja_pago", 0.0)
+	if "pareja_frio" in career_obj:
+		career_obj.pareja_frio = snap.get("pareja_frio", 0)
+	if "pareja_rechazadas" in career_obj:
+		career_obj.pareja_rechazadas = snap.get("pareja_rechazadas", {}).duplicate(true)
+	if "citas_hechas" in career_obj:
+		career_obj.citas_hechas = snap.get("citas_hechas", 0)
+	if "citas_cuenta" in career_obj:
+		career_obj.citas_cuenta = snap.get("citas_cuenta", {}).duplicate(true)
+	if "citas_aciertos" in career_obj:
+		career_obj.citas_aciertos = snap.get("citas_aciertos", 0)
+	if "world_news" in career_obj:
+		career_obj.world_news = snap.get("world_news", []).duplicate(true)
+	if "world_news_total" in career_obj:
+		career_obj.world_news_total = snap.get("world_news_total", 0)
+	if career_obj.has_method("_save_synchronous_barrier"):
+		career_obj._save_synchronous_barrier()
+	elif career_obj.has_method("_save"):
 		career_obj._save()
+	if career_obj.has_signal("changed"):
+		career_obj.changed.emit()
+
+	var ach = _get_achievements()
+	if ach != null:
+		if "parejas_vistas" in ach:
+			ach.parejas_vistas = snap.get("ach_parejas_vistas", {}).duplicate(true)
+		if "pending" in ach:
+			ach.pending = snap.get("ach_pending", []).duplicate(true)
+		if "progress" in ach:
+			ach.progress = snap.get("ach_progress", {}).duplicate(true)
+		if ach.has_method("_save"):
+			ach._save()
+
+func _rollback_career(career_obj: Object, b_pareja: Dictionary, b_rel: int, b_money: int, b_prenup: bool, b_boda: int) -> void:
+	_restore_career_snapshot(career_obj, {
+		"pareja": b_pareja,
+		"rel_pareja": b_rel,
+		"money": b_money,
+		"pareja_prenup": b_prenup,
+		"pareja_boda_season": b_boda
+	})
 
 func register_child(name: String, gender: String, formation_path: String = LifeLegacyFamily.FORMATION_BASIC, custom_id: String = "") -> Dictionary:
 	if _is_safe_mode:
