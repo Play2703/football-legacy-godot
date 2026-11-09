@@ -511,10 +511,10 @@ func test_deep_copy_protection() -> void:
 	print("  -> OK!")
 
 # =============================================================================
-# 9. INTEGRAÇÃO DEFINITIVA COM O FLUXO OFICIAL DO CAREER (11 CENÁRIOS)
+# 9. INTEGRAÇÃO DEFINITIVA COM O FLUXO OFICIAL DO CAREER (17 CENÁRIOS)
 # =============================================================================
 func test_career_official_relationship_flow_integration() -> void:
-	print("[TEST] 9. Integração Definitiva com o Fluxo Oficial de Relacionamentos do Career (11 cenários)...")
+	print("[TEST] 9. Integração Definitiva com o Fluxo Oficial de Relacionamentos do Career (17 cenários)...")
 	var ll = LifeLegacy
 	_cleanup_test_dir()
 	LifeLegacyPersistence.save_slot_data(test_slot, LifeLegacyState.get_default_profile(1, 0))
@@ -816,7 +816,125 @@ func test_career_official_relationship_flow_integration() -> void:
 	assert(current_official_name.is_empty() == false, "Career.pareja_nombre() deve retornar nome válido para o novo relacionamento")
 	assert(ll.get_family()["spouse"]["name"] == current_official_name, "LifeLegacy projeta diretamente o nome oficial quando sem alias")
 	
-	# Limpeza final
+	# Limpeza intermediária pós-Cenário 15
+	ll.divorce()
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+
+	# --- Cenário 16: Rollback de Achievements e cerimônias sob falha de persistência ---
+	print("  -> Cenário 16: Rollback completo de Achievements e cerimônias...")
+	var ach_node = ll._get_achievements()
+	assert(ach_node != null, "Autoload Achievements deve estar presente")
+	
+	# Condições controladas: des-desbloqueia 'media_naranja' e limpa parejas_vistas['casera']
+	ach_node._unlocked.erase("media_naranja")
+	ach_node.progress["pareja_formalized"] = false
+	ach_node.parejas_vistas.erase("casera")
+	ach_node.pending.erase("media_naranja")
+	ach_node.pending.erase("pareja:casera")
+	if ach_node.progress.has("logros_unseen") and ach_node.progress["logros_unseen"] is Dictionary:
+		ach_node.progress["logros_unseen"].erase("media_naranja")
+		ach_node.progress["logros_unseen"].erase("pareja:casera")
+	
+	# Enfileira uma cerimônia de controle para validar a preservação da fila
+	Career.pending_ceremonies = []
+	Career.queue_ceremony("ceremonia_controle", {"club": "ClubTest", "season": 1})
+	assert(Career.pending_ceremonies.size() == 1, "Fila de cerimônias com 1 item")
+
+	ach_node._save()
+	Career._save_synchronous_barrier()
+
+	# Registra os snapshots exatos
+	var snap_ach_unlocked = ach_node._unlocked.duplicate(true)
+	var snap_ach_parejas = ach_node.parejas_vistas.duplicate(true)
+	var snap_ach_pending = ach_node.pending.duplicate(true)
+	var snap_ach_progress = ach_node.progress.duplicate(true)
+	var snap_pending_ceremonies = Career.pending_ceremonies.duplicate(true)
+	assert(snap_ach_unlocked.has("media_naranja") == false, "Pré-condição: media_naranja não desbloqueada")
+
+	# Injeta falha de gravação no LifeLegacy
+	Career.money = 250000
+	LifeLegacyPersistence.fault_inject_open_write = true
+	var ok_m16 = ll.marry({"candidate_id": "casera"})
+	LifeLegacyPersistence.fault_inject_open_write = false
+	assert(ok_m16 == false, "Casamento deve falhar sob falha de persistência do LifeLegacy")
+
+	# Verifica restauração em memória de Achievements e cerimônias
+	assert(ach_node._unlocked == snap_ach_unlocked, "Achievements._unlocked deve retornar exatamente ao snapshot")
+	assert(ach_node._unlocked.has("media_naranja") == false, "Conquista media_naranja NÃO deve permanecer desbloqueada")
+	assert(ach_node.parejas_vistas == snap_ach_parejas, "Achievements.parejas_vistas deve retornar ao snapshot")
+	assert(ach_node.pending == snap_ach_pending, "Achievements.pending deve retornar ao snapshot")
+	assert(ach_node.progress == snap_ach_progress, "Achievements.progress deve retornar ao snapshot")
+	assert(Career.pending_ceremonies == snap_pending_ceremonies, "Career.pending_ceremonies deve retornar ao snapshot")
+	assert(Career.pareja_activa() == false, "Career deve estar solteiro em memória após rollback")
+	assert(Career.money == 250000, "Career.money deve ser restaurado em memória")
+
+	# Recarrega arquivos e verifica durabilidade em disco
+	Career.reload_active_slot()
+	ach_node._load()
+	ll.reload_slot(test_slot)
+	assert(ach_node._unlocked.has("media_naranja") == false, "Em disco: media_naranja não deve estar desbloqueada")
+	assert(ach_node.parejas_vistas.has("casera") == false, "Em disco: casera não deve estar em parejas_vistas")
+	assert(Career.pending_ceremonies.size() == 1, "Em disco: pending_ceremonies preservado com tamanho 1")
+	assert(Career.pareja_activa() == false, "Em disco: Career permanece solteiro")
+	assert(Career.money == 250000, "Em disco: saldo restaurado")
+	assert(ll.get_family()["spouse"].is_empty() == true, "Em disco: LifeLegacy spouse vazio")
+
+	# --- Cenário 17: Falha na gravação síncrona do Career ---
+	print("  -> Cenário 17: Falha na barreira síncrona do Career e compensação transacional...")
+	# Parte A: Casamento com falha na barreira síncrona do Career
+	Career.money = 300000
+	Career.fault_inject_save_barrier_once = true
+	var ok_m17_a = ll.marry({"candidate_id": "casera"})
+	Career.fault_inject_save_barrier_once = false
+	assert(ok_m17_a == false, "Casamento deve retornar false quando barreira síncrona do Career falha")
+	# Em memória: compensação deve ter revertido ambos os subsistemas
+	assert(Career.pareja_activa() == false, "Em memória: Career revertido para solteiro")
+	assert(Career.money == 300000, "Em memória: saldo integral sem débito de casamento")
+	assert(ll.get_family()["spouse"].is_empty() == true, "Em memória: LifeLegacy spouse vazio")
+	# Em disco: recarrega e confirma persistência efetiva da compensação
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	assert(Career.pareja_activa() == false, "Em disco: Career solteiro após compensação")
+	assert(Career.money == 300000, "Em disco: saldo integral em disco")
+	assert(ll.get_family()["spouse"].is_empty() == true, "Em disco: LifeLegacy spouse vazio em disco")
+
+	# Parte B: Divórcio com falha na barreira síncrona do Career
+	# Primeiro realiza casamento válido confirmado em disco
+	var ok_setup = ll.marry({"candidate_id": "casera"})
+	assert(ok_setup == true, "Casamento legítimo de preparação para teste de divórcio")
+	assert(Career.pareja_casada() == true, "Career casado")
+	var saldo_casado = Career.money
+	assert(ll.get_family()["spouse"].get("married") == true, "LifeLegacy casado")
+
+	# Injeta falha na barreira síncrona do divórcio
+	Career.fault_inject_save_barrier_once = true
+	var ok_m17_b = ll.divorce()
+	Career.fault_inject_save_barrier_once = false
+	assert(ok_m17_b == false, "Divórcio deve retornar false quando barreira síncrona do Career falha")
+	# Em memória: compensação mantém casamento intacto
+	assert(Career.pareja_casada() == true, "Em memória: Career permanece casado após compensação")
+	assert(Career.money == saldo_casado, "Em memória: saldo permanece inalterado sem partilha")
+	assert(ll.get_family()["spouse"].get("married") == true, "Em memória: LifeLegacy projeta cônjuge casado")
+	# Em disco: recarrega e confirma integridade matrimonial
+	Career.reload_active_slot()
+	ll.reload_slot(test_slot)
+	assert(Career.pareja_casada() == true, "Em disco: Career permanece casado pós-reload")
+	assert(Career.money == saldo_casado, "Em disco: saldo de casado intacto pós-reload")
+	assert(ll.get_family()["spouse"].get("married") == true, "Em disco: LifeLegacy permanece casado pós-reload")
+
+	# Parte C: Falha crítica na própria gravação de rollback / compensação ativa modo seguro
+	Career.fault_inject_save_barrier = true
+	var ok_m17_c = ll.divorce()
+	Career.fault_inject_save_barrier = false
+	assert(ok_m17_c == false, "Divórcio com falha permanente deve retornar false")
+	assert(ll.is_safe_mode() == true, "Modo Seguro DEVE ser ativado quando a própria compensação falha")
+	ll.set_safe_mode(false)
+
+	# Limpeza final definitiva
+	Career.fault_inject_save_barrier = false
+	Career.fault_inject_save_barrier_once = false
+	Career.fault_inject_save_barrier_count = 0
 	ll.divorce()
 	Career.reload_active_slot()
 	ll.reload_slot(test_slot)

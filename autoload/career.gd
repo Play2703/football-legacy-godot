@@ -63654,6 +63654,9 @@ var _save_epoch: int = 0
 var processed_career_tokens: Array = []
 var processed_muro_tokens: Array = []
 var processed_dynasty_txs: Array = []
+var fault_inject_save_barrier: bool = false
+var fault_inject_save_barrier_once: bool = false
+var fault_inject_save_barrier_count: int = 0
 
 
 
@@ -63739,6 +63742,14 @@ func _save() -> void:
 
 
 func _save_synchronous_barrier() -> bool:
+	if fault_inject_save_barrier:
+		return false
+	if fault_inject_save_barrier_once:
+		fault_inject_save_barrier_once = false
+		return false
+	if fault_inject_save_barrier_count > 0:
+		fault_inject_save_barrier_count -= 1
+		return false
 	if GameState.readonly_save and _is_real_save_path(save_path):
 		return false
 	var was_pending: bool = _save_pending

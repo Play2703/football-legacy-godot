@@ -726,10 +726,23 @@ func marry(spouse_data: Dictionary) -> bool:
 		var save_ok: bool = save_current_slot()
 		if not save_ok:
 			_data["family"] = backup_fam
-			_restore_career_snapshot(career_obj, career_snapshot)
+			var rest_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
+			if not rest_ok:
+				push_error("[LifeLegacyManager] CRITICAL: Falha na persistência de rollback do Career no casamento. Ativando Modo Seguro.")
+				set_safe_mode(true)
 			return false
+
 		if career_obj.has_method("_save_synchronous_barrier"):
-			career_obj._save_synchronous_barrier()
+			var career_save_ok: bool = career_obj._save_synchronous_barrier()
+			if not career_save_ok:
+				push_error("[LifeLegacyManager] Falha ao persistir Career na barreira síncrona pós-LifeLegacy. Executando compensação transacional...")
+				_data["family"] = backup_fam
+				var ll_comp_ok: bool = save_current_slot()
+				var career_comp_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
+				if not ll_comp_ok or not career_comp_ok:
+					push_error("[LifeLegacyManager] CRITICAL: Falha crítica na compensação transacional do casamento. Ativando Modo Seguro.")
+					set_safe_mode(true)
+				return false
 		return true
 
 	# Fallback isolado (quando Career não está presente na SceneTree)
@@ -776,10 +789,23 @@ func divorce() -> bool:
 	if not save_ok:
 		_data["family"] = backup_fam
 		if career_obj != null:
-			_restore_career_snapshot(career_obj, career_snapshot)
+			var rest_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
+			if not rest_ok:
+				push_error("[LifeLegacyManager] CRITICAL: Falha na persistência de rollback do Career no divórcio. Ativando Modo Seguro.")
+				set_safe_mode(true)
 		return false
+
 	if career_obj != null and career_obj.has_method("_save_synchronous_barrier"):
-		career_obj._save_synchronous_barrier()
+		var career_save_ok: bool = career_obj._save_synchronous_barrier()
+		if not career_save_ok:
+			push_error("[LifeLegacyManager] Falha ao persistir Career na barreira síncrona durante divórcio. Executando compensação transacional...")
+			_data["family"] = backup_fam
+			var ll_comp_ok: bool = save_current_slot()
+			var career_comp_ok: bool = _restore_career_snapshot(career_obj, career_snapshot)
+			if not ll_comp_ok or not career_comp_ok:
+				push_error("[LifeLegacyManager] CRITICAL: Falha crítica na compensação transacional do divórcio. Ativando Modo Seguro.")
+				set_safe_mode(true)
+			return false
 	return true
 
 func _capture_career_snapshot(career_obj: Object) -> Dictionary:
@@ -800,17 +826,21 @@ func _capture_career_snapshot(career_obj: Object) -> Dictionary:
 		"citas_aciertos": career_obj.citas_aciertos if "citas_aciertos" in career_obj else 0,
 		"world_news": career_obj.world_news.duplicate(true) if "world_news" in career_obj else [],
 		"world_news_total": career_obj.world_news_total if "world_news_total" in career_obj else 0,
+		"pending_ceremonies": career_obj.pending_ceremonies.duplicate(true) if "pending_ceremonies" in career_obj else [],
 	}
 	var ach = _get_achievements()
 	if ach != null:
-		snap["ach_parejas_vistas"] = ach.parejas_vistas.duplicate(true) if "parejas_vistas" in ach else {}
-		snap["ach_pending"] = ach.pending.duplicate(true) if "pending" in ach else []
+		snap["ach_unlocked"] = ach._unlocked.duplicate(true) if "_unlocked" in ach else {}
 		snap["ach_progress"] = ach.progress.duplicate(true) if "progress" in ach else {}
+		snap["ach_seen"] = ach._seen.duplicate(true) if "_seen" in ach else {}
+		snap["ach_pending"] = ach.pending.duplicate(true) if "pending" in ach else []
+		snap["ach_rasgos_vistos"] = ach.rasgos_vistos.duplicate(true) if "rasgos_vistos" in ach else {}
+		snap["ach_parejas_vistas"] = ach.parejas_vistas.duplicate(true) if "parejas_vistas" in ach else {}
 	return snap
 
-func _restore_career_snapshot(career_obj: Object, snap: Dictionary) -> void:
+func _restore_career_snapshot(career_obj: Object, snap: Dictionary) -> bool:
 	if career_obj == null or snap.is_empty():
-		return
+		return false
 	if "pareja" in career_obj:
 		career_obj.pareja = snap.get("pareja", {}).duplicate(true)
 	if "rel" in career_obj and career_obj.rel is Dictionary:
@@ -839,26 +869,40 @@ func _restore_career_snapshot(career_obj: Object, snap: Dictionary) -> void:
 		career_obj.world_news = snap.get("world_news", []).duplicate(true)
 	if "world_news_total" in career_obj:
 		career_obj.world_news_total = snap.get("world_news_total", 0)
-	if career_obj.has_method("_save_synchronous_barrier"):
-		career_obj._save_synchronous_barrier()
-	elif career_obj.has_method("_save"):
-		career_obj._save()
-	if career_obj.has_signal("changed"):
-		career_obj.changed.emit()
+	if "pending_ceremonies" in career_obj:
+		career_obj.pending_ceremonies = snap.get("pending_ceremonies", []).duplicate(true)
 
 	var ach = _get_achievements()
 	if ach != null:
-		if "parejas_vistas" in ach:
-			ach.parejas_vistas = snap.get("ach_parejas_vistas", {}).duplicate(true)
-		if "pending" in ach:
-			ach.pending = snap.get("ach_pending", []).duplicate(true)
+		if "_unlocked" in ach:
+			ach._unlocked = snap.get("ach_unlocked", {}).duplicate(true)
 		if "progress" in ach:
 			ach.progress = snap.get("ach_progress", {}).duplicate(true)
+		if "_seen" in ach:
+			ach._seen = snap.get("ach_seen", {}).duplicate(true)
+		if "pending" in ach:
+			ach.pending = snap.get("ach_pending", []).duplicate(true)
+		if "rasgos_vistos" in ach:
+			ach.rasgos_vistos = snap.get("ach_rasgos_vistos", {}).duplicate(true)
+		if "parejas_vistas" in ach:
+			ach.parejas_vistas = snap.get("ach_parejas_vistas", {}).duplicate(true)
 		if ach.has_method("_save"):
 			ach._save()
 
-func _rollback_career(career_obj: Object, b_pareja: Dictionary, b_rel: int, b_money: int, b_prenup: bool, b_boda: int) -> void:
-	_restore_career_snapshot(career_obj, {
+	var write_ok: bool = true
+	if career_obj.has_method("_save_synchronous_barrier"):
+		write_ok = career_obj._save_synchronous_barrier()
+	elif career_obj.has_method("_save"):
+		career_obj._save()
+		write_ok = true
+
+	if career_obj.has_signal("changed"):
+		career_obj.changed.emit()
+
+	return write_ok
+
+func _rollback_career(career_obj: Object, b_pareja: Dictionary, b_rel: int, b_money: int, b_prenup: bool, b_boda: int) -> bool:
+	return _restore_career_snapshot(career_obj, {
 		"pareja": b_pareja,
 		"rel_pareja": b_rel,
 		"money": b_money,
