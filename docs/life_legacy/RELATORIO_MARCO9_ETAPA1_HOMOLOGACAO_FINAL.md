@@ -93,3 +93,12 @@ A Etapa 1 do Marco 9 está plenamente corrigida, validada e homologada:
 - As regras financeiras, custos de casamento e partilhas de divórcio são estritamente respeitadas.
 - O Schema V5 e todas as migrações automáticas permanecem íntegros.
 - Nenhuma funcionalidade das Etapas subsequentes ou dos Marcos 10, 11 e 12 foi antecipada.
+
+---
+
+## 6. CONFIRMAÇÃO DE INTEGRAÇÃO GIT
+
+- **Branch Autorizada:** `life-legacy-fase2-implementation`
+- **Commit SHA de Referência:** `52e1d1a79c26a11f08b3036ca74bca7e4228e81b`
+- **Commit SHA Homologado:** `52f7055c97c5160d99e9ba3a24404ce6b629c852`
+
