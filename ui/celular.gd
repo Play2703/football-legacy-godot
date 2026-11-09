@@ -1095,21 +1095,22 @@ static func monta_minha_vida(padre: Container, ancho: float) -> Control:
 	vb_social.add_child(grid_actions)
 
 	var actions_meta: Array = [
-		{ "id": "hire_press_agent", "base_label": "Contratar Assessoria ($15.000 / 10 sem)" },
-		{ "id": "public_retraction", "base_label": "Retratação Pública ($5.000 / -15 Calor)" },
-		{ "id": "charity_campaign", "base_label": "Campanha de Caridade ($25.000 / -25 Calor)" },
-		{ "id": "training_promo_post", "base_label": "Post Treino e Foco ($0 / +Foco)" }
+		{ "id": "hire_press_agent", "node_name": "BtnAction_hire_press_agent_1", "params": { "level": 1 } },
+		{ "id": "hire_press_agent", "node_name": "BtnAction_hire_press_agent_2", "params": { "level": 2 } },
+		{ "id": "hire_press_agent", "node_name": "BtnAction_hire_press_agent_3", "params": { "level": 3 } },
+		{ "id": "public_retraction", "node_name": "BtnAction_public_retraction", "params": {} },
+		{ "id": "charity_campaign", "node_name": "BtnAction_charity_campaign", "params": {} },
+		{ "id": "training_promo_post", "node_name": "BtnAction_training_promo_post", "params": {} }
 	]
 
 	var action_buttons: Dictionary = {}
 	for ameta in actions_meta:
-		var act_id: String = ameta["id"]
+		var btn_key: String = ameta["node_name"]
 		var btn: Button = Button.new()
-		btn.name = "BtnAction_" + act_id
-		btn.text = ameta["base_label"]
+		btn.name = btn_key
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid_actions.add_child(btn)
-		action_buttons[act_id] = btn
+		action_buttons[btn_key] = btn
 
 	var refresh_social_panel: Callable = func() -> void:
 		var cur_heat: float = LifeLegacy.get_scandal_heat() if LifeLegacy != null else 0.0
@@ -1160,32 +1161,37 @@ static func monta_minha_vida(padre: Container, ancho: float) -> Control:
 		else:
 			var c_strs: Array = []
 			for c in camps:
-				c_strs.append("%s (%d sem)" % [c.get("name", "Campanha"), int(c.get("remaining_ticks", 0))])
+				var rem_w: int = int(c.get("remaining_ticks", c.get("ticks_remaining", 0)))
+				c_strs.append("%s (%d sem)" % [c.get("name", "Campanha"), rem_w])
 			lbl_campaigns.text = "Campanhas Ativas: %s" % ", ".join(c_strs)
 			lbl_campaigns.modulate = Color(0.5, 0.9, 0.5)
 
 		for ameta in actions_meta:
-			var a_id: String = ameta["id"]
-			var b_btn: Button = action_buttons[a_id]
-			var avail: Dictionary = LifeLegacy.is_social_action_available(a_id) if LifeLegacy != null else { "available": true }
+			var btn_key: String = ameta["node_name"]
+			var b_btn: Button = action_buttons[btn_key]
+			var act_id: String = ameta["id"]
+			var act_params: Dictionary = ameta.get("params", {})
+			var details: Dictionary = LifeLegacy.get_action_details(act_id, act_params) if LifeLegacy != null else {}
+			var base_label: String = String(details.get("label", act_id))
+			var avail: Dictionary = LifeLegacy.is_social_action_available(act_id, act_params) if LifeLegacy != null else { "available": true }
 			if not avail.get("available", true):
 				b_btn.disabled = true
-				b_btn.text = "%s [%s]" % [ameta["base_label"], String(avail.get("reason", "Indisponível"))]
+				b_btn.text = "%s [%s]" % [base_label, String(avail.get("reason", "Indisponível"))]
 			else:
 				b_btn.disabled = false
-				b_btn.text = ameta["base_label"]
-
-	refresh_social_panel.call()
+				b_btn.text = base_label
 
 	for ameta in actions_meta:
-		var a_id: String = ameta["id"]
-		var b_btn: Button = action_buttons[a_id]
+		var btn_key: String = ameta["node_name"]
+		var act_id: String = ameta["id"]
+		var act_params: Dictionary = ameta.get("params", {})
+		var b_btn: Button = action_buttons[btn_key]
 		b_btn.pressed.connect(func() -> void:
 			if LifeLegacy == null:
 				lbl_feedback.text = "Módulo LifeLegacy não inicializado."
 				lbl_feedback.modulate = Color(0.95, 0.3, 0.3)
 				return
-			var res: Dictionary = LifeLegacy.execute_social_action(a_id)
+			var res: Dictionary = LifeLegacy.execute_social_action(act_id, act_params)
 			if res.get("success", false):
 				lbl_feedback.text = "Sucesso: Ação RP concluída e publicada!"
 				lbl_feedback.modulate = Color(0.3, 0.9, 0.4)
@@ -1194,6 +1200,8 @@ static func monta_minha_vida(padre: Container, ancho: float) -> Control:
 				lbl_feedback.modulate = Color(0.95, 0.3, 0.3)
 			refresh_social_panel.call()
 		)
+
+	refresh_social_panel.call()
 
 	padre.add_child(scroll)
 	return scroll

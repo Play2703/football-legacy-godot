@@ -678,6 +678,14 @@ func get_heat_band_info() -> Dictionary:
 func get_press_agent_info() -> Dictionary:
 	return LifeLegacySocial.get_press_agent_info(_data)
 
+func get_press_agent_tiers_info() -> Array:
+	return LifeLegacySocial.get_press_agent_tiers_info()
+
+func get_action_details(action_id: String, params: Dictionary = {}) -> Dictionary:
+	var career = LifeLegacyOutbox._get_career()
+	var career_money: int = career.money if career != null else 0
+	return LifeLegacySocial.get_action_details(_data, action_id, career_money, params)
+
 func is_social_action_available(action_id: String, params: Dictionary = {}) -> Dictionary:
 	var career = LifeLegacyOutbox._get_career()
 	var career_money: int = career.money if career != null else 0

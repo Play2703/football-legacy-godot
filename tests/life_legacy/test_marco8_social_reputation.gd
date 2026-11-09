@@ -9,6 +9,7 @@ const LifeLegacyEvents = preload("res://features/life_legacy/life_legacy_events.
 const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.gd")
 const LifeLegacyCatalogoEventos = preload("res://features/life_legacy/data/catalogo_eventos.gd")
 const CelularScript = preload("res://ui/celular.gd")
+const Sponsors = preload("res://features/career/sponsors.gd")
 
 var test_slot: int = 0
 var base_dir: String = LifeLegacyPersistence.slot_dir(0).trim_suffix("/")
@@ -218,6 +219,18 @@ func test_scenario_b_scandal_heat_mechanics() -> void:
 	var min_heat: float = LifeLegacySocial.get_heat(state_dict)
 	assert(min_heat == 0.0, "Calor resfriado em excesso deve ser limitado a 0.0")
 
+	# 9. Teste estrito de limiares contínuos e semi-abertos com decimais
+	assert(LifeLegacySocial.get_heat_band(0.0) == LifeLegacySocial.HeatBand.TRANQUILO, "0.0 deve ser TRANQUILO")
+	assert(LifeLegacySocial.get_heat_band(19.9) == LifeLegacySocial.HeatBand.TRANQUILO, "19.9 deve ser TRANQUILO")
+	assert(LifeLegacySocial.get_heat_band(20.0) == LifeLegacySocial.HeatBand.LEVE, "20.0 deve ser LEVE")
+	assert(LifeLegacySocial.get_heat_band(39.9) == LifeLegacySocial.HeatBand.LEVE, "39.9 deve ser LEVE")
+	assert(LifeLegacySocial.get_heat_band(40.0) == LifeLegacySocial.HeatBand.MODERADO, "40.0 deve ser MODERADO")
+	assert(LifeLegacySocial.get_heat_band(59.9) == LifeLegacySocial.HeatBand.MODERADO, "59.9 deve ser MODERADO")
+	assert(LifeLegacySocial.get_heat_band(60.0) == LifeLegacySocial.HeatBand.CRISE, "60.0 deve ser CRISE")
+	assert(LifeLegacySocial.get_heat_band(79.9) == LifeLegacySocial.HeatBand.CRISE, "79.9 deve ser CRISE")
+	assert(LifeLegacySocial.get_heat_band(80.0) == LifeLegacySocial.HeatBand.GRAVE, "80.0 deve ser GRAVE")
+	assert(LifeLegacySocial.get_heat_band(100.0) == LifeLegacySocial.HeatBand.GRAVE, "100.0 deve ser GRAVE")
+
 	print("  -> Cenário B aprovado com sucesso! Variações, clamping e faixas validadas.")
 
 # =============================================================================
@@ -263,6 +276,39 @@ func test_scenario_c_press_agent_hiring_and_expiration() -> void:
 	var ag_expired: Dictionary = LifeLegacySocial.get_press_agent_info(profile)
 	assert(ag_expired["level"] == 0, "Assessoria após expiração deve reverter para nível 0")
 	assert(ag_expired["remaining_ticks"] == 0, "Duração da assessoria expirada deve ser 0")
+
+	# 3. Teste de Equivalência Temporal Monotônica (20 chamadas de 1 tick == 1 chamada de 20 ticks)
+	var prof_step: Dictionary = {
+		"social_reputation": {
+			"scandal_heat": 95.0,
+			"press_agent_level": 1,
+			"press_agent_ticks_remaining": 8,
+			"active_campaigns": [],
+			"cooldowns": {},
+			"history": []
+		}
+	}
+	var prof_jump: Dictionary = {
+		"social_reputation": {
+			"scandal_heat": 95.0,
+			"press_agent_level": 1,
+			"press_agent_ticks_remaining": 8,
+			"active_campaigns": [],
+			"cooldowns": {},
+			"history": []
+		}
+	}
+	for step in range(20):
+		LifeLegacySocial.advance_social_ticks(prof_step, 1)
+
+	LifeLegacySocial.advance_social_ticks(prof_jump, 20)
+
+	var heat_step: float = LifeLegacySocial.get_heat(prof_step)
+	var heat_jump: float = LifeLegacySocial.get_heat(prof_jump)
+	assert(is_equal_approx(heat_step, heat_jump), "Calor após 20x1 tick (%.4f) deve ser rigorosamente igual a 1x20 ticks (%.4f)" % [heat_step, heat_jump])
+	assert(is_equal_approx(heat_step, 5.0), "Calor final esperado deve ser exatamente 5.0 (foi %.4f)" % heat_step)
+	assert(prof_step["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado em prof_step")
+	assert(prof_jump["social_reputation"]["press_agent_level"] == 0, "Assessoria deve ter expirado em prof_jump")
 
 	print("  -> Cenário C aprovado com sucesso! Contratação, aceleração de resfriamento e expiração verificadas.")
 
@@ -326,13 +372,34 @@ func test_scenario_e_charity_campaign_action() -> void:
 	var camps: Array = soc_state.get("active_campaigns", [])
 	assert(camps.size() == 1, "Deve haver 1 campanha de caridade ativa")
 	assert(camps[0]["ticks_remaining"] == 4, "Duração da campanha de caridade deve ser 4 semanas")
+	assert(camps[0]["remaining_ticks"] == 4, "Campo unificado remaining_ticks deve ser 4 semanas")
 
-	# Avançar 4 semanas e checar expiração
+	# Avançar semana a semana e checar mitigação recorrente de 1.0 ponto/semana + resfriamento básico de 3.5 = 4.5/semana
 	var profile: Dictionary = LifeLegacy.get_data()
-	LifeLegacySocial.advance_social_ticks(profile, 4)
+	# Semana 1 (48.0 - 4.5 = 43.5)
+	LifeLegacySocial.advance_social_ticks(profile, 1)
+	assert(is_equal_approx(LifeLegacySocial.get_heat(profile), 43.5), "Semana 1 de caridade deve ter calor 43.5 (foi %.2f)" % LifeLegacySocial.get_heat(profile))
+	assert(profile["social_reputation"]["active_campaigns"][0]["remaining_ticks"] == 3, "Restante deve ser 3")
+	assert(profile["social_reputation"]["active_campaigns"][0]["ticks_remaining"] == 3, "Restante unificado deve ser 3")
+
+	# Semana 2 (43.5 - 4.5 = 39.0)
+	LifeLegacySocial.advance_social_ticks(profile, 1)
+	assert(is_equal_approx(LifeLegacySocial.get_heat(profile), 39.0), "Semana 2 de caridade deve ter calor 39.0 (foi %.2f)" % LifeLegacySocial.get_heat(profile))
+
+	# Semana 3 (39.0 - 4.5 = 34.5)
+	LifeLegacySocial.advance_social_ticks(profile, 1)
+	assert(is_equal_approx(LifeLegacySocial.get_heat(profile), 34.5), "Semana 3 de caridade deve ter calor 34.5 (foi %.2f)" % LifeLegacySocial.get_heat(profile))
+
+	# Semana 4 (34.5 - 4.5 = 30.0) -> expira
+	LifeLegacySocial.advance_social_ticks(profile, 1)
+	assert(is_equal_approx(LifeLegacySocial.get_heat(profile), 30.0), "Semana 4 de caridade deve ter calor 30.0 (foi %.2f)" % LifeLegacySocial.get_heat(profile))
 	assert(profile["social_reputation"]["active_campaigns"].is_empty(), "Campanha deve expirar após 4 semanas")
 
-	print("  -> Cenário E aprovado com sucesso! Campanha de caridade ativa e expiração validadas.")
+	# Semana 5: apenas taxa básica 3.5 (30.0 - 3.5 = 26.5)
+	LifeLegacySocial.advance_social_ticks(profile, 1)
+	assert(is_equal_approx(LifeLegacySocial.get_heat(profile), 26.5), "Semana 5 pós-caridade deve resfriar apenas taxa básica (26.5, foi %.2f)" % LifeLegacySocial.get_heat(profile))
+
+	print("  -> Cenário E aprovado com sucesso! Campanha de caridade ativa, mitigação recorrente e expiração validadas.")
 
 # =============================================================================
 # CENÁRIO F: Post Promocional de Treino (training_promo_post)
@@ -355,6 +422,11 @@ func test_scenario_f_promotional_training_post() -> void:
 	assert(is_equal_approx(LifeLegacy.get_stat("discipline"), disc_before + 1.0), "Disciplina deve aumentar em +1")
 	assert(is_equal_approx(LifeLegacy.get_stat("reputation"), rep_before + 0.0), "Reputação delta verificado")
 
+	# Confirmar ausência de 'likes' artificial no histórico e nas intenções
+	var hist_list: Array = LifeLegacy.get_data().get("social_reputation", {}).get("history", [])
+	for h in hist_list:
+		assert(not h.has("likes"), "Histórico não deve conter campo fixo 'likes'")
+
 	# Cooldown ativo
 	var avail: Dictionary = LifeLegacy.is_social_action_available("training_promo_post")
 	assert(avail["available"] == false, "Post promocional deve entrar em recarga")
@@ -375,19 +447,20 @@ func test_scenario_g_fault_injection_and_idempotency() -> void:
 	Career.money = 30000
 	LifeLegacy.apply_scandal("sc_g", 50.0, "Polemica teste G")
 
-	# Injetar falha de despacho no Outbox
-	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "rp_"
+	# Injetar falha de despacho no Outbox especificamente para o post (rp_post_)
+	# enquanto o débito financeiro (rp_cost_) é despachado com sucesso
+	LifeLegacyOutbox.fault_inject_dispatch_fail_token = "rp_post_"
 
 	var res: Dictionary = LifeLegacy.execute_social_action("public_retraction")
-	# Pré-compromisso foi salvo em pending_rp_transaction, mas despacho falhou
-	assert(res.get("success") == false, "Execução deve reportar falha durante injeção de falhas")
-	assert(res.get("reason", "").contains("pendente") or res.get("error", "").contains("incompleto"), "Mensagem deve indicar despacho pendente")
+	# Pré-compromisso gravado, dinheiro debitado via career_effects, mas post falhou no career_social
+	assert(res.get("success") == false, "Execução deve reportar falha com despacho pendente")
+	assert(res.get("status") == "PENDING_DISPATCH", "Status deve ser PENDING_DISPATCH")
+	assert(Career.money == 29500, "Dinheiro DEVE ter sido debitado ($500 debitados, saldo $29.500) pois rp_cost_ passou")
 
 	var profile: Dictionary = LifeLegacy.get_data()
 	assert(profile["social_reputation"].has("pending_rp_transaction"), "Deve persistir pending_rp_transaction")
-	assert(Career.money == 30000, "Dinheiro NÃO deve ter sido debitado pelo Career enquanto despacho falhar")
 
-	# Desativar falha de injeção
+	# Desativar injeção de falhas
 	LifeLegacyOutbox.reset_fault_injection()
 
 	# Recuperação em reload_slot()
@@ -395,12 +468,13 @@ func test_scenario_g_fault_injection_and_idempotency() -> void:
 
 	var profile_recovered: Dictionary = LifeLegacy.get_data()
 	assert(not profile_recovered["social_reputation"].has("pending_rp_transaction"), "Transação pendente deve ter sido consumida")
-	assert(Career.money == 29500, "Dinheiro debitado com sucesso exatamente uma vez ($500 debitados, $29.500 restante)")
+	assert(Career.money == 29500, "Dinheiro debitado exatamente uma vez ($29.500 mantido)")
 	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 27.5), "Calor reduzido de 50 para 27.5 com sucesso")
 
 	# Recarregar novamente não deve debitar outra vez (idempotência perfeita)
 	LifeLegacy.reload_slot(test_slot)
 	assert(Career.money == 29500, "Reload subsequente não pode debitar novamente (deve manter $29.500)")
+	assert(is_equal_approx(LifeLegacy.get_scandal_heat(), 27.5), "Calor subsequente deve manter 27.5")
 
 	print("  -> Cenário G aprovado com sucesso! Recuperação idempotente comprovada com zero duplicidade.")
 
@@ -464,7 +538,41 @@ func test_scenario_i_ui_and_sponsorship_impact() -> void:
 	assert(is_equal_approx(sp_grave["offer_value_multiplier"], 0.50), "Multiplicador deve ser 0.50")
 	assert(sp_grave["top_tier_blocked"] == true, "Patrocínio master deve ser bloqueado")
 
+	# Testar integração real com catálogo de patrocinadores (features/career/sponsors.gd)
+	# Calor 0: ofertas integrais e patrocinadores Grade 4 elegíveis
+	var el_0: Array = Sponsors.eligible(99, 99, 50, [], true, 0.0)
+	var has_grade_4_at_0: bool = false
+	for s in el_0:
+		if int(s.get("grade", 1)) >= 4:
+			has_grade_4_at_0 = true
+			break
+	assert(has_grade_4_at_0, "Com calor 0, patrocinadores top tier (grade 4) devem ser elegíveis")
+
+	var sample_c: Dictionary = el_0[0]
+	var off_0: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 0.0)
+	var off_30: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 30.0)
+	var off_50: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 50.0)
+	var off_70: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 70.0)
+	var off_85: Dictionary = Sponsors.scaled_offer(sample_c, 50, 0.0, "", 85.0)
+
+	assert(off_30["pay"] == roundi(float(off_0["pay"]) * 0.95), "Calor 30 deve aplicar deságio de 5% no pay")
+	assert(off_50["pay"] == roundi(float(off_0["pay"]) * 0.85), "Calor 50 deve aplicar deságio de 15% no pay")
+	assert(off_70["pay"] == roundi(float(off_0["pay"]) * 0.70), "Calor 70 deve aplicar deságio de 30% no pay")
+	assert(off_85["pay"] == roundi(float(off_0["pay"]) * 0.50), "Calor 85 deve aplicar deságio de 50% no pay")
+
+	# Bloqueio estrito de Grade 4 em crise (calor 70) e grave (calor 85)
+	var el_70: Array = Sponsors.eligible(99, 99, 50, [], true, 70.0)
+	for s in el_70:
+		assert(int(s.get("grade", 1)) < 4, "Patrocinador Grade 4 %s não pode estar elegível em calor 70" % s.get("id"))
+
+	var el_85: Array = Sponsors.eligible(99, 99, 50, [], true, 85.0)
+	for s in el_85:
+		assert(int(s.get("grade", 1)) < 4, "Patrocinador Grade 4 %s não pode estar elegível em calor 85" % s.get("id"))
+
 	# 2. Testar UI do Celular
+	Career.money = 30000
+	LifeLegacy.apply_scandal("sc_ui", 40.0, "Escandalo UI")
+
 	var phone_root: VBoxContainer = VBoxContainer.new()
 	var ui_control: Control = CelularScript.monta_minha_vida(phone_root, 320.0)
 	assert(ui_control != null, "monta_minha_vida deve retornar um Control")
@@ -481,10 +589,40 @@ func test_scenario_i_ui_and_sponsorship_impact() -> void:
 
 	var grid_rp: GridContainer = phone_root.find_child("GridAcoesRP", true, false) as GridContainer
 	assert(grid_rp != null, "GridAcoesRP deve estar presente")
-	assert(grid_rp.get_child_count() == 4, "Devem existir 4 botões de ações RP")
+	assert(grid_rp.get_child_count() == 6, "Devem existir 6 botões de ações RP (3 assessoria + 3 ações)")
+
+	var btn_ag1: Button = phone_root.find_child("BtnAction_hire_press_agent_1", true, false) as Button
+	var btn_ag2: Button = phone_root.find_child("BtnAction_hire_press_agent_2", true, false) as Button
+	var btn_ag3: Button = phone_root.find_child("BtnAction_hire_press_agent_3", true, false) as Button
+	assert(btn_ag1 != null, "Botão assessoria nível 1 deve existir")
+	assert(btn_ag2 != null, "Botão assessoria nível 2 deve existir")
+	assert(btn_ag3 != null, "Botão assessoria nível 3 deve existir")
+	assert(btn_ag1.text.contains("2500") and btn_ag1.text.contains("12 sem"), "Texto do botão nível 1 deve refletir $2.500 / 12 sem")
+	assert(btn_ag2.text.contains("7500") and btn_ag2.text.contains("16 sem"), "Texto do botão nível 2 deve refletir $7.500 / 16 sem")
+	assert(btn_ag3.text.contains("18000") and btn_ag3.text.contains("20 sem"), "Texto do botão nível 3 deve refletir $18.000 / 20 sem")
 
 	var btn_retract: Button = phone_root.find_child("BtnAction_public_retraction", true, false) as Button
 	assert(btn_retract != null, "Botão de retratação deve existir")
+	assert(btn_retract.text.contains("500"), "Retratação deve indicar custo de $500")
+	assert(btn_retract.text.contains("Previsão"), "Retratação deve indicar previsão dinâmica de calor")
+
+	var btn_charity: Button = phone_root.find_child("BtnAction_charity_campaign", true, false) as Button
+	assert(btn_charity != null, "Botão de caridade deve existir")
+	assert(btn_charity.text.contains("6000"), "Caridade deve indicar custo real de $6.000")
+	assert(btn_charity.text.contains("4 sem"), "Caridade deve indicar duração de 4 semanas")
+
+	var btn_train: Button = phone_root.find_child("BtnAction_training_promo_post", true, false) as Button
+	assert(btn_train != null, "Botão de treino deve existir")
+	assert(not btn_train.text.contains("Foco"), "Botão de treino não deve citar Foco")
+	assert(btn_train.text.contains("Disciplina") and btn_train.text.contains("Popularidade"), "Botão de treino deve citar deltas reais")
+
+	# Testar contratação da assessoria nível 2 via interface
+	btn_ag2.emit_signal("pressed")
+	assert(Career.money == 22500, "Contratação nível 2 via UI deve debitar $7.500 ($22.500 restante)")
+	var ag_ui: Dictionary = LifeLegacy.get_press_agent_info()
+	assert(ag_ui["level"] == 2, "Assessoria deve ter sido contratada no nível 2")
+	assert(ag_ui["remaining_ticks"] == 16, "Duração contratada via UI deve ser 16 semanas")
+	assert(ag_ui["cooling_bonus"] == 5.0, "Bônus contratado via UI deve ser 5.0")
 
 	phone_root.queue_free()
 	print("  -> Cenário I aprovado com sucesso! Interface celular e cálculo comercial homologados.")

@@ -236,5 +236,15 @@ Ações gerenciadas com validação prévia de saldo e cooldown:
 - **Modelo Estritamente Extracampo:** Escândalos afetam reputação, patrocínios e finanças, mas **nunca** geram suspensão de partidas, afastamento de elenco ou modificação do motor esportivo.
 
 #### 6.6. Interface do Celular e Schema V4
-- **Painel "GESTÃO DE IMAGEM & POLÊMICAS":** Inserido em `ui/celular.gd` (`monta_minha_vida`), exibindo barra visual com coloração dinâmica por faixa, diagnósticos de crise, status da assessoria, campanhas ativas, impacto comercial e grid com os 4 botões de ações RP com labels de custo, cooldown e feedback reativo.
+- **Painel "GESTÃO DE IMAGEM & POLÊMICAS":** Inserido em `ui/celular.gd` (`monta_minha_vida`), exibindo barra visual com coloração dinâmica por faixa, diagnósticos de crise, status da assessoria, campanhas ativas, impacto comercial e botões dedicados para os 3 níveis de assessoria de imprensa (`BtnAction_hire_press_agent_1`, `2`, `3`), retratação oficial com cálculo preditivo a partir do calor atual, campanha de caridade com mitigação ativa de 4 semanas e post de treino sem menção a "Foco" e sem "likes" artificiais.
 - **Schema V4:** Suporte a saves legados (V1, V2, V3) com migração automática para a versão 4, inicializando a estrutura `social_reputation` com valores padrão íntegros e preservando 100% dos dados pré-existentes.
+
+#### 6.7. Auditoria Corretiva do Marco 8 (Homologação Conclusiva)
+1. **Centralização UI:** Textos e valores de ações e assessoria centralizados em `LifeLegacySocial` / `LifeLegacyManager`.
+2. **Mitigação Ativa da Caridade:** Unificados `ticks_remaining` e `remaining_ticks`, aplicando mitigação recorrente de 1.0 pt/semana durante as 4 semanas ativas.
+3. **Equivalência Temporal:** Assessoria cronologicamente delimitada ao tempo contratado, revertendo à taxa básica (3.5 pts/sem) e garantindo identidade estrita entre 20 chamadas de 1 tick e 1 chamada de 20 ticks.
+4. **Patrocínio Real:** Integrado com `features/career/sponsors.gd` (`eligible`, `scaled_offer`, `offers_for`, `pool_for`, `draw`), aplicando multiplicador a `pay`, `per_goal` e `reward` e bloqueando Grade 4 em Crise/Grave.
+5. **Falha Parcial no Outbox:** Testado com token `rp_post_`, comprovando sucesso no débito financeiro, retenção em `PRE_COMMITMENT` e resolução idempotente no reload sem duplo débito.
+6. **Remoção de "likes":** Campo fixo `"likes"` eliminado de `post_dict`.
+7. **Faixas Contínuas Semi-Abertas:** $[0, 20), [20, 40), [40, 60), [60, 80), [80, 100]$ com testes de fronteira decimal (19.9, 20.0, 39.9, 40.0, etc.).
+8. **Regressão Global:** Todos os 10 runners do projeto aprovados com código de saída 0.

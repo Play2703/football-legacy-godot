@@ -11,11 +11,18 @@ const LifeLegacyOutbox = preload("res://features/life_legacy/life_legacy_outbox.
 const HEAT_MIN: float = 0.0
 const HEAT_MAX: float = 100.0
 
-# Faixas de Calor de Escândalos
-const HEAT_TRANQUILO_MAX: float = 19.0
-const HEAT_LEVE_MAX: float = 39.0
-const HEAT_MODERADO_MAX: float = 59.0
-const HEAT_CRISE_MAX: float = 79.0
+# Faixas de Calor de Escândalos (Intervalos semi-abertos: [0, 20), [20, 40), [40, 60), [60, 80), [80, 100])
+const THRESHOLD_TRANQUILO: float = 0.0
+const THRESHOLD_LEVE: float = 20.0
+const THRESHOLD_MODERADO: float = 40.0
+const THRESHOLD_CRISE: float = 60.0
+const THRESHOLD_GRAVE: float = 80.0
+
+# Retrocompatibilidade com constantes anteriores
+const HEAT_TRANQUILO_MAX: float = 20.0
+const HEAT_LEVE_MAX: float = 40.0
+const HEAT_MODERADO_MAX: float = 60.0
+const HEAT_CRISE_MAX: float = 80.0
 const HEAT_GRAVE_MAX: float = 100.0
 
 enum HeatBand {
@@ -61,6 +68,9 @@ const HEAT_BAND_INFO: Dictionary = {
 
 # Taxa de Resfriamento Base Semanal
 const BASE_HEAT_COOLING_RATE: float = 3.5
+
+# Mitigação Recorrente Semanal de Campanhas de Caridade
+const CHARITY_WEEKLY_HEAT_MITIGATION: float = 1.0
 
 # =============================================================================
 # 2. CONFIGURAÇÃO DA ASSESSORIA DE IMPRENSA
@@ -189,13 +199,13 @@ static func get_heat(profile: Dictionary) -> float:
 
 static func get_heat_band(heat: float) -> HeatBand:
 	var h = clampf(heat, HEAT_MIN, HEAT_MAX)
-	if h <= HEAT_TRANQUILO_MAX:
+	if h < THRESHOLD_LEVE:
 		return HeatBand.TRANQUILO
-	elif h <= HEAT_LEVE_MAX:
+	elif h < THRESHOLD_MODERADO:
 		return HeatBand.LEVE
-	elif h <= HEAT_MODERADO_MAX:
+	elif h < THRESHOLD_CRISE:
 		return HeatBand.MODERADO
-	elif h <= HEAT_CRISE_MAX:
+	elif h < THRESHOLD_GRAVE:
 		return HeatBand.CRISE
 	else:
 		return HeatBand.GRAVE
@@ -322,35 +332,25 @@ static func advance_social_ticks(profile: Dictionary, ticks_to_advance: int) -> 
 	var old_heat = float(sr.get("scandal_heat", 0.0))
 	var agent_lvl = int(sr.get("press_agent_level", 0))
 	var bonus_cool = float(PRESS_AGENT_CONFIG.get(agent_lvl, PRESS_AGENT_CONFIG[0]).get("cooling_bonus", 0.0))
-	var total_cool_rate = BASE_HEAT_COOLING_RATE + bonus_cool
-	var total_decay = total_cool_rate * float(ticks_to_advance)
-
-	var new_heat = maxf(HEAT_MIN, old_heat - total_decay)
-	sr["scandal_heat"] = new_heat
-
-	var expired_agents: Array = []
 	var rem_agent = int(sr.get("press_agent_ticks_remaining", 0))
-	if rem_agent > 0:
-		rem_agent = maxi(0, rem_agent - ticks_to_advance)
-		sr["press_agent_ticks_remaining"] = rem_agent
-		if rem_agent == 0 and agent_lvl > 0:
-			expired_agents.append(agent_lvl)
-			sr["press_agent_level"] = 0
-			var hist: Array = sr.get("history", [])
-			hist.append({
-				"type": "press_agent_expired",
-				"previous_level": agent_lvl,
-				"timestamp": Time.get_datetime_string_from_system()
-			})
-			sr["history"] = hist
 
+	# 1. Resfriamento base e da assessoria (cronologicamente limitado à vigência do contrato)
+	var active_agent_ticks = mini(ticks_to_advance, rem_agent) if agent_lvl > 0 else 0
+	var agent_decay = float(active_agent_ticks) * bonus_cool
+	var base_decay = float(ticks_to_advance) * BASE_HEAT_COOLING_RATE
+
+	# 2. Mitigação recorrente de campanhas de caridade ativas (1.0 por semana ativa)
+	var total_charity_decay = 0.0
 	var expired_campaigns: Array = []
 	var active_camps: Array = sr.get("active_campaigns", [])
 	var remaining_camps: Array = []
 	for camp in active_camps:
 		if camp is Dictionary:
-			var c_rem = int(camp.get("ticks_remaining", 1)) - ticks_to_advance
-			if c_rem <= 0:
+			var c_rem = int(camp.get("remaining_ticks", camp.get("ticks_remaining", 1)))
+			var active_c_ticks = mini(ticks_to_advance, c_rem)
+			total_charity_decay += float(active_c_ticks) * CHARITY_WEEKLY_HEAT_MITIGATION
+			var new_c_rem = c_rem - ticks_to_advance
+			if new_c_rem <= 0:
 				expired_campaigns.append(camp.get("campaign_id", ""))
 				var hist: Array = sr.get("history", [])
 				hist.append({
@@ -361,9 +361,29 @@ static func advance_social_ticks(profile: Dictionary, ticks_to_advance: int) -> 
 				sr["history"] = hist
 			else:
 				var c_copy = camp.duplicate(true)
-				c_copy["ticks_remaining"] = c_rem
+				c_copy["ticks_remaining"] = new_c_rem
+				c_copy["remaining_ticks"] = new_c_rem
 				remaining_camps.append(c_copy)
 	sr["active_campaigns"] = remaining_camps
+
+	var total_decay = base_decay + agent_decay + total_charity_decay
+	var new_heat = maxf(HEAT_MIN, old_heat - total_decay)
+	sr["scandal_heat"] = new_heat
+
+	var expired_agents: Array = []
+	if rem_agent > 0:
+		var new_rem_agent = maxi(0, rem_agent - ticks_to_advance)
+		sr["press_agent_ticks_remaining"] = new_rem_agent
+		if new_rem_agent == 0 and agent_lvl > 0:
+			expired_agents.append(agent_lvl)
+			sr["press_agent_level"] = 0
+			var hist: Array = sr.get("history", [])
+			hist.append({
+				"type": "press_agent_expired",
+				"previous_level": agent_lvl,
+				"timestamp": Time.get_datetime_string_from_system()
+			})
+			sr["history"] = hist
 
 	var cd_dict = sr.get("cooldowns", {}).duplicate()
 	var keys_to_remove: Array = []
@@ -443,7 +463,6 @@ static func execute_rp_action(manager_ref: Object, action_id: String, params: Di
 				"autor": String(cfg.get("post_author", "yo")),
 				"texto": String(cfg.get("post_text", "")),
 				"tipo": "comunicado_perdon",
-				"likes": 1200,
 				"timestamp": Time.get_datetime_string_from_system()
 			}
 		elif action_id == ACTION_CHARITY:
@@ -455,7 +474,6 @@ static func execute_rp_action(manager_ref: Object, action_id: String, params: Di
 				"autor": String(cfg.get("post_author", "yo")),
 				"texto": String(cfg.get("post_text", "")),
 				"tipo": "solidario",
-				"likes": 4500,
 				"timestamp": Time.get_datetime_string_from_system()
 			}
 		elif action_id == ACTION_TRAINING_POST:
@@ -467,7 +485,6 @@ static func execute_rp_action(manager_ref: Object, action_id: String, params: Di
 				"autor": String(cfg.get("post_author", "yo")),
 				"texto": String(cfg.get("post_text", "")),
 				"tipo": "entrenamiento",
-				"likes": 2800,
 				"timestamp": Time.get_datetime_string_from_system()
 			}
 
@@ -541,10 +558,13 @@ static func execute_rp_action(manager_ref: Object, action_id: String, params: Di
 
 		if action_id == ACTION_CHARITY:
 			var active_camps: Array = sr.get("active_campaigns", [])
+			var dur: int = int(cfg.get("campaign_duration_ticks", 4))
 			active_camps.append({
 				"campaign_id": "camp_%s" % tx_id,
 				"name": "Campanha Solidária Comunitária",
-				"ticks_remaining": int(cfg.get("campaign_duration_ticks", 4)),
+				"ticks_remaining": dur,
+				"remaining_ticks": dur,
+				"weekly_mitigation": CHARITY_WEEKLY_HEAT_MITIGATION,
 				"season_num": s_num,
 				"season_day": s_day
 			})
@@ -620,10 +640,13 @@ static func recover_pending_rp_transaction(manager_ref: Object) -> bool:
 
 		if action_id == ACTION_CHARITY:
 			var active_camps: Array = sr.get("active_campaigns", [])
+			var dur: int = int(cfg.get("campaign_duration_ticks", 4))
 			active_camps.append({
 				"campaign_id": "camp_%s" % tx_id,
 				"name": "Campanha Solidária Comunitária",
-				"ticks_remaining": int(cfg.get("campaign_duration_ticks", 4)),
+				"ticks_remaining": dur,
+				"remaining_ticks": dur,
+				"weekly_mitigation": CHARITY_WEEKLY_HEAT_MITIGATION,
 				"season_num": s_num,
 				"season_day": s_day
 			})
@@ -698,3 +721,83 @@ static func calculate_sponsorship_impact(heat: float) -> Dictionary:
 		impact["reason"] = "Imagem comercial tranquila e valorizada."
 
 	return impact
+
+# =============================================================================
+# 8. METADADOS E CENTRALIZAÇÃO PARA INTERFACE (UI)
+# =============================================================================
+
+static func get_press_agent_tiers_info() -> Array:
+	var tiers: Array = []
+	for lvl in [1, 2, 3]:
+		if PRESS_AGENT_CONFIG.has(lvl):
+			var cfg = PRESS_AGENT_CONFIG[lvl].duplicate()
+			tiers.append(cfg)
+	return tiers
+
+static func get_action_details(profile: Dictionary, action_id: String, career_money: int = 0, params: Dictionary = {}) -> Dictionary:
+	action_id = _normalize_action_id(action_id)
+	var heat = get_heat(profile)
+	if action_id == ACTION_PRESS_AGENT:
+		var lvl = int(params.get("level", 1))
+		var cfg = PRESS_AGENT_CONFIG.get(lvl, PRESS_AGENT_CONFIG[1])
+		var cost = int(cfg["cost"])
+		var dur = int(cfg["duration_ticks"])
+		var bonus = float(cfg["cooling_bonus"])
+		var factor = float(cfg["containment_factor"])
+		var label = "Assessoria %s ($ %d / %d sem)" % [cfg["name"].replace("Assessoria ", ""), cost, dur]
+		return {
+			"id": ACTION_PRESS_AGENT,
+			"level": lvl,
+			"name": cfg["name"],
+			"cost": cost,
+			"duration_ticks": dur,
+			"cooling_bonus": bonus,
+			"containment_factor": factor,
+			"label": label,
+			"desc": "Reduz o calor de novos escândalos em %.0f%% e adiciona +%.1f/sem de resfriamento." % [(1.0 - factor) * 100.0, bonus]
+		}
+	elif action_id == ACTION_RETRACTION:
+		var cfg = RP_ACTIONS[ACTION_RETRACTION]
+		var cost = int(cfg.get("cost", 500))
+		var ratio = float(cfg.get("heat_reduction_ratio", 0.25))
+		var flat = float(cfg.get("heat_reduction_flat", 10.0))
+		var est_reduction = heat * ratio + flat
+		var label = "Retratação Oficial ($ %d | Previsão: -%.1f Calor)" % [cost, est_reduction]
+		return {
+			"id": ACTION_RETRACTION,
+			"name": cfg["name"],
+			"cost": cost,
+			"estimated_reduction": est_reduction,
+			"min_heat": float(cfg.get("min_heat", 15.0)),
+			"label": label,
+			"desc": "Custo $ %d. Redução estimada: -%.1f Calor (Reputação +4, Popularidade -2, Disciplina +1)." % [cost, est_reduction]
+		}
+	elif action_id == ACTION_CHARITY:
+		var cfg = RP_ACTIONS[ACTION_CHARITY]
+		var cost = int(cfg.get("cost", 6000))
+		var flat = float(cfg.get("heat_reduction_flat", 12.0))
+		var dur = int(cfg.get("campaign_duration_ticks", 4))
+		var label = "Campanha de Caridade ($ %d | -%.0f Calor + %d sem ativas)" % [cost, flat, dur]
+		return {
+			"id": ACTION_CHARITY,
+			"name": cfg["name"],
+			"cost": cost,
+			"immediate_reduction": flat,
+			"duration_ticks": dur,
+			"weekly_mitigation": CHARITY_WEEKLY_HEAT_MITIGATION,
+			"label": label,
+			"desc": "Custo $ %d. Redução imediata de %.0f calor e mitigação de 1.0/sem por %d semanas. Pop +8, Inf +6, Rep +4." % [cost, flat, dur]
+		}
+	elif action_id == ACTION_TRAINING_POST:
+		var cfg = RP_ACTIONS[ACTION_TRAINING_POST]
+		var cost = int(cfg.get("cost", 0))
+		var label = "Post de Treino (Grátis | Disciplina +1, Popularidade +3, Influência +2)"
+		return {
+			"id": ACTION_TRAINING_POST,
+			"name": cfg["name"],
+			"cost": cost,
+			"stat_deltas": cfg.get("stat_deltas", {}),
+			"label": label,
+			"desc": "Custo $ 0. Disciplina +1, Popularidade +3, Influência Social +2. Resfriamento extra de 1.5 calor."
+		}
+	return {}

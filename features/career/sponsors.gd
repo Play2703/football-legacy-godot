@@ -311,9 +311,26 @@ static func obj_event(obj: String) -> String:
 
 
 
+const LifeLegacySocial = preload("res://features/life_legacy/life_legacy_social.gd")
+
+static func _resolve_heat(heat: float) -> float:
+	if heat >= 0.0:
+		return heat
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null and tree.root.has_node("LifeLegacy"):
+		var ll = tree.root.get_node("LifeLegacy")
+		if ll != null and ll.has_method("get_scandal_heat"):
+			return float(ll.get_scandal_heat())
+	return 0.0
+
 static func eligible(rel_prensa: int, rel_aficion: int, level: int,
-		signed_ids: Array, europa: bool = true) -> Array:
+		signed_ids: Array, europa: bool = true, heat: float = -1.0) -> Array:
+	var h: float = _resolve_heat(heat)
+	var impact: Dictionary = LifeLegacySocial.calculate_sponsorship_impact(h) if h > 0.0 else {}
+	var block_top: bool = bool(impact.get("top_tier_blocked", false))
 	return CATALOG.filter(func(s: Dictionary) -> bool:
+		if block_top and int(s.get("grade", 1)) >= 4:
+			return false
 		return not signed_ids.has(String(s["id"])) \
 				and rel_prensa >= int(s["min_prensa"]) \
 				and rel_aficion >= int(s["min_aficion"]) \
@@ -449,7 +466,10 @@ static func level_over(c: Dictionary, level: int) -> int:
 
 
 static func scaled_offer(c: Dictionary, level: int,
-		jersey_bonus: float = 0.0, pos: String = "") -> Dictionary:
+		jersey_bonus: float = 0.0, pos: String = "", heat: float = -1.0) -> Dictionary:
+	var h: float = _resolve_heat(heat)
+	var impact: Dictionary = LifeLegacySocial.calculate_sponsorship_impact(h) if h > 0.0 else {}
+	var mult: float = float(impact.get("offer_value_multiplier", 1.0))
 	var over: int = level_over(c, level)
 	var money: float = 1.0 + float(over) * MONEY_STEP + maxf(0.0, jersey_bonus)
 	var target: int
@@ -460,12 +480,6 @@ static func scaled_offer(c: Dictionary, level: int,
 		target = maxi(int(c["target"]),
 			roundi(float(c["target"]) *(1.0 + float(over) * TARGET_STEP)))
 
-
-
-
-
-
-
 		if VOLUME_OBJ.has(String(c["obj"])):
 			target = maxi(1, roundi(float(target) * Standing.dieta_de(pos)))
 	var min_rating: int = int(c.get("min_rating", 0))
@@ -475,21 +489,13 @@ static func scaled_offer(c: Dictionary, level: int,
 	return {
 		"id": String(c["id"]), "name": String(c["name"]), "grade": int(c["grade"]),
 		"obj": String(c["obj"]), "target": target,
-
-
-
-
 		"min_matches": int(c.get("min_matches",
 			RATING_MIN_MATCHES if String(c["obj"]) == "rating" else 0)),
-
-
-
-
 		"min_rating": min_rating,
 		"per_kind": String(c.get("per_kind", "goal")),
-		"pay": roundi(float(c["pay"]) * money),
-		"per_goal": roundi(float(c["per_goal"]) * money),
-		"reward": roundi(float(c["reward"]) * money),
+		"pay": roundi(float(c["pay"]) * money * mult),
+		"per_goal": roundi(float(c["per_goal"]) * money * mult),
+		"reward": roundi(float(c["reward"]) * money * mult),
 		"desc": String(c["desc"]),
 	}
 
@@ -504,9 +510,9 @@ static func scaled_offer(c: Dictionary, level: int,
 
 static func offers_for(rel_prensa: int, rel_aficion: int, level: int,
 		signed_ids: Array, burned: Dictionary = {},
-		jersey_bonus: float = 0.0, pos: String = "", europa: bool = true) -> Array:
-	return draw(pool_for(rel_prensa, rel_aficion, level, signed_ids, burned, europa),
-		level, jersey_bonus, pos)
+		jersey_bonus: float = 0.0, pos: String = "", europa: bool = true, heat: float = -1.0) -> Array:
+	return draw(pool_for(rel_prensa, rel_aficion, level, signed_ids, burned, europa, heat),
+		level, jersey_bonus, pos, OFFER_SLOTS, false, heat)
 
 
 
@@ -516,8 +522,8 @@ static func offers_for(rel_prensa: int, rel_aficion: int, level: int,
 
 
 static func pool_for(rel_prensa: int, rel_aficion: int, level: int,
-		signed_ids: Array, burned: Dictionary = {}, europa: bool = true) -> Array:
-	return _sin_chicas(_vivas(rel_prensa, rel_aficion, level, signed_ids, burned, europa))
+		signed_ids: Array, burned: Dictionary = {}, europa: bool = true, heat: float = -1.0) -> Array:
+	return _sin_chicas(_vivas(rel_prensa, rel_aficion, level, signed_ids, burned, europa, heat))
 
 
 
@@ -526,8 +532,8 @@ static func pool_for(rel_prensa: int, rel_aficion: int, level: int,
 
 
 static func chicas_for(rel_prensa: int, rel_aficion: int, level: int,
-		signed_ids: Array, burned: Dictionary = {}, europa: bool = true) -> int:
-	var vivas: Array = _vivas(rel_prensa, rel_aficion, level, signed_ids, burned, europa)
+		signed_ids: Array, burned: Dictionary = {}, europa: bool = true, heat: float = -1.0) -> int:
+	var vivas: Array = _vivas(rel_prensa, rel_aficion, level, signed_ids, burned, europa, heat)
 	return vivas.size() - _sin_chicas(vivas).size()
 
 
@@ -535,8 +541,8 @@ static func chicas_for(rel_prensa: int, rel_aficion: int, level: int,
 
 
 static func _vivas(rel_prensa: int, rel_aficion: int, level: int,
-		signed_ids: Array, burned: Dictionary, europa: bool) -> Array:
-	return eligible(rel_prensa, rel_aficion, level, signed_ids, europa).filter(
+		signed_ids: Array, burned: Dictionary, europa: bool, heat: float = -1.0) -> Array:
+	return eligible(rel_prensa, rel_aficion, level, signed_ids, europa, heat).filter(
 		func(c: Dictionary) -> bool: return int(burned.get(String(c["id"]), 0)) <= 0)
 
 
@@ -570,14 +576,14 @@ static func puja_for(escalon: int) -> bool:
 
 
 static func draw(pool: Array, level: int, jersey_bonus: float = 0.0,
-		pos: String = "", slots: int = OFFER_SLOTS, pujan: bool = false) -> Array:
+		pos: String = "", slots: int = OFFER_SLOTS, pujan: bool = false, heat: float = -1.0) -> Array:
 	if pool.is_empty():
 		return []
 	var bombo: Array = pool.duplicate()
 	bombo.shuffle()
 	var out: Array = []
 	for c in bombo.slice(0, slots):
-		out.append(scaled_offer(c, level, jersey_bonus, pos))
+		out.append(scaled_offer(c, level, jersey_bonus, pos, heat))
 	return puja(out) if pujan else out
 
 

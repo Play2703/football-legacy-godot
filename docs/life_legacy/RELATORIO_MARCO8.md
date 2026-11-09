@@ -4,80 +4,98 @@
 **Data:** 09 de Novembro de 2026  
 **Repositório:** `Play2703/football-legacy-godot`  
 **Branch:** `life-legacy-fase2-implementation`  
-**Status do Marco 8:** CONCLUÍDO E HOMOLOGADO COM SUCESSO (100% PASS)  
+**Status do Marco 8:** CONCLUÍDO E HOMOLOGADO COM SUCESSO (100% PASS NA AUDITORIA CORRETIVA)  
 
 ---
 
 ### 1. Resumo Executivo
-O Marco 8 implementou a Frente 2 da Fase 2 de Life & Legacy, focada em **Redes Sociais, Polêmicas e Gestão de Imagem**. Toda a lógica de negócio foi centralizada no módulo `features/life_legacy/life_legacy_social.gd`, garantindo que regras de relações públicas e mitigação de crises extracampo não sobrecarregassem a simulação esportiva (`Career`) nem a camada visual (`ui/celular.gd`).
+O Marco 8 implementou a Frente 2 da Fase 2 de Life & Legacy, focada em **Redes Sociais, Polêmicas e Gestão de Imagem**, seguida da auditoria corretiva completa de alinhamento com os sistemas de patrocínio, celular e Outbox. Toda a lógica de negócio permanece estritamente concentrada no módulo `features/life_legacy/life_legacy_social.gd`, garantindo que regras de relações públicas e mitigação de crises extracampo não sobrecarreguem a simulação esportiva (`Career`) nem a camada visual (`ui/celular.gd`).
 
 O sistema opera sob o modelo **Extracampo** e **Arcade/Tolerante** aprovado pela direção: escândalos afetam a popularidade, reputação e rendimentos comerciais de patrocínio, mas jamais provocam suspensão de partidas, afastamento de elenco ou adulteração do motor de simulação. As ações financeiras respeitam estritamente a política de não gerar saldo negativo involuntário.
 
 ---
 
-### 2. Entregas Técnicas Realizadas
+### 2. Entregas Técnicas e Resolução da Auditoria Corretiva
 
-#### 2.1. Novo Módulo `features/life_legacy/life_legacy_social.gd`
-- **Controle de Calor de Escândalos (`scandal_heat`):** Variação contínua entre `0.0` e `100.0`, com resfriamento semanal automático de `3.5` pts/semana.
-- **Cinco Faixas de Crise Estruturadas:**
-  - `Tranquilo` (0.0 a 19.9): Sem impacto negativo.
-  - `Leve` (20.0 a 39.9): Repercussão pontual, penalidade leve de reputação (-5) e deságio de 5%.
-  - `Moderado` (40.0 a 59.9): Noticiário em alerta, deságio de 15% e penalidade de reputação (-10).
-  - `Crise` (60.0 a 79.9): Marcas globais cautelosas, deságio de 30%, penalidade de reputação (-20) e bloqueio de ofertas Master.
-  - `Grave` (80.0 a 100.0): Risco de imagem crítico, deságio de 50%, penalidade de reputação (-35) e bloqueio de ofertas Master.
-- **Assessoria de Imprensa Contratual (`press_agent`):** Níveis 0 a 3 com custos balanceados ($2.5k a $18k), duração delimitada em semanas, bônus aditivo de resfriamento (até +8.0/sem) e amortecimento preventivo de escândalos no ato de sua aplicação (redução de até 50% do calor bruto).
-- **Ações de Relações Públicas (RP):** Quatro ações declaradas com custos, cooldowns e integração com `MuroRedes`:
-  1. Contratação / renovação de assessoria.
-  2. Retratação pública oficial (requer calor $\ge 15$).
-  3. Campanha de caridade comunitária (cria mitigação por 4 semanas).
-  4. Post promocional de treino (custo zero, foco e disciplina).
-- **Impacto Comercial em Patrocínios:** Função pura `calculate_sponsorship_impact(heat)` que gera os deságios e penalidades comerciais consumidos pela camada de patrocínios do jogo.
+#### 2.1. Centralização e Interface do Celular (`ui/celular.gd`)
+- **Centralização Completa:** Os textos, valores, reduções estimadas e regras de disponibilidade exibidos na UI foram centralizados nos métodos `get_action_details()` e `get_press_agent_tiers_info()` de `LifeLegacySocial` e `LifeLegacyManager`.
+- **Seletor Funcional dos 3 Níveis de Assessoria de Imprensa:**
+  - Nível 1: Regional ($ 2.500 / 12 semanas, bônus +2.5/sem, contenção 0.85).
+  - Nível 2: Nacional Especializada ($ 7.500 / 16 semanas, bônus +5.0/sem, contenção 0.70).
+  - Nível 3: Elite Internacional ($ 18.000 / 20 semanas, bônus +8.0/sem, contenção 0.50).
+  A interface expõe botões dedicados (`BtnAction_hire_press_agent_1`, `2`, `3`) passando o payload `{"level": nivel}`.
+- **Valores e Previsões Dinâmicas:**
+  - Retratação Oficial: exibe o custo real de $ 500 e a previsão dinâmica de redução calculada no momento a partir do calor atual ($cur\_heat \times 0.25 + 10.0$).
+  - Campanha de Caridade: exibe o custo real de $ 6.000$, a redução imediata de 12 pontos e a duração ativa de 4 semanas.
+  - Post Promocional de Treino: exibe os deltas reais (disciplina +1, popularidade +3, influência social +2, custo $ 0) e elimina qualquer menção a "Foco".
+- **Visualização de Campanhas:** Suporte transparente aos campos unificados `remaining_ticks` e `ticks_remaining`.
 
-#### 2.2. Schema V4 e Migração Não Destrutiva
-- `LifeLegacyState`: constante `CURRENT_SUPPORTED_SCHEMA` elevada para `4`, com validação estrutural do nó `social_reputation`.
-- `LifeLegacyPersistence`: bloco de migração incremental `V3 -> V4` adicionado em `_migrate()`, garantindo que saves das versões 1, 2 e 3 sejam automaticamente promovidos com preservação integral de dados familiares, dinásticos, arcos e modificadores.
+#### 2.2. Mitigação Ativa da Caridade e Unificação de Contadores
+- Em `LifeLegacySocial`:
+  - Unificados os atributos `ticks_remaining` e `remaining_ticks` nas campanhas institucionais.
+  - Implementada a mitigação ativa semanal recorrente de 1.0 ponto de calor por semana processada enquanto a campanha de caridade estiver ativa (4 semanas), cumulativa com a redução inicial plana de 12 pontos e a taxa básica semanal.
+  - Encerramento automático da campanha após 4 semanas sem resíduos em disco.
 
-#### 2.3. Integração Transacional com Outbox e MuroRedes
-- Cada ação de RP gera tokens idempotentes (`rp_cost_*` e `rp_post_*`).
-- Protocolo em 2 fases: pré-compromisso com `pending_rp_transaction` salvo em disco antes do despacho externo.
-- Despacho integrado com `Career.apply_idempotent_effect()` e `Career.apply_idempotent_social_post()`.
-- Em caso de crash ou falha transitória de I/O, `LifeLegacySocial.recover_pending_rp_transaction()` reconcilia o estado no boot sem debitar dinheiro duas vezes e sem duplicar publicações no feed.
+#### 2.3. Cronologia e Equivalência Temporal da Assessoria de Imprensa
+- Em `LifeLegacySocial.advance_social_ticks()`:
+  - O bônus de resfriamento contratado da assessoria é aplicado estritamente durante a vigência do contrato: $\min(ticks, rem\_agent) \times bonus\_agent$.
+  - Ao expirar a assessoria durante um avanço temporal ou salto de calendário, os ticks remanescentes aplicam a taxa básica semanal ($3.5$ pts/sem).
+  - **Equivalência Temporal Garantida:** Comprovado matematicamente que o calor resultante de 20 chamadas de 1 tick é rigorosamente idêntico a 1 chamada de 20 ticks.
 
-#### 2.4. Interface Gráfica no Smartphone In-Game (`ui/celular.gd`)
-- Painel **GESTÃO DE IMAGEM & POLÊMICAS** integrado na aba "Minha Vida".
-- Barra de progresso visual de calor com coloração contextual por faixa (Verde, Amarelo, Laranja, Vermelho, Carmesim).
-- Diagnóstico textual da crise, penalidades de patrocínio ativas e status do contrato de assessoria.
-- Lista de campanhas institucionais ativas.
-- Grid com 4 botões de ações RP, exibindo custos, estado de recarga (cooldown) e feedback visual imediato em caso de sucesso ou bloqueio preventivo.
+#### 2.4. Integração Real com Patrocínios (`features/career/sponsors.gd`)
+- Integrado o cálculo de impacto comercial de `LifeLegacySocial.calculate_sponsorship_impact(heat)` nos métodos `eligible`, `scaled_offer`, `offers_for`, `pool_for`, `chicas_for`, `_vivas` e `draw` de `Sponsors`.
+- O multiplicador de valor comercial (`offer_value_multiplier`) é aplicado proporcionalmente a `pay`, `per_goal` e `reward`, preservando integralmente as metas e objetivos esportivos (`target`, `min_matches`, `min_rating`).
+- Quando `top_tier_blocked == true` (faixas Crise $\ge 60$ e Grave $\ge 80$), patrocinadores Grade 4 (Elite/Master) são automaticamente excluídos do pool de elegibilidade.
+- Validação em patrocínios:
+  - Calor 0: multiplicador x1.0, marcas Grade 4 elegíveis.
+  - Calor 30: multiplicador x0.95, marcas Grade 4 elegíveis.
+  - Calor 50: multiplicador x0.85, marcas Grade 4 elegíveis.
+  - Calor 70: multiplicador x0.70, marcas Grade 4 bloqueadas.
+  - Calor 85: multiplicador x0.50, marcas Grade 4 bloqueadas.
 
-#### 2.5. Integração com Eventos Narrativos do Marco 7
-- Atualização em `LifeLegacyEvents.recover_precommitted_event()` para suportar `scandal_heat_delta` de forma declarativa nas opções de eventos.
-- Eventos `festa_vespera_derby`, `polemica_midia_ato1_boato`, `polemica_midia_ato2_desfecho` e `polemica_midia_ato2_silencio` configurados com deltas de calor proporcionais às decisões do jogador.
+#### 2.5. Resiliência a Falhas Parciais no Outbox e Idempotência
+- Testado com injeção de falha direcionada via `LifeLegacyOutbox.fault_inject_dispatch_fail_token = "rp_post_"`.
+- Comprovado que o débito financeiro em `career_effects` ocorre com sucesso imediato, enquanto `career_social` falha e permanece retido no Outbox sob `PRE_COMMITMENT`.
+- Na recarga de save (`LifeLegacy.reload_slot`), a transação pendente é reconciliada: o dinheiro não é debitado novamente (debitado exatamente uma vez), o post pendente é despachado, calor e indicadores são aplicados uma única vez, e a transação pendente é expurgada.
+- Um segundo reload comprova estabilidade absoluta sem qualquer efeito duplicado.
+
+#### 2.6. Remoção de Curtidas Artificiais ("likes")
+- Removido o campo fixo artificial `"likes"` dos dicionários `post_dict` em `life_legacy_social.gd`. As reações e engajamento da rede social são delegados exclusivamente aos sistemas nativos de redes do jogo.
+
+#### 2.7. Alinhamento de Limiares em Intervalos Semi-Abertos Contínuos
+- Faixas de calor padronizadas em intervalos contínuos semi-abertos:
+  - `Tranquilo`: $[0.0, 20.0)$
+  - `Leve`: $[20.0, 40.0)$
+  - `Moderado`: $[40.0, 60.0)$
+  - `Crise`: $[60.0, 80.0)$
+  - `Grave`: $[80.0, 100.0]$
+- Constantes unificadas: `THRESHOLD_TRANQUILO = 0.0`, `THRESHOLD_LEVE = 20.0`, `THRESHOLD_MODERADO = 40.0`, `THRESHOLD_CRISE = 60.0`, `THRESHOLD_GRAVE = 80.0`.
+- Testes cobrindo limites decimais: 19.9, 20.0, 39.9, 40.0, 59.9, 60.0, 79.9, 80.0.
 
 ---
 
-### 3. Matriz de Testes Automatizados (Marco 8)
+### 3. Matriz de Testes Automatizados (Marco 8 Pós-Auditoria)
 
-Suíte criada: `tests/life_legacy/test_marco8_social_reputation.gd` e `tests/life_legacy/runner_marco8.tscn`.
+Suíte: `tests/life_legacy/test_marco8_social_reputation.gd` e `tests/life_legacy/runner_marco8.tscn`.
 
 | Cenário | Descrição | Resultado |
 |---|---|:---:|
 | **A** | Migração e integridade de saves legados (V1, V2, V3 $\to$ V4) | **100% PASS** |
-| **B** | Mecânica de `scandal_heat`, 5 faixas e resfriamento semanal | **100% PASS** |
-| **C** | Contratação, bônus de resfriamento, contenção e expiração da assessoria | **100% PASS** |
+| **B** | Mecânica de `scandal_heat`, 5 faixas semi-abertas e testes decimais | **100% PASS** |
+| **C** | Contratação de assessoria, resfriamento contratual e equivalência temporal (20x1 == 1x20) | **100% PASS** |
 | **D** | Retratação pública com custos, deltas, post no Muro e cooldown | **100% PASS** |
-| **E** | Campanha de caridade com mitigação ativa por 4 semanas | **100% PASS** |
-| **F** | Post promocional de treino gratuito, ganhos de foco e cooldown | **100% PASS** |
-| **G** | Injeção de falhas no Outbox, retenção em pré-compromisso e idempotência pós-reload | **100% PASS** |
+| **E** | Campanha de caridade com contadores unificados, mitigação ativa (1.0/sem) e expiração | **100% PASS** |
+| **F** | Post promocional de treino gratuito sem "likes" fixos e sem menção a "Foco" | **100% PASS** |
+| **G** | Falha parcial de Outbox (`rp_post_`), débito único, recuperação e idempotência | **100% PASS** |
 | **H** | Proteção financeira (sem dívida negativa) e modelo estritamente extracampo | **100% PASS** |
-| **I** | Cálculo de patrocínio comercial e instanciação da UI do Celular | **100% PASS** |
+| **I** | Patrocínio real (deságios e bloqueio Grade 4) e UI do Celular com 3 níveis de assessoria | **100% PASS** |
 | **J** | Resolução de eventos narrativos com deltas declarativos de calor | **100% PASS** |
 
 ---
 
-### 4. Bateria Completa de Regressão Longitudinal
+### 4. Bateria Completa de Regressão Longitudinal (10 Runners)
 
-Todos os 10 runners do projeto foram executados sequencialmente em modo headless:
+Execução headless de todas as suítes do projeto:
 
 1. `test_deterministic_rng.gd`: **APROVADO (Exit 0)**
 2. `test_persistence_cases_a_to_e.gd`: **APROVADO (Exit 0)**
@@ -96,4 +114,4 @@ Todos os 10 runners do projeto foram executados sequencialmente em modo headless
 - **Branch exclusiva:** `life-legacy-fase2-implementation`.
 - **Branches protegidas intocadas:** Nenhuma alteração ou merge em `master`, `etapa-4e18-r2`, `life-legacy-fase0-auditoria` ou `life-legacy-fase1-implementation`.
 - **Marco 9:** Não iniciado.
-- **Histórico Git:** Preservado sem rebase destrutivo ou reescrita.
+- **Histórico Git:** Preservado linearmente.
